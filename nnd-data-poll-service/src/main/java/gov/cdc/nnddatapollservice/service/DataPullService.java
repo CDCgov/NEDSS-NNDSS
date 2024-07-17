@@ -16,7 +16,7 @@ public class DataPullService implements IDataPullService {
 
 
     // Use the cron expression to schedule the task with a specific time zone
-    @Scheduled(cron = "${scheduler.cron}", zone = "America/New_York")
+    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleDataFetch() {
         dataHandlingService.handlingExchangedData();
     }
