@@ -1,0 +1,42 @@
+server:
+  port: 8081
+
+management:
+  endpoint:
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+spring:
+  application:
+    name: nnd-data-exchange-service
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+  datasource:
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 10
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: ${NBS_DBUSER}
+    password: ${NBS_DBPASSWORD}
+    msg:
+      url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_MSGOUTE;encrypt=true;trustServerCertificate=true;
+    odse:
+      url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+    srte:
+      url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
