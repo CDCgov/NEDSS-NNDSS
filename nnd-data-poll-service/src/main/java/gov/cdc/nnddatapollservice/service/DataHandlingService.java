@@ -35,7 +35,6 @@ public class DataHandlingService implements IDataHandlingService {
     private String exchangeEndpoint;
 
     private final RestTemplate restTemplate = new RestTemplate();
-    private final String dataExchangeApiUrl = "";
     private final ICNTransportQOutService icnTransportQOutService;
     private final INetsstTransportService netsstTransportService;
     private final ITransportQOutService transportQOutService;

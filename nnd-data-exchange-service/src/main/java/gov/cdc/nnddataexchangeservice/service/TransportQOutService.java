@@ -26,14 +26,8 @@ public class TransportQOutService implements ITransportQOutService {
     public List<TransportQOutDto> getTransportData(String statusTime) throws DataExchangeException {
 
         List<TransportQOutDto> transportQOutDtoList = new ArrayList<>();
-//        Timestamp timestamp;
 
         try {
-//            if (statusTime == null || statusTime.equals("")) {
-//                timestamp = null;
-//            } else {
-//                timestamp = Timestamp.valueOf(statusTime);
-//            }
 
             Optional<Collection<TransportQOut>> transportQOutResults;
             if (statusTime.isEmpty()) {

@@ -1,6 +1,9 @@
 server:
   port: 8082
 
+io:
+  finalLocation: ${NND_FILE_LOCATION}
+
 data_exchange:
   clientId: ${NND_DE_CLIENT_ID}
   secret: ${NND_DE_SECRET}

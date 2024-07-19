@@ -12,16 +12,6 @@ import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Optional;
 
-//@Repository
-//public interface TransportQOutRepository extends JpaRepository<TransportQOut, Long> {
-//    @Query("SELECT a FROM TransportQOut a WHERE a.recordStatusTime > :recordStatusTime ")
-//    Optional<Collection<TransportQOut>> findTransportByCreationTime (@Param("recordStatusTime") Timestamp recordStatusTime);
-//
-//    @Query("SELECT a FROM TransportQOut a")
-//    Optional<Collection<TransportQOut>> findTransportByWithoutCreationTime ();
-//
-//}
-
 @Repository
 public interface TransportQOutRepository extends JpaRepository<TransportQOut, Long> {
 
