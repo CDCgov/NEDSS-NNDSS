@@ -1,5 +1,12 @@
 server:
-  port: 8081
+  port: 8082
+
+data_exchange:
+  clientId: ${NND_DE_CLIENT_ID}
+  secret: ${NND_DE_SECRET}
+  url: ${NND_DE_URL}
+  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN}
+  endpoint_de: ${NND_DE_URL}${NND_DE_DE}
 
 management:
   endpoint:
@@ -19,7 +26,7 @@ spring:
     name: nnd-data-poll-service
 
 scheduler:
-  zone: ${NBS_NND_CRON_TIME_ZONE}
+  zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
   # America/New_York
   # UTC
   cron: ${NBS_NND_CRON}
@@ -37,14 +44,16 @@ spring:
       connection-timeout: 60000
       maximum-pool-size: 10
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    username: ${NBS_DBUSER}
-    password: ${NBS_DBPASSWORD}
+    username: ${OP_DBUSER}
+    password: ${OP_DBPASSWORD}
     msg:
-      url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_MSGOUTE;encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_MSGOUTE;encrypt=true;trustServerCertificate=true;
     odse:
-      url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
     srte:
-      url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
+    ingest:
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_DataIngest;encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:

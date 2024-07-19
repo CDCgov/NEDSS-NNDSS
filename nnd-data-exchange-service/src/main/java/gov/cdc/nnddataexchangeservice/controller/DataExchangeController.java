@@ -1,6 +1,7 @@
 package gov.cdc.nnddataexchangeservice.controller;
 
 
+import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
 import gov.cdc.nnddataexchangeservice.service.model.DataExchangeModel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -39,7 +41,12 @@ public class DataExchangeController {
                             schema = @Schema(type = "string"))}
     )
     @GetMapping(path = "/api/nnd/data-exchange")
-    public ResponseEntity<DataExchangeModel> exchangingData()  {
-        return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging());
+    public ResponseEntity<DataExchangeModel> exchangingData(@RequestParam String cnStatusTime,
+                                                            @RequestParam String transportStatusTime,
+                                                            @RequestParam String statusCd) throws DataExchangeException {
+        if (statusCd.isEmpty()) {
+            throw new DataExchangeException("Status Code is Missing");
+        }
+        return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportStatusTime, statusCd));
     }
 }
