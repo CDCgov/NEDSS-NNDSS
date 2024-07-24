@@ -56,7 +56,7 @@ spring:
     srte:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
     ingest:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_DataIngest;encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=MSGOUTE;encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:
