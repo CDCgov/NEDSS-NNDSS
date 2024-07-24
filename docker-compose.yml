@@ -1,0 +1,20 @@
+services:
+  data-exchange-service:
+    build:
+      context: ./
+      dockerfile: ./nnd-data-exchange-service/Dockerfile
+    ports:
+      - "8085:8085"
+    depends_on:
+      - broker
+    container_name: data-exchange-service
+    environment:
+      NBS_DBPASSWORD: fake.fake.fake.1234
+      NBS_DBSERVER: localhost
+      NBS_DBUSER: sa
+      NND_AUTH_URI: http://localhost:8080/realms/NBS
+    networks:
+      - nnd
+networks:
+  nnd:
+    name: nnd

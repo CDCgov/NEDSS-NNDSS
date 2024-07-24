@@ -1,0 +1,63 @@
+server:
+  port: 8082
+
+io:
+  finalLocation: ${NND_FILE_LOCATION}
+
+data_exchange:
+  clientId: ${NND_DE_CLIENT_ID}
+  secret: ${NND_DE_SECRET}
+  url: ${NND_DE_URL}
+  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN}
+  endpoint_de: ${NND_DE_URL}${NND_DE_DE}
+
+management:
+  endpoint:
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+spring:
+  application:
+    name: nnd-data-poll-service
+
+scheduler:
+  zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
+  # America/New_York
+  # UTC
+  cron: ${NBS_NND_CRON}
+  # "0 */5 0-2 * * *"
+  # every 5 min from 12 am to 3 am
+  # 0 * 0-2 * * *
+  # 0 (start at zero sec), * (run every min),  0-2 (run during 12 am to 3 am), * (run every day), * (run every month), * (run every year)
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+  datasource:
+    hikari:
+      connection-timeout: 60000
+      maximum-pool-size: 10
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    username: ${OP_DBUSER}
+    password: ${OP_DBPASSWORD}
+    msg:
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_MSGOUTE;encrypt=true;trustServerCertificate=true;
+    odse:
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
+    srte:
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
+    ingest:
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=MSGOUTE;encrypt=true;trustServerCertificate=true;
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
