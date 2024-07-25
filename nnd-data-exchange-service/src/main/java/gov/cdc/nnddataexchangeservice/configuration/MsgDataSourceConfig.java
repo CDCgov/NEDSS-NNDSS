@@ -58,10 +58,10 @@ public class MsgDataSourceConfig {
 
     @Bean(name = "msgEntityManagerFactory")
     public LocalContainerEntityManagerFactoryBean msgEntityManagerFactory(
-            EntityManagerFactoryBuilder msgEntityManagerFactoryBuilder,
-            @Qualifier("msgDataSource") DataSource msgDataSource ) {
-        return msgEntityManagerFactoryBuilder
-                .dataSource(msgDataSource)
+            @Qualifier("msgEntityManagerFactoryBuilder") EntityManagerFactoryBuilder builder,
+            @Qualifier("msgDataSource") DataSource dataSource) {
+        return builder
+                .dataSource(dataSource)
                 .packages("gov.cdc.nnddataexchangeservice.repository.msg.model")
                 .persistenceUnit("msg")
                 .build();
@@ -69,7 +69,7 @@ public class MsgDataSourceConfig {
 
     @Bean(name = "msgTransactionManager")
     public PlatformTransactionManager msgTransactionManager(
-            @Qualifier("msgEntityManagerFactory") EntityManagerFactory msgEntityManagerFactory ) {
-        return new JpaTransactionManager(msgEntityManagerFactory);
+            @Qualifier("msgEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+        return new JpaTransactionManager(entityManagerFactory);
     }
 }

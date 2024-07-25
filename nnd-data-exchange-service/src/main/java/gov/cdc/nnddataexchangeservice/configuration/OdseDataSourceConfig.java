@@ -57,12 +57,13 @@ public class OdseDataSourceConfig {
         return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), new HashMap<>(), null);
     }
 
+    @Primary
     @Bean(name = "odseEntityManagerFactory")
     public LocalContainerEntityManagerFactoryBean odseEntityManagerFactory(
-            EntityManagerFactoryBuilder odseEntityManagerFactoryBuilder,
-            @Qualifier("odseDataSource") DataSource odseDataSource ) {
-        return odseEntityManagerFactoryBuilder
-                .dataSource(odseDataSource)
+            @Qualifier("odseEntityManagerFactoryBuilder") EntityManagerFactoryBuilder builder,
+            @Qualifier("odseDataSource") DataSource dataSource) {
+        return builder
+                .dataSource(dataSource)
                 .packages("gov.cdc.nnddataexchangeservice.repository.odse.model")
                 .persistenceUnit("odse")
                 .build();
@@ -71,7 +72,7 @@ public class OdseDataSourceConfig {
     @Primary
     @Bean(name = "odseTransactionManager")
     public PlatformTransactionManager odseTransactionManager(
-            @Qualifier("odseEntityManagerFactory") EntityManagerFactory odseEntityManagerFactory ) {
-        return new JpaTransactionManager(odseEntityManagerFactory);
+            @Qualifier("odseEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+        return new JpaTransactionManager(entityManagerFactory);
     }
 }
