@@ -14,7 +14,7 @@ java -jar build/libs/nnd-data-poll.jar
 
 
 
-WIND
+WINS
 set SPRING_PROFILES_ACTIVE=dev
 set CUSTOM_PROPERTY=myValue
 java -jar build/libs/nnd-data-poll.jar

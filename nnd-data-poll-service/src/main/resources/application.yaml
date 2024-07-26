@@ -11,19 +11,6 @@ data_exchange:
   endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN}
   endpoint_de: ${NND_DE_URL}${NND_DE_DE}
 
-management:
-  endpoint:
-    prometheus:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-
 spring:
   application:
     name: nnd-data-poll-service
@@ -49,12 +36,6 @@ spring:
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${OP_DBUSER}
     password: ${OP_DBPASSWORD}
-    msg:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_MSGOUTE;encrypt=true;trustServerCertificate=true;
-    odse:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
-    srte:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
     ingest:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=MSGOUTE;encrypt=true;trustServerCertificate=true;
   jpa:

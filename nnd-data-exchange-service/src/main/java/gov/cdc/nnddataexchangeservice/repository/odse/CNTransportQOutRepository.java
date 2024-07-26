@@ -17,8 +17,8 @@ public interface CNTransportQOutRepository extends JpaRepository<CNTransportQOut
     @Query("SELECT a FROM CNTransportQOut a WHERE a.recordStatusCd = :statusCd")
     Optional<Collection<CNTransportQOut>> findTransportByStatusCd (@Param("statusCd") String statusCd);
 
-    @Query("SELECT a FROM CNTransportQOut a WHERE a.recordStatusTime <= :recordStatusTime AND a.recordStatusCd = :recordStatusCd")
-    Optional<Collection<CNTransportQOut>> findTransportByCreationTimeAndStatus (@Param("recordStatusTime") String recordStatusTime,
+    @Query("SELECT a FROM CNTransportQOut a WHERE a.recordStatusTime > :recordStatusTime AND a.recordStatusCd = :recordStatusCd")
+    Optional<Collection<CNTransportQOut>> findTransportByCreationTimeAndStatus (@Param("recordStatusTime") Timestamp recordStatusTime,
                                                                                 @Param("recordStatusCd") String recordStatusCd);
 
 

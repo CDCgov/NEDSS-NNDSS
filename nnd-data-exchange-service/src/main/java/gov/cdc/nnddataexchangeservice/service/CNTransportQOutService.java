@@ -8,6 +8,7 @@ import gov.cdc.nnddataexchangeservice.service.model.dto.CNTransportQOutDto;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.Optional;
 @Service
 public class CNTransportQOutService implements ICNTransportQOutService {
     private final CNTransportQOutRepository cnTransportQOutRepository;
+    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     public CNTransportQOutService(CNTransportQOutRepository cnTransportQOutRepository) {
         this.cnTransportQOutRepository = cnTransportQOutRepository;
@@ -24,19 +26,15 @@ public class CNTransportQOutService implements ICNTransportQOutService {
     public List<CNTransportQOutDto> getTransportData(String statusCd, String statusTime) throws DataExchangeException {
 
         List<CNTransportQOutDto> cnTransportQOutDtoList = new ArrayList<>();
-//        Timestamp timestamp;
         try {
-//            if (statusTime == null || statusTime.equals("")) {
-//                timestamp = null;
-//            } else {
-//                timestamp = Timestamp.valueOf(statusTime);
-//            }
-
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            java.util.Date parsedDate = formatter.parse(statusTime);
+            Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
             Optional<Collection<CNTransportQOut>> transportQOutResults;
             if (statusTime.isEmpty()) {
                 transportQOutResults = cnTransportQOutRepository.findTransportByStatusCd(statusCd);
             } else {
-                transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatus(statusTime, statusCd);
+                transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatus(recordStatusTime, statusCd);
             }
 
             if (transportQOutResults.isPresent()) {

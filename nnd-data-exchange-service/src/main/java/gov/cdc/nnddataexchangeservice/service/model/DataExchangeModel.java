@@ -15,4 +15,8 @@ public class DataExchangeModel {
     List<CNTransportQOutDto> cnTransportQOutDtoList = new ArrayList<>();
     List<NETSSTransportQOutDto> netssTransportQOutDtoList = new ArrayList<>();
     List<TransportQOutDto> transportQOutDtoList = new ArrayList<>();
+
+    int countCnTransport;
+    int countNetssTransport;
+    int countTransport;
 }

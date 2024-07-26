@@ -74,7 +74,7 @@ public class DataHandlingService implements IDataHandlingService {
             var dataExchangeModel = gson.fromJson(data, DataExchangeModel.class);
 
             if (!dataExchangeModel.getCnTransportQOutDtoList().isEmpty()) {
-               // icnTransportQOutService.saveDataExchange(dataExchangeModel.getCnTransportQOutDtoList());
+                icnTransportQOutService.saveDataExchange(dataExchangeModel.getCnTransportQOutDtoList());
             }
 
             if (!dataExchangeModel.getTransportQOutDtoList().isEmpty()) {

@@ -9,6 +9,8 @@ import gov.cdc.nnddatapollservice.service.model.dto.CNTransportQOutDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +18,7 @@ import java.util.List;
 public class CNTransportQOutService implements ICNTransportQOutService {
     private final CNTransportQOutRepository cnTransportQOutRepository;
     private final IErrorHandlingService errorHandlingService;
+    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     @Value("${io.finalLocation}")
     private String fileLocation;
@@ -30,7 +33,9 @@ public class CNTransportQOutService implements ICNTransportQOutService {
     public String getMaxTimestamp() {
         var time = cnTransportQOutRepository.findMaxTimeStamp();
         if (time.isPresent()) {
-            return time.get().toString();
+            Timestamp maxTimestamp = time.get();
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            return formatter.format(maxTimestamp);
         }
         else {
             return "";
