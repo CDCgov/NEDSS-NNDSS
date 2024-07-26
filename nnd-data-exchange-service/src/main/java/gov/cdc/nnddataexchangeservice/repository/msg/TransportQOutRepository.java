@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface TransportQOutRepository extends JpaRepository<TransportQOut, Long> {
 
-    @Query("SELECT a FROM TransportQOut a WHERE a.messageCreationTime <= :recordStatusTime")
+    @Query("SELECT a FROM TransportQOut a WHERE a.messageCreationTime > :recordStatusTime")
     Optional<Collection<TransportQOut>> findTransportByCreationTime(@Param("recordStatusTime") String recordStatusTime);
 
     @Query("SELECT a FROM TransportQOut a")

@@ -38,9 +38,10 @@ public class CNTransportQOut {
     @Column(name = "last_chg_user_id")
     private Long lastChgUserId;
 
-    @Lob
+   // @Lob
     @Column(name = "message_payload")
-    private byte[] messagePayload;
+//    private byte[] messagePayload;
+    private String messagePayload;
 
     @Column(name = "notification_uid", nullable = false)
     private Long notificationUid;

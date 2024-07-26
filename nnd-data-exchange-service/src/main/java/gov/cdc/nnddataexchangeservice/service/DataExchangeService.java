@@ -30,6 +30,9 @@ public class DataExchangeService implements IDataExchangeService {
 
         dataExchange.setCnTransportQOutDtoList(cnTransportDatas);
         dataExchange.setTransportQOutDtoList(transportDatas);
+
+        dataExchange.setCountCnTransport(cnTransportDatas.size());
+        dataExchange.setCountTransport(transportDatas.size());
         return dataExchange;
     }
 }
