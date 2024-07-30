@@ -60,6 +60,6 @@ public class NETSSTransportQOut {
     }
 
     public NETSSTransportQOut() {
-
+        // Default constructor
     }
 }

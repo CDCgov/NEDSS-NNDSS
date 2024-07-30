@@ -2,19 +2,28 @@ package gov.cdc.nndmessageprocessor.service;
 
 import gov.cdc.nndmessageprocessor.exception.DataProcessorException;
 import gov.cdc.nndmessageprocessor.service.interfaces.INETSSTransportQOutService;
+import gov.cdc.nndmessageprocessor.service.interfaces.INetssCaseService;
 import gov.cdc.nndmessageprocessor.service.model.dto.NETSSTransportQOutDto;
-import lombok.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class NetssCaseService {
+public class NetssCaseService implements INetssCaseService {
+    private static Logger logger = LoggerFactory.getLogger(NetssCaseService.class);
+
     private final INETSSTransportQOutService netssTransportQOutService;
+    @Value("${io.fileLocation}")
+    private String fileLocation;
+    private static final String NETSSFileName = "STDNETSS.dat";  // output filename per requirements
 
     public NetssCaseService(INETSSTransportQOutService netssTransportQOutService) {
         this.netssTransportQOutService = netssTransportQOutService;
@@ -33,6 +42,13 @@ public class NetssCaseService {
         }
 
         var dedupedCollection = removeDupsFromNetssCollection(coll);
+        var written = processAndWriteNETSSOutputFile(mmwrYear, dedupedCollection);
+
+        if (written) {
+            logger.info("OK");
+        } else {
+            logger.info("FAILED");
+        }
     }
 
 
@@ -49,7 +65,7 @@ public class NetssCaseService {
     }
 
 
-    protected List<NETSSTransportQOutDto> getNETSSTransportQOutDTCollectionForYear(Short mmwrYear, Short mmwrWeek, Boolean includePriorYear) {
+    protected List<NETSSTransportQOutDto> getNETSSTransportQOutDTCollectionForYear(Short mmwrYear, Short mmwrWeek, Boolean includePriorYear) throws DataProcessorException {
         List<NETSSTransportQOutDto> coll = null;
         if (includePriorYear) {
             coll = netssTransportQOutService.getNetssCaseDataYtdAndPriorYear(mmwrYear, mmwrWeek, mmwrYear - 1);
@@ -59,28 +75,63 @@ public class NetssCaseService {
         return coll;
     }
 
-    @Value("${io.finalLocation}")
-    private String fileLocation;
-    private static boolean processAndWriteNETSSOutputFile(Short mmwrYear, List<NETSSTransportQOutDto> coll) {
-        //Get the directory from the property file
-        if (propertyUtil.getNETSSOutputFileLocation() == null) {
-            System.out.println("NETSS_OUTPUT_FILE_LOCATION not found in NEDSS.properties file. Processing can not continue...");
+
+    protected boolean processAndWriteNETSSOutputFile(Short mmwrYear, List<NETSSTransportQOutDto> coll) {
+        File dirToWriteTo = new File(fileLocation);
+        if (!dirToWriteTo.exists() && !dirToWriteTo.mkdirs()) {
+            System.out.println("Failed to create directory: " + fileLocation);
             return false;
         }
-        String filePath = propertyUtil.getNETSSOutputFileLocation();
-
-
-        File dirToWriteTo = new File(filePath);
-        if (!dirToWriteTo.exists())
-            dirToWriteTo.mkdirs(); // make the directory if it does not exist
 
         if (!dirToWriteTo.isDirectory()) {
-            logger.error("NETSS_OUTPUT_FILE_LOCATION in NEDSS.properties file is not a directory?");
-            System.out.println("NETSS_OUTPUT_FILE_LOCATION in NEDSS.properties file is not a directory?");
+            System.out.println(fileLocation + " is not a directory.");
             return false;
         }
-        File netssFile = new File(dirToWriteTo, NETSSFileName);
 
+        File netssFile = new File(dirToWriteTo, NETSSFileName);
         return writeNETSSOutputFile(netssFile, coll, mmwrYear);
+    }
+
+    protected boolean writeNETSSOutputFile(File netssFile, List<NETSSTransportQOutDto> coll, Short mmwrYear) {
+        int totalRecordsWritten = 0;
+        int verificationRecordsWritten = 0;
+        Map<String, Integer> countersMap = new HashMap<>();
+        String formattedCount;
+        String blanks44 = "                                            ";
+        String stateCCD = null;
+
+        try (PrintWriter netssWriter = new PrintWriter(new FileWriter(netssFile, false))) { // overwrite existing
+            if (mmwrYear > 2000) {
+                mmwrYear = (short) (mmwrYear - 2000);
+            }
+
+            for (NETSSTransportQOutDto netssTransportQOutDT : coll) {
+                String thisConditionCd = netssTransportQOutDT.getEvent();
+                if (thisConditionCd != null) {
+                    if (stateCCD == null) {
+                        stateCCD = netssTransportQOutDT.getPayload().substring(2, 4);
+                    }
+                    netssWriter.println(netssTransportQOutDT.getPayload());
+                    totalRecordsWritten++;
+
+                    countersMap.merge(thisConditionCd, 1, Integer::sum);
+                }
+            }
+
+            for (Map.Entry<String, Integer> entry : countersMap.entrySet()) {
+                formattedCount = String.format("%05d", entry.getValue());
+                netssWriter.println("V" + stateCCD + entry.getKey() + formattedCount + mmwrYear + blanks44);
+                verificationRecordsWritten++;
+            }
+
+        } catch (IOException e) {
+            return false;
+        }
+
+        if (totalRecordsWritten > 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

@@ -1,16 +1,20 @@
 server:
   port: 8083
 
+functional:
+  year: ${NND_YEAR}
+  week: ${NND_WEEK}
+  prior: ${NND_PRIOR}
+
 io:
   fileLocation: ${NND_FILE_LOCATION}
-
 
 spring:
   application:
     name: nnd-message-processor
 
 scheduler:
-  zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
+  zone: ${NBS_NND_CRON_TIME_ZONE:}
   # America/New_York
   # UTC
   cron: ${NBS_NND_CRON}
@@ -31,7 +35,7 @@ spring:
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${OP_DBUSER}
     password: ${OP_DBPASSWORD}
-    ingest:
+    nnd:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=MSGOUTE;encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
