@@ -43,10 +43,11 @@ public class DataExchangeController {
     @GetMapping(path = "/api/nnd/data-exchange")
     public ResponseEntity<DataExchangeModel> exchangingData(@RequestParam("cnStatusTime") String cnStatusTime,
                                                             @RequestParam("transportStatusTime") String transportStatusTime,
+                                                            @RequestParam("netssTime") String netssTime,
                                                             @RequestParam("statusCd") String statusCd) throws DataExchangeException {
         if (statusCd.isEmpty()) {
             throw new DataExchangeException("Status Code is Missing");
         }
-        return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportStatusTime, statusCd));
+        return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportStatusTime,netssTime, statusCd));
     }
 }

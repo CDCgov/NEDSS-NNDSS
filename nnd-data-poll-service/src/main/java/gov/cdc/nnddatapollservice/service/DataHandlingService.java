@@ -53,12 +53,14 @@ public class DataHandlingService implements IDataHandlingService {
     public void handlingExchangedData() throws DataPollException {
         var cnTimeStamp = icnTransportQOutService.getMaxTimestamp();
         var transportTimeStamp = transportQOutService.getMaxTimestamp();
+        var netssTimeStamp = netsstTransportService.getMaxTimestamp();
 
         var token = tokenService.getToken();
 
         var param = new HashMap<String, String>();
         param.put("cnStatusTime", cnTimeStamp);
         param.put("transportStatusTime", transportTimeStamp);
+        param.put("netssTime", netssTimeStamp);
         param.put("statusCd", "UNPROCESSED");
 
         String data = callDataExchangeEndpoint(token, param);
@@ -79,6 +81,10 @@ public class DataHandlingService implements IDataHandlingService {
 
             if (!dataExchangeModel.getTransportQOutDtoList().isEmpty()) {
                 transportQOutService.saveDataExchange(dataExchangeModel.getTransportQOutDtoList());
+            }
+
+            if (!dataExchangeModel.getNetssTransportQOutDtoList().isEmpty()) {
+                netsstTransportService.saveDataExchange(dataExchangeModel.getNetssTransportQOutDtoList());
             }
         } catch (Exception e) {
             throw new DataPollException(e.getMessage());

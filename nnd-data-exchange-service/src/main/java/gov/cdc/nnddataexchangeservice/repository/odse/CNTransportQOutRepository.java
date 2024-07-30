@@ -23,7 +23,4 @@ public interface CNTransportQOutRepository extends JpaRepository<CNTransportQOut
 
 
 
-    @Modifying
-    @Query("UPDATE CNTransportQOut a SET a.recordStatusCd = :statusCd, a.recordStatusTime = :statusTime WHERE a.cnTransportqOutUid = :uid")
-    void updateTransportStatusByUid(Long uid, String statusCd, Timestamp statusTime);
 }
