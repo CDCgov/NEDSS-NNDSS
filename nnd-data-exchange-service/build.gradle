@@ -37,11 +37,19 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:5.0.1'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
     testImplementation 'org.springframework.security:spring-security-test:6.2.0'
+
     runtimeOnly 'com.nimbusds:oauth2-oidc-sdk:11.8'
     implementation 'org.apache.httpcomponents.core5:httpcore5:5.2.5'
 
+
+
+
+    testImplementation(platform('org.junit:junit-bom'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.mockito:mockito-core'
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
 }
