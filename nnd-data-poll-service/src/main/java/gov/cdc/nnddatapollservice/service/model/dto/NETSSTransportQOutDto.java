@@ -21,6 +21,9 @@ public class NETSSTransportQOutDto {
     private String payload;
     private String recordStatusCd;
 
+    public NETSSTransportQOutDto(){
+
+    }
     // Constructor to convert domain model to DTO
     public NETSSTransportQOutDto(NETSSTransportQOut netssTransportQOut) {
         this.netssTransportQOutUid = netssTransportQOut.getNetssTransportQOutUid();
