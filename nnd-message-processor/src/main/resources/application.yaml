@@ -2,8 +2,7 @@ server:
   port: 8083
 
 functional:
-  year: ${NND_YEAR}
-  week: ${NND_WEEK}
+  date: ${NND_DATE}
   prior: ${NND_PRIOR}
 
 io:
