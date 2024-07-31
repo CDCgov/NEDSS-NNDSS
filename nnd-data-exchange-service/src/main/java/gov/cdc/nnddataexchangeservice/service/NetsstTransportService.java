@@ -31,13 +31,14 @@ public class NetsstTransportService implements INetsstTransportService {
 
         List<NETSSTransportQOutDto> cnTransportQOutDtoList = new ArrayList<>();
         try {
-            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            java.util.Date parsedDate = formatter.parse(statusTime);
-            Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
+
             Optional<Collection<NETSSTransportQOut>> transportQOutResults;
             if (statusTime.isEmpty()) {
                 transportQOutResults = netssTransportQOutRepository.findNetssTransport();
             } else {
+                SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+                java.util.Date parsedDate = formatter.parse(statusTime);
+                Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
                 transportQOutResults = netssTransportQOutRepository.findNetssTransportByCreationTime(recordStatusTime);
             }
 
