@@ -15,7 +15,7 @@ COPY . /usr/src/nnd
 WORKDIR /usr/src/nnd
 
 #Build report service along with any required libraries
-RUN ./gradlew :nnd-data-exchange-service :buildNeeded -x test --no-daemon
+RUN ./gradlew :nnd-data-exchange-service:buildNeeded -x test --no-daemon
 
 FROM amazoncorretto:17
 

@@ -51,6 +51,5 @@ spring:
     hibernate:
       ddl-auto: none
 
-
-diserver:
+nndserver:
   host: ${NND_SERVER_HOST:localhost:8081}
