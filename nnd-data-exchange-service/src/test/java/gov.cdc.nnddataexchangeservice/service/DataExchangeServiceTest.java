@@ -3,7 +3,6 @@ package gov.cdc.nnddataexchangeservice.service;
 
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.ICNTransportQOutService;
-import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.INetsstTransportService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.ITransportQOutService;
 import gov.cdc.nnddataexchangeservice.service.model.DataExchangeModel;

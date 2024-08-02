@@ -1,7 +1,7 @@
 package gov.cdc.nnddataexchangeservice.repository.msg.model;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
 
 @Entity
 @Table(name = "TransportQ_out")

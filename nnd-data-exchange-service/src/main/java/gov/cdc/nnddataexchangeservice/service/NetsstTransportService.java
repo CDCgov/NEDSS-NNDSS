@@ -2,11 +2,8 @@ package gov.cdc.nnddataexchangeservice.service;
 
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.msg.NETSSTransportQOutRepository;
-import gov.cdc.nnddataexchangeservice.repository.msg.TransportQOutRepository;
 import gov.cdc.nnddataexchangeservice.repository.msg.model.NETSSTransportQOut;
-import gov.cdc.nnddataexchangeservice.repository.odse.model.CNTransportQOut;
 import gov.cdc.nnddataexchangeservice.service.interfaces.INetsstTransportService;
-import gov.cdc.nnddataexchangeservice.service.model.dto.CNTransportQOutDto;
 import gov.cdc.nnddataexchangeservice.service.model.dto.NETSSTransportQOutDto;
 import org.springframework.stereotype.Service;
 

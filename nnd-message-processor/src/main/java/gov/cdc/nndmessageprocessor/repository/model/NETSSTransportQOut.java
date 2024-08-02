@@ -62,4 +62,9 @@ public class NETSSTransportQOut {
     public NETSSTransportQOut() {
         // Default constructor
     }
+
+    // For Unit Test
+    public NETSSTransportQOut(String payload    ) {
+        this.payload = payload;
+    }
 }

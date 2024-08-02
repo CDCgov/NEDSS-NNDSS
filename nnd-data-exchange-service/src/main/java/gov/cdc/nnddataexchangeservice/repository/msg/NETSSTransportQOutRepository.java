@@ -1,7 +1,6 @@
 package gov.cdc.nnddataexchangeservice.repository.msg;
 
 import gov.cdc.nnddataexchangeservice.repository.msg.model.NETSSTransportQOut;
-import gov.cdc.nnddataexchangeservice.repository.odse.model.CNTransportQOut;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

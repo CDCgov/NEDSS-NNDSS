@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,7 +44,7 @@ public class MessageProcessingService {
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone:#{T(java.util.TimeZone).getDefault().getID()}}")
     public void scheduleDataFetch() throws DataProcessorException {
         if (zone == null || zone.isEmpty()) {
-            zone = java.util.TimeZone.getDefault().getID();
+            zone = ZoneId.systemDefault().getId();
         }
         logger.info("CRON STARTED");
         logger.info("Cron expression: {}", cron);
@@ -67,7 +68,7 @@ public class MessageProcessingService {
         }
     }
 
-    private Map<String, Short> getMMWRAndPriorYear(Date specifiedDate) {
+    protected Map<String, Short> getMMWRAndPriorYear(Date specifiedDate) {
         Map<String, Short> returnMap = new HashMap<>();
 
         Calendar cal = Calendar.getInstance();
@@ -106,7 +107,7 @@ public class MessageProcessingService {
         return returnMap;
     }
 
-    private int[] calcMMWR(String pDate) {
+    protected int[] calcMMWR(String pDate) {
         int[] result = {0, 0};
 
         try {
@@ -171,7 +172,7 @@ public class MessageProcessingService {
         return result;
     }
 
-    private long adjustForDaylightSavings(long t) {
+    protected long adjustForDaylightSavings(long t) {
         Date d = new Date(t);
         Calendar cal = Calendar.getInstance();
         cal.setTime(d);
@@ -185,7 +186,7 @@ public class MessageProcessingService {
         return t;
     }
 
-    private int adjustYearForWeekZero(long t, int y) {
+    protected int adjustYearForWeekZero(long t, int y) {
         Date d = new Date(t);
         Calendar dCal = Calendar.getInstance();
         dCal.setTime(d);

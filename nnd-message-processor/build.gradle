@@ -32,8 +32,20 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'com.microsoft.sqlserver:mssql-jdbc:12.2.0.jre11'
 	implementation 'com.zaxxer:HikariCP:5.0.1'
+
+	testImplementation(platform('org.junit:junit-bom'))
+	testImplementation('org.junit.jupiter:junit-jupiter')
+	testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+	testImplementation 'org.mockito:mockito-core'
 }
 
-tasks.named('test') {
+test {
 	useJUnitPlatform()
+}
+
+
+bootJar {
+	archiveBaseName.set('nnd-message-processor')
+	archiveVersion.set('')
+	archiveClassifier.set('')
 }

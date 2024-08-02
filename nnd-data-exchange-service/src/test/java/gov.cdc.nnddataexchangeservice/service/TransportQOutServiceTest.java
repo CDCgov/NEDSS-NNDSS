@@ -10,16 +10,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class TransportQOutServiceTest {
+
+
+class TransportQOutServiceTest {
 
     @Mock
     private TransportQOutRepository transportQOutRepository;
@@ -33,53 +33,86 @@ public class TransportQOutServiceTest {
     }
 
     @Test
-    void testGetTransportData_NoStatusTime() throws Exception {
-        String statusTime = "";
+    void testGetTransportData_WithStatusTime_Success() throws DataExchangeException {
+        String statusTime = "2023-07-30 12:00:00.000";
+        List<TransportQOut> mockTransportQOutList = new ArrayList<>();
+        mockTransportQOutList.add(new TransportQOut());
+        mockTransportQOutList.add(new TransportQOut());
 
-        TransportQOut transportQOut = new TransportQOut();
-        List<TransportQOut> transportQOutList = Arrays.asList(transportQOut);
-
-        when(transportQOutRepository.findTransportByWithoutCreationTime()).thenReturn(Optional.of(transportQOutList));
-
-        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
-
-        assertEquals(1, result.size());
-        verify(transportQOutRepository, times(1)).findTransportByWithoutCreationTime();
-    }
-
-    @Test
-    void testGetTransportData_WithStatusTime() throws Exception {
-        String statusTime = "2023-07-30 10:00:00.000";
-
-        TransportQOut transportQOut = new TransportQOut();
-        List<TransportQOut> transportQOutList = Arrays.asList(transportQOut);
-
-        when(transportQOutRepository.findTransportByCreationTime(statusTime)).thenReturn(Optional.of(transportQOutList));
+        when(transportQOutRepository.findTransportByCreationTime(statusTime)).thenReturn(Optional.of(mockTransportQOutList));
 
         List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
 
-        assertEquals(1, result.size());
+        assertNotNull(result);
+       assertEquals(2, result.size());
         verify(transportQOutRepository, times(1)).findTransportByCreationTime(statusTime);
     }
 
     @Test
-    void testGetTransportData_NoResults() throws Exception {
+    void testGetTransportData_WithoutStatusTime_Success() throws DataExchangeException {
         String statusTime = "";
+        List<TransportQOut> mockTransportQOutList = new ArrayList<>();
+        mockTransportQOutList.add(new TransportQOut());
+        mockTransportQOutList.add(new TransportQOut());
 
-        when(transportQOutRepository.findTransportByWithoutCreationTime()).thenReturn(Optional.of(Collections.emptyList()));
+        when(transportQOutRepository.findTransportByWithoutCreationTime()).thenReturn(Optional.of(mockTransportQOutList));
 
         List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
 
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(transportQOutRepository, times(1)).findTransportByWithoutCreationTime();
+    }
+
+    @Test
+    void testGetTransportData_WithStatusTime_Empty() throws DataExchangeException {
+        String statusTime = "2023-07-30 12:00:00.000";
+
+        when(transportQOutRepository.findTransportByCreationTime(statusTime)).thenReturn(Optional.empty());
+
+        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        verify(transportQOutRepository, times(1)).findTransportByCreationTime(statusTime);
+    }
+
+    @Test
+    void testGetTransportData_WithoutStatusTime_Empty() throws DataExchangeException {
+        String statusTime = "";
+
+        when(transportQOutRepository.findTransportByWithoutCreationTime()).thenReturn(Optional.empty());
+
+        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
+
+        assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(transportQOutRepository, times(1)).findTransportByWithoutCreationTime();
     }
 
     @Test
-    void testGetTransportData_Exception() {
+    void testGetTransportData_WithStatusTime_Exception() {
+        String statusTime = "2023-07-30 12:00:00.000";
+
+        when(transportQOutRepository.findTransportByCreationTime(statusTime)).thenThrow(new RuntimeException("Database error"));
+
+        DataExchangeException exception = assertThrows(DataExchangeException.class, () ->
+                transportQOutService.getTransportData(statusTime));
+
+        assertEquals("Database error", exception.getMessage());
+        verify(transportQOutRepository, times(1)).findTransportByCreationTime(statusTime);
+    }
+
+    @Test
+    void testGetTransportData_WithoutStatusTime_Exception() {
         String statusTime = "";
 
         when(transportQOutRepository.findTransportByWithoutCreationTime()).thenThrow(new RuntimeException("Database error"));
 
-        assertThrows(DataExchangeException.class, () -> transportQOutService.getTransportData(statusTime));
+        DataExchangeException exception = assertThrows(DataExchangeException.class, () ->
+                transportQOutService.getTransportData(statusTime));
+
+        assertEquals("Database error", exception.getMessage());
+        verify(transportQOutRepository, times(1)).findTransportByWithoutCreationTime();
     }
 }
