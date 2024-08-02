@@ -29,6 +29,14 @@ This architecture ensure the STLT can make a secure connection to CDC database w
     - OP_DBUSER: On Prem DB info
     - NBS_NND_CRON: Cron Scheduler (ex: * * * * * *)
     - NBS_NND_CRON_TIME_ZONE: Cron timezone (ex: UTC)
+- NETSS Message Processor ENV:
+    - NBS_NND_CRON: Cron Scheduler (ex: * * * * * *)
+    - NND_FILE_LOCATION: Path to output directory on the setup machine (ex: /Users/UserName/Desktop/LOG)
+    - NND_PRIOR: prior date indicator (ex: either T or F)
+    - NND_DATE: date value (format: 12/30/2023)
+    - OP_DBPASSWORD: On Prem DB info
+    - OP_DBSERVER: On Prem DB info
+    - OP_DBUSER: On Prem DB info
 
 ## Useful command to run Poller jar file
 The two enviroment variable the end user will need to explicitly set when running the poller service is the CRON configuration (NBS_NND_CRON (schedule) and NBS_NND_CRON_TIME_ZONE (timezone))
