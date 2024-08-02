@@ -27,6 +27,9 @@ public class CNTransportQOutDto {
     private Timestamp recordStatusTime;
     private Integer versionCtrlNbr;
 
+    public CNTransportQOutDto() {
+
+    }
     // Constructor to convert domain model to DTO
     public CNTransportQOutDto(CNTransportQOut cnTransportQOut) {
         this.cnTransportqOutUid = cnTransportQOut.getCnTransportqOutUid();

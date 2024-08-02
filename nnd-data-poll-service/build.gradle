@@ -33,12 +33,15 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'com.microsoft.sqlserver:mssql-jdbc:12.2.0.jre11'
 
+    testImplementation(platform('org.junit:junit-bom'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.mockito:mockito-core'
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
 }
-
 bootJar {
     archiveBaseName.set('nnd-data-poll-service')
     archiveVersion.set('')

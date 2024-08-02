@@ -27,13 +27,14 @@ public class CNTransportQOutService implements ICNTransportQOutService {
 
         List<CNTransportQOutDto> cnTransportQOutDtoList = new ArrayList<>();
         try {
-            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            java.util.Date parsedDate = formatter.parse(statusTime);
-            Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
+
             Optional<Collection<CNTransportQOut>> transportQOutResults;
             if (statusTime.isEmpty()) {
                 transportQOutResults = cnTransportQOutRepository.findTransportByStatusCd(statusCd);
             } else {
+                SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+                java.util.Date parsedDate = formatter.parse(statusTime);
+                Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
                 transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatus(recordStatusTime, statusCd);
             }
 
