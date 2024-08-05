@@ -44,3 +44,14 @@ jobs:
       GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
+
+#  build:
+#    runs-on: ubuntu-latest
+#    steps:
+#    - uses: actions/checkout@v4
+#    - uses: actions/setup-java@v4
+#      with:
+#        distribution: 'temurin'
+#        java-version: '21'
+#        cache: 'gradle'
+#    - run: ./gradlew build --no-daemon
