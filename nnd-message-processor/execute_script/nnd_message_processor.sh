@@ -6,4 +6,5 @@ export NND_DATE="12/30/2023"
 export OP_DBPASSWORD="fake.fake.fake.1234"
 export OP_DBSERVER="localhost:1433"
 export OP_DBUSER="sa"
+export OP_DBNAME="MSGOUTE"
 java -jar /Users/DucNguyen/Desktop/CDC_Repos/NEDSS-NNDSS/nnd-message-processor/build/libs/nnd-message-processor.jar
