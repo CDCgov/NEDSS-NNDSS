@@ -35,7 +35,7 @@ spring:
     username: ${OP_DBUSER}
     password: ${OP_DBPASSWORD}
     nnd:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=MSGOUTE;encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${OP_DBNAME};encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:
