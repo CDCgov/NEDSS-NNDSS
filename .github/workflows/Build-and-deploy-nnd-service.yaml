@@ -52,14 +52,13 @@ jobs:
     - uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
+        java-version: '17'
         cache: 'gradle'
-    - name: create nnd data poll
+    - name: create-nnd-data-poll-jar
       working-directory: ./nnd-data-poll-service
       run: ./gradlew build --no-daemon
-
-    - name: Call upload jar file
+    - name: upload-nnd-data-poll-jar
       uses: actions/upload-artifact@v4
       with:
-        name: NND-data-poll
+        name: NND-data-poll-service-jar
         path: nnd-data-poll-service/build/libs/nnd-data-poll-service.jar
