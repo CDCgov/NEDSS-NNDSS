@@ -58,3 +58,6 @@ jobs:
       working-directory: ./nnd-data-poll-service
       run: ./gradlew build --no-daemon
 
+    - name: Call upload jar file
+      uses: actions/upload-artifact@v4
+
