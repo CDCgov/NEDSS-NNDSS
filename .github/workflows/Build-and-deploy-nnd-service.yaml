@@ -62,4 +62,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: NND-data-poll
-        path: /build/libs/
+        path: nnd-data-poll-service/build/libs/
