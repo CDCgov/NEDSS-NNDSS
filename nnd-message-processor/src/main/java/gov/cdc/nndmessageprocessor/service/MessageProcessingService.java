@@ -2,6 +2,7 @@ package gov.cdc.nndmessageprocessor.service;
 
 import gov.cdc.nndmessageprocessor.exception.DataProcessorException;
 import gov.cdc.nndmessageprocessor.service.interfaces.INetssCaseService;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,17 +17,12 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+
 @Service
 public class MessageProcessingService {
     private static Logger logger = LoggerFactory.getLogger(MessageProcessingService.class);
 
     private final INetssCaseService netssCaseService;
-    @Value("${scheduler.cron}")
-    private String cron;
-
-    @Value("${scheduler.zone:#{null}}")
-    private String zone;
-
 
     @Value("${functional.date}")
     private String date;
@@ -41,20 +37,28 @@ public class MessageProcessingService {
         this.netssCaseService = netssCaseService;
     }
 
-    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone:#{T(java.util.TimeZone).getDefault().getID()}}")
-    public void scheduleDataFetch() throws DataProcessorException {
-        if (zone == null || zone.isEmpty()) {
-            zone = ZoneId.systemDefault().getId();
+    @PostConstruct
+    public void initialize() {
+        try {
+            scheduleDataFetch();
+        } catch (Exception e) {
+            logger.info("SERVICE ENDED IN ERROR: " + e.getMessage());
         }
-        logger.info("CRON STARTED");
-        logger.info("Cron expression: {}", cron);
-        logger.info("Time zone: {}", zone);
+        System.exit(0);
+    }
+
+    public void scheduleDataFetch() throws DataProcessorException {
+
+        logger.info("SERVICE STARTED");
 
         var dateData = processDateInput(date);
         // 2023 and 52
         if (!dateData.isEmpty()) {
             netssCaseService.getNetssCases(dateData.get(KEY_YEAR), dateData.get(KEY_WEEK), prior);
         }
+
+        logger.info("SERVICE ENDED");
+
     }
 
     protected Map<String, Short>  processDateInput(String date) throws DataProcessorException {

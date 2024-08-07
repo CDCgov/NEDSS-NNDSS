@@ -10,4 +10,5 @@ set NND_FILE_LOCATION=C:\Users\DucNguyen\Desktop\LOG\Poll
 set OP_DBPASSWORD=fake.fake.fake.1234
 set OP_DBSERVER=localhost:1433
 set OP_DBUSER=sa
+set OP_DBNAME=MSGOUTE
 java -jar nnd-data-poll-service.jar

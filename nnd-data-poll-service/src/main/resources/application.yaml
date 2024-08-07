@@ -19,7 +19,7 @@ scheduler:
   zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
   # America/New_York
   # UTC
-  cron: ${NBS_NND_CRON}
+  cron: ${NBS_NND_CRON:* */1 * * * }
   # "0 */5 0-2 * * *"
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *
@@ -37,7 +37,7 @@ spring:
     username: ${OP_DBUSER}
     password: ${OP_DBPASSWORD}
     ingest:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=MSGOUTE;encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${OP_DBNAME};encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:
