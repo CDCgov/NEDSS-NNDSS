@@ -45,7 +45,7 @@ test {
 
 
 bootJar {
-	archiveBaseName.set('nnd-message-processor')
+	archiveBaseName.set('netss-message-processor')
 	archiveVersion.set('')
 	archiveClassifier.set('')
 }

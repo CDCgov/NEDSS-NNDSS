@@ -10,5 +10,5 @@ export NND_FILE_LOCATION="/Users/DucNguyen/Desktop/LOG/Poll"
 export OP_DBPASSWORD="fake.fake.fake.1234"
 export OP_DBSERVER="localhost:1433"
 export OP_DBUSER="sa"
-
+export OP_DBNAME="MSGOUTE"
 java -jar /Users/DucNguyen/Desktop/CDC_Repos/NEDSS-NNDSS/nnd-data-poll-service/build/libs/nnd-data-poll-service.jar

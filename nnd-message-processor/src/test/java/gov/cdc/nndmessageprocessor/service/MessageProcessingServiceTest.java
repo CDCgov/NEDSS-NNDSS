@@ -30,8 +30,6 @@ public class MessageProcessingServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        ReflectionTestUtils.setField(messageProcessingService, "cron", "0 0/5 * * * ?");
-        ReflectionTestUtils.setField(messageProcessingService, "zone", "UTC");
         ReflectionTestUtils.setField(messageProcessingService, "date", "12/30/2023");
         ReflectionTestUtils.setField(messageProcessingService, "prior", true);
     }
