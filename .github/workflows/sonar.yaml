@@ -15,6 +15,7 @@ on:
     paths:
       - "nnd-data-exchange-service/**"
       - "nnd-data-poll-service/**"
+      -  "nnd-message-processor/**"
       - ".github/workflows/sonar.yaml"
 env:
   deployment_env: dev
