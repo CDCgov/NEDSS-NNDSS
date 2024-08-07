@@ -56,7 +56,7 @@ jobs:
         cache: 'gradle'
     - name: create-nnd-data-poll-jar
       working-directory: ./nnd-data-poll-service
-      run: ./gradlew build
+      run: ./gradlew build --no-daemon
     - name: upload-nnd-data-poll-jar
       uses: actions/upload-artifact@v4
       with:
@@ -65,7 +65,7 @@ jobs:
 
     - name: create-nnd-message-processor-jar
       working-directory: ./nnd-message-processor
-      run: ./gradlew build
+      run: ./gradlew build --no-daemon
     - name: upload-nnd-message-processor-jar
       uses: actions/upload-artifact@v4
       with:
