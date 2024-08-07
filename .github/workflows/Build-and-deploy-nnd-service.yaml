@@ -62,3 +62,12 @@ jobs:
       with:
         name: NND-data-poll-service-jar
         path: nnd-data-poll-service/build/libs/nnd-data-poll-service.jar
+
+    - name: create-nnd-message-processor-jar
+      working-directory: ./nnd-message-processor
+      run: ./gradlew build --no-daemon
+    - name: upload-nnd-message-processor-jar
+      uses: actions/upload-artifact@v4
+      with:
+        name: NND-message-processor-jar
+        path: nnd-message-processor/build/libs/nnd-message-processor.jar
