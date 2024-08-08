@@ -88,5 +88,5 @@ jobs:
       - name: upload-nnd-message-processor-jar
         uses: actions/upload-artifact@v4
         with:
-          name: NND-message-processor-jar
-          path: nnd-message-processor/build/libs/nnd-message-processor.jar
+          name: NETSS-message-processor-jar
+          path: nnd-message-processor/build/libs/netss-message-processor.jar
