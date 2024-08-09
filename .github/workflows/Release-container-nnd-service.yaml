@@ -83,11 +83,11 @@ jobs:
           name: NND-data-poll-service-jar
           path: nnd-data-poll-service/build/libs/nnd-data-poll-service.jar
 
-      - name: create-nnd-message-processor-jar
-        working-directory: ./nnd-message-processor
+      - name: create-netss-message-processor-jar
+        working-directory: ./netss-message-processor
         run: ./gradlew build --no-daemon
-      - name: upload-nnd-message-processor-jar
+      - name: upload-netss-message-processor-jar
         uses: actions/upload-artifact@v4
         with:
           name: NETSS-message-processor-jar
-          path: nnd-message-processor/build/libs/netss-message-processor.jar
+          path: netss-message-processor/build/libs/netss-message-processor.jar
