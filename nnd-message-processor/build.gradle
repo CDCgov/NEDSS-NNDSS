@@ -43,7 +43,6 @@ test {
 	useJUnitPlatform()
 }
 
-
 bootJar {
 	archiveBaseName.set('netss-message-processor')
 	archiveVersion.set('')

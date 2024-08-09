@@ -4,7 +4,6 @@ on:
     branches:
       - main
       - master
-      - rel-**
       - Cndit-1600-*
     paths-ignore:
       - "docker-compose.yml"
@@ -54,6 +53,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         cache: 'gradle'
+
     - name: create-nnd-data-poll-jar
       working-directory: ./nnd-data-poll-service
       run: ./gradlew build --no-daemon
