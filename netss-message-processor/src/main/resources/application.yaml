@@ -10,7 +10,7 @@ io:
 
 spring:
   application:
-    name: nnd-message-processor
+    name: netss-message-processor
 
 #scheduler:
 #  zone: ${NBS_NND_CRON_TIME_ZONE:}
