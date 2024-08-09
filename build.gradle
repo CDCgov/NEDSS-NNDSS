@@ -19,7 +19,6 @@ version = '1.0.1-SNAPSHOT'
 apply plugin: "com.dipien.semantic-version"
 
 subprojects {
-
     repositories {
         mavenCentral()
         maven {

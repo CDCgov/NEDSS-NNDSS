@@ -4,21 +4,19 @@ on:
     branches:
       - main
       - master
-      - rel-**
-      - CNDIT-1600-*
     paths-ignore:
       - "docker-compose.yml"
       - "**.md"
 jobs:
-#  sonar_scan:
-#    uses: ./.github/workflows/sonar.yaml
-#    secrets:
-#      CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
-#      PASSED_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-#      SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
+  sonar_scan:
+    uses: ./.github/workflows/sonar.yaml
+    secrets:
+      CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
+      PASSED_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
   call-build-microservice-container-workflow:
     name: Build Container
-#    needs: sonar_scan
+    needs: sonar_scan
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
       microservice_name: nnd-data-exchange-service
@@ -54,6 +52,7 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         cache: 'gradle'
+
     - name: create-nnd-data-poll-jar
       working-directory: ./nnd-data-poll-service
       run: ./gradlew build --no-daemon
@@ -69,5 +68,5 @@ jobs:
     - name: upload-nnd-message-processor-jar
       uses: actions/upload-artifact@v4
       with:
-        name: NND-message-processor-jar
-        path: nnd-message-processor/build/libs/nnd-message-processor.jar
+        name: NETSS-message-processor-jar
+        path: nnd-message-processor/build/libs/netss-message-processor.jar
