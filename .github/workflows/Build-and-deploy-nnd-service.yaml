@@ -1,4 +1,4 @@
-name: Build and push data-ingestion-service and data-processing-service images to ECR
+name: Build and push nnd-data-exchange-service image to ECR
 on:
   push:
     branches:
@@ -30,7 +30,7 @@ jobs:
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
 
-  call-update-helm-data-ingestion:
+  call-update-helm-nnd-service:
     name: Request DEV deployment
     needs: call-build-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
