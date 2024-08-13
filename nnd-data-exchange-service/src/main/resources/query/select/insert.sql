@@ -1,5 +1,5 @@
 INSERT INTO [RDB].[dbo].[data_exchange_config] (table_name, source_db, query) VALUES
-    ('CONDITIONS', 'RDB', 'SELECT * FROM CONDITIONS;'),
+    ('CONDITION', 'RDB', 'SELECT * FROM CONDITION;'),
     ('RdbDates', 'RDB', 'SELECT * FROM RdbDates;'),
     ('D_PATIENT', 'RDB', 'SELECT * FROM D_PATIENT WHERE D_PATIENT.PATIENT_LAST_CHANGE_TIME >= :timestamp;'),
     ('INVESTIGATION', 'RDB', 'SELECT * FROM INVESTIGATION WHERE INVESTIGATION.LAST_CHG_TIME >= :timestamp;'),

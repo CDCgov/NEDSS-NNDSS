@@ -31,13 +31,17 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         this.gson = gson;
     }
 
-    public String getGenericDataExchange(String tableName) throws DataExchangeException {
+    public String getGenericDataExchange(String tableName, String timeStamp) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataExchangeConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
 
+        if (timeStamp == null) {
+            timeStamp = "";
+        }
         try {
             // Execute the query and retrieve the dataset
-            String query = "SELECT * FROM " + dataConfig.getTableName();
+            String query = dataConfig.getQuery().replace(":timestamp", "'" + timeStamp + "'");
+
             List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
 
             // Serialize the data to JSON using Gson
@@ -61,7 +65,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     // DECODE TEST METHOD
-    protected void decodeAndDecompress(String base64EncodedData) {
+    public String decodeAndDecompress(String base64EncodedData) {
         byte[] compressedData = Base64.getDecoder().decode(base64EncodedData);
 
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedData);
@@ -76,7 +80,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
             String decompressedJson = byteArrayOutputStream.toString("UTF-8");
 
-            var test =  gson.fromJson(decompressedJson, List.class);
+            return decompressedJson;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

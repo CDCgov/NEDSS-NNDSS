@@ -13,10 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -74,19 +71,25 @@ public class DataExchangeController {
                             required = true,
                             schema = @Schema(type = "string"))}
     )
-    @GetMapping(path = "/api/nnd/data-exchange-generic/{tableName}")
-    public ResponseEntity<String> exchangingData(@PathVariable String tableName) throws DataExchangeException {
+    @GetMapping(path = "/api/data-exchange-generic/{tableName}")
+    public ResponseEntity<String> exchangingData(@PathVariable String tableName, @RequestParam(required = false) String timestamp) {
         try {
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.add(HttpHeaders.CONTENT_ENCODING, "gzip");
-//            headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
-            var base64CompressedData = dataExchangeGenericService.getGenericDataExchange(tableName);
+            var base64CompressedData = dataExchangeGenericService.getGenericDataExchange(tableName, timestamp);
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
 
         }
-
-
     }
+
+    @PostMapping(path = "/api/data-exchange-generic")
+    public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) {
+        try {
+            var val = dataExchangeGenericService.decodeAndDecompress(tableName);
+            return new ResponseEntity<>(val, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
 }
