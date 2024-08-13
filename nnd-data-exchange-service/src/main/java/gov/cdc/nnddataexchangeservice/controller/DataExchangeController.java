@@ -2,6 +2,7 @@ package gov.cdc.nnddataexchangeservice.controller;
 
 
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
+import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
 import gov.cdc.nnddataexchangeservice.service.model.DataExchangeModel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,19 +10,27 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 @RestController
 @SecurityRequirement(name = "bearer-key")
 public class DataExchangeController {
 
     private final IDataExchangeService dataExchangeService;
+    private final IDataExchangeGenericService dataExchangeGenericService;
 
-    public DataExchangeController(IDataExchangeService dataExchangeService) {
+    public DataExchangeController(IDataExchangeService dataExchangeService,
+                                  IDataExchangeGenericService dataExchangeGenericService) {
         this.dataExchangeService = dataExchangeService;
+        this.dataExchangeGenericService = dataExchangeGenericService;
     }
 
     @Operation(
@@ -48,5 +57,36 @@ public class DataExchangeController {
             throw new DataExchangeException("Status Code is Missing");
         }
         return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportStatusTime,netssTime, statusCd));
+    }
+
+    @Operation(
+            summary = "Getting generic data from NND",
+            description = "Getting generic data from NND",
+            parameters = {
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientid",
+                            description = "The Client Id",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientsecret",
+                            description = "The Client Secret",
+                            required = true,
+                            schema = @Schema(type = "string"))}
+    )
+    @GetMapping(path = "/api/nnd/data-exchange-generic/{tableName}")
+    public ResponseEntity<String> exchangingData(@PathVariable String tableName) throws DataExchangeException {
+        try {
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.add(HttpHeaders.CONTENT_ENCODING, "gzip");
+//            headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
+            var base64CompressedData = dataExchangeGenericService.getGenericDataExchange(tableName);
+            return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+
+        }
+
+
     }
 }
