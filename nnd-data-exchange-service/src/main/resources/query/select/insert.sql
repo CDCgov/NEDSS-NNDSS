@@ -1,6 +1,6 @@
 INSERT INTO [RDB].[dbo].[data_exchange_config] (table_name, source_db, query) VALUES
     ('CONDITION', 'RDB', 'SELECT * FROM CONDITION;'),
-    ('RdbDates', 'RDB', 'SELECT * FROM RdbDates;'),
+    ('Rdb_Date', 'RDB', 'SELECT * FROM Rdb_Date;'),
     ('D_PATIENT', 'RDB', 'SELECT * FROM D_PATIENT WHERE D_PATIENT.PATIENT_LAST_CHANGE_TIME >= :timestamp;'),
     ('INVESTIGATION', 'RDB', 'SELECT * FROM INVESTIGATION WHERE INVESTIGATION.LAST_CHG_TIME >= :timestamp;'),
     ('CASE_COUNT', 'RDB', 'SELECT A.* FROM CASE_COUNT as A INNER JOIN INVESTIGATION as B ON A.INVESTIGATION_KEY = B.INVESTIGATION_KEY WHERE B.ADD_TIME >= :timestamp OR B.LAST_CHG_TIME >= :timestamp;'),

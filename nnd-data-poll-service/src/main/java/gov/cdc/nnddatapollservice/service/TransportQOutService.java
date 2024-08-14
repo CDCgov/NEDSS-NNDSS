@@ -45,6 +45,7 @@ public class TransportQOutService implements ITransportQOutService {
             List<TransportQOut> cnTransportQOutList = new ArrayList<>();
             for (var item : transportQOutDtoList) {
                 TransportQOut transportQOut = new TransportQOut(item);
+                transportQOut.setRecordId(null);
                 cnTransportQOutList.add(transportQOut);
             }
 

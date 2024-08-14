@@ -10,6 +10,7 @@ import lombok.*;
 @Data
 public class TransportQOut {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "recordId", nullable = false)
     private Long recordId;
 
