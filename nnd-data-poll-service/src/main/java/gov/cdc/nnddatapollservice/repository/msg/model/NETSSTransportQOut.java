@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 public class NETSSTransportQOut {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "NETSS_TransportQ_out_uid", nullable = false)
     private Long netssTransportQOutUid;
 

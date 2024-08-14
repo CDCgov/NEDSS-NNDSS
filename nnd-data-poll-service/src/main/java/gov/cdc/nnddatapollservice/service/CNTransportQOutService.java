@@ -47,6 +47,7 @@ public class CNTransportQOutService implements ICNTransportQOutService {
             List<CNTransportQOut> cnTransportQOutList = new ArrayList<>();
             for (var item : transportQOutDtoList) {
                 CNTransportQOut transportQOut = new CNTransportQOut(item);
+                transportQOut.setCnTransportqOutUid(null);
                 cnTransportQOutList.add(transportQOut);
             }
 
