@@ -40,7 +40,16 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
         try {
             // Execute the query and retrieve the dataset
-            String query = dataConfig.getQuery().replace(":timestamp", "'" + timeStamp + "'");
+            String query;
+            if (dataConfig.getQuery().contains(":timestamp")) {
+                if (timeStamp.isEmpty()) {
+                    query = dataConfig.getQuery().replace(":timestamp", "'" + "1753-01-01" + "'");
+                } else {
+                    query = dataConfig.getQuery().replace(":timestamp", "'" + timeStamp + "'");
+                }
+            } else {
+                query = dataConfig.getQuery();
+            }
 
             List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
 
