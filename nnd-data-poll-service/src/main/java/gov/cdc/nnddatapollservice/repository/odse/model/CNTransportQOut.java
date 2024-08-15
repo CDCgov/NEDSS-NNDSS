@@ -17,6 +17,7 @@ import java.sql.Timestamp;
 public class CNTransportQOut {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cn_transportq_out_uid", nullable = false)
     private Long cnTransportqOutUid;
 

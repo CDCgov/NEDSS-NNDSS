@@ -47,6 +47,7 @@ public class NetsstTransportService implements INetsstTransportService {
             List<NETSSTransportQOut> cnTransportQOutList = new ArrayList<>();
             for (var item : transportQOutDtoList) {
                 NETSSTransportQOut transportQOut = new NETSSTransportQOut(item);
+                transportQOut.setNetssTransportQOutUid(null);
                 cnTransportQOutList.add(transportQOut);
             }
 
