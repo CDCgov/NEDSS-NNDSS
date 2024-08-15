@@ -36,7 +36,7 @@ public class DataPullService implements IDataPullService {
         logger.info("CRON STARTED");
         logger.info(cron);
         logger.info(zone);
-        dataHandlingService.handlingExchangedData();
+//        dataHandlingService.handlingExchangedData();
     }
 
 

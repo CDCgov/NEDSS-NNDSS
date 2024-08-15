@@ -38,6 +38,8 @@ spring:
     password: ${OP_DBPASSWORD}
     ingest:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${OP_DBNAME};encrypt=true;trustServerCertificate=true;
+    rdb:
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=RDB;encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:
