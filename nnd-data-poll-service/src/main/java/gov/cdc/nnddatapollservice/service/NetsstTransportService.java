@@ -30,6 +30,10 @@ public class NetsstTransportService implements INetsstTransportService {
         this.errorHandlingService = errorHandlingService;
     }
 
+    public void truncatingData() {
+        netssTransportQOutRepository.truncateTable();
+    }
+
     public String getMaxTimestamp() {
         var time = netssTransportQOutRepository.findMaxTimeStamp();
         if (time.isPresent()) {

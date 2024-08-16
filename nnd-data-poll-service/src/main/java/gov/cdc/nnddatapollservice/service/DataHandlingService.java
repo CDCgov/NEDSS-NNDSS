@@ -34,6 +34,9 @@ public class DataHandlingService implements IDataHandlingService {
     @Value("${data_exchange.endpoint_de}")
     private String exchangeEndpoint;
 
+    @Value("${nnd.fullLoad}")
+    protected Boolean fullLoadApplied;
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final ICNTransportQOutService icnTransportQOutService;
     private final INetsstTransportService netsstTransportService;
@@ -51,6 +54,7 @@ public class DataHandlingService implements IDataHandlingService {
     }
 
     public void handlingExchangedData() throws DataPollException {
+        truncatingDataForFullLoading();
         var cnTimeStamp = icnTransportQOutService.getMaxTimestamp();
         var transportTimeStamp = transportQOutService.getMaxTimestamp();
         var netssTimeStamp = netsstTransportService.getMaxTimestamp();
@@ -88,6 +92,15 @@ public class DataHandlingService implements IDataHandlingService {
             }
         } catch (Exception e) {
             throw new DataPollException(e.getMessage());
+        }
+
+    }
+
+    protected void truncatingDataForFullLoading() {
+        if (fullLoadApplied) {
+            icnTransportQOutService.truncatingData();
+            transportQOutService.truncatingData();
+            netsstTransportService.truncatingData();
         }
 
     }

@@ -30,6 +30,10 @@ public class CNTransportQOutService implements ICNTransportQOutService {
         this.errorHandlingService = errorHandlingService;
     }
 
+    public void truncatingData() {
+        cnTransportQOutRepository.truncateTable();
+    }
+
     public String getMaxTimestamp() {
         var time = cnTransportQOutRepository.findMaxTimeStamp();
         if (time.isPresent()) {

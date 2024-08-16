@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.internal.verification.Times;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -79,5 +80,23 @@ public class DataHandlingServiceTest {
         verify(netsstTransportService, never()).saveDataExchange(anyList());
     }
 
+    @Test
+    void testTruncatingDataForFullLoading() {
+        dataHandlingService.fullLoadApplied = true;
+        dataHandlingService.truncatingDataForFullLoading();
+        verify(icnTransportQOutService).truncatingData();
+        verify(transportQOutService).truncatingData();
+        verify(netsstTransportService).truncatingData();
+    }
+
+
+    @Test
+    void testTruncatingDataForFullLoadingFalse() {
+        dataHandlingService.fullLoadApplied = false;
+        dataHandlingService.truncatingDataForFullLoading();
+        verify(icnTransportQOutService, never()).truncatingData();
+        verify(transportQOutService, never()).truncatingData();
+        verify(netsstTransportService, never()).truncatingData();
+    }
 
 }
