@@ -40,23 +40,6 @@ class DataExchangeGenericServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
-//    @Test
-//    void getGenericDataExchange_WithValidParams_ReturnsCompressedBase64Data() throws DataExchangeException, IOException {
-//        String tableName = "test_table";
-//        String timeStamp = "2024-07-11";
-//        int limit = 10;
-//        DataExchangeConfig mockConfig = new DataExchangeConfig();
-//        mockConfig.setQuery("SELECT * FROM test_table WHERE timestamp > :timestamp");
-//
-//        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(mockConfig));
-//        when(jdbcTemplate.queryForList(anyString())).thenReturn(List.of(Map.of("key", "value")));
-//        when(gson.toJson(any())).thenReturn("[{\"key\":\"value\"}]");
-//
-//        String result = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit);
-//
-//        assertNotNull(result);
-//        assertTrue(Base64.getDecoder().decode(result).length > 0);
-//    }
 
     @Test
     void getGenericDataExchange_WithMissingTable_ThrowsDataExchangeException() {
