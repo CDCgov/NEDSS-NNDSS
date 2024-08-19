@@ -14,14 +14,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 
@@ -58,6 +54,82 @@ class DataExchangeGenericServiceTest {
     }
 
     @Test
+    void getGenericDataExchange_1() throws DataExchangeException {
+        String tableName = "table";
+        String timeStamp = null;
+
+        DataExchangeConfig config = new DataExchangeConfig();
+        config.setQuery("SELECT * FROM HERE");
+        config.setTableName(tableName);
+        config.setSourceDb("RDB");
+        int limit = 0;
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("CONDITION", "RDB");
+        map.put("SELECT * FROM CONDITION;", null);
+        map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
+        data.add(map);
+
+        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(jdbcTemplate.queryForList(any())).thenReturn(data);
+        when(gson.toJson(data)).thenReturn("TEST");
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit);
+        assertNotNull(res);
+    }
+    @Test
+    void getGenericDataExchange_2() throws DataExchangeException {
+        String tableName = "table";
+        String timeStamp = "2024-01-01";
+
+        DataExchangeConfig config = new DataExchangeConfig();
+        config.setQuery("SELECT * FROM HERE :timestamp");
+        config.setTableName(tableName);
+        config.setSourceDb("RDB");
+        int limit = 0;
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("CONDITION", "RDB");
+        map.put("SELECT * FROM CONDITION;", null);
+        map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
+        data.add(map);
+
+        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(jdbcTemplate.queryForList(any())).thenReturn(data);
+        when(gson.toJson(data)).thenReturn("TEST");
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit);
+        assertNotNull(res);
+    }
+
+    @Test
+    void getGenericDataExchange_3() throws DataExchangeException {
+        String tableName = "table";
+        String timeStamp = "2024-01-01";
+
+        DataExchangeConfig config = new DataExchangeConfig();
+        config.setQuery("SELECT * FROM HERE :timestamp ");
+        config.setQueryWithLimit("SELECT * FROM HERE :timestamp :limit");
+        config.setTableName(tableName);
+        config.setSourceDb("RDB");
+        int limit = 10;
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("CONDITION", "RDB");
+        map.put("SELECT * FROM CONDITION;", null);
+        map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
+        data.add(map);
+
+        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(jdbcTemplate.queryForList(any())).thenReturn(data);
+        when(gson.toJson(data)).thenReturn("TEST");
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit);
+        assertNotNull(res);
+    }
+
+
+    @Test
     void getGenericDataExchange_WithIOException_ThrowsDataExchangeException() throws IOException {
         String tableName = "test_table";
         String timeStamp = "2024-07-11";
@@ -78,6 +150,8 @@ class DataExchangeGenericServiceTest {
                     dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit));
         }
     }
+
+
 
     @Test
     void decodeAndDecompress_WithValidData_ReturnsDecompressedJson() throws IOException {
