@@ -44,7 +44,7 @@ public class CNTransportQOutServiceTest {
 
         when(cnTransportQOutRepository.findTransportByStatusCd(statusCd)).thenReturn(Optional.of(cnTransportQOutList));
 
-        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime);
+        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 0);
 
         assertEquals(1, result.size());
         verify(cnTransportQOutRepository, times(1)).findTransportByStatusCd(statusCd);
@@ -64,7 +64,7 @@ public class CNTransportQOutServiceTest {
 
         when(cnTransportQOutRepository.findTransportByCreationTimeAndStatus(recordStatusTime, statusCd)).thenReturn(Optional.of(cnTransportQOutList));
 
-        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime);
+        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 0);
 
         assertEquals(1, result.size());
         verify(cnTransportQOutRepository, times(1)).findTransportByCreationTimeAndStatus(recordStatusTime, statusCd);
@@ -77,7 +77,7 @@ public class CNTransportQOutServiceTest {
 
         when(cnTransportQOutRepository.findTransportByStatusCd(statusCd)).thenReturn(Optional.of(Collections.emptyList()));
 
-        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime);
+        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 0);
 
         assertTrue(result.isEmpty());
         verify(cnTransportQOutRepository, times(1)).findTransportByStatusCd(statusCd);
@@ -90,6 +90,6 @@ public class CNTransportQOutServiceTest {
 
         when(cnTransportQOutRepository.findTransportByStatusCd(statusCd)).thenThrow(new RuntimeException("Database error"));
 
-        assertThrows(DataExchangeException.class, () -> cnTransportQOutService.getTransportData(statusCd, statusTime));
+        assertThrows(DataExchangeException.class, () -> cnTransportQOutService.getTransportData(statusCd, statusTime, 0));
     }
 }

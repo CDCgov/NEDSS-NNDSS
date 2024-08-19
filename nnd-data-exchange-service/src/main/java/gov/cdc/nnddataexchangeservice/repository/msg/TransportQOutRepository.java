@@ -17,4 +17,11 @@ public interface TransportQOutRepository extends JpaRepository<TransportQOut, Lo
 
     @Query("SELECT a FROM TransportQOut a")
     Optional<Collection<TransportQOut>> findTransportByWithoutCreationTime();
+
+
+    @Query(value = "SELECT TOP (:limit) a.*  FROM TransportQ_out a WHERE a.messageCreationTime > :recordStatusTime ORDER BY a.messageCreationTime ASC", nativeQuery = true)
+    Optional<Collection<TransportQOut>> findTransportByCreationTimeWLimit(@Param("recordStatusTime") String recordStatusTime, @Param("limit") int limit);
+
+    @Query(value = "SELECT TOP (:limit) a.*  FROM TransportQ_out a ORDER BY a.messageCreationTime ASC", nativeQuery = true)
+    Optional<Collection<TransportQOut>> findTransportByWithoutCreationTimeWLimit(@Param("limit") int limit);
 }

@@ -41,7 +41,7 @@ class TransportQOutServiceTest {
 
         when(transportQOutRepository.findTransportByCreationTime(statusTime)).thenReturn(Optional.of(mockTransportQOutList));
 
-        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
+        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime,0);
 
         assertNotNull(result);
        assertEquals(2, result.size());
@@ -57,7 +57,7 @@ class TransportQOutServiceTest {
 
         when(transportQOutRepository.findTransportByWithoutCreationTime()).thenReturn(Optional.of(mockTransportQOutList));
 
-        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
+        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime,0);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -70,7 +70,7 @@ class TransportQOutServiceTest {
 
         when(transportQOutRepository.findTransportByCreationTime(statusTime)).thenReturn(Optional.empty());
 
-        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
+        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime,0);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -83,7 +83,7 @@ class TransportQOutServiceTest {
 
         when(transportQOutRepository.findTransportByWithoutCreationTime()).thenReturn(Optional.empty());
 
-        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime);
+        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime,0);
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
@@ -97,7 +97,7 @@ class TransportQOutServiceTest {
         when(transportQOutRepository.findTransportByCreationTime(statusTime)).thenThrow(new RuntimeException("Database error"));
 
         DataExchangeException exception = assertThrows(DataExchangeException.class, () ->
-                transportQOutService.getTransportData(statusTime));
+                transportQOutService.getTransportData(statusTime,0));
 
         assertEquals("Database error", exception.getMessage());
         verify(transportQOutRepository, times(1)).findTransportByCreationTime(statusTime);
@@ -110,7 +110,7 @@ class TransportQOutServiceTest {
         when(transportQOutRepository.findTransportByWithoutCreationTime()).thenThrow(new RuntimeException("Database error"));
 
         DataExchangeException exception = assertThrows(DataExchangeException.class, () ->
-                transportQOutService.getTransportData(statusTime));
+                transportQOutService.getTransportData(statusTime,0));
 
         assertEquals("Database error", exception.getMessage());
         verify(transportQOutRepository, times(1)).findTransportByWithoutCreationTime();

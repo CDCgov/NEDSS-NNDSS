@@ -19,6 +19,13 @@ public interface CNTransportQOutRepository extends JpaRepository<CNTransportQOut
     Optional<Collection<CNTransportQOut>> findTransportByCreationTimeAndStatus (@Param("recordStatusTime") Timestamp recordStatusTime,
                                                                                 @Param("recordStatusCd") String recordStatusCd);
 
+    @Query(value = "SELECT TOP (:limit) a.*  FROM CN_transportq_out a WHERE a.record_status_cd = :statusCd ORDER BY a.record_status_time ASC", nativeQuery = true)
+    Optional<Collection<CNTransportQOut>> findTransportByStatusCdWLimit (@Param("statusCd") String statusCd, @Param("limit") int limit);
+
+    @Query(value = "SELECT TOP (:limit) a.*  FROM CN_transportq_out a WHERE a.record_status_time > :recordStatusTime AND a.record_status_cd = :recordStatusCd ORDER BY a.record_status_time ASC", nativeQuery = true)
+    Optional<Collection<CNTransportQOut>> findTransportByCreationTimeAndStatusWLimit (@Param("recordStatusTime") Timestamp recordStatusTime,
+                                                                                @Param("recordStatusCd") String recordStatusCd,
+                                                                                @Param("limit") int limit);
 
 
 }

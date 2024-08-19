@@ -43,7 +43,7 @@ class NetsstTransportServiceTest {
 
         when(netssTransportQOutRepository.findNetssTransport()).thenReturn(Optional.of(netssTransportQOutList));
 
-        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime);
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,0);
 
         assertEquals(1, result.size());
         verify(netssTransportQOutRepository, times(1)).findNetssTransport();
@@ -62,7 +62,7 @@ class NetsstTransportServiceTest {
 
         when(netssTransportQOutRepository.findNetssTransportByCreationTime(recordStatusTime)).thenReturn(Optional.of(netssTransportQOutList));
 
-        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime);
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,0);
 
         assertEquals(1, result.size());
         verify(netssTransportQOutRepository, times(1)).findNetssTransportByCreationTime(recordStatusTime);
@@ -74,7 +74,7 @@ class NetsstTransportServiceTest {
 
         when(netssTransportQOutRepository.findNetssTransport()).thenReturn(Optional.of(Collections.emptyList()));
 
-        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime);
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,0);
 
         assertTrue(result.isEmpty());
         verify(netssTransportQOutRepository, times(1)).findNetssTransport();
@@ -86,6 +86,6 @@ class NetsstTransportServiceTest {
 
         when(netssTransportQOutRepository.findNetssTransport()).thenThrow(new RuntimeException("Database error"));
 
-        assertThrows(DataExchangeException.class, () -> netsstTransportService.getNetssTransportData(statusTime));
+        assertThrows(DataExchangeException.class, () -> netsstTransportService.getNetssTransportData(statusTime,0));
     }
 }

@@ -20,7 +20,7 @@ public class TransportQOutService implements ITransportQOutService {
         this.transportQOutRepository = transportQOutRepository;
     }
 
-    public List<TransportQOutDto> getTransportData(String statusTime) throws DataExchangeException {
+    public List<TransportQOutDto> getTransportData(String statusTime, Integer limit) throws DataExchangeException {
 
         List<TransportQOutDto> transportQOutDtoList = new ArrayList<>();
 
@@ -28,9 +28,17 @@ public class TransportQOutService implements ITransportQOutService {
 
             Optional<Collection<TransportQOut>> transportQOutResults;
             if (statusTime.isEmpty()) {
-                transportQOutResults = transportQOutRepository.findTransportByWithoutCreationTime();
+                if (limit == 0) {
+                    transportQOutResults = transportQOutRepository.findTransportByWithoutCreationTime();
+                } else {
+                    transportQOutResults = transportQOutRepository.findTransportByWithoutCreationTimeWLimit(limit);
+                }
             } else {
-                transportQOutResults = transportQOutRepository.findTransportByCreationTime(statusTime);
+                if (limit == 0) {
+                    transportQOutResults = transportQOutRepository.findTransportByCreationTime(statusTime);
+                } else {
+                    transportQOutResults = transportQOutRepository.findTransportByCreationTimeWLimit(statusTime, limit);
+                }
             }
 
             if (transportQOutResults.isPresent()) {
