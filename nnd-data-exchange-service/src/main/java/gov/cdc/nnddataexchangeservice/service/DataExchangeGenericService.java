@@ -27,8 +27,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final Gson gson;
 
     public DataExchangeGenericService(DataExchangeConfigRepository dataExchangeConfigRepository,
-                                      @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                      Gson gson) {
+                                      @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate) {
         this.dataExchangeConfigRepository = dataExchangeConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
 
