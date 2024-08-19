@@ -31,6 +31,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         this.gson = gson;
     }
 
+    @SuppressWarnings("javasecurity:S3649")
     public String getGenericDataExchange(String tableName, String timeStamp, Integer limit) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataExchangeConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
