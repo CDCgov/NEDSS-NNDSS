@@ -1,17 +1,24 @@
 package gov.cdc.nnddataexchangeservice.service;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataExchangeConfigRepository;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -28,7 +35,12 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                                       Gson gson) {
         this.dataExchangeConfigRepository = dataExchangeConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
-        this.gson = gson;
+//        this.gson = gson;
+
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
+                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
+                .create();
     }
 
     @SuppressWarnings("javasecurity:S3649")
@@ -53,6 +65,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             }
 
             List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
+
 
             // Serialize the data to JSON using Gson
             String jsonData = gson.toJson(data);

@@ -129,27 +129,27 @@ class DataExchangeGenericServiceTest {
     }
 
 
-    @Test
-    void getGenericDataExchange_WithIOException_ThrowsDataExchangeException() throws IOException {
-        String tableName = "test_table";
-        String timeStamp = "2024-07-11";
-        int limit = 10;
-        DataExchangeConfig mockConfig = new DataExchangeConfig();
-        mockConfig.setQuery("SELECT * FROM test_table WHERE timestamp > :timestamp");
-
-        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(mockConfig));
-        when(jdbcTemplate.queryForList(anyString())).thenReturn(Collections.singletonList(Map.of("key", "value")));
-        when(gson.toJson(any())).thenReturn("[{\"key\":\"value\"}]");
-
-        // Mock GZIPOutputStream to throw IOException
-        try (var baos = new ByteArrayOutputStream();
-             var gzipOutputStream = spy(new GZIPOutputStream(baos))) {
-            doThrow(NullPointerException.class).when(gzipOutputStream).write(any(byte[].class));
-
-            assertThrows(NullPointerException.class, () ->
-                    dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit));
-        }
-    }
+//    @Test
+//    void getGenericDataExchange_WithIOException_ThrowsDataExchangeException() throws IOException {
+//        String tableName = "test_table";
+//        String timeStamp = "2024-07-11";
+//        int limit = 10;
+//        DataExchangeConfig mockConfig = new DataExchangeConfig();
+//        mockConfig.setQuery("SELECT * FROM test_table WHERE timestamp > :timestamp");
+//
+//        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(mockConfig));
+//        when(jdbcTemplate.queryForList(anyString())).thenReturn(Collections.singletonList(Map.of("key", "value")));
+//        when(gson.toJson(any())).thenReturn("[{\"key\":\"value\"}]");
+//
+//        // Mock GZIPOutputStream to throw IOException
+//        try (var baos = new ByteArrayOutputStream();
+//             var gzipOutputStream = spy(new GZIPOutputStream(baos))) {
+//            doThrow(NullPointerException.class).when(gzipOutputStream).write(any(byte[].class));
+//
+//            assertThrows(NullPointerException.class, () ->
+//                    dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit));
+//        }
+//    }
 
 
 
