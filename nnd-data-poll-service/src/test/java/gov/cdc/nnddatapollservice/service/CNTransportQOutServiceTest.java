@@ -98,4 +98,10 @@ public class CNTransportQOutServiceTest {
 
 
     }
+
+    @Test
+    void testTruncating() {
+        cnTransportQOutService.truncatingData();
+        verify(cnTransportQOutRepository, times(1)).truncateTable();
+    }
 }

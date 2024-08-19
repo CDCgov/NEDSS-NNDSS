@@ -49,6 +49,23 @@ class TransportQOutServiceTest {
     }
 
     @Test
+    void testGetTransportData_WithStatusTime_Success_Limit() throws DataExchangeException {
+        String statusTime = "2023-07-30 12:00:00.000";
+        List<TransportQOut> mockTransportQOutList = new ArrayList<>();
+        mockTransportQOutList.add(new TransportQOut());
+        mockTransportQOutList.add(new TransportQOut());
+
+        when(transportQOutRepository.findTransportByCreationTimeWLimit(statusTime, 100)).thenReturn(Optional.of(mockTransportQOutList));
+
+        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime,100);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(transportQOutRepository, times(1)).findTransportByCreationTimeWLimit(statusTime, 100);
+    }
+
+
+    @Test
     void testGetTransportData_WithoutStatusTime_Success() throws DataExchangeException {
         String statusTime = "";
         List<TransportQOut> mockTransportQOutList = new ArrayList<>();
@@ -63,6 +80,23 @@ class TransportQOutServiceTest {
         assertEquals(2, result.size());
         verify(transportQOutRepository, times(1)).findTransportByWithoutCreationTime();
     }
+
+    @Test
+    void testGetTransportData_WithoutStatusTime_Success_Limit() throws DataExchangeException {
+        String statusTime = "";
+        List<TransportQOut> mockTransportQOutList = new ArrayList<>();
+        mockTransportQOutList.add(new TransportQOut());
+        mockTransportQOutList.add(new TransportQOut());
+
+        when(transportQOutRepository.findTransportByWithoutCreationTimeWLimit(100)).thenReturn(Optional.of(mockTransportQOutList));
+
+        List<TransportQOutDto> result = transportQOutService.getTransportData(statusTime,100);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(transportQOutRepository, times(1)).findTransportByWithoutCreationTimeWLimit(100);
+    }
+
 
     @Test
     void testGetTransportData_WithStatusTime_Empty() throws DataExchangeException {

@@ -101,4 +101,10 @@ public class NetsstTransportServiceTest {
 
         verify(netssTransportQOutRepository, times(1)).saveAll(anyList());
     }
+
+    @Test
+    void testTruncating() {
+        netsstTransportService.truncatingData();
+        verify(netssTransportQOutRepository, times(1)).truncateTable();
+    }
 }

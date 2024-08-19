@@ -75,24 +75,17 @@ public class DataExchangeController {
                             schema = @Schema(type = "string"))}
     )
     @GetMapping(path = "/api/data-exchange-generic/{tableName}")
-    public ResponseEntity<String> exchangingData(@PathVariable String tableName, @RequestParam(required = false) String timestamp) {
-        try {
-            var base64CompressedData = dataExchangeGenericService.getGenericDataExchange(tableName, timestamp);
+    public ResponseEntity<String> exchangingData(@PathVariable String tableName, @RequestParam(required = false) String timestamp,
+                                                 @RequestHeader(name = "limit", defaultValue = "0") String limit) throws DataExchangeException {
+            int intLimit = Integer.parseInt(limit);
+            var base64CompressedData = dataExchangeGenericService.getGenericDataExchange(tableName, timestamp, intLimit);
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-
-        }
     }
 
     @PostMapping(path = "/api/data-exchange-generic")
     public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) {
-        try {
-            var val = dataExchangeGenericService.decodeAndDecompress(tableName);
-            return new ResponseEntity<>(val, HttpStatus.OK);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
-        }
+        var val = dataExchangeGenericService.decodeAndDecompress(tableName);
+        return new ResponseEntity<>(val, HttpStatus.OK);
     }
 
 }

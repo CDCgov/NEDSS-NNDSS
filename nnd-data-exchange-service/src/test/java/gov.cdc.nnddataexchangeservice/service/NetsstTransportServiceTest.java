@@ -50,6 +50,22 @@ class NetsstTransportServiceTest {
     }
 
     @Test
+    void testGetNetssTransportData_NoStatusTime_Limit() throws Exception {
+        String statusTime = "";
+
+        NETSSTransportQOut netssTransportQOut = new NETSSTransportQOut();
+        List<NETSSTransportQOut> netssTransportQOutList = Arrays.asList(netssTransportQOut);
+
+        when(netssTransportQOutRepository.findNetssTransportWLimit(100)).thenReturn(Optional.of(netssTransportQOutList));
+
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,100);
+
+        assertEquals(1, result.size());
+        verify(netssTransportQOutRepository, times(1)).findNetssTransportWLimit(100);
+    }
+
+
+    @Test
     void testGetNetssTransportData_WithStatusTime() throws Exception {
         String statusTime = "2023-07-30 10:00:00.000";
 
@@ -66,6 +82,25 @@ class NetsstTransportServiceTest {
 
         assertEquals(1, result.size());
         verify(netssTransportQOutRepository, times(1)).findNetssTransportByCreationTime(recordStatusTime);
+    }
+
+    @Test
+    void testGetNetssTransportData_WithStatusTime_Limit() throws Exception {
+        String statusTime = "2023-07-30 10:00:00.000";
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        java.util.Date parsedDate = formatter.parse(statusTime);
+        Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
+
+        NETSSTransportQOut netssTransportQOut = new NETSSTransportQOut();
+        List<NETSSTransportQOut> netssTransportQOutList = Arrays.asList(netssTransportQOut);
+
+        when(netssTransportQOutRepository.findNetssTransportByCreationTimeWLimit(recordStatusTime, 100)).thenReturn(Optional.of(netssTransportQOutList));
+
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,100);
+
+        assertEquals(1, result.size());
+        verify(netssTransportQOutRepository, times(1)).findNetssTransportByCreationTimeWLimit(recordStatusTime, 100);
     }
 
     @Test

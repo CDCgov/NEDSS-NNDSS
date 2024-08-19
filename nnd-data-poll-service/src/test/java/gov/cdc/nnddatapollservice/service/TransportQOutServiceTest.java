@@ -109,4 +109,10 @@ public class TransportQOutServiceTest {
         verify(transportQOutRepository, times(1)).saveAll(anyList());
         verify(errorHandlingService, atLeastOnce()).dumpBatchToFile(anyList(), anyString(), anyString());
     }
+
+    @Test
+    void testTruncating() {
+        transportQOutService.truncatingData();
+        verify(transportQOutRepository, times(1)).truncateTable();
+    }
 }

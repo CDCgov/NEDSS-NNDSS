@@ -31,7 +31,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         this.gson = gson;
     }
 
-    public String getGenericDataExchange(String tableName, String timeStamp) throws DataExchangeException {
+    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataExchangeConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
 
@@ -49,6 +49,10 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 }
             } else {
                 query = dataConfig.getQuery();
+            }
+
+            if (limit > 0) {
+                query = query.replace("SELECT ", "SELECT TOP(" + limit + ")");
             }
 
             List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
