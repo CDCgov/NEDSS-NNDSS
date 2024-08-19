@@ -12,7 +12,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -35,7 +34,7 @@ public class DataHandlingService implements IDataHandlingService {
     private String exchangeEndpoint;
 
     @Value("${nnd.fullLoad}")
-    protected Boolean fullLoadApplied;
+    protected boolean fullLoadApplied;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ICNTransportQOutService icnTransportQOutService;

@@ -12,8 +12,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -84,7 +82,7 @@ class DataExchangeControllerTest {
 
 
     @Test
-    void decodeAndDecompress_WithValidTableName_ReturnsDecodedData() throws Exception {
+    void decodeAndDecompress_WithValidTableName_ReturnsDecodedData()  {
         String tableName = "test_table";
         String decodedData = "mockDecodedData";
 

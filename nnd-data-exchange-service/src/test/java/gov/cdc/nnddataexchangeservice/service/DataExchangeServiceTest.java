@@ -21,7 +21,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class DataExchangeServiceTest {
+class DataExchangeServiceTest {
 
     @Mock
     private INetsstTransportService netsstTransportService;

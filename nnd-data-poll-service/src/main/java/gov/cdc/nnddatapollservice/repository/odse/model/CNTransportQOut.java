@@ -4,9 +4,6 @@ package gov.cdc.nnddatapollservice.repository.odse.model;
 import gov.cdc.nnddatapollservice.service.model.dto.CNTransportQOutDto;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 
 import java.sql.Timestamp;
 

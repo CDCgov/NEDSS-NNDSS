@@ -1,31 +1,23 @@
 package gov.cdc.nnddatapollservice.service;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.service.interfaces.*;
-import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
+import gov.cdc.nnddatapollservice.service.interfaces.ICNTransportQOutService;
+import gov.cdc.nnddatapollservice.service.interfaces.INetsstTransportService;
+import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
+import gov.cdc.nnddatapollservice.service.interfaces.ITransportQOutService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.internal.verification.Times;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 public class DataHandlingServiceTest {
 

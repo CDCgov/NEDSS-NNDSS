@@ -21,7 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class CNTransportQOutServiceTest {
+class CNTransportQOutServiceTest {
 
     @Mock
     private CNTransportQOutRepository cnTransportQOutRepository;

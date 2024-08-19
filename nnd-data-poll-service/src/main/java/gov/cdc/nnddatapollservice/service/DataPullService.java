@@ -1,9 +1,8 @@
 package gov.cdc.nnddatapollservice.service;
 
-import com.google.gson.Gson;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.service.interfaces.*;
-import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
+import gov.cdc.nnddatapollservice.service.interfaces.IDataHandlingService;
+import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

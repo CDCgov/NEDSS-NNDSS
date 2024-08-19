@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.service;
 
-import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

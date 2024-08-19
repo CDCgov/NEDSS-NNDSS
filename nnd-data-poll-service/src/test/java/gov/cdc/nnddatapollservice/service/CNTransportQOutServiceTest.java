@@ -2,7 +2,6 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.repository.odse.CNTransportQOutRepository;
-import gov.cdc.nnddatapollservice.repository.odse.model.CNTransportQOut;
 import gov.cdc.nnddatapollservice.service.interfaces.IErrorHandlingService;
 import gov.cdc.nnddatapollservice.service.model.dto.CNTransportQOutDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class CNTransportQOutServiceTest {

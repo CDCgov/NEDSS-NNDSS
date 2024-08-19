@@ -2,7 +2,6 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.repository.msg.NETSSTransportQOutRepository;
-import gov.cdc.nnddatapollservice.repository.msg.model.NETSSTransportQOut;
 import gov.cdc.nnddatapollservice.service.interfaces.IErrorHandlingService;
 import gov.cdc.nnddatapollservice.service.model.dto.NETSSTransportQOutDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,11 +14,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class NetsstTransportServiceTest {

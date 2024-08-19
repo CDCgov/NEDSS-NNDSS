@@ -2,23 +2,21 @@ package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import gov.cdc.nnddatapollservice.service.interfaces.IErrorHandlingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 public class ErrorHandlingServiceTest {
