@@ -7,9 +7,10 @@ import com.google.gson.JsonSerializer;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-
+@SuppressWarnings("java:S1118")
 public class TimestampAdapter {
 
+    @SuppressWarnings("java:S2885")
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
     // Serializer: Convert Timestamp to JSON

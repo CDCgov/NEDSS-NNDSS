@@ -8,17 +8,13 @@ import gov.cdc.nnddataexchangeservice.repository.rdb.DataExchangeConfigRepositor
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
@@ -35,7 +31,6 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                                       Gson gson) {
         this.dataExchangeConfigRepository = dataExchangeConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
-//        this.gson = gson;
 
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
