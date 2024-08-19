@@ -40,19 +40,15 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
         try {
             // Execute the query and retrieve the dataset
-            String query;
-            if (dataConfig.getQuery().contains(":timestamp")) {
-                if (timeStamp.isEmpty()) {
-                    query = dataConfig.getQuery().replace(":timestamp", "'" + "1753-01-01" + "'");
-                } else {
-                    query = dataConfig.getQuery().replace(":timestamp", "'" + timeStamp + "'");
-                }
-            } else {
-                query = dataConfig.getQuery();
-            }
+            String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
+                    ? dataConfig.getQueryWithLimit()
+                    : dataConfig.getQuery();
 
-            if (limit > 0) {
-                query = query.replace("SELECT ", "SELECT TOP(" + limit + ")");
+            String effectiveTimestamp = timeStamp.isEmpty() ? "'1753-01-01'" : "'" + timeStamp + "'";
+            String query = baseQuery.replace(":timestamp", effectiveTimestamp);
+
+            if (baseQuery.contains(":limit")) {
+                query = query.replace(":limit", limit.toString());
             }
 
             List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
