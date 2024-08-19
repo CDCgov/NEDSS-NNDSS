@@ -3,7 +3,7 @@ package gov.cdc.nnddatapollservice.repository.msg.model;
 
 import gov.cdc.nnddatapollservice.service.model.dto.TransportQOutDto;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
 
 @Entity
 @Table(name = "TransportQ_out")

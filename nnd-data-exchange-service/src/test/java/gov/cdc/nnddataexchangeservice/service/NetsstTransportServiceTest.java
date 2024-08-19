@@ -43,11 +43,27 @@ class NetsstTransportServiceTest {
 
         when(netssTransportQOutRepository.findNetssTransport()).thenReturn(Optional.of(netssTransportQOutList));
 
-        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime);
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,0);
 
         assertEquals(1, result.size());
         verify(netssTransportQOutRepository, times(1)).findNetssTransport();
     }
+
+    @Test
+    void testGetNetssTransportData_NoStatusTime_Limit() throws Exception {
+        String statusTime = "";
+
+        NETSSTransportQOut netssTransportQOut = new NETSSTransportQOut();
+        List<NETSSTransportQOut> netssTransportQOutList = Arrays.asList(netssTransportQOut);
+
+        when(netssTransportQOutRepository.findNetssTransportWLimit(100)).thenReturn(Optional.of(netssTransportQOutList));
+
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,100);
+
+        assertEquals(1, result.size());
+        verify(netssTransportQOutRepository, times(1)).findNetssTransportWLimit(100);
+    }
+
 
     @Test
     void testGetNetssTransportData_WithStatusTime() throws Exception {
@@ -62,10 +78,29 @@ class NetsstTransportServiceTest {
 
         when(netssTransportQOutRepository.findNetssTransportByCreationTime(recordStatusTime)).thenReturn(Optional.of(netssTransportQOutList));
 
-        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime);
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,0);
 
         assertEquals(1, result.size());
         verify(netssTransportQOutRepository, times(1)).findNetssTransportByCreationTime(recordStatusTime);
+    }
+
+    @Test
+    void testGetNetssTransportData_WithStatusTime_Limit() throws Exception {
+        String statusTime = "2023-07-30 10:00:00.000";
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        java.util.Date parsedDate = formatter.parse(statusTime);
+        Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
+
+        NETSSTransportQOut netssTransportQOut = new NETSSTransportQOut();
+        List<NETSSTransportQOut> netssTransportQOutList = Arrays.asList(netssTransportQOut);
+
+        when(netssTransportQOutRepository.findNetssTransportByCreationTimeWLimit(recordStatusTime, 100)).thenReturn(Optional.of(netssTransportQOutList));
+
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,100);
+
+        assertEquals(1, result.size());
+        verify(netssTransportQOutRepository, times(1)).findNetssTransportByCreationTimeWLimit(recordStatusTime, 100);
     }
 
     @Test
@@ -74,7 +109,7 @@ class NetsstTransportServiceTest {
 
         when(netssTransportQOutRepository.findNetssTransport()).thenReturn(Optional.of(Collections.emptyList()));
 
-        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime);
+        List<NETSSTransportQOutDto> result = netsstTransportService.getNetssTransportData(statusTime,0);
 
         assertTrue(result.isEmpty());
         verify(netssTransportQOutRepository, times(1)).findNetssTransport();
@@ -86,6 +121,6 @@ class NetsstTransportServiceTest {
 
         when(netssTransportQOutRepository.findNetssTransport()).thenThrow(new RuntimeException("Database error"));
 
-        assertThrows(DataExchangeException.class, () -> netsstTransportService.getNetssTransportData(statusTime));
+        assertThrows(DataExchangeException.class, () -> netsstTransportService.getNetssTransportData(statusTime,0));
     }
 }

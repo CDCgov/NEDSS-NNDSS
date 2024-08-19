@@ -3,10 +3,8 @@ package gov.cdc.nnddatapollservice.service;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.repository.msg.NETSSTransportQOutRepository;
 import gov.cdc.nnddatapollservice.repository.msg.model.NETSSTransportQOut;
-import gov.cdc.nnddatapollservice.repository.odse.model.CNTransportQOut;
 import gov.cdc.nnddatapollservice.service.interfaces.IErrorHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.INetsstTransportService;
-import gov.cdc.nnddatapollservice.service.model.dto.CNTransportQOutDto;
 import gov.cdc.nnddatapollservice.service.model.dto.NETSSTransportQOutDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,6 +26,10 @@ public class NetsstTransportService implements INetsstTransportService {
     public NetsstTransportService(NETSSTransportQOutRepository netssTransportQOutRepository, IErrorHandlingService errorHandlingService) {
         this.netssTransportQOutRepository = netssTransportQOutRepository;
         this.errorHandlingService = errorHandlingService;
+    }
+
+    public void truncatingData() {
+        netssTransportQOutRepository.truncateTable();
     }
 
     public String getMaxTimestamp() {

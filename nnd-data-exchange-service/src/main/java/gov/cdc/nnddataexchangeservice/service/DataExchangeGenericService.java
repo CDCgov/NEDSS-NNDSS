@@ -1,6 +1,8 @@
 package gov.cdc.nnddataexchangeservice.service;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataExchangeConfigRepository;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -24,14 +27,18 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final Gson gson;
 
     public DataExchangeGenericService(DataExchangeConfigRepository dataExchangeConfigRepository,
-                                      @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                      Gson gson) {
+                                      @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate) {
         this.dataExchangeConfigRepository = dataExchangeConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
-        this.gson = gson;
+
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
+                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
+                .create();
     }
 
-    public String getGenericDataExchange(String tableName, String timeStamp) throws DataExchangeException {
+    @SuppressWarnings("javasecurity:S3649")
+    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataExchangeConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
 
@@ -40,18 +47,19 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
         try {
             // Execute the query and retrieve the dataset
-            String query;
-            if (dataConfig.getQuery().contains(":timestamp")) {
-                if (timeStamp.isEmpty()) {
-                    query = dataConfig.getQuery().replace(":timestamp", "'" + "1753-01-01" + "'");
-                } else {
-                    query = dataConfig.getQuery().replace(":timestamp", "'" + timeStamp + "'");
-                }
-            } else {
-                query = dataConfig.getQuery();
+            String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
+                    ? dataConfig.getQueryWithLimit()
+                    : dataConfig.getQuery();
+
+            String effectiveTimestamp = timeStamp.isEmpty() ? "'1753-01-01'" : "'" + timeStamp + "'";
+            String query = baseQuery.replace(":timestamp", effectiveTimestamp);
+
+            if (baseQuery.contains(":limit")) {
+                query = query.replace(":limit", limit.toString());
             }
 
             List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
+
 
             // Serialize the data to JSON using Gson
             String jsonData = gson.toJson(data);

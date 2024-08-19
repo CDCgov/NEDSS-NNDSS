@@ -28,6 +28,9 @@ public class DataExchangeConfig {
     @Column(name = "query")
     private String query;
 
+    @Column(name = "query_with_limit")
+    private String queryWithLimit;
+
 
     @Column(name = "created_at")
     private Timestamp createdAt;
