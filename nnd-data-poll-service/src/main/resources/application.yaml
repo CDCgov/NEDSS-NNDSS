@@ -10,6 +10,7 @@ data_exchange:
   url: ${NND_DE_URL}
   endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN}
   endpoint_de: ${NND_DE_URL}${NND_DE_DE}
+  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC}
 nnd:
   fullLoad: ${NND_FULL_LOAD}
 
