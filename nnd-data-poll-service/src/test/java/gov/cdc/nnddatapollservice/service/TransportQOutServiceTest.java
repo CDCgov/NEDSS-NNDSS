@@ -2,7 +2,6 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.repository.msg.TransportQOutRepository;
-import gov.cdc.nnddatapollservice.repository.msg.model.TransportQOut;
 import gov.cdc.nnddatapollservice.service.interfaces.IErrorHandlingService;
 import gov.cdc.nnddatapollservice.service.model.dto.TransportQOutDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,5 +107,11 @@ public class TransportQOutServiceTest {
 
         verify(transportQOutRepository, times(1)).saveAll(anyList());
         verify(errorHandlingService, atLeastOnce()).dumpBatchToFile(anyList(), anyString(), anyString());
+    }
+
+    @Test
+    void testTruncating() {
+        transportQOutService.truncatingData();
+        verify(transportQOutRepository, times(1)).truncateTable();
     }
 }

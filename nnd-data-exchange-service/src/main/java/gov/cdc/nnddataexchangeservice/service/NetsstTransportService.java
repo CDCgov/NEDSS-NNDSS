@@ -24,19 +24,27 @@ public class NetsstTransportService implements INetsstTransportService {
     }
 
 
-    public List<NETSSTransportQOutDto> getNetssTransportData(String statusTime) throws DataExchangeException {
+    public List<NETSSTransportQOutDto> getNetssTransportData(String statusTime, Integer limit) throws DataExchangeException {
 
         List<NETSSTransportQOutDto> cnTransportQOutDtoList = new ArrayList<>();
         try {
 
             Optional<Collection<NETSSTransportQOut>> transportQOutResults;
             if (statusTime.isEmpty()) {
-                transportQOutResults = netssTransportQOutRepository.findNetssTransport();
+                if (limit == 0) {
+                    transportQOutResults = netssTransportQOutRepository.findNetssTransport();
+                } else {
+                    transportQOutResults = netssTransportQOutRepository.findNetssTransportWLimit(limit);
+                }
             } else {
                 SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
                 java.util.Date parsedDate = formatter.parse(statusTime);
                 Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
-                transportQOutResults = netssTransportQOutRepository.findNetssTransportByCreationTime(recordStatusTime);
+                if (limit == 0) {
+                    transportQOutResults = netssTransportQOutRepository.findNetssTransportByCreationTime(recordStatusTime);
+                } else {
+                    transportQOutResults = netssTransportQOutRepository.findNetssTransportByCreationTimeWLimit(recordStatusTime, limit);
+                }
             }
 
             if (transportQOutResults.isPresent()) {

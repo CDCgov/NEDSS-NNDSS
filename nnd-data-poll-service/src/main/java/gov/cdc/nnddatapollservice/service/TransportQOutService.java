@@ -20,9 +20,14 @@ public class TransportQOutService implements ITransportQOutService {
     @Value("${io.finalLocation}")
     private String fileLocation;
 
+
     public TransportQOutService(TransportQOutRepository transportQOutRepository, IErrorHandlingService errorHandlingService) {
         this.transportQOutRepository = transportQOutRepository;
         this.errorHandlingService = errorHandlingService;
+    }
+
+    public void truncatingData() {
+        transportQOutRepository.truncateTable();
     }
 
     public String getMaxTimestamp() throws DataPollException {

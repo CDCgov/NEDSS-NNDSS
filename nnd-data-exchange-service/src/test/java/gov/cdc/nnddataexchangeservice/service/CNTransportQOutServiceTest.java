@@ -21,7 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class CNTransportQOutServiceTest {
+class CNTransportQOutServiceTest {
 
     @Mock
     private CNTransportQOutRepository cnTransportQOutRepository;
@@ -44,10 +44,26 @@ public class CNTransportQOutServiceTest {
 
         when(cnTransportQOutRepository.findTransportByStatusCd(statusCd)).thenReturn(Optional.of(cnTransportQOutList));
 
-        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime);
+        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 0);
 
         assertEquals(1, result.size());
         verify(cnTransportQOutRepository, times(1)).findTransportByStatusCd(statusCd);
+    }
+
+    @Test
+    void testGetTransportData_NoStatusTime_Limit() throws Exception {
+        String statusCd = "status";
+        String statusTime = "";
+
+        CNTransportQOut cnTransportQOut = new CNTransportQOut();
+        List<CNTransportQOut> cnTransportQOutList = Arrays.asList(cnTransportQOut);
+
+        when(cnTransportQOutRepository.findTransportByStatusCdWLimit(statusCd, 100)).thenReturn(Optional.of(cnTransportQOutList));
+
+        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 100);
+
+        assertEquals(1, result.size());
+        verify(cnTransportQOutRepository, times(1)).findTransportByStatusCdWLimit(statusCd, 100);
     }
 
     @Test
@@ -64,10 +80,30 @@ public class CNTransportQOutServiceTest {
 
         when(cnTransportQOutRepository.findTransportByCreationTimeAndStatus(recordStatusTime, statusCd)).thenReturn(Optional.of(cnTransportQOutList));
 
-        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime);
+        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 0);
 
         assertEquals(1, result.size());
         verify(cnTransportQOutRepository, times(1)).findTransportByCreationTimeAndStatus(recordStatusTime, statusCd);
+    }
+
+    @Test
+    void testGetTransportData_WithStatusTime_Limit() throws Exception {
+        String statusCd = "status";
+        String statusTime = "2023-07-30 10:00:00.000";
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        java.util.Date parsedDate = formatter.parse(statusTime);
+        Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
+
+        CNTransportQOut cnTransportQOut = new CNTransportQOut();
+        List<CNTransportQOut> cnTransportQOutList = Arrays.asList(cnTransportQOut);
+
+        when(cnTransportQOutRepository.findTransportByCreationTimeAndStatusWLimit(recordStatusTime, statusCd, 100)).thenReturn(Optional.of(cnTransportQOutList));
+
+        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 100);
+
+        assertEquals(1, result.size());
+        verify(cnTransportQOutRepository, times(1)).findTransportByCreationTimeAndStatusWLimit(recordStatusTime, statusCd, 100);
     }
 
     @Test
@@ -77,7 +113,7 @@ public class CNTransportQOutServiceTest {
 
         when(cnTransportQOutRepository.findTransportByStatusCd(statusCd)).thenReturn(Optional.of(Collections.emptyList()));
 
-        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime);
+        List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 0);
 
         assertTrue(result.isEmpty());
         verify(cnTransportQOutRepository, times(1)).findTransportByStatusCd(statusCd);
@@ -90,6 +126,6 @@ public class CNTransportQOutServiceTest {
 
         when(cnTransportQOutRepository.findTransportByStatusCd(statusCd)).thenThrow(new RuntimeException("Database error"));
 
-        assertThrows(DataExchangeException.class, () -> cnTransportQOutService.getTransportData(statusCd, statusTime));
+        assertThrows(DataExchangeException.class, () -> cnTransportQOutService.getTransportData(statusCd, statusTime, 0));
     }
 }

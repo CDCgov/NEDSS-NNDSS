@@ -8,4 +8,5 @@ import java.util.List;
 public interface ICNTransportQOutService {
     String getMaxTimestamp();
     void saveDataExchange(List<CNTransportQOutDto> transportQOutDtoList) throws DataPollException;
+    void truncatingData();
 }

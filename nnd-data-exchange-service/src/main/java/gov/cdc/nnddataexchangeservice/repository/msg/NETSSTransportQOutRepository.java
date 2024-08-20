@@ -18,5 +18,12 @@ public interface NETSSTransportQOutRepository extends JpaRepository<NETSSTranspo
     @Query("SELECT a FROM NETSSTransportQOut a WHERE a.addTime > :recordStatusTime")
     Optional<Collection<NETSSTransportQOut>> findNetssTransportByCreationTime (@Param("recordStatusTime") Timestamp recordStatusTime);
 
+    @Query(value = "SELECT TOP (:limit) a.* FROM NETSS_TransportQ_out a ORDER BY a.add_time ASC ", nativeQuery = true)
+    Optional<Collection<NETSSTransportQOut>> findNetssTransportWLimit(@Param("limit") int limit);
+
+    @Query(value = "SELECT TOP (:limit) a.*  FROM NETSS_TransportQ_out a WHERE a.add_time > :recordStatusTime ORDER BY a.add_time ASC", nativeQuery = true)
+    Optional<Collection<NETSSTransportQOut>> findNetssTransportByCreationTimeWLimit (@Param("recordStatusTime") Timestamp recordStatusTime,
+                                                                                     @Param("limit") int limit);
+
 
 }

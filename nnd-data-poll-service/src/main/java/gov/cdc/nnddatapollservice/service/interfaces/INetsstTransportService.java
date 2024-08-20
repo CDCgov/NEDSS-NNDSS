@@ -8,4 +8,5 @@ import java.util.List;
 public interface INetsstTransportService {
     String getMaxTimestamp();
     void saveDataExchange(List<NETSSTransportQOutDto> transportQOutDtoList) throws DataPollException;
+    void truncatingData();
 }

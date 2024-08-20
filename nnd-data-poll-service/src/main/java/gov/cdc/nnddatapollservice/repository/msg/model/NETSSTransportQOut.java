@@ -3,12 +3,8 @@ package gov.cdc.nnddatapollservice.repository.msg.model;
 import gov.cdc.nnddatapollservice.service.model.dto.NETSSTransportQOutDto;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "NETSS_TransportQ_out")

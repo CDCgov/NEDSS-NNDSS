@@ -23,19 +23,28 @@ public class CNTransportQOutService implements ICNTransportQOutService {
         this.cnTransportQOutRepository = cnTransportQOutRepository;
     }
 
-    public List<CNTransportQOutDto> getTransportData(String statusCd, String statusTime) throws DataExchangeException {
+    public List<CNTransportQOutDto> getTransportData(String statusCd, String statusTime, Integer limit) throws DataExchangeException {
 
         List<CNTransportQOutDto> cnTransportQOutDtoList = new ArrayList<>();
         try {
 
             Optional<Collection<CNTransportQOut>> transportQOutResults;
             if (statusTime.isEmpty()) {
-                transportQOutResults = cnTransportQOutRepository.findTransportByStatusCd(statusCd);
+                if (limit == 0) {
+                    transportQOutResults = cnTransportQOutRepository.findTransportByStatusCd(statusCd);
+                } else {
+                    transportQOutResults = cnTransportQOutRepository.findTransportByStatusCdWLimit(statusCd, limit);
+
+                }
             } else {
                 SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
                 java.util.Date parsedDate = formatter.parse(statusTime);
                 Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
-                transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatus(recordStatusTime, statusCd);
+                if (limit == 0) {
+                    transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatus(recordStatusTime, statusCd);
+                } else {
+                    transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatusWLimit(recordStatusTime, statusCd, limit);
+                }
             }
 
             if (transportQOutResults.isPresent()) {

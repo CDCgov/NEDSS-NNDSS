@@ -23,11 +23,12 @@ public class DataExchangeService implements IDataExchangeService {
         this.cnTransportQOutService = icnTransportQOutService;
     }
 
-    public DataExchangeModel getDataForOnPremExchanging(String cnStatusTime, String transportTime,String netssTime, String statusCd) throws DataExchangeException {
+    public DataExchangeModel getDataForOnPremExchanging(String cnStatusTime, String transportTime,String netssTime, String statusCd,
+                                                        Integer limit) throws DataExchangeException {
         var dataExchange = new DataExchangeModel();
-        var cnTransportDatas = cnTransportQOutService.getTransportData(statusCd, cnStatusTime);
-        var transportDatas = transportQOutService.getTransportData(transportTime);
-        var netssDatas = netsstTransportService.getNetssTransportData(netssTime);
+        var cnTransportDatas = cnTransportQOutService.getTransportData(statusCd, cnStatusTime, limit);
+        var transportDatas = transportQOutService.getTransportData(transportTime, limit);
+        var netssDatas = netsstTransportService.getNetssTransportData(netssTime, limit);
 
         dataExchange.setCnTransportQOutDtoList(cnTransportDatas);
         dataExchange.setTransportQOutDtoList(transportDatas);
