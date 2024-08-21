@@ -22,7 +22,7 @@ public class RdbDataSourceConfig {
     private String dbUserPassword;
 
     @Bean(name = "rdbDataSource")
-    public DataSource ingestDataSource() {
+    public DataSource rdbDataSource() {
         DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
 
         dataSourceBuilder.driverClassName(driverClassName);

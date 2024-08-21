@@ -53,7 +53,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         String lastUpdatedTime= persistentService.getLastUpdatedTime(tableName);
         //call data exchange service api
         String encodedData = callDataExchangeEndpoint(token, param, tableName,"");
-        System.out.println("encoded compressed data from exchange for rdb: " + encodedData);
+        //System.out.println("encoded compressed data from exchange for rdb: " + encodedData);
         String rawData = decodeAndDecompress(encodedData);
         System.out.println("raw data from exchange for the table: "+tableName+" " + rawData);
         persistRdbData(tableName, rawData);
