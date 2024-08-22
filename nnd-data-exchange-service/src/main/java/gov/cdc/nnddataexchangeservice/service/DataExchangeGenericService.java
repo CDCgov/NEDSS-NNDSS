@@ -7,6 +7,7 @@ import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataExchangeConfigRepository;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.ColumnMapRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
+                .serializeNulls()
                 .create();
     }
 
@@ -59,6 +61,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             }
 
             List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
+//            List<Map<String, Object>> data = jdbcTemplate.query(query, new ColumnMapRowMapper());
 
 
             // Serialize the data to JSON using Gson

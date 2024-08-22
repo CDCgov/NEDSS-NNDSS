@@ -11,7 +11,7 @@ data_exchange:
   endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN}
   endpoint_de: ${NND_DE_URL}${NND_DE_DE}
 nnd:
-  fullLoad: ${NND_FULL_LOAD}
+  fullLoad: ${NND_FULL_LOAD:false}
 
 spring:
   application:
