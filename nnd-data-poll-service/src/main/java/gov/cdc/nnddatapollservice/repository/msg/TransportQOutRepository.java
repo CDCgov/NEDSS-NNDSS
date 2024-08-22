@@ -24,6 +24,8 @@ public interface TransportQOutRepository extends JpaRepository<TransportQOut, Lo
     @Query("SELECT MAX(a.messageCreationTime) FROM TransportQOut a ")
     Optional<String> findMaxTimeStamp ();
 
+    @Query(value = "SELECT MAX(a.messageCreationTime) FROM TransportQ_out a WHERE a.messageId NOT IN (SELECT DISTINCT notification_local_id FROM CN_transportq_out)", nativeQuery = true)
+    Optional<String> findMaxTimeStampInvolvingWithNotification();
 
     @Modifying
     @Transactional

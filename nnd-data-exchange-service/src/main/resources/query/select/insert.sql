@@ -1,4 +1,4 @@
-INSERT INTO [RDB].[dbo].[data_exchange_config] (table_name, source_db, query, query_with_limit) VALUES
+INSERT INTO [RDB].[dbo].[data_sync_config] (table_name, source_db, query, query_with_limit) VALUES
     ('CONDITION', 'RDB', 'SELECT * FROM CONDITION;', NULL),
     ('Rdb_Date', 'RDB', 'SELECT * FROM Rdb_Date;', NULL),
     ('D_PATIENT', 'RDB', 'SELECT * FROM D_PATIENT WHERE D_PATIENT.PATIENT_LAST_CHANGE_TIME >= :timestamp;', 'SELECT TOP(:limit) * FROM D_PATIENT WHERE D_PATIENT.PATIENT_LAST_CHANGE_TIME >= :timestamp ORDER BY D_PATIENT.PATIENT_LAST_CHANGE_TIME ASC;'),

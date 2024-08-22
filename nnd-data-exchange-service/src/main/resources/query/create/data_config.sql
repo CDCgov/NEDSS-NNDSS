@@ -12,9 +12,9 @@ GO
 IF NOT EXISTS(
     SELECT 'X'
     FROM INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_NAME = 'data_exchange_config')
+    WHERE TABLE_NAME = 'data_sync_config')
 BEGIN
-CREATE TABLE data_exchange_config
+CREATE TABLE data_sync_config
 (
     table_name      NVARCHAR(255) NOT NULL PRIMARY KEY,
     source_db       NVARCHAR(255) NOT NULL,

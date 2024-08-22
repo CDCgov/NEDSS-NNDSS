@@ -4,10 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
-import gov.cdc.nnddataexchangeservice.repository.rdb.DataExchangeConfigRepository;
+import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.ColumnMapRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,13 +22,13 @@ import java.util.zip.GZIPOutputStream;
 
 @Service
 public class DataExchangeGenericService implements IDataExchangeGenericService {
-    private final DataExchangeConfigRepository dataExchangeConfigRepository;
+    private final DataSyncConfigRepository dataSyncConfigRepository;
     private final JdbcTemplate jdbcTemplate;
     private final Gson gson;
 
-    public DataExchangeGenericService(DataExchangeConfigRepository dataExchangeConfigRepository,
+    public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository,
                                       @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate) {
-        this.dataExchangeConfigRepository = dataExchangeConfigRepository;
+        this.dataSyncConfigRepository = dataSyncConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
 
         this.gson = new GsonBuilder()
@@ -42,7 +41,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     @SuppressWarnings("javasecurity:S3649")
     public String getGenericDataExchange(String tableName, String timeStamp, Integer limit) throws DataExchangeException {
         // Retrieve configuration based on table name
-        var dataConfig = dataExchangeConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
+        var dataConfig = dataSyncConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
 
         if (timeStamp == null) {
             timeStamp = "";
