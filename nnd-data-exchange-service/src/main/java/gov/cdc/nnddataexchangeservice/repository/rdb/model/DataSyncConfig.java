@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "data_exchange_config")
+@Table(name = "data_sync_config")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DataExchangeConfig {
+public class DataSyncConfig {
     @Id
     @Column(name = "table_name")
     private String tableName;
