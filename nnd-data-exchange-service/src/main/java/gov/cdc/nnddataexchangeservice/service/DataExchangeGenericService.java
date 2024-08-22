@@ -61,7 +61,6 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             }
 
             List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
-//            List<Map<String, Object>> data = jdbcTemplate.query(query, new ColumnMapRowMapper());
 
 
             // Serialize the data to JSON using Gson
