@@ -40,31 +40,31 @@ public class TransportQOutServiceTest {
     @Test
     void testGetMaxTimestamp_WithTimestamp() throws DataPollException {
         Timestamp maxTimestamp = new Timestamp(System.currentTimeMillis());
-        when(transportQOutRepository.findMaxTimeStamp()).thenReturn(Optional.of(maxTimestamp.toString()));
+        when(transportQOutRepository.findMaxTimeStampInvolvingWithNotification()).thenReturn(Optional.of(maxTimestamp.toString()));
 
         String result = transportQOutService.getMaxTimestamp();
 
         assertEquals(maxTimestamp.toString(), result);
-        verify(transportQOutRepository, times(1)).findMaxTimeStamp();
+        verify(transportQOutRepository, times(1)).findMaxTimeStampInvolvingWithNotification();
     }
 
     @Test
     void testGetMaxTimestamp_NoTimestamp() throws DataPollException {
-        when(transportQOutRepository.findMaxTimeStamp()).thenReturn(Optional.empty());
+        when(transportQOutRepository.findMaxTimeStampInvolvingWithNotification()).thenReturn(Optional.empty());
 
         String result = transportQOutService.getMaxTimestamp();
 
         assertEquals("", result);
-        verify(transportQOutRepository, times(1)).findMaxTimeStamp();
+        verify(transportQOutRepository, times(1)).findMaxTimeStampInvolvingWithNotification();
     }
 
     @Test
     void testGetMaxTimestamp_Exception() {
-        when(transportQOutRepository.findMaxTimeStamp()).thenThrow(new RuntimeException("Exception"));
+        when(transportQOutRepository.findMaxTimeStampInvolvingWithNotification()).thenThrow(new RuntimeException("Exception"));
 
         assertThrows(DataPollException.class, () -> transportQOutService.getMaxTimestamp());
 
-        verify(transportQOutRepository, times(1)).findMaxTimeStamp();
+        verify(transportQOutRepository, times(1)).findMaxTimeStampInvolvingWithNotification();
     }
 
     @Test

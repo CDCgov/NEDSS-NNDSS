@@ -32,7 +32,7 @@ public class TransportQOutService implements ITransportQOutService {
 
     public String getMaxTimestamp() throws DataPollException {
         try {
-            var time = transportQOutRepository.findMaxTimeStamp();
+            var time = transportQOutRepository.findMaxTimeStampInvolvingWithNotification();
             if (time.isPresent()) {
                 return time.get().toString();
             }
