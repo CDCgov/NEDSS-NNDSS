@@ -1,6 +1,7 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -55,12 +57,10 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         String encodedData = callDataExchangeEndpoint(token, param, tableName,"");
         //System.out.println("encoded compressed data from exchange for rdb: " + encodedData);
         String rawData = decodeAndDecompress(encodedData);
-        System.out.println("raw data from exchange for the table: "+tableName+" " + rawData);
+        //System.out.println("raw data from exchange for the table: "+tableName+" " + rawData);
         persistRdbData(tableName, rawData);
-        System.out.println("--END11111--Handling exchanged data for table " + tableName);
         //update 'last_update_time' in data_exchange_config
         persistentService.updateLastUpdatedTime(tableName);
-        System.out.println("--END2222--Handling exchanged data for table " + tableName);
     }
 
     protected String callDataExchangeEndpoint(String token, Map<String, String> params, String tableName,String lastUpdatedTime) throws DataPollException {
@@ -110,5 +110,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
     public void persistRdbData(String tableName, String jsonData) throws DataPollException {
         persistentService.saveRDBData(tableName, jsonData);
+    }
+    public List<PollDataSyncConfig> getTableListFromConfig() throws DataPollException {
+        return persistentService.getTableListFromConfig();
     }
 }
