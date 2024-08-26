@@ -29,7 +29,6 @@ VALUES('D_INV_MEDICAL_HISTORY', 'RDB',9);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('D_INV_RISK_FACTOR', 'RDB',10);
-
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('D_INV_TREATMENT', 'RDB',11);
@@ -60,7 +59,6 @@ VALUES('INVESTIGATION', 'RDB',19);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('RDB_DATE', 'RDB',20);
-
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('CONFIRMATION_METHOD', 'RDB',21);
@@ -91,7 +89,6 @@ VALUES('CONFIRMATION_METHOD_GROUP', 'RDB',29);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('GENERIC_CASE', 'RDB',30);
-
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('HEPATITIS_CASE', 'RDB',31);
@@ -122,7 +119,6 @@ VALUES('TREATMENT', 'RDB',39);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('TREATMENT_EVENT', 'RDB',40);
-
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('VAR_PAM_LDF', 'RDB',41);
