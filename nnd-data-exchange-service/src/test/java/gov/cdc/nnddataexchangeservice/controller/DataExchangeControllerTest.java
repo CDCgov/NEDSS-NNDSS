@@ -52,6 +52,26 @@ class DataExchangeControllerTest {
         assertEquals(dataExchangeModel, response.getBody());
     }
 
+
+    @Test
+    void exchangingData_WithValidParams_ReturnsDataExchangeModel_True() throws DataExchangeException, IOException {
+        String cnStatusTime = "2024-07-11";
+        String transportStatusTime = "2024-07-12";
+        String netssTime = "2024-07-13";
+        String statusCd = "COMPLETE";
+        String limit = "10";
+
+        DataExchangeModel dataExchangeModel = new DataExchangeModel();
+        when(dataExchangeService.getDataForOnPremExchanging(anyString(), anyString(), anyString(), anyString(), anyInt(), anyBoolean()))
+                .thenReturn(dataExchangeModel);
+
+        ResponseEntity<DataExchangeModel> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "true");
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(dataExchangeModel, response.getBody());
+    }
+
     @Test
     void exchangingData_WithMissingStatusCd_ThrowsDataExchangeException() {
         String cnStatusTime = "2024-07-11";
