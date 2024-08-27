@@ -12,6 +12,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -32,7 +34,7 @@ class DataExchangeControllerTest {
     }
 
     @Test
-    void exchangingData_WithValidParams_ReturnsDataExchangeModel() throws DataExchangeException {
+    void exchangingData_WithValidParams_ReturnsDataExchangeModel() throws DataExchangeException, IOException {
         String cnStatusTime = "2024-07-11";
         String transportStatusTime = "2024-07-12";
         String netssTime = "2024-07-13";
@@ -40,10 +42,10 @@ class DataExchangeControllerTest {
         String limit = "10";
 
         DataExchangeModel dataExchangeModel = new DataExchangeModel();
-        when(dataExchangeService.getDataForOnPremExchanging(anyString(), anyString(), anyString(), anyString(), anyInt()))
+        when(dataExchangeService.getDataForOnPremExchanging(anyString(), anyString(), anyString(), anyString(), anyInt(), anyBoolean()))
                 .thenReturn(dataExchangeModel);
 
-        ResponseEntity<DataExchangeModel> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit);
+        ResponseEntity<DataExchangeModel> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "false");
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -59,7 +61,7 @@ class DataExchangeControllerTest {
         String limit = "10";
 
         assertThrows(DataExchangeException.class, () ->
-                dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit));
+                dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "false"));
     }
 
     @Test

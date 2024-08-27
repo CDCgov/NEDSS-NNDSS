@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 @RestController
 @SecurityRequirement(name = "bearer-key")
 public class DataExchangeController {
@@ -47,13 +49,20 @@ public class DataExchangeController {
                                                             @RequestParam("transportStatusTime") String transportStatusTime,
                                                             @RequestParam("netssTime") String netssTime,
                                                             @RequestParam("statusCd") String statusCd,
-                                                            @RequestHeader(name = "limit", defaultValue = "0") String limit) throws DataExchangeException {
+                                                            @RequestHeader(name = "limit", defaultValue = "0") String limit,
+                                                            @RequestHeader(name = "compress", defaultValue = "false") String compress) throws DataExchangeException, IOException {
         if (statusCd.isEmpty()) {
             throw new DataExchangeException("Status Code is Missing");
         }
 
+
+        boolean compressCheck = false;
+        if (compress.equalsIgnoreCase("true")) {
+            compressCheck = true;
+        }
+
         int intLimit = Integer.parseInt(limit);
-        return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportStatusTime,netssTime, statusCd, intLimit));
+        return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportStatusTime,netssTime, statusCd, intLimit, compressCheck));
     }
 
     @Operation(

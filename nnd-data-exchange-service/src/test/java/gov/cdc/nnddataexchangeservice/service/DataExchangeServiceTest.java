@@ -55,7 +55,7 @@ class DataExchangeServiceTest {
         when(transportQOutService.getTransportData(transportTime, 0)).thenReturn(transportQOutDtos);
         when(netsstTransportService.getNetssTransportData(netssTime, 0)).thenReturn(netssTransportQOutDtos);
 
-        DataExchangeModel result = dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0);
+        DataExchangeModel result = dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0, false);
 
         assertNotNull(result);
         assertEquals(cnTransportQOutDtos.size(), result.getCountCnTransport());
@@ -76,7 +76,7 @@ class DataExchangeServiceTest {
 
         when(cnTransportQOutService.getTransportData(statusCd, cnStatusTime, 0)).thenThrow(new DataExchangeException("Exception"));
 
-        assertThrows(DataExchangeException.class, () -> dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0));
+        assertThrows(DataExchangeException.class, () -> dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0, false));
 
         verify(cnTransportQOutService, times(1)).getTransportData(statusCd, cnStatusTime, 0);
         verify(transportQOutService, times(0)).getTransportData(transportTime,0);
