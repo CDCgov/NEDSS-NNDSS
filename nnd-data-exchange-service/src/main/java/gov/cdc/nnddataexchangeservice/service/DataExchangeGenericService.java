@@ -20,16 +20,21 @@ import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
+
 @Service
 public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final DataSyncConfigRepository dataSyncConfigRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate odseJdbcTemplate;
     private final Gson gson;
 
     public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository,
-                                      @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate) {
+                                      @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
+                                      @Qualifier("odseJdbcTemplate")  JdbcTemplate odseJdbcTemplate) {
         this.dataSyncConfigRepository = dataSyncConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.odseJdbcTemplate = odseJdbcTemplate;
 
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
@@ -52,14 +57,19 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                     ? dataConfig.getQueryWithLimit()
                     : dataConfig.getQuery();
 
-            String effectiveTimestamp = timeStamp.isEmpty() ? "'1753-01-01'" : "'" + timeStamp + "'";
-            String query = baseQuery.replace(":timestamp", effectiveTimestamp);
+            String effectiveTimestamp = timeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP +"'" : "'" + timeStamp + "'";
+            String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
 
-            if (baseQuery.contains(":limit")) {
-                query = query.replace(":limit", limit.toString());
+            if (baseQuery.contains(LIMIT_PARAM)) {
+                query = query.replace(LIMIT_PARAM, limit.toString());
             }
+            List<Map<String, Object>> data;
 
-            List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
+            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_ODSE)) {
+                data = odseJdbcTemplate.queryForList(query);
+            } else {
+                data = jdbcTemplate.queryForList(query);
+            }
 
 
             // Serialize the data to JSON using Gson
@@ -90,13 +100,13 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
              GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream);
              ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
 
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[BYTE_SIZE];
             int len;
             while ((len = gzipInputStream.read(buffer)) > 0) {
                 byteArrayOutputStream.write(buffer, 0, len);
             }
 
-            String decompressedJson = byteArrayOutputStream.toString("UTF-8");
+            String decompressedJson = byteArrayOutputStream.toString(UTF8);
 
             return decompressedJson;
         } catch (IOException e) {
