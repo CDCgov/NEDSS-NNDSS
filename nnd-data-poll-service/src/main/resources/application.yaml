@@ -47,3 +47,8 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: none
+
+logging:
+  #  Only one config can be active at a time
+  config: classpath:logback-config.xml
+LOG_PATH: ${NND_POLL_LOG_PATH:nndPollLogfiles}

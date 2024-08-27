@@ -1,0 +1,23 @@
+<configuration>
+<!-- ENV -->
+<variable resource="application.yaml" />
+
+<!-- Appender for Console -->
+<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+</appender>
+
+<!-- Appender for File -->
+<appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>${LOG_PATH}/nnd-poll-service.log</file>
+    <encoder>
+        <pattern>%d %-5level [%thread] %logger : %msg%n</pattern>
+    </encoder>
+</appender>
+<logger name="com.apps.restfulApp.api.controller" level="INFO">
+    <appender-ref ref="FILE" />
+</logger>
+<root level="INFO">
+    <appender-ref ref="CONSOLE" />
+</root>
+</configuration>
