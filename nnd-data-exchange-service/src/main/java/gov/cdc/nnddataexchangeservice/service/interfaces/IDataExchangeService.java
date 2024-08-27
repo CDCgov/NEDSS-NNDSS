@@ -6,7 +6,7 @@ import gov.cdc.nnddataexchangeservice.service.model.DataExchangeModel;
 import java.io.IOException;
 
 public interface IDataExchangeService {
-    DataExchangeModel getDataForOnPremExchanging(String cnStatusTime, String transportStatusTime,
+    String getDataForOnPremExchanging(String cnStatusTime, String transportStatusTime,
                                                  String netssTime , String statusCd,
                                                  Integer limit, boolean compressionApplied) throws DataExchangeException, IOException;
 }

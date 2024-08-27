@@ -53,7 +53,7 @@ public class NetsstTransportService implements INetsstTransportService {
                 cnTransportQOutList.add(transportQOut);
             }
 
-            int batchSize = 10;
+            int batchSize = 100;
             for (int i = 0; i < cnTransportQOutList.size(); i += batchSize) {
                 int end = Math.min(i + batchSize, cnTransportQOutList.size());
                 List<NETSSTransportQOut> batch = cnTransportQOutList.subList(i, end);

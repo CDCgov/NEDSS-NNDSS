@@ -55,7 +55,7 @@ public class CNTransportQOutService implements ICNTransportQOutService {
                 cnTransportQOutList.add(transportQOut);
             }
 
-            int batchSize = 10;
+            int batchSize = 100;
             for (int i = 0; i < cnTransportQOutList.size(); i += batchSize) {
                 int end = Math.min(i + batchSize, cnTransportQOutList.size());
                 List<CNTransportQOut> batch = cnTransportQOutList.subList(i, end);

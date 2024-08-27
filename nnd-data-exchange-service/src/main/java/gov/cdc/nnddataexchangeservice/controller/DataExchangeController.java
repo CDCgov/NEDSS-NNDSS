@@ -45,19 +45,19 @@ public class DataExchangeController {
                             schema = @Schema(type = "string"))}
     )
     @GetMapping(path = "/api/nnd/data-exchange")
-    public ResponseEntity<DataExchangeModel> exchangingData(@RequestParam("cnStatusTime") String cnStatusTime,
+    public ResponseEntity<String> exchangingData(@RequestParam("cnStatusTime") String cnStatusTime,
                                                             @RequestParam("transportStatusTime") String transportStatusTime,
                                                             @RequestParam("netssTime") String netssTime,
                                                             @RequestParam("statusCd") String statusCd,
-                                                            @RequestHeader(name = "limit", defaultValue = "0") String limit,
-                                                            @RequestHeader(name = "compress", defaultValue = "false") String compress) throws DataExchangeException, IOException {
+                                                            @RequestHeader(name = "limit", defaultValue = "0", required = false) String limit,
+                                                            @RequestHeader(name = "compress", defaultValue = "false", required = false) String compress) throws DataExchangeException, IOException {
         if (statusCd.isEmpty()) {
             throw new DataExchangeException("Status Code is Missing");
         }
 
 
         boolean compressCheck = false;
-        if (compress.equalsIgnoreCase("true")) {
+        if (compress.equalsIgnoreCase("true") ) {
             compressCheck = true;
         }
 
