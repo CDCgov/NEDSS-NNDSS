@@ -1,16 +1,20 @@
 package gov.cdc.nnddataexchangeservice.shared;
 
+import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.BYTE_SIZE;
-import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.UTF8;
 
 public class DataSimplification {
+    private DataSimplification() {
+    }
     public static String dataCompressionAndEncode(String jsonData) throws IOException {
         // Compress the JSON data using GZIP and return the Base64 encoded result
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -24,7 +28,7 @@ public class DataSimplification {
         }
     }
     // DECODE TEST METHOD
-    public static String decodeAndDecompress(String base64EncodedData) {
+    public static String decodeAndDecompress(String base64EncodedData) throws DataExchangeException {
         byte[] compressedData = Base64.getDecoder().decode(base64EncodedData);
 
         try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedData);
@@ -37,11 +41,9 @@ public class DataSimplification {
                 byteArrayOutputStream.write(buffer, 0, len);
             }
 
-            String decompressedJson = byteArrayOutputStream.toString(UTF8);
-
-            return decompressedJson;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return byteArrayOutputStream.toString(StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new DataExchangeException(e.getMessage());
         }
     }
 }

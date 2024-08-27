@@ -79,7 +79,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     // DECODE TEST METHOD
-    public String decodeAndDecompress(String base64EncodedData) {
+    public String decodeAndDecompress(String base64EncodedData) throws DataExchangeException {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
     }
 }

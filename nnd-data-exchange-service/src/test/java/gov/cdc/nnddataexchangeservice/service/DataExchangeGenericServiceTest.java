@@ -130,7 +130,7 @@ class DataExchangeGenericServiceTest {
     }
 
     @Test
-    void decodeAndDecompress_WithValidData_ReturnsDecompressedJson() throws IOException {
+    void decodeAndDecompress_WithValidData_ReturnsDecompressedJson() throws DataExchangeException, IOException {
         String json = "[{\"key\":\"value\"}]";
         byte[] compressedData;
 

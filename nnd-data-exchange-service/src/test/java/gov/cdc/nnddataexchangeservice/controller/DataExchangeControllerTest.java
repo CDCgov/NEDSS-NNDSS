@@ -104,7 +104,7 @@ class DataExchangeControllerTest {
 
 
     @Test
-    void decodeAndDecompress_WithValidTableName_ReturnsDecodedData()  {
+    void decodeAndDecompress_WithValidTableName_ReturnsDecodedData() throws DataExchangeException {
         String tableName = "test_table";
         String decodedData = "mockDecodedData";
 

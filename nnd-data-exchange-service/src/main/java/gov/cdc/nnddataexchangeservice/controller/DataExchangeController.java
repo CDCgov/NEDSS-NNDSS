@@ -89,7 +89,7 @@ public class DataExchangeController {
     }
 
     @PostMapping(path = "/api/data-exchange-generic")
-    public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) {
+    public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) throws DataExchangeException {
         var val = dataExchangeGenericService.decodeAndDecompress(tableName);
         return new ResponseEntity<>(val, HttpStatus.OK);
     }
