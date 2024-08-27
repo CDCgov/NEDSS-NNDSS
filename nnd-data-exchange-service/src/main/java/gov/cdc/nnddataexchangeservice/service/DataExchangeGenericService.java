@@ -6,6 +6,7 @@ import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
+import gov.cdc.nnddataexchangeservice.shared.DataSimplification;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -17,8 +18,6 @@ import java.sql.Timestamp;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
 
@@ -74,17 +73,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
             // Serialize the data to JSON using Gson
             String jsonData = gson.toJson(data);
-
-            // Compress the JSON data using GZIP and return the Base64 encoded result
-            try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                 GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
-
-                gzipOutputStream.write(jsonData.getBytes());
-                gzipOutputStream.finish();
-
-                byte[] compressedData = byteArrayOutputStream.toByteArray();
-                return Base64.getEncoder().encodeToString(compressedData);
-            }
+            return DataSimplification.dataCompressionAndEncode(jsonData);
 
         } catch (IOException e) {
             // Catch IOException and throw DataExchangeException
@@ -94,23 +83,6 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
     // DECODE TEST METHOD
     public String decodeAndDecompress(String base64EncodedData) {
-        byte[] compressedData = Base64.getDecoder().decode(base64EncodedData);
-
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedData);
-             GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream);
-             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-
-            byte[] buffer = new byte[BYTE_SIZE];
-            int len;
-            while ((len = gzipInputStream.read(buffer)) > 0) {
-                byteArrayOutputStream.write(buffer, 0, len);
-            }
-
-            String decompressedJson = byteArrayOutputStream.toString(UTF8);
-
-            return decompressedJson;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return DataSimplification.decodeAndDecompress(base64EncodedData);
     }
 }
