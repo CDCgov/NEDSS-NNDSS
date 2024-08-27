@@ -26,11 +26,6 @@ public class DataExchangeService implements IDataExchangeService {
         this.netsstTransportService = netsstTransportService;
         this.transportQOutService = transportQOutService;
         this.cnTransportQOutService = icnTransportQOutService;
-//        this.gson = new GsonBuilder()
-//                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
-//                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
-//                .serializeNulls()
-//                .create();
         this.gson = gson;
     }
 

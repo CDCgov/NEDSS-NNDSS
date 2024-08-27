@@ -1,7 +1,6 @@
 package gov.cdc.nnddataexchangeservice.service.interfaces;
 
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
-import gov.cdc.nnddataexchangeservice.service.model.DataExchangeModel;
 
 import java.io.IOException;
 

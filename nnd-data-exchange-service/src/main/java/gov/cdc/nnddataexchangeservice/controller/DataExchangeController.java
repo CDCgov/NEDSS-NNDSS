@@ -4,7 +4,6 @@ package gov.cdc.nnddataexchangeservice.controller;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
-import gov.cdc.nnddataexchangeservice.service.model.DataExchangeModel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
