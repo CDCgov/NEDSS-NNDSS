@@ -23,6 +23,9 @@ public class NetsstTransportService implements INetsstTransportService {
     @Value("${io.finalLocation}")
     private String fileLocation;
 
+    @Value("${nnd.insertLimit}")
+    private Integer insertLimit = 1000;
+
     public NetsstTransportService(NETSSTransportQOutRepository netssTransportQOutRepository, IErrorHandlingService errorHandlingService) {
         this.netssTransportQOutRepository = netssTransportQOutRepository;
         this.errorHandlingService = errorHandlingService;
@@ -53,9 +56,8 @@ public class NetsstTransportService implements INetsstTransportService {
                 cnTransportQOutList.add(transportQOut);
             }
 
-            int batchSize = 100;
-            for (int i = 0; i < cnTransportQOutList.size(); i += batchSize) {
-                int end = Math.min(i + batchSize, cnTransportQOutList.size());
+            for (int i = 0; i < cnTransportQOutList.size(); i += insertLimit) {
+                int end = Math.min(i + insertLimit, cnTransportQOutList.size());
                 List<NETSSTransportQOut> batch = cnTransportQOutList.subList(i, end);
 
                 try {

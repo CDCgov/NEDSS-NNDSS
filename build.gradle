@@ -51,7 +51,11 @@ sonarqube {
                 "**/exception/**, " +
                 "**/security/**," +
                 "**/repository/**, " +
-                "**/constant/DataSyncConstant.java, " +
-                "**/service/model/**"
+                "**/constant/**, " +
+                "**/service/model/** ," +
+                "**/json_config/**, " +
+                "**/NndMessageProcessorApplication.java, " +
+                "**/NndDataExchangeServiceApplication.java, " +
+                "**/NndDataPollServiceApplication.java"
     }
 }

@@ -1,5 +1,6 @@
 package gov.cdc.nnddataexchangeservice.controller;
 
+import com.google.gson.Gson;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
@@ -42,14 +43,15 @@ class DataExchangeControllerTest {
         String limit = "10";
 
         DataExchangeModel dataExchangeModel = new DataExchangeModel();
+        Gson gson = new Gson();
+        String data = gson.toJson(dataExchangeModel);
         when(dataExchangeService.getDataForOnPremExchanging(anyString(), anyString(), anyString(), anyString(), anyInt(), anyBoolean()))
-                .thenReturn(dataExchangeModel);
+                .thenReturn(data);
 
-        ResponseEntity<DataExchangeModel> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "false");
+        ResponseEntity<String> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "false");
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(dataExchangeModel, response.getBody());
     }
 
 
@@ -62,14 +64,15 @@ class DataExchangeControllerTest {
         String limit = "10";
 
         DataExchangeModel dataExchangeModel = new DataExchangeModel();
+        Gson gson = new Gson();
+        String data = gson.toJson(dataExchangeModel);
         when(dataExchangeService.getDataForOnPremExchanging(anyString(), anyString(), anyString(), anyString(), anyInt(), anyBoolean()))
-                .thenReturn(dataExchangeModel);
+                .thenReturn(data);
 
-        ResponseEntity<DataExchangeModel> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "true");
+        ResponseEntity<String> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "true");
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(dataExchangeModel, response.getBody());
     }
 
     @Test

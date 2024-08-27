@@ -50,7 +50,7 @@ public class DataExchangeService implements IDataExchangeService {
         dataExchange.setCountTransport(transportDatas.size());
         dataExchange.setCountNetssTransport(netssDatas.size());
         String strData = gson.toJson(dataExchange);
-        String finalData = null;
+        String finalData;
         if (compressionApplied) {
             finalData = DataSimplification.dataCompressionAndEncode(strData);
         } else {

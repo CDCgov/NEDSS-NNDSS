@@ -6,6 +6,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.json_config.ByteArrayDeserializer;
 import gov.cdc.nnddatapollservice.service.interfaces.*;
 import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
+import gov.cdc.nnddatapollservice.share.DataSimplification;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +36,9 @@ public class DataHandlingService implements IDataHandlingService {
 
     @Value("${nnd.fullLoad}")
     protected boolean fullLoadApplied;
+
+    @Value("${nnd.pullLimit}")
+    private String pullLimit;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ICNTransportQOutService icnTransportQOutService;
@@ -68,14 +72,14 @@ public class DataHandlingService implements IDataHandlingService {
 
         String data = callDataExchangeEndpoint(token, param);
 
-         persistingExchangeData(data);
+        var deCompressedData = DataSimplification.decodeAndDecompress(data);
+
+        persistingExchangeData(deCompressedData);
     }
 
     public void persistingExchangeData(String data) throws DataPollException {
         try {
-            Gson gson = new GsonBuilder()
-                    .registerTypeAdapter(byte[].class, new ByteArrayDeserializer())
-                    .create();
+            Gson gson = new Gson();
             var dataExchangeModel = gson.fromJson(data, DataExchangeModel.class);
 
             if (!dataExchangeModel.getCnTransportQOutDtoList().isEmpty()) {
@@ -110,6 +114,8 @@ public class DataHandlingService implements IDataHandlingService {
             headers.setBearerAuth(token);
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
+            headers.add("compress", "true");
+            headers.add("limit", pullLimit);
             HttpEntity<String> entity = new HttpEntity<>(headers);
             MultiValueMap<String, String> multiValueParams = new LinkedMultiValueMap<>();
             for (Map.Entry<String, String> entry : params.entrySet()) {

@@ -20,7 +20,7 @@ public class DataSimplification {
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
              GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
 
-            gzipOutputStream.write(jsonData.getBytes());
+            gzipOutputStream.write(jsonData.getBytes(StandardCharsets.UTF_8));
             gzipOutputStream.finish();
 
             byte[] compressedData = byteArrayOutputStream.toByteArray();
