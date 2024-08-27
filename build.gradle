@@ -47,5 +47,11 @@ sonarqube {
         property "sonar.projectKey", "CDCgov_NEDSS-NNDSS"
         property "sonar.organization", "cdcgov"
         property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.exclusions", "**/nnd-data-exchange-service/src/main/java/gov/cdc/nnddataexchangeservice/configuration/**," +
+                "**/nnd-data-exchange-service/src/main/java/gov/cdc/nnddataexchangeservice/exception/**, " +
+                "**/nnd-data-exchange-service/src/main/java/gov/cdc/nnddataexchangeservice/security/**," +
+                "**/nnd-data-exchange-service/src/main/java/gov/cdc/nnddataexchangeservice/repository/**, " +
+                "**/nnd-data-exchange-service/src/main/java/gov/cdc/nnddataexchangeservice/service/model/**"
+
     }
 }
