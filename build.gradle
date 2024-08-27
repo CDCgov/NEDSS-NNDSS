@@ -47,7 +47,5 @@ sonarqube {
         property "sonar.projectKey", "CDCgov_NEDSS-NNDSS"
         property "sonar.organization", "cdcgov"
         property "sonar.host.url", "https://sonarcloud.io"
-       // property "sonar.exclusions", "**/configuration/**, **/exception/**, **/security/**, **/repository/**, **/service/model/**"
-
     }
 }
