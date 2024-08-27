@@ -50,23 +50,3 @@ dependencies {
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
-
-//plugins {
-//    id 'org.sonarqube' version '4.2.1.3168'
-//}
-//
-//sonarqube {
-//    properties {
-//        property "sonar.sourceEncoding", "UTF-8"
-//        property "sonar.projectKey", "CDCgov_NEDSS-NNDSS"
-//        property "sonar.organization", "cdcgov"
-//        property "sonar.host.url", "https://sonarcloud.io"
-//        property "sonar.exclusions", "**/configuration/**," +
-//                "**/exception/**, " +
-//                "**/security/**," +
-//                "**/repository/**, " +
-//                "**/constant/DataSyncConstant.java, " +
-//                "**/service/model/**"
-//
-//    }
-//}
