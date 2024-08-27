@@ -1,9 +1,7 @@
 package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.json_config.ByteArrayDeserializer;
 import gov.cdc.nnddatapollservice.service.interfaces.*;
 import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
@@ -26,19 +24,21 @@ import java.util.Map;
 public class DataHandlingService implements IDataHandlingService {
 
     @Value("${data_exchange.clientId}")
-    private String clientId;
+    private String clientId = "clientId";
 
     @Value("${data_exchange.secret}")
-    private String clientSecret;
+    private String clientSecret = "clientSecret";
 
     @Value("${data_exchange.endpoint_de}")
-    private String exchangeEndpoint;
+    protected String exchangeEndpoint;
 
     @Value("${nnd.fullLoad}")
-    protected boolean fullLoadApplied;
+    protected boolean fullLoadApplied = false;
 
     @Value("${nnd.pullLimit}")
-    private String pullLimit;
+    private String pullLimit = "0";
+
+    private final Gson gson;
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ICNTransportQOutService icnTransportQOutService;
@@ -46,10 +46,11 @@ public class DataHandlingService implements IDataHandlingService {
     private final ITransportQOutService transportQOutService;
     private final ITokenService tokenService;
 
-    public DataHandlingService(ICNTransportQOutService icnTransportQOutService,
+    public DataHandlingService(Gson gson, ICNTransportQOutService icnTransportQOutService,
                                INetsstTransportService netsstTransportService,
                                ITransportQOutService transportQOutService,
                                ITokenService tokenService) {
+        this.gson = gson;
         this.icnTransportQOutService = icnTransportQOutService;
         this.netsstTransportService = netsstTransportService;
         this.transportQOutService = transportQOutService;
@@ -79,7 +80,6 @@ public class DataHandlingService implements IDataHandlingService {
 
     public void persistingExchangeData(String data) throws DataPollException {
         try {
-            Gson gson = new Gson();
             var dataExchangeModel = gson.fromJson(data, DataExchangeModel.class);
 
             if (!dataExchangeModel.getCnTransportQOutDtoList().isEmpty()) {
