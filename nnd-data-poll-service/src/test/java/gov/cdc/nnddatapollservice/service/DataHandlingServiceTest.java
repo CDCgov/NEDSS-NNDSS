@@ -22,8 +22,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;

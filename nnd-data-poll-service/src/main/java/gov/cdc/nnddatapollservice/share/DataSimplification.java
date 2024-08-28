@@ -12,7 +12,9 @@ public class DataSimplification {
     private DataSimplification() {
 
     }
-    public static String decodeAndDecompress(String base64EncodedData) throws DataPollException {
+
+    @SuppressWarnings("java:S1141")
+    public static String decodeAndDecompress(String base64EncodedData) {
         try {
             byte[] compressedData = Base64.getDecoder().decode(base64EncodedData);
 
