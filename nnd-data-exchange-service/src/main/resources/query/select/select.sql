@@ -320,9 +320,12 @@ WHERE
 
 
 
-
-
-
+SELECT N.* FROM NOTIFICATION N
+           WHERE (N.NOTIFICATION_LAST_CHANGE_TIME >= :timestamp)
+                                  OR (N.NOTIFICATION_LAST_CHANGE_TIME IS NULL AND EXISTS
+                                      (SELECT 1 FROM NOTIFICATION_EVENT NE JOIN INVESTIGATION I
+                                          ON NE.INVESTIGATION_KEY = I.INVESTIGATION_KEY WHERE NE.NOTIFICATION_KEY = N.NOTIFICATION_KEY
+                                                                                          AND I.LAST_CHG_TIME >= :timestamp));
 
 
 

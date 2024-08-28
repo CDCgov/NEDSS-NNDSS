@@ -12,10 +12,10 @@ import java.util.Optional;
 
 @Repository
 public interface CNTransportQOutRepository extends JpaRepository<CNTransportQOut, Long> {
-    @Query("SELECT a FROM CNTransportQOut a WHERE a.recordStatusCd = :statusCd")
+    @Query("SELECT a FROM CNTransportQOut a WHERE a.recordStatusCd = :statusCd ORDER BY a.recordStatusTime ASC")
     Optional<Collection<CNTransportQOut>> findTransportByStatusCd (@Param("statusCd") String statusCd);
 
-    @Query("SELECT a FROM CNTransportQOut a WHERE a.recordStatusTime > :recordStatusTime AND a.recordStatusCd = :recordStatusCd")
+    @Query("SELECT a FROM CNTransportQOut a WHERE a.recordStatusTime > :recordStatusTime AND a.recordStatusCd = :recordStatusCd ORDER BY a.recordStatusTime ASC")
     Optional<Collection<CNTransportQOut>> findTransportByCreationTimeAndStatus (@Param("recordStatusTime") Timestamp recordStatusTime,
                                                                                 @Param("recordStatusCd") String recordStatusCd);
 

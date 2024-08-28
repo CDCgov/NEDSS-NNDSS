@@ -20,6 +20,9 @@ public class TransportQOutService implements ITransportQOutService {
     @Value("${io.finalLocation}")
     private String fileLocation;
 
+    @Value("${nnd.insertLimit}")
+    private Integer insertLimit = 1000;
+
 
     public TransportQOutService(TransportQOutRepository transportQOutRepository, IErrorHandlingService errorHandlingService) {
         this.transportQOutRepository = transportQOutRepository;
@@ -54,9 +57,8 @@ public class TransportQOutService implements ITransportQOutService {
                 cnTransportQOutList.add(transportQOut);
             }
 
-            int batchSize = 10;
-            for (int i = 0; i < cnTransportQOutList.size(); i += batchSize) {
-                int end = Math.min(i + batchSize, cnTransportQOutList.size());
+            for (int i = 0; i < cnTransportQOutList.size(); i += insertLimit) {
+                int end = Math.min(i + insertLimit, cnTransportQOutList.size());
                 List<TransportQOut> batch = cnTransportQOutList.subList(i, end);
 
                 try {

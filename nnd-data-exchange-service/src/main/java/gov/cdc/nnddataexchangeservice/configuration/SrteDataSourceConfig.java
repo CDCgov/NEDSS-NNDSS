@@ -19,20 +19,21 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import javax.sql.DataSource;
 import java.util.HashMap;
 
+
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "odseEntityManagerFactory",
-        transactionManagerRef = "odseTransactionManager",
+        entityManagerFactoryRef = "srteEntityManagerFactory",
+        transactionManagerRef = "srteTransactionManager",
         basePackages = {
-                "gov.cdc.nnddataexchangeservice.repository.odse"
+                "gov.cdc.nnddataexchangeservice.repository.srte"
         }
 )
-public class OdseDataSourceConfig {
+public class SrteDataSourceConfig {
     @Value("${spring.datasource.driverClassName}")
     private String driverClassName;
 
-    @Value("${spring.datasource.odse.url}")
+    @Value("${spring.datasource.srte.url}")
     private String dbUrl;
 
     @Value("${spring.datasource.username}")
@@ -41,8 +42,8 @@ public class OdseDataSourceConfig {
     @Value("${spring.datasource.password}")
     private String dbUserPassword;
 
-    @Bean(name = "odseDataSource")
-    public DataSource odseDataSource() {
+    @Bean(name = "srteDataSource")
+    public DataSource srteDataSource() {
         DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
 
         dataSourceBuilder.driverClassName(driverClassName);
@@ -53,32 +54,33 @@ public class OdseDataSourceConfig {
         return dataSourceBuilder.build();
     }
 
-    @Bean(name = "odseEntityManagerFactoryBuilder")
-    public EntityManagerFactoryBuilder odseEntityManagerFactoryBuilder() {
+    @Bean(name = "srteEntityManagerFactoryBuilder")
+    public EntityManagerFactoryBuilder srteEntityManagerFactoryBuilder() {
         return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), new HashMap<>(), null);
     }
 
     @Primary
-    @Bean(name = "odseEntityManagerFactory")
-    public LocalContainerEntityManagerFactoryBean odseEntityManagerFactory(
-            @Qualifier("odseEntityManagerFactoryBuilder") EntityManagerFactoryBuilder builder,
-            @Qualifier("odseDataSource") DataSource dataSource) {
+    @Bean(name = "srteEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean srteEntityManagerFactory(
+            @Qualifier("srteEntityManagerFactoryBuilder") EntityManagerFactoryBuilder builder,
+            @Qualifier("srteDataSource") DataSource dataSource) {
         return builder
                 .dataSource(dataSource)
-                .packages("gov.cdc.nnddataexchangeservice.repository.odse.model")
-                .persistenceUnit("odse")
+                .packages("gov.cdc.nnddataexchangeservice.repository.srte.model")
+                .persistenceUnit("srte")
                 .build();
     }
 
     @Primary
-    @Bean(name = "odseTransactionManager")
-    public PlatformTransactionManager odseTransactionManager(
-            @Qualifier("odseEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+    @Bean(name = "srteTransactionManager")
+    public PlatformTransactionManager srteTransactionManager(
+            @Qualifier("srteEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 
-    @Bean(name = "odseJdbcTemplate")
-    public JdbcTemplate odseJdbcTemplate(@Qualifier("odseDataSource") DataSource dataSource) {
+
+    @Bean(name = "srteJdbcTemplate")
+    public JdbcTemplate srteJdbcTemplate(@Qualifier("srteDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 }

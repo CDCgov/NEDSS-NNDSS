@@ -31,6 +31,8 @@ public class DataSyncConfig {
     @Column(name = "query_with_limit")
     private String queryWithLimit;
 
+    @Column(name = "query_with_null_timestamp")
+    private String queryWithNullTimeStamp;
 
     @Column(name = "created_at")
     private Timestamp createdAt;

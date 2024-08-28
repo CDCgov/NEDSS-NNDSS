@@ -12,6 +12,9 @@ data_exchange:
   endpoint_de: ${NND_DE_URL}${NND_DE_DE}
 nnd:
   fullLoad: ${NND_FULL_LOAD:false}
+  pullLimit: ${NND_PULL_LIMIT:0}
+  insertLimit: ${NND_INSERT_LIMIT:1000}
+
 
 spring:
   application:

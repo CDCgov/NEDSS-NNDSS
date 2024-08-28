@@ -21,7 +21,10 @@ public class CNTransportQOutService implements ICNTransportQOutService {
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     @Value("${io.finalLocation}")
-    private String fileLocation;
+    protected String fileLocation;
+
+    @Value("${nnd.insertLimit}")
+    protected Integer insertLimit = 1000;
 
 
     public CNTransportQOutService(CNTransportQOutRepository cnTransportQOutRepository,
@@ -55,9 +58,8 @@ public class CNTransportQOutService implements ICNTransportQOutService {
                 cnTransportQOutList.add(transportQOut);
             }
 
-            int batchSize = 10;
-            for (int i = 0; i < cnTransportQOutList.size(); i += batchSize) {
-                int end = Math.min(i + batchSize, cnTransportQOutList.size());
+            for (int i = 0; i < cnTransportQOutList.size(); i += insertLimit) {
+                int end = Math.min(i + insertLimit, cnTransportQOutList.size());
                 List<CNTransportQOut> batch = cnTransportQOutList.subList(i, end);
 
                 try {

@@ -1,6 +1,7 @@
 package gov.cdc.nnddataexchangeservice.service;
 
 
+import com.google.gson.Gson;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.ICNTransportQOutService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.INetsstTransportService;
@@ -18,7 +19,8 @@ import org.mockito.MockitoAnnotations;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class DataExchangeServiceTest {
@@ -31,6 +33,9 @@ class DataExchangeServiceTest {
 
     @Mock
     private ICNTransportQOutService cnTransportQOutService;
+
+    @Mock
+    private Gson gson;
 
     @InjectMocks
     private DataExchangeService dataExchangeService;
@@ -50,17 +55,42 @@ class DataExchangeServiceTest {
         List<CNTransportQOutDto> cnTransportQOutDtos = Collections.singletonList(new CNTransportQOutDto());
         List<TransportQOutDto> transportQOutDtos = Collections.singletonList(new TransportQOutDto());
         List<NETSSTransportQOutDto> netssTransportQOutDtos = Collections.singletonList(new NETSSTransportQOutDto());
-
+        when(gson.toJson(any(DataExchangeModel.class))).thenReturn("Test");
         when(cnTransportQOutService.getTransportData(statusCd, cnStatusTime, 0)).thenReturn(cnTransportQOutDtos);
         when(transportQOutService.getTransportData(transportTime, 0)).thenReturn(transportQOutDtos);
         when(netsstTransportService.getNetssTransportData(netssTime, 0)).thenReturn(netssTransportQOutDtos);
 
-        DataExchangeModel result = dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0);
+
+        String result = dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0, false);
 
         assertNotNull(result);
-        assertEquals(cnTransportQOutDtos.size(), result.getCountCnTransport());
-        assertEquals(transportQOutDtos.size(), result.getCountTransport());
-        assertEquals(netssTransportQOutDtos.size(), result.getCountNetssTransport());
+
+        verify(cnTransportQOutService, times(1)).getTransportData(statusCd, cnStatusTime, 0);
+        verify(transportQOutService, times(1)).getTransportData(transportTime, 0);
+        verify(netsstTransportService, times(1)).getNetssTransportData(netssTime, 0);
+    }
+
+    @Test
+    void testGetDataForOnPremExchanging_True() throws Exception {
+        String cnStatusTime = "2023-07-30 10:00:00.000";
+        String transportTime = "2023-07-30 10:00:00.000";
+        String netssTime = "2023-07-30 10:00:00.000";
+        String statusCd = "status";
+
+        List<CNTransportQOutDto> cnTransportQOutDtos = Collections.singletonList(new CNTransportQOutDto());
+        List<TransportQOutDto> transportQOutDtos = Collections.singletonList(new TransportQOutDto());
+        List<NETSSTransportQOutDto> netssTransportQOutDtos = Collections.singletonList(new NETSSTransportQOutDto());
+
+
+
+        when(cnTransportQOutService.getTransportData(statusCd, cnStatusTime, 0)).thenReturn(cnTransportQOutDtos);
+        when(transportQOutService.getTransportData(transportTime, 0)).thenReturn(transportQOutDtos);
+        when(netsstTransportService.getNetssTransportData(netssTime, 0)).thenReturn(netssTransportQOutDtos);
+        when(gson.toJson(any(DataExchangeModel.class))).thenReturn("Test");
+
+        String result = dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0, true);
+
+        assertNotNull(result);
 
         verify(cnTransportQOutService, times(1)).getTransportData(statusCd, cnStatusTime, 0);
         verify(transportQOutService, times(1)).getTransportData(transportTime, 0);
@@ -76,7 +106,7 @@ class DataExchangeServiceTest {
 
         when(cnTransportQOutService.getTransportData(statusCd, cnStatusTime, 0)).thenThrow(new DataExchangeException("Exception"));
 
-        assertThrows(DataExchangeException.class, () -> dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0));
+        assertThrows(DataExchangeException.class, () -> dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportTime, netssTime, statusCd, 0, false));
 
         verify(cnTransportQOutService, times(1)).getTransportData(statusCd, cnStatusTime, 0);
         verify(transportQOutService, times(0)).getTransportData(transportTime,0);

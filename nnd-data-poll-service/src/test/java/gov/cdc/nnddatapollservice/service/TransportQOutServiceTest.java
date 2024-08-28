@@ -90,7 +90,7 @@ public class TransportQOutServiceTest {
 
         transportQOutService.saveDataExchange(transportQOutDtoList);
 
-        verify(transportQOutRepository, times(2)).saveAll(anyList());
+        verify(transportQOutRepository, times(1)).saveAll(anyList());
         verify(transportQOutRepository, never()).flush();
         verify(errorHandlingService, atLeastOnce()).dumpBatchToFile(anyList(), anyString(), anyString());
     }
