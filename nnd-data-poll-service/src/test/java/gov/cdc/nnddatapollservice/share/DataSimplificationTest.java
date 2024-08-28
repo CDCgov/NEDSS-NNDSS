@@ -24,7 +24,7 @@ class DataSimplificationTest {
     }
 
     @Test
-    void testDecodeAndDecompressInvalidBase64() throws DataPollException {
+    void testDecodeAndDecompressInvalidBase64() {
         String invalidBase64 = "ThisIsNotABase64EncodedString";
         String result = DataSimplification.decodeAndDecompress(invalidBase64);
         assertEquals(invalidBase64, result);
