@@ -82,11 +82,14 @@ public class DataExchangeController {
     @GetMapping(path = "/api/data-exchange-generic/{tableName}")
     public ResponseEntity<String> exchangingData(@PathVariable String tableName, @RequestParam(required = false) String timestamp,
                                                  @RequestHeader(name = "limit", defaultValue = "0") String limit,
-                                                 @RequestHeader(name = "null_allow", defaultValue = "false", required = false) String nulLAllow) throws DataExchangeException {
-            int intLimit = Integer.parseInt(limit);
+                                                 @RequestHeader(name = "null_allow", defaultValue = "false", required = false) String nulLAllow,
+                                                 @RequestHeader(name = "initial_load", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
+        int intLimit = Integer.parseInt(limit);
 
-            boolean nullApplied = nulLAllow.equalsIgnoreCase("true");
-            var base64CompressedData = dataExchangeGenericService.getGenericDataExchange(tableName, timestamp, intLimit, nullApplied);
+        boolean nullApplied = nulLAllow.equalsIgnoreCase("true");
+        boolean initialLoad = initialLoadApplied.equalsIgnoreCase("true");
+
+        var base64CompressedData = dataExchangeGenericService.getGenericDataExchange(tableName, timestamp, intLimit, nullApplied, initialLoad);
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
     }
 

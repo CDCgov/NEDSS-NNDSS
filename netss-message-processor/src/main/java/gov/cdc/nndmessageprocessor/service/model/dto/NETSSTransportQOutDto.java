@@ -45,6 +45,10 @@ public class NETSSTransportQOutDto {
         this.recordStatusCd = netssTransportQOut.getRecordStatusCd();
     }
 
+    public NETSSTransportQOutDto() {
+
+    }
+
     public String getEvent() {
         String thisPayload = getPayload();
         String conditionStr = "";

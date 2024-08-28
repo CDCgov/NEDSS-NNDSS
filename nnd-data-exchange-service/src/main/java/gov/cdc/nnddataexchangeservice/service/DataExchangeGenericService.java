@@ -40,7 +40,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     @SuppressWarnings("javasecurity:S3649")
-    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit, boolean nullAllow) throws DataExchangeException {
+    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit, boolean nullAllow,boolean initialLoad) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataSyncConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
 
@@ -63,6 +63,10 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
             String effectiveTimestamp = timeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP +"'" : "'" + timeStamp + "'";
             String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
+
+            if (initialLoad) {
+                query = query.replaceAll(">=", "<");
+            }
 
             if (baseQuery.contains(LIMIT_PARAM)) {
                 query = query.replace(LIMIT_PARAM, limit.toString());

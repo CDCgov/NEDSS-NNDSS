@@ -94,11 +94,12 @@ class DataExchangeControllerTest {
         String limit = "10";
         String base64CompressedData = "mockBase64Data";
         String nullApply = "true";
+        String load = "true";
 
-        when(dataExchangeGenericService.getGenericDataExchange(anyString(), anyString(), anyInt(), anyBoolean()))
+        when(dataExchangeGenericService.getGenericDataExchange(anyString(), anyString(), anyInt(), anyBoolean(), anyBoolean()))
                 .thenReturn(base64CompressedData);
 
-        ResponseEntity<String> response = dataExchangeController.exchangingData(tableName, timestamp, limit, nullApply);
+        ResponseEntity<String> response = dataExchangeController.exchangingData(tableName, timestamp, limit, nullApply, load);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());

@@ -51,7 +51,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.empty());
 
         assertThrows(DataExchangeException.class, () ->
-                dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false));
+                dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false, false));
     }
 
     @Test
@@ -75,7 +75,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false, true);
         assertNotNull(res);
     }
     @Test
@@ -99,7 +99,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false, false);
         assertNotNull(res);
     }
 
@@ -125,7 +125,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false, false);
         assertNotNull(res);
     }
 
@@ -152,7 +152,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true, false);
         assertNotNull(res);
     }
 

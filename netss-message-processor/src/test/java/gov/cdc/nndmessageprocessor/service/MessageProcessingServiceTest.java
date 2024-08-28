@@ -13,6 +13,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,8 +34,6 @@ public class MessageProcessingServiceTest {
         ReflectionTestUtils.setField(messageProcessingService, "date", "12/30/2023");
         ReflectionTestUtils.setField(messageProcessingService, "prior", true);
     }
-
-
 
     @Test
     void testScheduleDataFetch_Success() throws DataProcessorException {

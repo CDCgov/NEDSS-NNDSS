@@ -9,7 +9,9 @@ import org.mockito.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,7 +21,8 @@ public class NetssCaseServiceTest {
 
     @Mock
     private INETSSTransportQOutService netssTransportQOutService;
-
+    @Mock
+    private File fileMock;
     @Spy
     @InjectMocks
     private NetssCaseService netssCaseService;
@@ -116,6 +119,161 @@ public class NetssCaseServiceTest {
 
         boolean result = netssCaseService.writeNETSSOutputFile(mockFile, mockCollection, (short) 23);
 
+        assertFalse(result);
+    }
+
+    @Test
+    public void testGetNetssCasesYearLessThan2000() throws DataProcessorException {
+        // Set up the inputs for the test
+        Short mmwrYear = 1999;
+        Short mmwrWeek = 10;
+        Boolean includePriorYear = false;
+
+        // Mock the method calls
+        when(netssCaseService.getNETSSTransportQOutDTCollectionForYear(anyShort(), anyShort(), anyBoolean()))
+                .thenReturn(List.of(new NETSSTransportQOutDto())); // returning a non-empty collection to avoid the exception
+
+        when(netssCaseService.processAndWriteNETSSOutputFile(anyShort(), anyList()))
+                .thenReturn(true); // simulate a successful write
+
+        // Call the method under test
+        netssCaseService.getNetssCases(mmwrYear, mmwrWeek, includePriorYear);
+
+        // Verify the behavior: Year should not be modified (no subtraction)
+        verify(netssCaseService, times(1)).getNETSSTransportQOutDTCollectionForYear(eq(mmwrYear), eq(mmwrWeek), eq(includePriorYear));
+    }
+
+    @Test
+    public void testGetNetssCasesWrittenFalse() throws DataProcessorException {
+        // Set up the inputs for the test
+        Short mmwrYear = 2023;
+        Short mmwrWeek = 10;
+        Boolean includePriorYear = false;
+
+        // Mock the method calls
+        when(netssCaseService.getNETSSTransportQOutDTCollectionForYear(anyShort(), anyShort(), anyBoolean()))
+                .thenReturn(List.of(new NETSSTransportQOutDto())); // returning a non-empty collection to avoid the exception
+
+        when(netssCaseService.processAndWriteNETSSOutputFile(anyShort(), anyList()))
+                .thenReturn(false); // simulate a failed write
+
+        // Call the method under test
+        netssCaseService.getNetssCases(mmwrYear, mmwrWeek, includePriorYear);
+
+        // Verify that the correct log message is produced
+        verify(netssCaseService, times(1)).processAndWriteNETSSOutputFile(eq((short) 23), anyList());
+    }
+
+    @Test
+    public void testGetNetssCasesNoDataFound() throws DataProcessorException {
+        // Set up the inputs for the test
+        Short mmwrYear = 2023;
+        Short mmwrWeek = 10;
+        Boolean includePriorYear = false;
+
+        // Mock the method to return an empty collection
+        when(netssCaseService.getNETSSTransportQOutDTCollectionForYear(anyShort(), anyShort(), anyBoolean()))
+                .thenReturn(Collections.emptyList()); // returning an empty collection to simulate "No Data Found"
+
+        // Expect DataProcessorException to be thrown
+        assertThrows(DataProcessorException.class, () -> {
+            netssCaseService.getNetssCases(mmwrYear, mmwrWeek, includePriorYear);
+        });
+
+        // Verify that processAndWriteNETSSOutputFile is never called due to the exception
+        verify(netssCaseService, never()).processAndWriteNETSSOutputFile(anyShort(), anyList());
+    }
+
+    @Test
+    public void testRemoveDupsFromNetssCollectionWithNullPayload() {
+        // Create a list with one item having null payload
+        List<NETSSTransportQOutDto> inputList = new ArrayList<>();
+        inputList.add(new NETSSTransportQOutDto());  // Assuming a constructor for testing purposes
+
+        // Call the method under test
+        List<NETSSTransportQOutDto> result = netssCaseService.removeDupsFromNetssCollection(inputList);
+
+        // Verify the result - the list should be empty since the payload is null
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testRemoveDupsFromNetssCollectionWithShortPayload() {
+        // Create a list with one item having a payload length < 12
+        List<NETSSTransportQOutDto> inputList = new ArrayList<>();
+        inputList.add(new NETSSTransportQOutDto("12345"));  // Payload length < 12
+
+        // Call the method under test
+        List<NETSSTransportQOutDto> result = netssCaseService.removeDupsFromNetssCollection(inputList);
+
+        // Verify the result - the list should be empty since the payload length is < 12
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    public void testRemoveDupsFromNetssCollectionWithValidPayloads() {
+        // Create a list with valid payloads
+        List<NETSSTransportQOutDto> inputList = new ArrayList<>();
+        inputList.add(new NETSSTransportQOutDto("ABC123456789"));  // Valid payload
+        inputList.add(new NETSSTransportQOutDto("XYZ123456789"));  // Same CASE REPORT ID (456789) as above
+
+        // Call the method under test
+        List<NETSSTransportQOutDto> result = netssCaseService.removeDupsFromNetssCollection(inputList);
+
+        // Verify the result - there should be only 1 entry as they have the same CASE REPORT ID
+        assertEquals(1, result.size());
+    }
+
+
+
+    @Test
+    public void testProcessAndWriteNETSSOutputFileDirectoryCreationFailure() {
+        // Simulate the directory does not exist and cannot be created
+        when(fileMock.exists()).thenReturn(false);
+        when(fileMock.mkdirs()).thenReturn(false);
+
+        // Test the method
+        boolean result = netssCaseService.processAndWriteNETSSOutputFile((short) 2023, Collections.emptyList());
+
+        // Verify that the result is false due to directory creation failure
+        assertFalse(result);
+    }
+
+    @Test
+    public void testProcessAndWriteNETSSOutputFileNotADirectory() {
+        // Simulate the directory exists but is not a directory
+        when(fileMock.exists()).thenReturn(true);
+        when(fileMock.isDirectory()).thenReturn(false);
+
+        // Test the method
+        boolean result = netssCaseService.processAndWriteNETSSOutputFile((short) 2023, Collections.emptyList());
+
+        // Verify that the result is false because the path is not a directory
+        assertFalse(result);
+    }
+
+
+
+    @Test
+    public void testWriteNETSSOutputFileIOException() throws IOException {
+        // Create a mock file and a mock list of DTOs
+        File mockFile = mock(File.class);
+        List<NETSSTransportQOutDto> mockList = new ArrayList<>();
+        mockList.add(new NETSSTransportQOutDto("ABC123456789"));
+
+        // Mock the FileWriter to throw an IOException
+        FileWriter mockFileWriter = mock(FileWriter.class);
+        when(new FileWriter(mockFile, false)).thenThrow(new IOException("Mock IO Exception"));
+
+        // Mock the PrintWriter
+        PrintWriter mockWriter = mock(PrintWriter.class);
+        doThrow(new IOException()).when(mockWriter).close();
+
+        // Call the method under test
+        Short mmwrYear = 2023;
+        boolean result = netssCaseService.writeNETSSOutputFile(mockFile, mockList, mmwrYear);
+
+        // Verify the method returns false due to the IOException
         assertFalse(result);
     }
 }
