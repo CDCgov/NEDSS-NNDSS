@@ -20,6 +20,7 @@ CREATE TABLE data_sync_config
     source_db       NVARCHAR(255) NOT NULL,
     query NVARCHAR(MAX) NOT NULL,
     query_with_limit NVARCHAR(MAX) NULL,
+    query_with_null_timestamp NVARCHAR(MAX) NULL,
     created_at      DATETIME2 DEFAULT GETDATE(),
     updated_at      DATETIME2 DEFAULT GETDATE()
 );

@@ -22,15 +22,15 @@ import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
 public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final DataSyncConfigRepository dataSyncConfigRepository;
     private final JdbcTemplate jdbcTemplate;
-    private final JdbcTemplate odseJdbcTemplate;
+    private final JdbcTemplate srteJdbcTemplate;
     private final Gson gson;
 
     public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository,
                                       @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                      @Qualifier("odseJdbcTemplate")  JdbcTemplate odseJdbcTemplate) {
+                                      @Qualifier("srteJdbcTemplate")  JdbcTemplate srteJdbcTemplate) {
         this.dataSyncConfigRepository = dataSyncConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
-        this.odseJdbcTemplate = odseJdbcTemplate;
+        this.srteJdbcTemplate = srteJdbcTemplate;
 
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
@@ -40,7 +40,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     @SuppressWarnings("javasecurity:S3649")
-    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit) throws DataExchangeException {
+    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit, boolean nullAllow) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataSyncConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
 
@@ -49,9 +49,17 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
         try {
             // Execute the query and retrieve the dataset
-            String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
-                    ? dataConfig.getQueryWithLimit()
-                    : dataConfig.getQuery();
+            String baseQuery = "";
+
+            if (nullAllow && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+                baseQuery = dataConfig.getQueryWithNullTimeStamp();
+            } else {
+                baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
+                        ? dataConfig.getQueryWithLimit()
+                        : dataConfig.getQuery();
+            }
+
+
 
             String effectiveTimestamp = timeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP +"'" : "'" + timeStamp + "'";
             String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
@@ -61,8 +69,8 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             }
             List<Map<String, Object>> data;
 
-            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_ODSE)) {
-                data = odseJdbcTemplate.queryForList(query);
+            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+                data = srteJdbcTemplate.queryForList(query);
             } else {
                 data = jdbcTemplate.queryForList(query);
             }

@@ -6,5 +6,5 @@ public class DataSyncConstant {
     public static final String LIMIT_PARAM = ":limit";
     public static final Integer BYTE_SIZE = 1024;
     public static final String DB_RDB = "RDB";
-    public static final String DB_ODSE = "ODSE";
+    public static final String DB_SRTE = "SRTE";
 }
