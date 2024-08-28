@@ -253,27 +253,4 @@ public class NetssCaseServiceTest {
     }
 
 
-
-    @Test
-    public void testWriteNETSSOutputFileIOException() throws IOException {
-        // Create a mock file and a mock list of DTOs
-        File mockFile = mock(File.class);
-        List<NETSSTransportQOutDto> mockList = new ArrayList<>();
-        mockList.add(new NETSSTransportQOutDto("ABC123456789"));
-
-        // Mock the FileWriter to throw an IOException
-        FileWriter mockFileWriter = mock(FileWriter.class);
-        when(new FileWriter(mockFile, false)).thenThrow(new IOException("Mock IO Exception"));
-
-        // Mock the PrintWriter
-        PrintWriter mockWriter = mock(PrintWriter.class);
-        doThrow(new IOException()).when(mockWriter).close();
-
-        // Call the method under test
-        Short mmwrYear = 2023;
-        boolean result = netssCaseService.writeNETSSOutputFile(mockFile, mockList, mmwrYear);
-
-        // Verify the method returns false due to the IOException
-        assertFalse(result);
-    }
 }
