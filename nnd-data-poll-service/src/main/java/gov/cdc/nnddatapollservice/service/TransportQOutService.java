@@ -36,18 +36,14 @@ public class TransportQOutService implements ITransportQOutService {
     public String getMaxTimestamp() throws DataPollException {
         try {
             var time = transportQOutRepository.findMaxTimeStampInvolvingWithNotification();
-            if (time.isPresent()) {
-                return time.get().toString();
-            }
-            else {
-                return "";
-            }
+            return time.orElse("");
         } catch (Exception e) {
             throw new DataPollException(e.getMessage());
         }
 
     }
 
+    @SuppressWarnings("java:S1141")
     public void saveDataExchange(List<TransportQOutDto> transportQOutDtoList) throws DataPollException {
         try {
             List<TransportQOut> cnTransportQOutList = new ArrayList<>();

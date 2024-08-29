@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
-public class DataHandlingServiceTest {
+class DataHandlingServiceTest {
 
     @Mock
     private ICNTransportQOutService icnTransportQOutService;

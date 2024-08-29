@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class TokenServiceTest {
+class TokenServiceTest {
 
     @Mock
     private RestTemplate restTemplate;

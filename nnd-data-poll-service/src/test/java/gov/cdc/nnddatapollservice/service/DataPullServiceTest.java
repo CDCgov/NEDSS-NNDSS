@@ -12,7 +12,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-public class DataPullServiceTest {
+class DataPullServiceTest {
 
     @Mock
     private IDataHandlingService dataHandlingService;
