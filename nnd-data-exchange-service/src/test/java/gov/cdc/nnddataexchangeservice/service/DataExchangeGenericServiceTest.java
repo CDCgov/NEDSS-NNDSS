@@ -54,6 +54,7 @@ class DataExchangeGenericServiceTest {
                 dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false));
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_1() throws DataExchangeException {
         String tableName = "table";
@@ -63,6 +64,7 @@ class DataExchangeGenericServiceTest {
         config.setQuery("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
+        config.setQueryWithNullTimeStamp("TEST SELECT");
         int limit = 0;
 
         List<Map<String, Object>> data = new ArrayList<>();
@@ -75,9 +77,65 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
         assertNotNull(res);
     }
+
+    @SuppressWarnings("java:S5976")
+    @Test
+    void getGenericDataExchange_5() throws DataExchangeException {
+        String tableName = "table";
+        String timeStamp = null;
+
+        DataSyncConfig config = new DataSyncConfig();
+        config.setQuery("SELECT * FROM HERE");
+        config.setTableName(tableName);
+        config.setSourceDb("RDB");
+        config.setQueryWithNullTimeStamp("");
+        int limit = 0;
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("CONDITION", "RDB");
+        map.put("SELECT * FROM CONDITION;", null);
+        map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
+        data.add(map);
+
+        when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(jdbcTemplate.queryForList(any())).thenReturn(data);
+        when(gson.toJson(data)).thenReturn("TEST");
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
+        assertNotNull(res);
+    }
+
+    @SuppressWarnings("java:S5976")
+    @Test
+    void getGenericDataExchange_6() throws DataExchangeException {
+        String tableName = "table";
+        String timeStamp = null;
+
+        DataSyncConfig config = new DataSyncConfig();
+        config.setQuery("SELECT * FROM HERE");
+        config.setTableName(tableName);
+        config.setSourceDb("RDB");
+        config.setQueryWithNullTimeStamp(null);
+        int limit = 0;
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("CONDITION", "RDB");
+        map.put("SELECT * FROM CONDITION;", null);
+        map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
+        data.add(map);
+
+        when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(jdbcTemplate.queryForList(any())).thenReturn(data);
+        when(gson.toJson(data)).thenReturn("TEST");
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
+        assertNotNull(res);
+    }
+
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_2() throws DataExchangeException {
         String tableName = "table";
@@ -103,6 +161,7 @@ class DataExchangeGenericServiceTest {
         assertNotNull(res);
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_3() throws DataExchangeException {
         String tableName = "table";
@@ -129,6 +188,7 @@ class DataExchangeGenericServiceTest {
         assertNotNull(res);
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_4() throws DataExchangeException {
         String tableName = "table";
@@ -152,7 +212,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
         assertNotNull(res);
     }
 
