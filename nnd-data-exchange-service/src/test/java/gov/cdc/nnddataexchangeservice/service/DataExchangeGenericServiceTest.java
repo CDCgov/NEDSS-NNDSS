@@ -63,6 +63,7 @@ class DataExchangeGenericServiceTest {
         config.setQuery("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
+        config.setQueryWithNullTimeStamp("TEST SELECT");
         int limit = 0;
 
         List<Map<String, Object>> data = new ArrayList<>();

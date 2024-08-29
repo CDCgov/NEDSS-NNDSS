@@ -9,10 +9,11 @@ import org.mockito.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -123,7 +124,7 @@ public class NetssCaseServiceTest {
     }
 
     @Test
-    public void testGetNetssCasesYearLessThan2000() throws DataProcessorException {
+    void testGetNetssCasesYearLessThan2000() throws DataProcessorException {
         // Set up the inputs for the test
         Short mmwrYear = 1999;
         Short mmwrWeek = 10;
@@ -140,11 +141,11 @@ public class NetssCaseServiceTest {
         netssCaseService.getNetssCases(mmwrYear, mmwrWeek, includePriorYear);
 
         // Verify the behavior: Year should not be modified (no subtraction)
-        verify(netssCaseService, times(1)).getNETSSTransportQOutDTCollectionForYear(eq(mmwrYear), eq(mmwrWeek), eq(includePriorYear));
+        verify(netssCaseService, times(1)).getNETSSTransportQOutDTCollectionForYear(mmwrYear, mmwrWeek, includePriorYear);
     }
 
     @Test
-    public void testGetNetssCasesWrittenFalse() throws DataProcessorException {
+    void testGetNetssCasesWrittenFalse() throws DataProcessorException {
         // Set up the inputs for the test
         Short mmwrYear = 2023;
         Short mmwrWeek = 10;
@@ -165,7 +166,7 @@ public class NetssCaseServiceTest {
     }
 
     @Test
-    public void testGetNetssCasesNoDataFound() throws DataProcessorException {
+    void testGetNetssCasesNoDataFound() throws DataProcessorException {
         // Set up the inputs for the test
         Short mmwrYear = 2023;
         Short mmwrWeek = 10;
@@ -185,7 +186,7 @@ public class NetssCaseServiceTest {
     }
 
     @Test
-    public void testRemoveDupsFromNetssCollectionWithNullPayload() {
+    void testRemoveDupsFromNetssCollectionWithNullPayload() {
         // Create a list with one item having null payload
         List<NETSSTransportQOutDto> inputList = new ArrayList<>();
         inputList.add(new NETSSTransportQOutDto());  // Assuming a constructor for testing purposes
@@ -198,7 +199,7 @@ public class NetssCaseServiceTest {
     }
 
     @Test
-    public void testRemoveDupsFromNetssCollectionWithShortPayload() {
+    void testRemoveDupsFromNetssCollectionWithShortPayload() {
         // Create a list with one item having a payload length < 12
         List<NETSSTransportQOutDto> inputList = new ArrayList<>();
         inputList.add(new NETSSTransportQOutDto("12345"));  // Payload length < 12
@@ -211,7 +212,7 @@ public class NetssCaseServiceTest {
     }
 
     @Test
-    public void testRemoveDupsFromNetssCollectionWithValidPayloads() {
+    void testRemoveDupsFromNetssCollectionWithValidPayloads() {
         // Create a list with valid payloads
         List<NETSSTransportQOutDto> inputList = new ArrayList<>();
         inputList.add(new NETSSTransportQOutDto("ABC123456789"));  // Valid payload
@@ -227,7 +228,7 @@ public class NetssCaseServiceTest {
 
 
     @Test
-    public void testProcessAndWriteNETSSOutputFileDirectoryCreationFailure() {
+    void testProcessAndWriteNETSSOutputFileDirectoryCreationFailure() {
         // Simulate the directory does not exist and cannot be created
         when(fileMock.exists()).thenReturn(false);
         when(fileMock.mkdirs()).thenReturn(false);
@@ -240,7 +241,7 @@ public class NetssCaseServiceTest {
     }
 
     @Test
-    public void testProcessAndWriteNETSSOutputFileNotADirectory() {
+    void testProcessAndWriteNETSSOutputFileNotADirectory() {
         // Simulate the directory exists but is not a directory
         when(fileMock.exists()).thenReturn(true);
         when(fileMock.isDirectory()).thenReturn(false);

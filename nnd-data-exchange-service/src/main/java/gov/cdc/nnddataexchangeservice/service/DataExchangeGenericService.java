@@ -61,11 +61,11 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
 
             if (initialLoad) {
-                query = query.replaceAll(">=", "<");
+                query = query.replaceAll(">=", "<"); //NOSONAR
                 if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                    query = query.replaceAll(";", "");
+                    query = query.replaceAll(";", ""); //NOSONAR
                     var nullQuery = dataConfig.getQueryWithNullTimeStamp();
-                    nullQuery = nullQuery.replaceAll(";", "");
+                    nullQuery = nullQuery.replaceAll(";", ""); //NOSONAR
                     query = nullQuery + " UNION " + query + ";";
                 }
             }
