@@ -24,7 +24,6 @@ import javax.sql.DataSource;
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +43,7 @@ public class RdbDataPersistentDAO {
     }
 
     public void saveRDBData(String tableName, String jsonData) {
-        logger.info("saveRDBData tableName: " + tableName);
+        logger.info("saveRDBData tableName: {0}",tableName);
         if (tableName != null && tableName.equalsIgnoreCase("CONFIRMATION_METHOD")) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
@@ -55,7 +54,7 @@ public class RdbDataPersistentDAO {
             for (ConfirmationMethod confirmationMethod : list) {
                 upsertConfirmationMethod(confirmationMethod);
             }
-            logger.info("saveRDBData tableName: " + tableName + " Updated Records: " + list.size());
+            logger.info("saveRDBData tableName:: {0} Inserted Records:{1}",tableName,list.size());
         } else if (tableName != null && tableName.equalsIgnoreCase("CONDITION")) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
@@ -66,7 +65,7 @@ public class RdbDataPersistentDAO {
             for (Condition condition : list) {
                 upsertCondition(condition);
             }
-            logger.info("saveRDBData tableName: " + tableName + " Updated Records: " + list.size());
+            logger.info("saveRDBData tableName:: {0} Inserted Records:{1}",tableName,list.size());
         } else if (tableName != null && tableName.equalsIgnoreCase("RDB_DATE")) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
@@ -77,16 +76,17 @@ public class RdbDataPersistentDAO {
             for (RdbDate rdbDate : list) {
                 upsertRdbDate(rdbDate);
             }
-            logger.info("saveRDBData tableName: " + tableName + " Updated Records: " + list.size());
+
+            logger.info("saveRDBData tableName:: {0} Inserted Records:{1}",tableName,list.size());
         } else {
             try {
                 SimpleJdbcInsert simpleJdbcInsert =
                         new SimpleJdbcInsert(dataSource);
                 simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
                 List<Map<String, Object>> records = jsonToListOfMap(jsonData);
-                logger.info("Inside generic code before executeBatch tableName: " + tableName + " Updated Records: " + records.size());
+                logger.info("Inside generic code before executeBatch tableName: {0} Updated Records:{1}",tableName,records.size());
                 simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                logger.info("Success.. executeBatch tableName: " + tableName);
+                logger.info("Success.. executeBatch tableName: {0}",tableName);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -213,28 +213,20 @@ public class RdbDataPersistentDAO {
 
     public String getLastUpdatedTime(String tableName) {
         String sql = "select last_update_time from POLL_DATA_SYNC_CONFIG where table_name=?";
+        String updatedTime="";
         Timestamp lastTime = jdbcTemplate.queryForObject(
                 sql, new Object[]{tableName}, Timestamp.class);
-        logger.info("getLastUpdatedTime tableName: " + tableName + " lastTime:" + lastTime);
         if (lastTime != null) {
-            System.out.println("Table:" + tableName + " EXISTING TIME:" + lastTime);
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            return formatter.format(lastTime);
-        } else {
-            Timestamp timestamp = Timestamp.from(Instant.now());
-            System.out.println("Table:" + tableName + " CURRENT TIME:" + timestamp);
-            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            return formatter.format(timestamp);
+            updatedTime= formatter.format(lastTime);
         }
+        logger.info("getLastUpdatedTime tableName: {0} lastUpdatedTime:{1}", tableName,lastTime);
+        return updatedTime;
     }
 
-    public void updateLastUpdatedTime(String tableName) {
+    public void updateLastUpdatedTime(String tableName,Timestamp timestamp) {
         String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
-        Timestamp timestamp = Timestamp.from(Instant.now());
-        int updateCount = jdbcTemplate.update(
-                updateSql,
-                timestamp, tableName);
-        logger.info("updateLastUpdatedTime tableName: " + tableName + " updateCount:" + updateCount);
+        jdbcTemplate.update(updateSql, timestamp, tableName);
     }
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
@@ -242,7 +234,12 @@ public class RdbDataPersistentDAO {
         List<PollDataSyncConfig> tableList = jdbcTemplate.query(
                 sql,
                 new BeanPropertyRowMapper(PollDataSyncConfig.class));
-        logger.info("getTableListFromConfig size:" + tableList.size());
+        logger.info("getTableListFromConfig size:{0}",tableList.size());
         return tableList;
+    }
+
+    public void deleteTable(String tableName) {
+        String truncateSql = "delete "+tableName;
+        jdbcTemplate.execute(truncateSql);
     }
 }

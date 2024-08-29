@@ -22,7 +22,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 @Service
@@ -50,87 +53,52 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
     @PostConstruct
     public void handlingExchangedData() throws DataPollException {
-        //Foreign Key tables
-//        pollAndPeristsRDBData("D_ORGANIZATION");//tested
-//        pollAndPeristsRDBData("D_PROVIDER");//tested
-//        pollAndPeristsRDBData("D_CASE_MANAGEMENT");
-//        pollAndPeristsRDBData("D_INTERVIEW");//no record
-//        pollAndPeristsRDBData("D_INV_ADMINISTRATIVE");//tested
-//        pollAndPeristsRDBData("D_INV_EPIDEMIOLOGY");//tested
-//        pollAndPeristsRDBData("D_INV_HIV");//tested
-//        pollAndPeristsRDBData("D_INV_LAB_FINDING");//tested
-//        pollAndPeristsRDBData("D_INV_MEDICAL_HISTORY");//tested
-//        pollAndPeristsRDBData("D_INV_RISK_FACTOR");//tested
-//        pollAndPeristsRDBData("D_INV_TREATMENT");//no record
-//        pollAndPeristsRDBData("D_INV_VACCINATION");//tested
-//        pollAndPeristsRDBData("D_PATIENT");//tested
-//        pollAndPeristsRDBData("F_INTERVIEW_CASE");//no record
-//        pollAndPeristsRDBData("F_PAGE_CASE");//tested
-//        pollAndPeristsRDBData("F_STD_PAGE_CASE");//tested
-//        pollAndPeristsRDBData("F_VAR_PAM");//no record
-//        pollAndPeristsRDBData("CONDITION");//tested
-//        pollAndPeristsRDBData("INVESTIGATION");//tested
-//        pollAndPeristsRDBData("RDB_DATE");//tested
-//        pollAndPeristsRDBData("CONFIRMATION_METHOD");//tested 1
-//        pollAndPeristsRDBData("LDF_GROUP");//not ready.
-//        pollAndPeristsRDBData("HEP_MULTI_VALUE_FIELD_GROUP");//not ready.
-//        pollAndPeristsRDBData("NOTIFICATION");//tested
-//        pollAndPeristsRDBData("PERTUSSIS_SUSPECTED_SOURCE_GRP");//not ready.
-//        pollAndPeristsRDBData("PERTUSSIS_TREATMENT_GROUP");//not ready.
 
-//        pollAndPeristsRDBData("BMIRD_CASE");//no record
-//        pollAndPeristsRDBData("CASE_COUNT");//Error "FK__CASE_COUN__INVES__71D87064". The conflict occurred in database "RDB", table "dbo.D_PROVIDER", column 'PROVIDER_KEY'-foreign key dependency
-//        pollAndPeristsRDBData("CONFIRMATION_METHOD_GROUP");//tested
-//        pollAndPeristsRDBData("GENERIC_CASE");//foreign key dependency LDF_GROUP
-//        pollAndPeristsRDBData("HEPATITIS_CASE");//foreign key HEP_MULTI_VALUE_FIELD_GROUP
-//        pollAndPeristsRDBData("HEPATITIS_DATAMART");//tested
-//        pollAndPeristsRDBData("LDF_DATA");//tested
-//        pollAndPeristsRDBData("LDF_FOODBORNE");//no record
-//        pollAndPeristsRDBData("MEASLES_CASE");//LDF_GROUP dependency
-//        pollAndPeristsRDBData("NOTIFICATION_EVENT");//foreign key NOTIFICATION
-//        pollAndPeristsRDBData("PERTUSSIS_CASE");//foreign key LDF_GROUP, PERTUSSIS_SUSPECTED_SOURCE_GRP, PERTUSSIS_TREATMENT_GROUP
-//        pollAndPeristsRDBData("RUBELLA_CASE");//foreign key LDF_GROUP
-//        pollAndPeristsRDBData("TREATMENT");//no record
-//        pollAndPeristsRDBData("TREATMENT_EVENT");//no record
-//        pollAndPeristsRDBData("VAR_PAM_LDF");//no record
         logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList= getTableListFromConfig();
-        logger.info(" tableList to be polled: " + configTableList.size());
-        int i=0;
+        logger.info(" RDB TableList to be polled: " + configTableList.size());
+        boolean isInitalLoad= checkPollingIsInitailLoad(configTableList);
+        System.out.println("isInitalLoad: " + isInitalLoad);
+        if (isInitalLoad) {
+            cleanupRDBTables(configTableList);
+        }
+
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
             logger.info("pollDataSyncConfig: order:"+pollDataSyncConfig.getTableOrder() +"  Table:"+ pollDataSyncConfig.getTableName());
             if(!pollDataSyncConfig.getTableName().equals("LDF_GROUP")
                     && !pollDataSyncConfig.getTableName().equals("HEP_MULTI_VALUE_FIELD_GROUP")
                     && !pollDataSyncConfig.getTableName().equals("PERTUSSIS_SUSPECTED_SOURCE_GRP")
                     && !pollDataSyncConfig.getTableName().equals("PERTUSSIS_TREATMENT_GROUP")
-                    && !pollDataSyncConfig.getTableName().equals("CASE_COUNT")
+                    //&& !pollDataSyncConfig.getTableName().equals("CASE_COUNT")
                     && !pollDataSyncConfig.getTableName().equals("GENERIC_CASE")
                     && !pollDataSyncConfig.getTableName().equals("HEPATITIS_CASE")
                     && !pollDataSyncConfig.getTableName().equals("MEASLES_CASE")
                     && !pollDataSyncConfig.getTableName().equals("NOTIFICATION_EVENT")
                     && !pollDataSyncConfig.getTableName().equals("PERTUSSIS_CASE")
                     && !pollDataSyncConfig.getTableName().equals("RUBELLA_CASE")) {
-                pollAndPeristsRDBData(pollDataSyncConfig.getTableName());
+                pollAndPeristsRDBData(pollDataSyncConfig.getTableName(),isInitalLoad);
             }
         }
         logger.info("---END RDB POLLING---");
     }
-    private void pollAndPeristsRDBData(String tableName) throws DataPollException {
+    private void pollAndPeristsRDBData(String tableName,boolean isInitalLoad) throws DataPollException {
         var token = tokenService.getToken();
         var param = new HashMap<String, String>();
         logger.info("--START--handlingExchangedData for table " + tableName);
         String lastUpdatedTime= rdbDataPersistentDAO.getLastUpdatedTime(tableName);
         System.out.println("------lastUpdatedTime:"+lastUpdatedTime);
         //call data exchange service api
-        String encodedData = callDataExchangeEndpoint(token, param, tableName,lastUpdatedTime);
+        String encodedData = callDataExchangeEndpoint(token, param, tableName,"");
         //logger.info("encoded compressed data from exchange for rdb: " + encodedData);
         String rawData = decodeAndDecompress(encodedData);
         //logger.info("raw data from exchange for the table: "+tableName+" " + rawData);
+        Timestamp timestamp = Timestamp.from(Instant.now());
         persistRdbData(tableName, rawData);
 
-        rdbDataPersistentDAO.updateLastUpdatedTime(tableName);
+        rdbDataPersistentDAO.updateLastUpdatedTime(tableName,timestamp);
         logger.info("--END--handlingExchangedData for table " + tableName);
     }
+
     protected String callDataExchangeEndpoint(String token, Map<String, String> params, String tableName,String lastUpdatedTime) throws DataPollException {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -180,5 +148,19 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     }
     private List<PollDataSyncConfig> getTableListFromConfig() throws DataPollException {
         return rdbDataPersistentDAO.getTableListFromConfig();
+    }
+    private void cleanupRDBTables(List<PollDataSyncConfig> configTableList) throws DataPollException {
+        for(int j=configTableList.size()-1;j>=0;j=j-1){
+            rdbDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
+        }
+    }
+    private boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList){
+        for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
+            logger.info("pollDataSyncConfig Table:" + pollDataSyncConfig.getTableName() + "  LastUpdateTime:" + pollDataSyncConfig.getLastUpdateTime());
+            if (pollDataSyncConfig.getLastUpdateTime()!=null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
+                return false;
+            }
+        }
+        return true;
     }
 }
