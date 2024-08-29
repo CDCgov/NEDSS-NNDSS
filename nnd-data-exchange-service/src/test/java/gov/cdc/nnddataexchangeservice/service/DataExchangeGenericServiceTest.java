@@ -43,15 +43,17 @@ class DataExchangeGenericServiceTest {
 
 
     @Test
-    void getGenericDataExchange_WithMissingTable_ThrowsDataExchangeException() {
+    void getGenericDataExchange_WithMissingTable_NoRelevantData() throws DataExchangeException {
         String tableName = "invalid_table";
         String timeStamp = "2024-07-11";
         int limit = 10;
 
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.empty());
 
-        assertThrows(DataExchangeException.class, () ->
-                dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false));
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
+
+        assertNotNull(res);
+
     }
 
     @SuppressWarnings("java:S5976")
