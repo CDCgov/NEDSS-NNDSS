@@ -40,7 +40,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     @SuppressWarnings("javasecurity:S3649")
-    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit, boolean nullAllow,boolean initialLoad) throws DataExchangeException {
+    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit,boolean initialLoad) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataSyncConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
 
@@ -51,14 +51,10 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             // Execute the query and retrieve the dataset
             String baseQuery = "";
 
-            if (nullAllow && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                baseQuery = dataConfig.getQueryWithNullTimeStamp();
-            } else {
-                baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
-                        ? dataConfig.getQueryWithLimit()
-                        : dataConfig.getQuery();
-            }
 
+            baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
+                    ? dataConfig.getQueryWithLimit()
+                    : dataConfig.getQuery();
 
 
             String effectiveTimestamp = timeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP +"'" : "'" + timeStamp + "'";
@@ -66,6 +62,12 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
             if (initialLoad) {
                 query = query.replaceAll(">=", "<");
+                if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+                    query = query.replaceAll(";", "");
+                    var nullQuery = dataConfig.getQueryWithNullTimeStamp();
+                    nullQuery = nullQuery.replaceAll(";", "");
+                    query = nullQuery + " UNION " + query + ";";
+                }
             }
 
             if (baseQuery.contains(LIMIT_PARAM)) {
