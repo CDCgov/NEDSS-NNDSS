@@ -21,6 +21,7 @@ import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
 
 @Service
 public class DataExchangeGenericService implements IDataExchangeGenericService {
+
     private final DataSyncConfigRepository dataSyncConfigRepository;
     private final JdbcTemplate jdbcTemplate;
     private final JdbcTemplate srteJdbcTemplate;
@@ -72,6 +73,8 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                     nullQuery = nullQuery.replaceAll(";", ""); //NOSONAR
                     query = nullQuery + " UNION " + query + ";";
                 }
+
+                System.out.println("TEST QUERY: " + query);
             }
 
             if (baseQuery.contains(LIMIT_PARAM)) {
