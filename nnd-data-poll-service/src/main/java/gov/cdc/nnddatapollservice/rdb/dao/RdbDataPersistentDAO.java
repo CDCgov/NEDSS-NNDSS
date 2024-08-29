@@ -1,4 +1,4 @@
-package gov.cdc.nnddatapollservice.rdb.service;
+package gov.cdc.nnddatapollservice.rdb.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.FieldNamingPolicy;
@@ -9,7 +9,6 @@ import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
-import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataPersistentService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Type;
@@ -29,17 +28,17 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-@Component
+@Service
 @Slf4j
-public class RdbDataPersistentService implements IRdbDataPersistentService {
-    private static Logger logger = LoggerFactory.getLogger(RdbDataPersistentService.class);
+public class RdbDataPersistentDAO {
+    private static Logger logger = LoggerFactory.getLogger(RdbDataPersistentDAO.class);
     private JdbcTemplate jdbcTemplate;
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     private DataSource dataSource;
 
     @Autowired
-    public RdbDataPersistentService(@Qualifier("rdbDataSource") DataSource dataSource) {
+    public RdbDataPersistentDAO(@Qualifier("rdbDataSource") DataSource dataSource) {
         jdbcTemplate = new JdbcTemplate(dataSource);
         this.dataSource = dataSource;
     }
@@ -88,29 +87,6 @@ public class RdbDataPersistentService implements IRdbDataPersistentService {
                 logger.info("Inside generic code before executeBatch tableName: " + tableName + " Updated Records: " + records.size());
                 simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                 logger.info("Success.. executeBatch tableName: " + tableName);
-
-//                List<Map<String, Object>> records = jsonToListOfMap(jsonData);
-//                int i=0;
-//                for(Map<String, Object> record : records) {
-//
-//                    if(i++<20){
-//                        System.out.println(record.toString());
-//                    }
-////                    //System.out.println(record);
-//////                    System.out.println("CASE_COUNT:"+record.get("CASE_COUNT")+" INV_ASSIGNED_DT_KEY:"+record.get("INV_ASSIGNED_DT_KEY")+" INVESTIGATOR_KEY:"+record.get("INVESTIGATOR_KEY")+" REPORTER_KEY:"
-//////                            +record.get("REPORTER_KEY")+" PHYSICIAN_KEY:"+record.get("PHYSICIAN_KEY")+" RPT_SRC_ORG_KEY:"+record.get("RPT_SRC_ORG_KEY")+" PATIENT_KEY:"+record.get("PATIENT_KEY")
-//////                            +" INVESTIGATION_KEY:"+record.get("INVESTIGATION_KEY")+" CONDITION_KEY:"+record.get("CONDITION_KEY"));
-////                    //INV_ASSIGNED_DT_KEY,INVESTIGATOR_KEY,REPORTER_KEY,PHYSICIAN_KEY,RPT_SRC_ORG_KEY,PATIENT_KEY,INVESTIGATION_KEY,CONDITION_KEY
-////
-////                    if((Double)record.get("INVESTIGATOR_KEY")>1 && (Double)record.get("REPORTER_KEY")>1 && (Double)record.get("PHYSICIAN_KEY")>1) {
-////                        System.out.println("CASE_COUNT:"+record.get("CASE_COUNT")+" INV_ASSIGNED_DT_KEY:"+record.get("INV_ASSIGNED_DT_KEY")+" INVESTIGATOR_KEY:"+record.get("INVESTIGATOR_KEY")+" REPORTER_KEY:"
-////                                +record.get("REPORTER_KEY")+" PHYSICIAN_KEY:"+record.get("PHYSICIAN_KEY")+" RPT_SRC_ORG_KEY:"+record.get("RPT_SRC_ORG_KEY")+" PATIENT_KEY:"+record.get("PATIENT_KEY")
-////                                +" INVESTIGATION_KEY:"+record.get("INVESTIGATION_KEY")+" CONDITION_KEY:"+record.get("CONDITION_KEY"));
-////
-////                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(record));
-////
-////                    }
-//                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -124,28 +100,6 @@ public class RdbDataPersistentService implements IRdbDataPersistentService {
         }.getType();
         List<Map<String, Object>> list = gson.fromJson(jsonData, resultType);
         return list;
-    }
-
-    public String getLastUpdatedTime(String tableName) {
-        String sql = "select last_update_time from POLL_DATA_SYNC_CONFIG where table_name=?";
-        Timestamp lastTime = jdbcTemplate.queryForObject(
-                sql, new Object[]{tableName}, Timestamp.class);
-        logger.info("getLastUpdatedTime tableName: " + tableName + " lastTime:" + lastTime);
-        if (lastTime != null) {
-            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            return formatter.format(lastTime);
-        } else {
-            return "";
-        }
-    }
-
-    public void updateLastUpdatedTime(String tableName) {
-        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
-        Timestamp timestamp = Timestamp.from(Instant.now());
-        int updateCount = jdbcTemplate.update(
-                updateSql,
-                timestamp, tableName);
-        logger.info("updateLastUpdatedTime tableName: " + tableName + " updateCount:" + updateCount);
     }
 
     private void upsertConfirmationMethod(ConfirmationMethod confirmationMethod) {
@@ -255,6 +209,32 @@ public class RdbDataPersistentService implements IRdbDataPersistentService {
             return "'" + val + "'";
         }
         return val;
+    }
+
+    public String getLastUpdatedTime(String tableName) {
+        String sql = "select last_update_time from POLL_DATA_SYNC_CONFIG where table_name=?";
+        Timestamp lastTime = jdbcTemplate.queryForObject(
+                sql, new Object[]{tableName}, Timestamp.class);
+        logger.info("getLastUpdatedTime tableName: " + tableName + " lastTime:" + lastTime);
+        if (lastTime != null) {
+            System.out.println("Table:" + tableName + " EXISTING TIME:" + lastTime);
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            return formatter.format(lastTime);
+        } else {
+            Timestamp timestamp = Timestamp.from(Instant.now());
+            System.out.println("Table:" + tableName + " CURRENT TIME:" + timestamp);
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            return formatter.format(timestamp);
+        }
+    }
+
+    public void updateLastUpdatedTime(String tableName) {
+        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
+        Timestamp timestamp = Timestamp.from(Instant.now());
+        int updateCount = jdbcTemplate.update(
+                updateSql,
+                timestamp, tableName);
+        logger.info("updateLastUpdatedTime tableName: " + tableName + " updateCount:" + updateCount);
     }
 
     public List<PollDataSyncConfig> getTableListFromConfig() {

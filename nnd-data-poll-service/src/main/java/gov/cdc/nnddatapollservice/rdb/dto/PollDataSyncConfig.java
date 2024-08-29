@@ -13,4 +13,5 @@ public class PollDataSyncConfig {
     private Timestamp lastUpdateTime;
     private String tableOrder;
     private String query;
+    private String timestampQuery;
 }

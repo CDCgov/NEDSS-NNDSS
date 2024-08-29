@@ -18,8 +18,8 @@ CREATE TABLE poll_data_sync_config
 (
     table_name      NVARCHAR(255) NOT NULL PRIMARY KEY,
     source_db       NVARCHAR(255) NOT NULL,
-    last_update_time      DATETIME2,
     table_order int NULL,
+    last_update_time  DATETIME2,
     query nvarchar(MAX) NULL
 );
 END
