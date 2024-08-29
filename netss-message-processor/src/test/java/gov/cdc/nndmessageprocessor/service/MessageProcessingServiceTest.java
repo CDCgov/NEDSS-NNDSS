@@ -17,7 +17,8 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class MessageProcessingServiceTest {
 
@@ -33,8 +34,6 @@ public class MessageProcessingServiceTest {
         ReflectionTestUtils.setField(messageProcessingService, "date", "12/30/2023");
         ReflectionTestUtils.setField(messageProcessingService, "prior", true);
     }
-
-
 
     @Test
     void testScheduleDataFetch_Success() throws DataProcessorException {
