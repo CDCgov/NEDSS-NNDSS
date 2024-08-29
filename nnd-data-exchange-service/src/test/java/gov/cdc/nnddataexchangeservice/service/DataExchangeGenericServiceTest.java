@@ -54,6 +54,7 @@ class DataExchangeGenericServiceTest {
                 dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false));
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_1() throws DataExchangeException {
         String tableName = "table";
@@ -80,6 +81,7 @@ class DataExchangeGenericServiceTest {
         assertNotNull(res);
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_5() throws DataExchangeException {
         String tableName = "table";
@@ -106,6 +108,7 @@ class DataExchangeGenericServiceTest {
         assertNotNull(res);
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_6() throws DataExchangeException {
         String tableName = "table";
@@ -132,6 +135,7 @@ class DataExchangeGenericServiceTest {
         assertNotNull(res);
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_2() throws DataExchangeException {
         String tableName = "table";
@@ -157,6 +161,7 @@ class DataExchangeGenericServiceTest {
         assertNotNull(res);
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_3() throws DataExchangeException {
         String tableName = "table";
@@ -183,6 +188,7 @@ class DataExchangeGenericServiceTest {
         assertNotNull(res);
     }
 
+    @SuppressWarnings("java:S5976")
     @Test
     void getGenericDataExchange_4() throws DataExchangeException {
         String tableName = "table";
