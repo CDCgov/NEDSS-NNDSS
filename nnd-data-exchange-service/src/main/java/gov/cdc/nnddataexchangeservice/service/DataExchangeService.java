@@ -1,12 +1,16 @@
 package gov.cdc.nnddataexchangeservice.service;
 
+import com.google.gson.Gson;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.ICNTransportQOutService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.INetsstTransportService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.ITransportQOutService;
 import gov.cdc.nnddataexchangeservice.service.model.DataExchangeModel;
+import gov.cdc.nnddataexchangeservice.shared.DataSimplification;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 public class DataExchangeService implements IDataExchangeService {
@@ -14,17 +18,20 @@ public class DataExchangeService implements IDataExchangeService {
     private final ITransportQOutService transportQOutService;
     private final ICNTransportQOutService cnTransportQOutService;
 
+    private final Gson gson;
 
     public DataExchangeService(INetsstTransportService netsstTransportService,
                                ITransportQOutService transportQOutService,
-                               ICNTransportQOutService icnTransportQOutService) {
+                               ICNTransportQOutService icnTransportQOutService, Gson gson) {
         this.netsstTransportService = netsstTransportService;
         this.transportQOutService = transportQOutService;
         this.cnTransportQOutService = icnTransportQOutService;
+        this.gson = gson;
     }
 
-    public DataExchangeModel getDataForOnPremExchanging(String cnStatusTime, String transportTime,String netssTime, String statusCd,
-                                                        Integer limit) throws DataExchangeException {
+    public String getDataForOnPremExchanging(String cnStatusTime, String transportTime,
+                                                        String netssTime, String statusCd,
+                                                        Integer limit, boolean compressionApplied) throws DataExchangeException, IOException {
         var dataExchange = new DataExchangeModel();
         var cnTransportDatas = cnTransportQOutService.getTransportData(statusCd, cnStatusTime, limit);
         var transportDatas = transportQOutService.getTransportData(transportTime, limit);
@@ -37,6 +44,13 @@ public class DataExchangeService implements IDataExchangeService {
         dataExchange.setCountCnTransport(cnTransportDatas.size());
         dataExchange.setCountTransport(transportDatas.size());
         dataExchange.setCountNetssTransport(netssDatas.size());
-        return dataExchange;
+        String strData = gson.toJson(dataExchange);
+        String finalData;
+        if (compressionApplied) {
+            finalData = DataSimplification.dataCompressionAndEncode(strData);
+        } else {
+            finalData = strData;
+        }
+        return finalData;
     }
 }

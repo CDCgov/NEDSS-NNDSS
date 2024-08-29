@@ -12,7 +12,10 @@ data_exchange:
   endpoint_de: ${NND_DE_URL}${NND_DE_DE}
   endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC}
 nnd:
-  fullLoad: ${NND_FULL_LOAD}
+  fullLoad: ${NND_FULL_LOAD:false}
+  pullLimit: ${NND_PULL_LIMIT:0}
+  insertLimit: ${NND_INSERT_LIMIT:1000}
+
 
 spring:
   application:

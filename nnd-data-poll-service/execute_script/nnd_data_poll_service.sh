@@ -1,6 +1,9 @@
 #!/bin/bash
 export NBS_NND_CRON="* * * * * *"
 export NBS_NND_CRON_TIME_ZONE="UTC"
+export NND_FULL_LOAD="false"
+export NND_PULL_LIMIT="0"
+export NND_INSERT_LIMIT="1000"
 export NND_DE_CLIENT_ID="nnd-keycloak-client"
 export NND_DE_DE="/api/nnd/data-exchange"
 export NND_DE_SECRET="bpVTppDam4sxXt4hfgm5hZ6Rteponjb9"

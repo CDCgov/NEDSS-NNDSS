@@ -12,10 +12,10 @@ import java.util.Optional;
 
 @Repository
 public interface NETSSTransportQOutRepository extends JpaRepository<NETSSTransportQOut, Long> {
-    @Query("SELECT a FROM NETSSTransportQOut a")
+    @Query("SELECT a FROM NETSSTransportQOut a ORDER BY a.addTime ASC")
     Optional<Collection<NETSSTransportQOut>> findNetssTransport ();
 
-    @Query("SELECT a FROM NETSSTransportQOut a WHERE a.addTime > :recordStatusTime")
+    @Query("SELECT a FROM NETSSTransportQOut a WHERE a.addTime > :recordStatusTime ORDER BY a.addTime ASC")
     Optional<Collection<NETSSTransportQOut>> findNetssTransportByCreationTime (@Param("recordStatusTime") Timestamp recordStatusTime);
 
     @Query(value = "SELECT TOP (:limit) a.* FROM NETSS_TransportQ_out a ORDER BY a.add_time ASC ", nativeQuery = true)

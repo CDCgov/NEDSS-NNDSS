@@ -12,12 +12,12 @@ import lombok.NoArgsConstructor;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "data_exchange_config")
+@Table(name = "data_sync_config")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class DataExchangeConfig {
+public class DataSyncConfig {
     @Id
     @Column(name = "table_name")
     private String tableName;
@@ -31,6 +31,8 @@ public class DataExchangeConfig {
     @Column(name = "query_with_limit")
     private String queryWithLimit;
 
+    @Column(name = "query_with_null_timestamp")
+    private String queryWithNullTimeStamp;
 
     @Column(name = "created_at")
     private Timestamp createdAt;

@@ -83,7 +83,7 @@ public class NetsstTransportServiceTest {
 
         netsstTransportService.saveDataExchange(transportQOutDtoList);
 
-        verify(netssTransportQOutRepository, times(2)).saveAll(anyList());
+        verify(netssTransportQOutRepository, times(1)).saveAll(anyList());
         verify(netssTransportQOutRepository, never()).flush();
         verify(errorHandlingService, atLeastOnce()).dumpBatchToFile(anyList(), anyString(), anyString());
     }

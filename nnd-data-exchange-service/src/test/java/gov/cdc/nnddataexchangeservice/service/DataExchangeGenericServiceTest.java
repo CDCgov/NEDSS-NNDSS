@@ -3,8 +3,8 @@ package gov.cdc.nnddataexchangeservice.service;
 
 import com.google.gson.Gson;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
-import gov.cdc.nnddataexchangeservice.repository.rdb.DataExchangeConfigRepository;
-import gov.cdc.nnddataexchangeservice.repository.rdb.model.DataExchangeConfig;
+import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
+import gov.cdc.nnddataexchangeservice.repository.rdb.model.DataSyncConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 class DataExchangeGenericServiceTest {
 
     @Mock
-    private DataExchangeConfigRepository dataExchangeConfigRepository;
+    private DataSyncConfigRepository dataSyncConfigRepository;
 
     @Mock
     private JdbcTemplate jdbcTemplate;
@@ -48,10 +48,10 @@ class DataExchangeGenericServiceTest {
         String timeStamp = "2024-07-11";
         int limit = 10;
 
-        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.empty());
+        when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.empty());
 
         assertThrows(DataExchangeException.class, () ->
-                dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit));
+                dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false));
     }
 
     @Test
@@ -59,7 +59,7 @@ class DataExchangeGenericServiceTest {
         String tableName = "table";
         String timeStamp = null;
 
-        DataExchangeConfig config = new DataExchangeConfig();
+        DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
@@ -72,10 +72,10 @@ class DataExchangeGenericServiceTest {
         map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
         data.add(map);
 
-        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
         assertNotNull(res);
     }
     @Test
@@ -83,7 +83,7 @@ class DataExchangeGenericServiceTest {
         String tableName = "table";
         String timeStamp = "2024-01-01";
 
-        DataExchangeConfig config = new DataExchangeConfig();
+        DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE :timestamp");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
@@ -96,10 +96,10 @@ class DataExchangeGenericServiceTest {
         map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
         data.add(map);
 
-        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
         assertNotNull(res);
     }
 
@@ -108,7 +108,7 @@ class DataExchangeGenericServiceTest {
         String tableName = "table";
         String timeStamp = "2024-01-01";
 
-        DataExchangeConfig config = new DataExchangeConfig();
+        DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE :timestamp ");
         config.setQueryWithLimit("SELECT * FROM HERE :timestamp :limit");
         config.setTableName(tableName);
@@ -122,15 +122,42 @@ class DataExchangeGenericServiceTest {
         map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
         data.add(map);
 
-        when(dataExchangeConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit);
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
         assertNotNull(res);
     }
 
     @Test
-    void decodeAndDecompress_WithValidData_ReturnsDecompressedJson() throws IOException {
+    void getGenericDataExchange_4() throws DataExchangeException {
+        String tableName = "table";
+        String timeStamp = "2024-01-01";
+
+        DataSyncConfig config = new DataSyncConfig();
+        config.setQuery("SELECT * FROM HERE :timestamp ");
+        config.setQueryWithLimit("SELECT * FROM HERE :timestamp :limit");
+        config.setQueryWithNullTimeStamp("SELECT * FROM HERE NULL");
+        config.setTableName(tableName);
+        config.setSourceDb("SRTE");
+        int limit = 10;
+
+        List<Map<String, Object>> data = new ArrayList<>();
+        Map<String, Object> map = new HashMap<>();
+        map.put("CONDITION", "RDB");
+        map.put("SELECT * FROM CONDITION;", null);
+        map.put("2024-08-19 15:19:49.4830000", "2024-08-19 15:19:49.4830000");
+        data.add(map);
+
+        when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
+        when(jdbcTemplate.queryForList(any())).thenReturn(data);
+        when(gson.toJson(data)).thenReturn("TEST");
+        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
+        assertNotNull(res);
+    }
+
+    @Test
+    void decodeAndDecompress_WithValidData_ReturnsDecompressedJson() throws DataExchangeException, IOException {
         String json = "[{\"key\":\"value\"}]";
         byte[] compressedData;
 

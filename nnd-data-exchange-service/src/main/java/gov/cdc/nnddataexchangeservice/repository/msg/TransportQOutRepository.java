@@ -12,10 +12,10 @@ import java.util.Optional;
 @Repository
 public interface TransportQOutRepository extends JpaRepository<TransportQOut, Long> {
 
-    @Query("SELECT a FROM TransportQOut a WHERE a.messageCreationTime > :recordStatusTime")
+    @Query("SELECT a FROM TransportQOut a WHERE a.messageCreationTime > :recordStatusTime ORDER BY a.messageCreationTime ASC")
     Optional<Collection<TransportQOut>> findTransportByCreationTime(@Param("recordStatusTime") String recordStatusTime);
 
-    @Query("SELECT a FROM TransportQOut a")
+    @Query("SELECT a FROM TransportQOut a ORDER BY a.messageCreationTime ASC")
     Optional<Collection<TransportQOut>> findTransportByWithoutCreationTime();
 
 

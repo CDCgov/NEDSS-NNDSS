@@ -34,6 +34,8 @@ public class MessageProcessingServiceTest {
         ReflectionTestUtils.setField(messageProcessingService, "prior", true);
     }
 
+
+
     @Test
     void testScheduleDataFetch_Success() throws DataProcessorException {
         messageProcessingService.scheduleDataFetch();

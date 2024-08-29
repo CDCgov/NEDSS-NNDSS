@@ -1,6 +1,9 @@
 @echo off
 set NBS_NND_CRON=* * * * * *
 set NBS_NND_CRON_TIME_ZONE=UTC
+set NND_FULL_LOAD=false
+set NND_PULL_LIMIT=0
+set NND_INSERT_LIMIT=1000
 set NND_DE_CLIENT_ID=nnd-keycloak-client
 set NND_DE_DE=/api/nnd/data-exchange
 set NND_DE_SECRET=bpVTppDam4sxXt4hfgm5hZ6Rteponjb9
