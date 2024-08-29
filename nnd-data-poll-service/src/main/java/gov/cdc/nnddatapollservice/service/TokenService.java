@@ -19,8 +19,6 @@ public class TokenService implements ITokenService {
     @Value("${data_exchange.secret}")
     private String clientSecret;
 
-    private String currentToken;
-
     private final RestTemplate restTemplate;
 
     public TokenService(RestTemplate restTemplate) {
@@ -29,16 +27,7 @@ public class TokenService implements ITokenService {
 
 
     public String getToken() {
-//        if (currentToken == null) {
-//            currentToken = fetchNewToken();
-//        }
-        currentToken = fetchNewToken();
-        return currentToken;
-    }
-
-    private boolean isTokenExpired() {
-        // Implement your logic to check if the token is expired
-        return false;
+        return fetchNewToken();
     }
 
     private String fetchNewToken() {

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
+import gov.cdc.nnddataexchangeservice.repository.rdb.model.DataSyncConfig;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.shared.DataSimplification;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,6 +21,7 @@ import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
 
 @Service
 public class DataExchangeGenericService implements IDataExchangeGenericService {
+
     private final DataSyncConfigRepository dataSyncConfigRepository;
     private final JdbcTemplate jdbcTemplate;
     private final JdbcTemplate srteJdbcTemplate;
@@ -42,12 +44,15 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     @SuppressWarnings("javasecurity:S3649")
     public String getGenericDataExchange(String tableName, String timeStamp, Integer limit,boolean initialLoad) throws DataExchangeException {
         // Retrieve configuration based on table name
-        var dataConfig = dataSyncConfigRepository.findById(tableName).orElseThrow(() -> new DataExchangeException("Selected Table Not Found"));
-
+        var dataConfig = dataSyncConfigRepository.findById(tableName).orElse(new DataSyncConfig());
         if (timeStamp == null) {
             timeStamp = "";
         }
         try {
+            if (dataConfig.getTableName() == null) {
+                return DataSimplification.dataCompressionAndEncode("");
+            }
+
             // Execute the query and retrieve the dataset
             String baseQuery = "";
 
@@ -68,6 +73,8 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                     nullQuery = nullQuery.replaceAll(";", ""); //NOSONAR
                     query = nullQuery + " UNION " + query + ";";
                 }
+
+                System.out.println("TEST QUERY: " + query);
             }
 
             if (baseQuery.contains(LIMIT_PARAM)) {
