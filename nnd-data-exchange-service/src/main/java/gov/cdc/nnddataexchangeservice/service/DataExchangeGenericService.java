@@ -13,13 +13,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.getCurrentTimeStamp;

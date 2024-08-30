@@ -1,7 +1,5 @@
 package gov.cdc.nnddataexchangeservice.shared.model;
 
-import java.sql.Timestamp;
-
 public class ExecutionResult<V> {
     private final V result;
     private final String executionTime;
