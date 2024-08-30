@@ -5,6 +5,7 @@ import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
+import gov.cdc.nnddatapollservice.share.DataSimplification;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -18,15 +19,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.URI;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -41,6 +41,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     @Value("${data_exchange.endpoint_generic}")
     private String exchangeEndpoint;
 
+    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
@@ -51,71 +53,70 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
     }
 
-    @PostConstruct
+    //@PostConstruct
     public void handlingExchangedData() throws DataPollException {
-
         logger.info("---START RDB POLLING---");
-        List<PollDataSyncConfig> configTableList= getTableListFromConfig();
+        List<PollDataSyncConfig> configTableList = getTableListFromConfig();
         logger.info(" RDB TableList to be polled: " + configTableList.size());
-        boolean isInitalLoad= checkPollingIsInitailLoad(configTableList);
-        System.out.println("isInitalLoad: " + isInitalLoad);
+        boolean isInitalLoad = checkPollingIsInitailLoad(configTableList);
+        System.out.println("-----isInitalLoad: " + isInitalLoad);
+
         if (isInitalLoad) {
+            System.out.println("For INITIAL LOAD - CLEANING UP THE TABLES ");
             cleanupRDBTables(configTableList);
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-            logger.info("pollDataSyncConfig: order:"+pollDataSyncConfig.getTableOrder() +"  Table:"+ pollDataSyncConfig.getTableName());
-            if(!pollDataSyncConfig.getTableName().equals("LDF_GROUP")
-                    && !pollDataSyncConfig.getTableName().equals("HEP_MULTI_VALUE_FIELD_GROUP")
-                    && !pollDataSyncConfig.getTableName().equals("PERTUSSIS_SUSPECTED_SOURCE_GRP")
-                    && !pollDataSyncConfig.getTableName().equals("PERTUSSIS_TREATMENT_GROUP")
-                    //&& !pollDataSyncConfig.getTableName().equals("CASE_COUNT")
-                    && !pollDataSyncConfig.getTableName().equals("GENERIC_CASE")
-                    && !pollDataSyncConfig.getTableName().equals("HEPATITIS_CASE")
-                    && !pollDataSyncConfig.getTableName().equals("MEASLES_CASE")
-                    && !pollDataSyncConfig.getTableName().equals("NOTIFICATION_EVENT")
-                    && !pollDataSyncConfig.getTableName().equals("PERTUSSIS_CASE")
-                    && !pollDataSyncConfig.getTableName().equals("RUBELLA_CASE")) {
-                pollAndPeristsRDBData(pollDataSyncConfig.getTableName(),isInitalLoad);
-            }
+            logger.info("Start polling: Table:" + pollDataSyncConfig.getTableName()+ " order:" + pollDataSyncConfig.getTableOrder());
+            pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
         }
         logger.info("---END RDB POLLING---");
     }
-    private void pollAndPeristsRDBData(String tableName,boolean isInitalLoad) throws DataPollException {
+
+    private void pollAndPeristsRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
         var token = tokenService.getToken();
-        var param = new HashMap<String, String>();
-        logger.info("--START--handlingExchangedData for table " + tableName);
-        String lastUpdatedTime= rdbDataPersistentDAO.getLastUpdatedTime(tableName);
-        System.out.println("------lastUpdatedTime:"+lastUpdatedTime);
+
+        logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
+        String timeStampForPoll = "";
+        if (isInitialLoad) {
+            timeStampForPoll = getCurrentTimestamp();
+        } else {
+            timeStampForPoll = rdbDataPersistentDAO.getLastUpdatedTime(tableName);
+        }
+        logger.info("1111isInitalLoad: " + isInitialLoad+" valueof:"+String.valueOf(isInitialLoad));
+
+        logger.info("------lastUpdatedTime to send to exchange api {}",timeStampForPoll);
         //call data exchange service api
-        String encodedData = callDataExchangeEndpoint(token, param, tableName,"");
+        String encodedData = callDataExchangeEndpoint(token, tableName, isInitialLoad, timeStampForPoll);
         //logger.info("encoded compressed data from exchange for rdb: " + encodedData);
         String rawData = decodeAndDecompress(encodedData);
         //logger.info("raw data from exchange for the table: "+tableName+" " + rawData);
         Timestamp timestamp = Timestamp.from(Instant.now());
         persistRdbData(tableName, rawData);
 
-        rdbDataPersistentDAO.updateLastUpdatedTime(tableName,timestamp);
-        logger.info("--END--handlingExchangedData for table " + tableName);
+        rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
+        logger.info("--END--handlingExchangedData for table-- {}",tableName);
     }
 
-    protected String callDataExchangeEndpoint(String token, Map<String, String> params, String tableName,String lastUpdatedTime) throws DataPollException {
+    protected String callDataExchangeEndpoint(String token, String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setBearerAuth(token);
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+            headers.add("initialLoad", String.valueOf(isInitialLoad));
+            logger.info("22222isInitalLoad: " + isInitialLoad+" valueof:"+String.valueOf(isInitialLoad));
+            HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
-            String exchangeGenericEndpoint = exchangeEndpoint;
+            //String exchangeGenericEndpoint = exchangeEndpoint;
 
-            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeGenericEndpoint)
-                    .path("/"+tableName)
-                    .queryParamIfPresent("timestamp",Optional.ofNullable(lastUpdatedTime))
+            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
+                    .path("/" + tableName)
+                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
-            logger.info("Poll service URI: " + uri);
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+            logger.info("Exchange URI for rdb polling {} ",uri);
+            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             return response.getBody();
         } catch (Exception e) {
             throw new DataPollException(e.getMessage());
@@ -123,44 +124,36 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     }
 
     public String decodeAndDecompress(String base64EncodedData) {
-        byte[] compressedData = Base64.getDecoder().decode(base64EncodedData);
-
-        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(compressedData);
-             GZIPInputStream gzipInputStream = new GZIPInputStream(byteArrayInputStream);
-             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = gzipInputStream.read(buffer)) > 0) {
-                byteArrayOutputStream.write(buffer, 0, len);
-            }
-
-            String decompressedJson = byteArrayOutputStream.toString("UTF-8");
-
-            return decompressedJson;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return DataSimplification.decodeAndDecompress(base64EncodedData);
     }
 
-    private void persistRdbData(String tableName, String jsonData) throws DataPollException {
+    private void persistRdbData(String tableName, String jsonData) {
         rdbDataPersistentDAO.saveRDBData(tableName, jsonData);
     }
-    private List<PollDataSyncConfig> getTableListFromConfig() throws DataPollException {
+
+    private List<PollDataSyncConfig> getTableListFromConfig() {
         return rdbDataPersistentDAO.getTableListFromConfig();
     }
-    private void cleanupRDBTables(List<PollDataSyncConfig> configTableList) throws DataPollException {
-        for(int j=configTableList.size()-1;j>=0;j=j-1){
+
+    private void cleanupRDBTables(List<PollDataSyncConfig> configTableList) {
+        for (int j = configTableList.size() - 1; j >= 0; j = j - 1) {
             rdbDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
         }
     }
-    private boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList){
+
+    private boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-            logger.info("pollDataSyncConfig Table:" + pollDataSyncConfig.getTableName() + "  LastUpdateTime:" + pollDataSyncConfig.getLastUpdateTime());
-            if (pollDataSyncConfig.getLastUpdateTime()!=null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
+            logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
+            if (pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
                 return false;
             }
         }
         return true;
+    }
+
+    private String getCurrentTimestamp() {
+        Timestamp timestamp = Timestamp.from(Instant.now());
+        SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+        return formatter.format(timestamp);
     }
 }
