@@ -21,7 +21,6 @@ public class DataPullService implements IDataPullService {
     @Value("${scheduler.cron}")
     private String cron;
 
-
     @Value("${scheduler.zone}")
     private String zone;
 
@@ -38,6 +37,12 @@ public class DataPullService implements IDataPullService {
         logger.info(cron);
         logger.info(zone);
         dataHandlingService.handlingExchangedData();
+    }
+    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+    public void scheduleRDBDataFetch() throws DataPollException {
+        logger.info("CRON STARTED FOR POLLING RDB");
+        logger.info(cron+" FOR RDB");
+        logger.info(zone+" FOR RDB");
         rdbDataHandlingService.handlingExchangedData();
     }
 }
