@@ -20,12 +20,15 @@ nnd:
 spring:
   application:
     name: nnd-data-poll-service
-
+  task:
+    scheduling:
+      pool:
+        size: 2
 scheduler:
   zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
   # America/New_York
   # UTC
-  cron: ${NBS_NND_CRON:* */1 * * * }
+  cron: ${NBS_NND_CRON:0 */1 * * * * }
   # "0 */5 0-2 * * *"
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *

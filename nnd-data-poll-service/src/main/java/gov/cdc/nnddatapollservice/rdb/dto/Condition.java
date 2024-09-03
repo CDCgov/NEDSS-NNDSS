@@ -12,7 +12,7 @@ public class Condition {
     private String conditionCd;
     private String conditionDesc;
     private String conditionShortNm;
-    private String conditionCdEffDt;//time
+    private String conditionCdEffDt;//timestamp
     private String conditionCdEndDt;//timestamp
     private String nndInd;
     private String diseaseGrpCd;

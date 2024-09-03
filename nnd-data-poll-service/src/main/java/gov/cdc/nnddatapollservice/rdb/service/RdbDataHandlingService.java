@@ -6,7 +6,6 @@ import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +22,7 @@ import java.net.URI;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -67,7 +64,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-            logger.info("Start polling: Table:" + pollDataSyncConfig.getTableName()+ " order:" + pollDataSyncConfig.getTableOrder());
+            logger.info("Start polling: Table:" + pollDataSyncConfig.getTableName() + " order:" + pollDataSyncConfig.getTableOrder());
             pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
         }
         logger.info("---END RDB POLLING---");
@@ -75,7 +72,6 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
     private void pollAndPeristsRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
         var token = tokenService.getToken();
-
         logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
         String timeStampForPoll = "";
         if (isInitialLoad) {
@@ -83,19 +79,18 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         } else {
             timeStampForPoll = rdbDataPersistentDAO.getLastUpdatedTime(tableName);
         }
-        logger.info("1111isInitalLoad: " + isInitialLoad+" valueof:"+String.valueOf(isInitialLoad));
+        logger.info("isInitalLoad {}", isInitialLoad);
 
-        logger.info("------lastUpdatedTime to send to exchange api {}",timeStampForPoll);
+        logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
         //call data exchange service api
         String encodedData = callDataExchangeEndpoint(token, tableName, isInitialLoad, timeStampForPoll);
-        //logger.info("encoded compressed data from exchange for rdb: " + encodedData);
+
         String rawData = decodeAndDecompress(encodedData);
-        //logger.info("raw data from exchange for the table: "+tableName+" " + rawData);
+
         Timestamp timestamp = Timestamp.from(Instant.now());
         persistRdbData(tableName, rawData);
 
         rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
-        logger.info("--END--handlingExchangedData for table-- {}",tableName);
     }
 
     protected String callDataExchangeEndpoint(String token, String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
@@ -105,17 +100,14 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
             headers.add("initialLoad", String.valueOf(isInitialLoad));
-            logger.info("22222isInitalLoad: " + isInitialLoad+" valueof:"+String.valueOf(isInitialLoad));
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
-
-            //String exchangeGenericEndpoint = exchangeEndpoint;
 
             URI uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
                     .path("/" + tableName)
                     .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
-            logger.info("Exchange URI for rdb polling {} ",uri);
+            logger.info("Exchange URI for rdb polling {} ", uri);
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             return response.getBody();
         } catch (Exception e) {

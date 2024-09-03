@@ -9,7 +9,6 @@ import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.catalina.startup.FailedContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,13 +86,12 @@ public class RdbDataPersistentDAO {
                 if (records != null && !records.isEmpty()) {
                     logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
                     simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                    logger.info("executeBatch completed. tableName: {}", tableName);
                 } else {
-                    logger.info("Inside generic code tableName: {} Records size:{}", tableName, 0);
+                    logger.info("Inside generic code tableName: {} Records size:0", tableName);
                 }
-                logger.info("executeBatch completed. tableName: {}", tableName);
             } catch (Exception e) {
-                e.printStackTrace();
-                logger.error("executeBatch completed. tableName: {}, Error:{}", tableName, e.getMessage());
+                logger.error("Error executeBatch. tableName: {}, Error:{}", tableName, e.getMessage());
             }
         }
     }
@@ -121,7 +119,11 @@ public class RdbDataPersistentDAO {
                 "VALUES (" + confirmationMethod.getConfirmationMethodKey() +
                 "," + getSqlString(confirmationMethod.getConfirmationMethodCd()) +
                 "," + getSqlString(confirmationMethod.getConfirmationMethodDesc()) + ");";
-        jdbcTemplate.update(sql);
+        try{
+            jdbcTemplate.update(sql);
+        }catch (Exception e){
+            logger.error("Error in upsert for CONFIRMATION_METHOD table:"+e.getMessage());
+        }
     }
 
     private void upsertCondition(Condition condition) {
@@ -169,7 +171,11 @@ public class RdbDataPersistentDAO {
                 getSqlString(condition.getAssigningAuthorityDesc()) + "," +
                 getSqlString(condition.getConditionCdSysCd()) +
                 ");";
-        jdbcTemplate.update(sql);
+        try{
+            jdbcTemplate.update(sql);
+        }catch (Exception e){
+            logger.error("Error in upsert for CONDITION table:"+e.getMessage());
+        }
     }
 
     private void upsertRdbDate(RdbDate rdbDate) {
@@ -195,7 +201,7 @@ public class RdbDataPersistentDAO {
                 " DATE_MM_DD_YYYY," +
                 " DAY_OF_WEEK,DAY_NBR_IN_CLNDR_MON,DAY_NBR_IN_CLNDR_YR,WK_NBR_IN_CLNDR_MON,WK_NBR_IN_CLNDR_YR," +
                 " CLNDR_MON_NAME,CLNDR_MON_IN_YR,CLNDR_QRTR,CLNDR_YR)" +
-                "VALUES ("
+                " VALUES ("
                 + rdbDate.getDateKey() + "," +
                 getSqlString(rdbDate.getDateMmDdYyyy()) + "," +
                 getSqlString(rdbDate.getDayOfWeek()) + "," +
@@ -208,7 +214,12 @@ public class RdbDataPersistentDAO {
                 rdbDate.getClndrQrtr() + "," +
                 rdbDate.getClndrYr() +
                 ");";
-        jdbcTemplate.update(sql);
+
+        try{
+            jdbcTemplate.update(sql);
+        }catch (Exception e){
+            logger.error("Error in upsert for RDB_DATE table:"+e.getMessage());
+        }
     }
 
     private static String getSqlString(String val) {
@@ -251,4 +262,3 @@ public class RdbDataPersistentDAO {
         jdbcTemplate.execute(deleteSql);
     }
 }
-
