@@ -7,6 +7,9 @@ import java.time.Instant;
 import java.util.concurrent.Callable;
 
 public class MetricCollector {
+    private MetricCollector() {
+
+    }
     public static <V> ExecutionResult<V> measureExecutionTime(Callable<V> function) throws Exception {
         Instant start = Instant.now();
 

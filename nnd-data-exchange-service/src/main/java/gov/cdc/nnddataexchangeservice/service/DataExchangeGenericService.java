@@ -44,7 +44,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 .create();
     }
 
-    @SuppressWarnings("javasecurity:S3649")
+    @SuppressWarnings({"javasecurity:S3649", "java:S3776"})
     public String getGenericDataExchange(String tableName, String timeStamp, Integer limit,boolean initialLoad) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataSyncConfigRepository.findById(tableName).orElse(new DataSyncConfig());
