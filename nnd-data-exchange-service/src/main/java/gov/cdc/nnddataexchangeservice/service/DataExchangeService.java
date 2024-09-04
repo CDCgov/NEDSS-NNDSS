@@ -25,7 +25,7 @@ public class DataExchangeService implements IDataExchangeService {
 
     public DataExchangeService(INetsstTransportService netsstTransportService,
                                ITransportQOutService transportQOutService,
-                               ICNTransportQOutService icnTransportQOutService, Gson gson) {
+                               ICNTransportQOutService icnTransportQOutService) {
         this.netsstTransportService = netsstTransportService;
         this.transportQOutService = transportQOutService;
         this.cnTransportQOutService = icnTransportQOutService;
