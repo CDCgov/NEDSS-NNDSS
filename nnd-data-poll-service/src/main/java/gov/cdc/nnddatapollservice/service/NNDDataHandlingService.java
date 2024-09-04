@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class DataHandlingService implements IDataHandlingService {
+public class NNDDataHandlingService implements IDataHandlingService {
 
     @Value("${data_exchange.clientId}")
     private String clientId = "clientId";
@@ -46,10 +46,10 @@ public class DataHandlingService implements IDataHandlingService {
     private final ITransportQOutService transportQOutService;
     private final ITokenService tokenService;
 
-    public DataHandlingService(Gson gson, ICNTransportQOutService icnTransportQOutService,
-                               INetsstTransportService netsstTransportService,
-                               ITransportQOutService transportQOutService,
-                               ITokenService tokenService) {
+    public NNDDataHandlingService(Gson gson, ICNTransportQOutService icnTransportQOutService,
+                                  INetsstTransportService netsstTransportService,
+                                  ITransportQOutService transportQOutService,
+                                  ITokenService tokenService) {
         this.gson = gson;
         this.icnTransportQOutService = icnTransportQOutService;
         this.netsstTransportService = netsstTransportService;

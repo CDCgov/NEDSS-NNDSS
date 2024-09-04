@@ -30,9 +30,8 @@ public class DataPullService implements IDataPullService {
         this.rdbDataHandlingService = rdbDataHandlingService;
     }
 
-
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
-    public void scheduleDataFetch() throws DataPollException {
+    public void scheduleNNDDataFetch() throws DataPollException {
         logger.info("CRON STARTED");
         logger.info(cron);
         logger.info(zone);

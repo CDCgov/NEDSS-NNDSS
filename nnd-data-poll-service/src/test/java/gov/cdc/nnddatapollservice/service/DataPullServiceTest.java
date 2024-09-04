@@ -31,7 +31,7 @@ public class DataPullServiceTest {
 
     @Test
     void testScheduleDataFetch_Success() throws DataPollException {
-        dataPullService.scheduleDataFetch();
+        dataPullService.scheduleNNDDataFetch();
 
         verify(dataHandlingService, times(1)).handlingExchangedData();
     }
@@ -40,7 +40,7 @@ public class DataPullServiceTest {
     void testScheduleDataFetch_Exception() throws DataPollException {
         doThrow(new DataPollException("Exception")).when(dataHandlingService).handlingExchangedData();
 
-        assertThrows(DataPollException.class, () -> dataPullService.scheduleDataFetch());
+        assertThrows(DataPollException.class, () -> dataPullService.scheduleNNDDataFetch());
 
         verify(dataHandlingService, times(1)).handlingExchangedData();
     }
