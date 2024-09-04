@@ -14,4 +14,8 @@ export OP_DBPASSWORD="fake.fake.fake.1234"
 export OP_DBSERVER="localhost:1433"
 export OP_DBUSER="sa"
 export OP_DBNAME="MSGOUTE"
+export RDB_DBNAME="NBS_MSGOUTE"
+export RDB_DBUSER="sa"
+export RDB_DBPASSWORD="fake.fake.fake.1234"
+export RDB_DBSERVER="localhost:1433"
 java -jar nnd-data-poll-service.jar
