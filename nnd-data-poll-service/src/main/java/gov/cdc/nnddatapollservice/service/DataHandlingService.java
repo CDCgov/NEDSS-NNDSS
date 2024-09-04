@@ -1,6 +1,7 @@
 package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.*;
 import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
@@ -46,11 +47,13 @@ public class DataHandlingService implements IDataHandlingService {
     private final ITransportQOutService transportQOutService;
     private final ITokenService tokenService;
 
-    public DataHandlingService(Gson gson, ICNTransportQOutService icnTransportQOutService,
+    public DataHandlingService(ICNTransportQOutService icnTransportQOutService,
                                INetsstTransportService netsstTransportService,
                                ITransportQOutService transportQOutService,
                                ITokenService tokenService) {
-        this.gson = gson;
+        this.gson = new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+                .create();
         this.icnTransportQOutService = icnTransportQOutService;
         this.netsstTransportService = netsstTransportService;
         this.transportQOutService = transportQOutService;
