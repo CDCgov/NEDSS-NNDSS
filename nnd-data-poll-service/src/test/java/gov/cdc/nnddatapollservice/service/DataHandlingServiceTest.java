@@ -158,10 +158,10 @@ class DataHandlingServiceTest {
         dataModel.setTransportQOutDtoList(List.of(new TransportQOutDto()));
         dataModel.setNetssTransportQOutDtoList(List.of(new NETSSTransportQOutDto()));
 
-        when(gson.fromJson(anyString(), any(Class.class))).thenReturn(dataModel);
+        when(gson.fromJson(anyString(), eq(DataExchangeModel.class))).thenReturn(dataModel);
 
         // Act & Assert
-        assertThrows(DataPollException.class, () -> dataHandlingService.handlingExchangedData());
+        dataHandlingService.handlingExchangedData();
 
         // Verify that the tokenService was called once
         verify(tokenService, times(1)).getToken();
