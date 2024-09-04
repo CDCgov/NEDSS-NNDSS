@@ -40,4 +40,13 @@ public class DataSyncConfig {
     @Column(name = "updated_at")
     private Timestamp updatedAt;
 
+    @Column(name = "last_executed_run_time")
+    private String lastExecutedRunTime;
+
+    @Column(name = "last_executed_result_count")
+    private Integer lastExecutedResultCount;
+
+    @Column(name = "last_executed_timestamp")
+    private Timestamp lastExecutedTimestamp;
+
 }

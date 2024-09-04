@@ -8,16 +8,19 @@ import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
 import gov.cdc.nnddataexchangeservice.repository.rdb.model.DataSyncConfig;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.shared.DataSimplification;
+import gov.cdc.nnddataexchangeservice.shared.MetricCollector;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
+import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.getCurrentTimeStamp;
 
 @Service
 public class DataExchangeGenericService implements IDataExchangeGenericService {
@@ -41,45 +44,48 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 .create();
     }
 
-    @SuppressWarnings("javasecurity:S3649")
+    @SuppressWarnings({"javasecurity:S3649", "java:S3776"})
     public String getGenericDataExchange(String tableName, String timeStamp, Integer limit,boolean initialLoad) throws DataExchangeException {
         // Retrieve configuration based on table name
         var dataConfig = dataSyncConfigRepository.findById(tableName).orElse(new DataSyncConfig());
+
         if (timeStamp == null) {
             timeStamp = "";
         }
-        try {
+
+        AtomicInteger dataCountHolder = new AtomicInteger();
+        String finalTimeStamp = timeStamp;
+
+        Callable<String> callable = () -> {
+            String dataCompressed = "";
+            Integer dataCount = 0;
+
             if (dataConfig.getTableName() == null) {
                 return DataSimplification.dataCompressionAndEncode("");
             }
 
             // Execute the query and retrieve the dataset
-            String baseQuery = "";
-
-
-            baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
+            String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
                     ? dataConfig.getQueryWithLimit()
                     : dataConfig.getQuery();
 
-
-            String effectiveTimestamp = timeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP +"'" : "'" + timeStamp + "'";
+            String effectiveTimestamp = finalTimeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP + "'" : "'" + finalTimeStamp + "'";
             String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
 
             if (initialLoad) {
-                query = query.replaceAll(">=", "<"); //NOSONAR
+                query = query.replaceAll(">=", "<"); // NOSONAR
                 if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                    query = query.replaceAll(";", ""); //NOSONAR
+                    query = query.replaceAll(";", ""); // NOSONAR
                     var nullQuery = dataConfig.getQueryWithNullTimeStamp();
-                    nullQuery = nullQuery.replaceAll(";", ""); //NOSONAR
+                    nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
                     query = nullQuery + " UNION " + query + ";";
                 }
-
-                System.out.println("TEST QUERY: " + query);
             }
 
             if (baseQuery.contains(LIMIT_PARAM)) {
                 query = query.replace(LIMIT_PARAM, limit.toString());
             }
+
             List<Map<String, Object>> data;
 
             if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
@@ -88,16 +94,29 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 data = jdbcTemplate.queryForList(query);
             }
 
-
             // Serialize the data to JSON using Gson
             String jsonData = gson.toJson(data);
-            return DataSimplification.dataCompressionAndEncode(jsonData);
+            dataCompressed = DataSimplification.dataCompressionAndEncode(jsonData);
+            dataCount = data.size();
 
-        } catch (IOException e) {
-            // Catch IOException and throw DataExchangeException
-            throw new DataExchangeException("Error during data compression or encoding");
+            // Store values for later use
+            dataCountHolder.set(dataCount);
+
+            return dataCompressed;
+        };
+
+        try {
+            var metricData = MetricCollector.measureExecutionTime(callable);
+            var currentTime = getCurrentTimeStamp();
+
+            dataSyncConfigRepository.updateDataSyncConfig(dataCountHolder.get(), metricData.getExecutionTime(), currentTime, tableName.toUpperCase());
+            return metricData.getResult();
+        } catch (Exception e) {
+            throw new DataExchangeException(e.getMessage());
         }
     }
+
+
 
     // DECODE TEST METHOD
     public String decodeAndDecompress(String base64EncodedData) throws DataExchangeException {
