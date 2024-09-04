@@ -1,6 +1,8 @@
 package gov.cdc.nnddataexchangeservice.service;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.ICNTransportQOutService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
@@ -11,6 +13,7 @@ import gov.cdc.nnddataexchangeservice.shared.DataSimplification;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.sql.Timestamp;
 
 @Service
 public class DataExchangeService implements IDataExchangeService {
@@ -26,7 +29,11 @@ public class DataExchangeService implements IDataExchangeService {
         this.netsstTransportService = netsstTransportService;
         this.transportQOutService = transportQOutService;
         this.cnTransportQOutService = icnTransportQOutService;
-        this.gson = gson;
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
+                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
+                .serializeNulls()
+                .create();
     }
 
     public String getDataForOnPremExchanging(String cnStatusTime, String transportTime,
