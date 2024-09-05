@@ -59,50 +59,57 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         Callable<String> callable = () -> {
             String dataCompressed = "";
             Integer dataCount = 0;
+            List<Map<String, Object>> data = null;
+            try {
+                if (dataConfig.getTableName() == null) {
+                    return DataSimplification.dataCompressionAndEncode("");
+                }
 
-            if (dataConfig.getTableName() == null) {
-                return DataSimplification.dataCompressionAndEncode("");
-            }
+                // Execute the query and retrieve the dataset
+                String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
+                        ? dataConfig.getQueryWithLimit()
+                        : dataConfig.getQuery();
 
-            // Execute the query and retrieve the dataset
-            String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
-                    ? dataConfig.getQueryWithLimit()
-                    : dataConfig.getQuery();
+                String effectiveTimestamp = finalTimeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP + "'" : "'" + finalTimeStamp + "'";
+                String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
 
-            String effectiveTimestamp = finalTimeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP + "'" : "'" + finalTimeStamp + "'";
-            String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
+                if (initialLoad) {
+                    query = query.replaceAll(">=", "<"); // NOSONAR
+                    if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+                        query = query.replaceAll(";", ""); // NOSONAR
+                        var nullQuery = dataConfig.getQueryWithNullTimeStamp();
+                        nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
+                        query = nullQuery + " UNION " + query + ";";
+                    }
+                }
 
-            if (initialLoad) {
-                query = query.replaceAll(">=", "<"); // NOSONAR
-                if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                    query = query.replaceAll(";", ""); // NOSONAR
-                    var nullQuery = dataConfig.getQueryWithNullTimeStamp();
-                    nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
-                    query = nullQuery + " UNION " + query + ";";
+                if (baseQuery.contains(LIMIT_PARAM)) {
+                    query = query.replace(LIMIT_PARAM, limit.toString());
+                }
+
+
+                if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+                    data = srteJdbcTemplate.queryForList(query);
+                } else {
+                    data = jdbcTemplate.queryForList(query);
+                }
+
+                // Serialize the data to JSON using Gson
+                dataCompressed = DataSimplification.dataCompressionAndEncodeV2(gson, data);
+
+                dataCount = data.size();
+
+                // Store values for later use
+                dataCountHolder.set(dataCount);
+
+                return dataCompressed;
+            } finally {
+                // Explicitly nullify references to large objects to make them eligible for garbage collection
+                if (data != null) {
+                    data.clear();
                 }
             }
 
-            if (baseQuery.contains(LIMIT_PARAM)) {
-                query = query.replace(LIMIT_PARAM, limit.toString());
-            }
-
-            List<Map<String, Object>> data;
-
-            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-                data = srteJdbcTemplate.queryForList(query);
-            } else {
-                data = jdbcTemplate.queryForList(query);
-            }
-
-            // Serialize the data to JSON using Gson
-            String jsonData = gson.toJson(data);
-            dataCompressed = DataSimplification.dataCompressionAndEncode(jsonData);
-            dataCount = data.size();
-
-            // Store values for later use
-            dataCountHolder.set(dataCount);
-
-            return dataCompressed;
         };
 
         try {
