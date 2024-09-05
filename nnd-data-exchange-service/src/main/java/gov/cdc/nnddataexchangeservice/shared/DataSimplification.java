@@ -4,11 +4,13 @@ import com.google.gson.Gson;
 import com.google.gson.stream.JsonWriter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
-import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 

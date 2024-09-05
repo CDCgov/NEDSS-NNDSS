@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -109,9 +108,6 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 if (data != null) {
                     data.clear();
                 }
-
-                // Encourage garbage collection
-                System.gc();  // Optional, use cautiously as it can affect performance
             }
 
         };
