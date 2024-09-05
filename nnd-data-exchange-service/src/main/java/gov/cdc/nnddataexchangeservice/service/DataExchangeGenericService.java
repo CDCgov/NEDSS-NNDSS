@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.StringWriter;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
@@ -59,50 +60,60 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         Callable<String> callable = () -> {
             String dataCompressed = "";
             Integer dataCount = 0;
-
-            if (dataConfig.getTableName() == null) {
-                return DataSimplification.dataCompressionAndEncode("");
-            }
-
-            // Execute the query and retrieve the dataset
-            String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
-                    ? dataConfig.getQueryWithLimit()
-                    : dataConfig.getQuery();
-
-            String effectiveTimestamp = finalTimeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP + "'" : "'" + finalTimeStamp + "'";
-            String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
-
-            if (initialLoad) {
-                query = query.replaceAll(">=", "<"); // NOSONAR
-                if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                    query = query.replaceAll(";", ""); // NOSONAR
-                    var nullQuery = dataConfig.getQueryWithNullTimeStamp();
-                    nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
-                    query = nullQuery + " UNION " + query + ";";
+            List<Map<String, Object>> data = null;
+            try {
+                if (dataConfig.getTableName() == null) {
+                    return DataSimplification.dataCompressionAndEncode("");
                 }
+
+                // Execute the query and retrieve the dataset
+                String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
+                        ? dataConfig.getQueryWithLimit()
+                        : dataConfig.getQuery();
+
+                String effectiveTimestamp = finalTimeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP + "'" : "'" + finalTimeStamp + "'";
+                String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
+
+                if (initialLoad) {
+                    query = query.replaceAll(">=", "<"); // NOSONAR
+                    if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+                        query = query.replaceAll(";", ""); // NOSONAR
+                        var nullQuery = dataConfig.getQueryWithNullTimeStamp();
+                        nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
+                        query = nullQuery + " UNION " + query + ";";
+                    }
+                }
+
+                if (baseQuery.contains(LIMIT_PARAM)) {
+                    query = query.replace(LIMIT_PARAM, limit.toString());
+                }
+
+
+                if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+                    data = srteJdbcTemplate.queryForList(query);
+                } else {
+                    data = jdbcTemplate.queryForList(query);
+                }
+
+                // Serialize the data to JSON using Gson
+                dataCompressed = DataSimplification.dataCompressionAndEncodeV2(gson, data);
+
+                dataCount = data.size();
+
+                // Store values for later use
+                dataCountHolder.set(dataCount);
+
+                return dataCompressed;
+            } finally {
+                // Explicitly nullify references to large objects to make them eligible for garbage collection
+                if (data != null) {
+                    data.clear();
+                }
+
+                // Encourage garbage collection
+                System.gc();  // Optional, use cautiously as it can affect performance
             }
 
-            if (baseQuery.contains(LIMIT_PARAM)) {
-                query = query.replace(LIMIT_PARAM, limit.toString());
-            }
-
-            List<Map<String, Object>> data;
-
-            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-                data = srteJdbcTemplate.queryForList(query);
-            } else {
-                data = jdbcTemplate.queryForList(query);
-            }
-
-            // Serialize the data to JSON using Gson
-            String jsonData = gson.toJson(data);
-            dataCompressed = DataSimplification.dataCompressionAndEncode(jsonData);
-            dataCount = data.size();
-
-            // Store values for later use
-            dataCountHolder.set(dataCount);
-
-            return dataCompressed;
         };
 
         try {

@@ -1,12 +1,14 @@
 package gov.cdc.nnddataexchangeservice.shared;
 
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonWriter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
+import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -15,10 +17,33 @@ import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.BYTE_SIZE
 public class DataSimplification {
     private DataSimplification() {
     }
+
+    public static String dataCompressionAndEncodeV2(Gson gson, List<?> data) throws IOException {
+        // Use ByteArrayOutputStream to accumulate the compressed data in memory
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        // Stream JSON data into GZIP compression
+        try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream);
+             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(gzipOutputStream, StandardCharsets.UTF_8);
+             JsonWriter jsonWriter = new JsonWriter(outputStreamWriter)) {
+
+            // Serialize the data directly into the GZIPOutputStream via the JsonWriter
+            gson.toJson(data, List.class, jsonWriter);
+
+            // Flush to ensure all data is written to the stream
+            jsonWriter.flush();
+        }
+
+        // Convert the compressed data to Base64 encoded string
+        byte[] compressedData = byteArrayOutputStream.toByteArray();
+        return Base64.getEncoder().encodeToString(compressedData);
+    }
+
     public static String dataCompressionAndEncode(String jsonData) throws IOException {
         // Compress the JSON data using GZIP and return the Base64 encoded result
         try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream))
+        {
 
             gzipOutputStream.write(jsonData.getBytes(StandardCharsets.UTF_8));
             gzipOutputStream.finish();
