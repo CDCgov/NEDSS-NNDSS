@@ -49,14 +49,14 @@ class DataHandlingServiceTest {
     private Gson gson;
 
     @InjectMocks
-    private NNDDataHandlingService dataHandlingService;
+    private DataHandlingService dataHandlingService;
 
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.openMocks(this);
 
         // Set the exchangeEndpoint value using reflection
-        Field exchangeEndpointField = NNDDataHandlingService.class.getDeclaredField("exchangeEndpoint");
+        Field exchangeEndpointField = DataHandlingService.class.getDeclaredField("exchangeEndpoint");
         exchangeEndpointField.setAccessible(true);
         exchangeEndpointField.set(dataHandlingService, "http://example.com/exchange");
     }

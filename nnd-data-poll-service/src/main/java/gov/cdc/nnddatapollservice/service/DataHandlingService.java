@@ -1,6 +1,7 @@
 package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.*;
 import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
@@ -21,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class NNDDataHandlingService implements IDataHandlingService {
+public class DataHandlingService implements IDataHandlingService {
 
     @Value("${data_exchange.clientId}")
     private String clientId = "clientId";
@@ -46,11 +47,13 @@ public class NNDDataHandlingService implements IDataHandlingService {
     private final ITransportQOutService transportQOutService;
     private final ITokenService tokenService;
 
-    public NNDDataHandlingService(Gson gson, ICNTransportQOutService icnTransportQOutService,
-                                  INetsstTransportService netsstTransportService,
-                                  ITransportQOutService transportQOutService,
-                                  ITokenService tokenService) {
-        this.gson = gson;
+    public DataHandlingService(ICNTransportQOutService icnTransportQOutService,
+                               INetsstTransportService netsstTransportService,
+                               ITransportQOutService transportQOutService,
+                               ITokenService tokenService) {
+        this.gson = new GsonBuilder()
+                .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+                .create();
         this.icnTransportQOutService = icnTransportQOutService;
         this.netsstTransportService = netsstTransportService;
         this.transportQOutService = transportQOutService;
