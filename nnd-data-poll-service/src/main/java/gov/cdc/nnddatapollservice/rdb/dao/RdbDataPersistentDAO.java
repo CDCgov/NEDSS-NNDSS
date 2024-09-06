@@ -19,7 +19,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 
-import javax.sql.DataSource;
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -33,12 +32,9 @@ public class RdbDataPersistentDAO {
     private JdbcTemplate jdbcTemplate;
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
-    private DataSource dataSource;
-
     @Autowired
-    public RdbDataPersistentDAO(@Qualifier("rdbDataSource") DataSource dataSource) {
-        jdbcTemplate = new JdbcTemplate(dataSource);
-        this.dataSource = dataSource;
+    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     public void saveRDBData(String tableName, String jsonData) {
@@ -80,7 +76,7 @@ public class RdbDataPersistentDAO {
         } else {
             try {
                 SimpleJdbcInsert simpleJdbcInsert =
-                        new SimpleJdbcInsert(dataSource);
+                        new SimpleJdbcInsert(jdbcTemplate);
                 simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
                 List<Map<String, Object>> records = jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
@@ -119,10 +115,10 @@ public class RdbDataPersistentDAO {
                 "VALUES (" + confirmationMethod.getConfirmationMethodKey() +
                 "," + getSqlString(confirmationMethod.getConfirmationMethodCd()) +
                 "," + getSqlString(confirmationMethod.getConfirmationMethodDesc()) + ");";
-        try{
+        try {
             jdbcTemplate.update(sql);
-        }catch (Exception e){
-            logger.error("Error in upsert for CONFIRMATION_METHOD table:"+e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error in upsert for CONFIRMATION_METHOD table:" + e.getMessage());
         }
     }
 
@@ -171,10 +167,10 @@ public class RdbDataPersistentDAO {
                 getSqlString(condition.getAssigningAuthorityDesc()) + "," +
                 getSqlString(condition.getConditionCdSysCd()) +
                 ");";
-        try{
+        try {
             jdbcTemplate.update(sql);
-        }catch (Exception e){
-            logger.error("Error in upsert for CONDITION table:"+e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error in upsert for CONDITION table:" + e.getMessage());
         }
     }
 
@@ -215,10 +211,10 @@ public class RdbDataPersistentDAO {
                 rdbDate.getClndrYr() +
                 ");";
 
-        try{
+        try {
             jdbcTemplate.update(sql);
-        }catch (Exception e){
-            logger.error("Error in upsert for RDB_DATE table:"+e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error in upsert for RDB_DATE table:" + e.getMessage());
         }
     }
 

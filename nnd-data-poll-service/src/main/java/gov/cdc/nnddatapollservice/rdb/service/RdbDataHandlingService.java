@@ -36,7 +36,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     private String clientSecret;
 
     @Value("${data_exchange.endpoint_generic}")
-    private String exchangeEndpoint;
+    protected String exchangeEndpoint;
 
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
@@ -50,16 +50,15 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
     }
 
-    //@PostConstruct
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList = getTableListFromConfig();
         logger.info(" RDB TableList to be polled: " + configTableList.size());
         boolean isInitalLoad = checkPollingIsInitailLoad(configTableList);
-        System.out.println("-----isInitalLoad: " + isInitalLoad);
+        logger.info("-----INITIAL LOAD: " + isInitalLoad);
 
         if (isInitalLoad) {
-            System.out.println("For INITIAL LOAD - CLEANING UP THE TABLES ");
+            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
             cleanupRDBTables(configTableList);
         }
 

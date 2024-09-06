@@ -8,14 +8,18 @@ data_exchange:
   clientId: ${NND_DE_CLIENT_ID}
   secret: ${NND_DE_SECRET}
   url: ${NND_DE_URL}
-  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN}
-  endpoint_de: ${NND_DE_URL}${NND_DE_DE}
-  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC}
+  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN:/api/auth/token}
+  endpoint_de: ${NND_DE_URL}${NND_DE_DE:/api/nnd/data-exchange}
+  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/api/data-exchange-generic}
 nnd:
   fullLoad: ${NND_FULL_LOAD:false}
   pullLimit: ${NND_PULL_LIMIT:0}
   insertLimit: ${NND_INSERT_LIMIT:1000}
-
+  poll:
+    enabled: ${NND_POLL_ENABLED:true}
+rdb:
+  poll:
+    enabled: ${RDB_POLL_ENABLED:true}
 
 spring:
   application:

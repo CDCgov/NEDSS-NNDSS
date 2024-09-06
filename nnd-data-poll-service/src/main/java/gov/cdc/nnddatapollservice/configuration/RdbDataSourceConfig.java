@@ -1,9 +1,11 @@
 package gov.cdc.nnddatapollservice.configuration;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
@@ -31,5 +33,9 @@ public class RdbDataSourceConfig {
         dataSourceBuilder.password(dbUserPassword);
 
         return dataSourceBuilder.build();
+    }
+    @Bean(name = "rdbJdbcTemplate")
+    public JdbcTemplate rdbJdbcTemplate(@Qualifier("rdbDataSource") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
     }
 }
