@@ -4,6 +4,8 @@ import java.security.SecureRandom;
 import java.sql.Date;
 
 public class RandomValueGenerator {
+    private static final SecureRandom secureRandom = new SecureRandom();
+
     public static String getRandomString(SecureRandom  random) {
         int length = random.nextInt(10) + 1;  // FLAG
         StringBuilder sb = new StringBuilder(length);
@@ -16,7 +18,7 @@ public class RandomValueGenerator {
     public static Date getRandomDate() {
         long beginTime = Date.valueOf("2000-01-01").getTime();
         long endTime = Date.valueOf("2020-12-31").getTime();
-        long randomTime = beginTime + (long) (Math.random() * (endTime - beginTime));  // FLAG
+        long randomTime = beginTime + (long) (secureRandom.nextDouble() * (endTime - beginTime));
         return new Date(randomTime);
     }
 
