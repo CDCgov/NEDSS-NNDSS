@@ -7,9 +7,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static gov.cdc.nnddataexchangeservice.data_generator.RandomValueGenerator.getRandomDate;
 import static gov.cdc.nnddataexchangeservice.data_generator.RandomValueGenerator.getRandomString;
@@ -173,7 +173,7 @@ public class DataGeneratorApp  {
     }
 
     private void insertRandomDataBatchInvMedicalHistory(int batchSize) {
-        Random random = new Random();
+        SecureRandom  random = new SecureRandom();
         List<Object[]> batchArgs = new ArrayList<>();
 
         for (int i = 0; i < batchSize; i++) {
@@ -262,7 +262,7 @@ public class DataGeneratorApp  {
     }
 
     private void insertProviderDataBatch(int batchSize) {
-        Random random = new Random();
+        SecureRandom  random = new SecureRandom();
         List<Object[]> batchArgs = new ArrayList<>();
 
         for (int i = 0; i < batchSize; i++) {
