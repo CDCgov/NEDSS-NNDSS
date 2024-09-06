@@ -82,7 +82,7 @@ public class DataExchangeController {
     @GetMapping(path = "/api/data-exchange-generic/{tableName}")
     public ResponseEntity<String> exchangingData(@PathVariable String tableName, @RequestParam(required = false) String timestamp,
                                                  @RequestHeader(name = "limit", defaultValue = "0") String limit,
-                                                 @RequestHeader(name = "initial_load", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
+                                                 @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
         int intLimit = Integer.parseInt(limit);
 
         boolean initialLoad = initialLoadApplied.equalsIgnoreCase("true");
