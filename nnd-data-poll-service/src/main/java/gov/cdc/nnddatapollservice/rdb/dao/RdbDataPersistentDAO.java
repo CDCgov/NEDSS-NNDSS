@@ -78,14 +78,16 @@ public class RdbDataPersistentDAO {
             try {
                 SimpleJdbcInsert simpleJdbcInsert =
                         new SimpleJdbcInsert(jdbcTemplate);
-                simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
-                List<Map<String, Object>> records = jsonToListOfMap(jsonData);
-                if (records != null && !records.isEmpty()) {
-                    logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                    logger.info("executeBatch completed. tableName: {}", tableName);
-                } else {
-                    logger.info("Inside generic code tableName: {} Records size:0", tableName);
+                if(tableName!=null && !tableName.isEmpty()) {
+                    simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
+                    List<Map<String, Object>> records = jsonToListOfMap(jsonData);
+                    if (records != null && !records.isEmpty()) {
+                        logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
+                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                        logger.info("executeBatch completed. tableName: {}", tableName);
+                    } else {
+                        logger.info("Inside generic code tableName: {} Records size:0", tableName);
+                    }
                 }
             } catch (Exception e) {
                 logger.error("Error executeBatch. tableName: {}, Error:{}", tableName, e.getMessage());
@@ -119,7 +121,7 @@ public class RdbDataPersistentDAO {
         try {
             jdbcTemplate.update(sql);
         } catch (Exception e) {
-            logger.error("Error in upsert for CONFIRMATION_METHOD table:" + e.getMessage());
+            logger.error("Error in upsert for CONFIRMATION_METHOD table:{}",e.getMessage());
         }
     }
 

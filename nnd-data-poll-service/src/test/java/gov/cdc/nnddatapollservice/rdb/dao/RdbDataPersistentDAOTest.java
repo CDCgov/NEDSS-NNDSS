@@ -112,7 +112,6 @@ class RdbDataPersistentDAOTest {
 
     @Test
     void deleteTable() {
-        //when(jdbcTemplate.execute(anyString())).thenReturn(any());
         rdbDataPersistentDAO.deleteTable("TEST");
         verify(jdbcTemplate, times(1)).execute(anyString());
     }
