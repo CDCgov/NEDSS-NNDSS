@@ -38,8 +38,9 @@ public class RdbDataPersistentDAO {
     }
 
     @SuppressWarnings("java:S3776")
-    public void saveRDBData(String tableName, String jsonData) {
+    public int saveRDBData(String tableName, String jsonData) {
         logger.info("saveRDBData tableName: {}", tableName);
+        int noOfRecordsSaved = 0;
         if ("CONFIRMATION_METHOD".equalsIgnoreCase(tableName)) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
@@ -48,9 +49,8 @@ public class RdbDataPersistentDAO {
             }.getType();
             List<ConfirmationMethod> list = gson.fromJson(jsonData, resultType);
             for (ConfirmationMethod confirmationMethod : list) {
-                upsertConfirmationMethod(confirmationMethod);
+                noOfRecordsSaved=upsertConfirmationMethod(confirmationMethod);
             }
-            logger.info("upsert tableName: CONFIRMATION_METHOD Records size:{}", list.size());
         } else if ("CONDITION".equalsIgnoreCase(tableName)) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
@@ -59,9 +59,8 @@ public class RdbDataPersistentDAO {
             }.getType();
             List<Condition> list = gson.fromJson(jsonData, resultType);
             for (Condition condition : list) {
-                upsertCondition(condition);
+                noOfRecordsSaved=upsertCondition(condition);
             }
-            logger.info("upsert tableName: CONDITION Records size:{}", list.size());
         } else if ("RDB_DATE".equalsIgnoreCase(tableName)) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
@@ -70,10 +69,8 @@ public class RdbDataPersistentDAO {
             }.getType();
             List<RdbDate> list = gson.fromJson(jsonData, resultType);
             for (RdbDate rdbDate : list) {
-                upsertRdbDate(rdbDate);
+                noOfRecordsSaved=upsertRdbDate(rdbDate);
             }
-
-            logger.info("upsert tableName: RDB_DATE Records size:{}", list.size());
         } else {
             try {
                 SimpleJdbcInsert simpleJdbcInsert =
@@ -83,7 +80,8 @@ public class RdbDataPersistentDAO {
                     List<Map<String, Object>> records = jsonToListOfMap(jsonData);
                     if (records != null && !records.isEmpty()) {
                         logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                        int[] noOfInserts =simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                        noOfRecordsSaved=noOfInserts.length;
                         logger.info("executeBatch completed. tableName: {}", tableName);
                     } else {
                         logger.info("Inside generic code tableName: {} Records size:0", tableName);
@@ -93,6 +91,8 @@ public class RdbDataPersistentDAO {
                 logger.error("Error executeBatch. tableName: {}, Error:{}", tableName, e.getMessage());
             }
         }
+        logger.info("saveRDBData tableName: {} Records size:{}",tableName, noOfRecordsSaved);
+        return noOfRecordsSaved;
     }
 
     private List<Map<String, Object>> jsonToListOfMap(String jsonData) {
@@ -106,7 +106,8 @@ public class RdbDataPersistentDAO {
         return list;
     }
 
-    private void upsertConfirmationMethod(ConfirmationMethod confirmationMethod) {
+    private int upsertConfirmationMethod(ConfirmationMethod confirmationMethod) {
+        int noOfRecordsUpdated = 0;
         String sql = "MERGE INTO CONFIRMATION_METHOD AS target USING " +
                 "(select " + confirmationMethod.getConfirmationMethodKey() + " as id) AS source " +
                 "ON (target.CONFIRMATION_METHOD_KEY = source.id) " +
@@ -119,13 +120,15 @@ public class RdbDataPersistentDAO {
                 "," + getSqlString(confirmationMethod.getConfirmationMethodCd()) +
                 "," + getSqlString(confirmationMethod.getConfirmationMethodDesc()) + ");";
         try {
-            jdbcTemplate.update(sql);
+            noOfRecordsUpdated= jdbcTemplate.update(sql);
         } catch (Exception e) {
             logger.error("Error in upsert for CONFIRMATION_METHOD table:{}",e.getMessage());
         }
+        return noOfRecordsUpdated;
     }
 
-    private void upsertCondition(Condition condition) {
+    private int upsertCondition(Condition condition) {
+        int noOfRecordsUpdated = 0;
         String sql = "MERGE INTO CONDITION AS target " +
                 "USING (select " + condition.getConditionKey() + " as id) AS source ON" +
                 "(target.CONDITION_KEY = source.id)" +
@@ -171,13 +174,15 @@ public class RdbDataPersistentDAO {
                 getSqlString(condition.getConditionCdSysCd()) +
                 ");";
         try {
-            jdbcTemplate.update(sql);
+            noOfRecordsUpdated= jdbcTemplate.update(sql);
         } catch (Exception e) {
             logger.error("Error in upsert for CONDITION table:{}",e.getMessage());
         }
+        return noOfRecordsUpdated;
     }
 
-    private void upsertRdbDate(RdbDate rdbDate) {
+    private int upsertRdbDate(RdbDate rdbDate) {
+        int noOfRecordsUpdated = 0;
         String sql = "MERGE INTO RDB_DATE AS target " +
                 "USING (select " + rdbDate.getDateKey() + " as id) AS source ON" +
                 "(target.DATE_KEY = source.id)" +
@@ -215,10 +220,11 @@ public class RdbDataPersistentDAO {
                 ");";
 
         try {
-            jdbcTemplate.update(sql);
+            noOfRecordsUpdated= jdbcTemplate.update(sql);
         } catch (Exception e) {
             logger.error("Error in upsert for RDB_DATE table:{}",e.getMessage());
         }
+        return noOfRecordsUpdated;
     }
 
     private static String getSqlString(String val) {

@@ -3,11 +3,10 @@ package gov.cdc.nnddatapollservice.rdb.dao;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -27,6 +26,9 @@ class RdbDataPersistentDAOTest {
     @Mock
     private JdbcTemplate jdbcTemplate;
 
+    @Captor
+    ArgumentCaptor<SimpleJdbcInsert> simpleJdbcCaptor;
+
     @InjectMocks
     RdbDataPersistentDAO rdbDataPersistentDAO;
 
@@ -39,7 +41,8 @@ class RdbDataPersistentDAOTest {
     void saveRDBData() {
         String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
                 "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
-        rdbDataPersistentDAO.saveRDBData("TEST_TABLE", jsondata);
+        int recordsSaved= rdbDataPersistentDAO.saveRDBData("TEST_TABLE", jsondata);
+        assertEquals(0, recordsSaved);
     }
 
     @Test
