@@ -1,7 +1,6 @@
 package gov.cdc.nnddatapollservice.rdb.dto;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Getter

@@ -37,9 +37,10 @@ public class RdbDataPersistentDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @SuppressWarnings("java:S3776")
     public void saveRDBData(String tableName, String jsonData) {
         logger.info("saveRDBData tableName: {}", tableName);
-        if (tableName != null && tableName.equalsIgnoreCase("CONFIRMATION_METHOD")) {
+        if ("CONFIRMATION_METHOD".equalsIgnoreCase(tableName)) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
                     .create();
@@ -49,8 +50,8 @@ public class RdbDataPersistentDAO {
             for (ConfirmationMethod confirmationMethod : list) {
                 upsertConfirmationMethod(confirmationMethod);
             }
-            logger.info("upsert tableName: {} Records size:{}", tableName, list.size());
-        } else if (tableName != null && tableName.equalsIgnoreCase("CONDITION")) {
+            logger.info("upsert tableName: CONFIRMATION_METHOD Records size:{}", list.size());
+        } else if ("CONDITION".equalsIgnoreCase(tableName)) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
                     .create();
@@ -60,8 +61,8 @@ public class RdbDataPersistentDAO {
             for (Condition condition : list) {
                 upsertCondition(condition);
             }
-            logger.info("upsert tableName: {} Records size:{}", tableName, list.size());
-        } else if (tableName != null && tableName.equalsIgnoreCase("RDB_DATE")) {
+            logger.info("upsert tableName: CONDITION Records size:{}", list.size());
+        } else if ("RDB_DATE".equalsIgnoreCase(tableName)) {
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
                     .create();
@@ -72,7 +73,7 @@ public class RdbDataPersistentDAO {
                 upsertRdbDate(rdbDate);
             }
 
-            logger.info("upsert tableName: {} Records size:{}", tableName, list.size());
+            logger.info("upsert tableName: RDB_DATE Records size:{}", list.size());
         } else {
             try {
                 SimpleJdbcInsert simpleJdbcInsert =
@@ -92,7 +93,7 @@ public class RdbDataPersistentDAO {
         }
     }
 
-    private List jsonToListOfMap(String jsonData) {
+    private List<Map<String, Object>> jsonToListOfMap(String jsonData) {
         List<Map<String, Object>> list = null;
         if (jsonData != null && !jsonData.isEmpty()) {
             Gson gson = new GsonBuilder().serializeNulls().create();
@@ -104,8 +105,8 @@ public class RdbDataPersistentDAO {
     }
 
     private void upsertConfirmationMethod(ConfirmationMethod confirmationMethod) {
-        String sql = "MERGE INTO CONFIRMATION_METHOD AS target " +
-                "USING (select " + confirmationMethod.getConfirmationMethodKey() + " as id) AS source " +
+        String sql = "MERGE INTO CONFIRMATION_METHOD AS target USING " +
+                "(select " + confirmationMethod.getConfirmationMethodKey() + " as id) AS source " +
                 "ON (target.CONFIRMATION_METHOD_KEY = source.id) " +
                 "WHEN MATCHED THEN " +
                 " UPDATE SET target.CONFIRMATION_METHOD_CD = " + getSqlString(confirmationMethod.getConfirmationMethodCd()) +
@@ -170,7 +171,7 @@ public class RdbDataPersistentDAO {
         try {
             jdbcTemplate.update(sql);
         } catch (Exception e) {
-            logger.error("Error in upsert for CONDITION table:" + e.getMessage());
+            logger.error("Error in upsert for CONDITION table:{}",e.getMessage());
         }
     }
 
@@ -214,7 +215,7 @@ public class RdbDataPersistentDAO {
         try {
             jdbcTemplate.update(sql);
         } catch (Exception e) {
-            logger.error("Error in upsert for RDB_DATE table:" + e.getMessage());
+            logger.error("Error in upsert for RDB_DATE table:{}",e.getMessage());
         }
     }
 
@@ -248,7 +249,7 @@ public class RdbDataPersistentDAO {
         String sql = "select * from RDB.dbo.poll_data_sync_config pdsc order by table_order";
         List<PollDataSyncConfig> tableList = jdbcTemplate.query(
                 sql,
-                new BeanPropertyRowMapper(PollDataSyncConfig.class));
+                new BeanPropertyRowMapper<>(PollDataSyncConfig.class));
         logger.info("getTableListFromConfig size:{}", tableList.size());
         return tableList;
     }

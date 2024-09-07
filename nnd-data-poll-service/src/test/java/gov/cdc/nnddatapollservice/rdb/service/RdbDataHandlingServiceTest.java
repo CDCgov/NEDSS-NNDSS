@@ -14,7 +14,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -38,7 +37,7 @@ class RdbDataHandlingServiceTest {
     private RdbDataHandlingService dataHandlingService;
 
     @BeforeEach
-    void setUp() throws NoSuchFieldException, IllegalAccessException {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
@@ -69,14 +68,13 @@ class RdbDataHandlingServiceTest {
     void handlingExchangedData_withTimestamp() throws DataPollException {
         dataHandlingService.exchangeEndpoint = "http://ip.jsontest.com/";
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
-        PollDataSyncConfig config = new PollDataSyncConfig();
 
-        PollDataSyncConfig config1 = new PollDataSyncConfig();
-        config1.setTableName("D_PROVIDER");
-        config1.setLastUpdateTime(Timestamp.from(Instant.now()));
-        config1.setTableOrder(2);
-        config1.setQuery("");
-        configTableList.add(config1);
+        PollDataSyncConfig config = new PollDataSyncConfig();
+        config.setTableName("D_PROVIDER");
+        config.setLastUpdateTime(Timestamp.from(Instant.now()));
+        config.setTableOrder(2);
+        config.setQuery("");
+        configTableList.add(config);
 
         when(rdbDataPersistentDAO.getTableListFromConfig()).thenReturn(configTableList);
         when(tokenService.getToken()).thenReturn("testtoken");

@@ -53,9 +53,9 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList = getTableListFromConfig();
-        logger.info(" RDB TableList to be polled: " + configTableList.size());
+        logger.info(" RDB TableList to be polled: {}",configTableList.size());
         boolean isInitalLoad = checkPollingIsInitailLoad(configTableList);
-        logger.info("-----INITIAL LOAD: " + isInitalLoad);
+        logger.info("-----INITIAL LOAD: {}",isInitalLoad);
 
         if (isInitalLoad) {
             logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
@@ -63,7 +63,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-            logger.info("Start polling: Table:" + pollDataSyncConfig.getTableName() + " order:" + pollDataSyncConfig.getTableOrder());
+            logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
             pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
         }
         logger.info("---END RDB POLLING---");

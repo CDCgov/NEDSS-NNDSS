@@ -48,8 +48,7 @@ public class DataPullService implements IDataPullService {
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB");
-            logger.info(cron+" FOR RDB");
-            logger.info(zone+" FOR RDB");
+            logger.info("{}, {} FOR RDB",cron,zone);
             rdbDataHandlingService.handlingExchangedData();
         }
     }

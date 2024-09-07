@@ -19,48 +19,4 @@ public class RdbDate {
     private BigDecimal clndrMonInYr;
     private BigDecimal clndrQrtr;
     private BigDecimal clndrYr;
-
-    public Long getDateKey() {
-        return dateKey;
-    }
-
-    public String getDateMmDdYyyy() {
-        return dateMmDdYyyy;
-    }
-
-    public String getDayOfWeek() {
-        return dayOfWeek;
-    }
-
-    public BigDecimal getDayNbrInClndrMon() {
-        return dayNbrInClndrMon;
-    }
-
-    public BigDecimal getDayNbrInClndrYr() {
-        return dayNbrInClndrYr;
-    }
-
-    public BigDecimal getWkNbrInClndrMon() {
-        return wkNbrInClndrMon;
-    }
-
-    public BigDecimal getWkNbrInClndrYr() {
-        return wkNbrInClndrYr;
-    }
-
-    public String getClndrMonName() {
-        return clndrMonName;
-    }
-
-    public BigDecimal getClndrMonInYr() {
-        return clndrMonInYr;
-    }
-
-    public BigDecimal getClndrQrtr() {
-        return clndrQrtr;
-    }
-
-    public BigDecimal getClndrYr() {
-        return clndrYr;
-    }
 }
