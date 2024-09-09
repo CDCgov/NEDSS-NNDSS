@@ -1,6 +1,7 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataHandlingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,8 @@ class DataPullServiceTest {
 
     @Mock
     private IDataHandlingService dataHandlingService;
-
+    @Mock
+    private IRdbDataHandlingService rdbDataHandlingService;
     @InjectMocks
     private DataPullService dataPullService;
 
@@ -27,21 +29,36 @@ class DataPullServiceTest {
         // Set the cron and zone values using reflection
         ReflectionTestUtils.setField(dataPullService, "cron", "0 0/5 * * * ?");
         ReflectionTestUtils.setField(dataPullService, "zone", "UTC");
+        ReflectionTestUtils.setField(dataPullService, "nndPollEnabled", true);
+        ReflectionTestUtils.setField(dataPullService, "rdbPollEnabled", true);
     }
 
     @Test
-    void testScheduleDataFetch_Success() throws DataPollException {
-        dataPullService.scheduleDataFetch();
+    void testScheduleNNDDataFetch_Success() throws DataPollException {
+        dataPullService.scheduleNNDDataFetch();
 
         verify(dataHandlingService, times(1)).handlingExchangedData();
     }
 
     @Test
-    void testScheduleDataFetch_Exception() throws DataPollException {
+    void testScheduleNNDDataFetch_Exception() throws DataPollException {
         doThrow(new DataPollException("Exception")).when(dataHandlingService).handlingExchangedData();
 
-        assertThrows(DataPollException.class, () -> dataPullService.scheduleDataFetch());
+        assertThrows(DataPollException.class, () -> dataPullService.scheduleNNDDataFetch());
 
         verify(dataHandlingService, times(1)).handlingExchangedData();
+    }
+    @Test
+    void testScheduleRDBDataFetch_Success() throws DataPollException {
+        dataPullService.scheduleRDBDataFetch();
+        verify(rdbDataHandlingService, times(1)).handlingExchangedData();
+    }
+    @Test
+    void testScheduleRDBataFetch_Exception() throws DataPollException {
+        doThrow(new DataPollException("Exception")).when(rdbDataHandlingService).handlingExchangedData();
+
+        assertThrows(DataPollException.class, () -> dataPullService.scheduleRDBDataFetch());
+
+        verify(rdbDataHandlingService, times(1)).handlingExchangedData();
     }
 }
