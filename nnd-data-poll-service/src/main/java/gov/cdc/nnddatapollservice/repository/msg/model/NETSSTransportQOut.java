@@ -1,6 +1,6 @@
 package gov.cdc.nnddatapollservice.repository.msg.model;
 
-import gov.cdc.nnddatapollservice.service.model.dto.NETSSTransportQOutDto;
+import gov.cdc.nnddatapollservice.service.data.model.dto.NETSSTransportQOutDto;
 import jakarta.persistence.*;
 import lombok.Data;
 
