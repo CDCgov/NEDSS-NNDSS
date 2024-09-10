@@ -20,6 +20,50 @@ nnd:
 rdb:
   poll:
     enabled: ${RDB_POLL_ENABLED:true}
+  s3:
+    enabled: ${RDB_S3_ENABLED:false}
+
+spring:
+  application:
+    name: nnd-data-poll-service
+  task:
+    scheduling:
+      pool:
+        size: 2
+scheduler:
+  zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
+  # America/New_York
+  # UTC
+  cron: ${NBS_NND_CRON:0 */1 * * * * }
+  # "0 */5 0-2 * * *"
+  # every 5 min from 12 am to 3 am
+  # 0 * 0-2 * * *
+  # 0 (start at zero sec), * (run every min),  0-2 (run during 12 am to 3 am), * (run every day), * (run every month), * (run every year)
+---
+server:
+  port: 8082
+
+io:
+  finalLocation: ${NND_FILE_LOCATION}
+
+data_exchange:
+  clientId: ${NND_DE_CLIENT_ID}
+  secret: ${NND_DE_SECRET}
+  url: ${NND_DE_URL}
+  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN:/api/auth/token}
+  endpoint_de: ${NND_DE_URL}${NND_DE_DE:/api/nnd/data-exchange}
+  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/api/data-exchange-generic}
+nnd:
+  fullLoad: ${NND_FULL_LOAD:false}
+  pullLimit: ${NND_PULL_LIMIT:0}
+  insertLimit: ${NND_INSERT_LIMIT:1000}
+  poll:
+    enabled: ${NND_POLL_ENABLED:true}
+rdb:
+  poll:
+    enabled: ${RDB_POLL_ENABLED:true}
+  s3:
+    enabled: ${RDB_S3_ENABLED:false}
 
 spring:
   application:
@@ -57,9 +101,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: none
-
-
-
 aws:
   auth:
     key_id: ${AWS_KEY_ID}
