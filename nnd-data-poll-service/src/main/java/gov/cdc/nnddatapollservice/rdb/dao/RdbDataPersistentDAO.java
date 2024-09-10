@@ -249,12 +249,12 @@ public class RdbDataPersistentDAO {
     }
 
     public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
-        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
+        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, tableName);
     }
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
-        String sql = "select * from RDB.dbo.poll_data_sync_config pdsc order by table_order";
+        String sql = "select * from poll_data_sync_config pdsc order by table_order";
         List<PollDataSyncConfig> tableList = jdbcTemplate.query(
                 sql,
                 new BeanPropertyRowMapper<>(PollDataSyncConfig.class));

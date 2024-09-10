@@ -2,7 +2,7 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.service.interfaces.IDataHandlingService;
+import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class DataPullService implements IDataPullService {
     private static Logger logger = LoggerFactory.getLogger(DataPullService.class);
 
-    private final IDataHandlingService dataHandlingService;
+    private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
     @Value("${scheduler.cron}")
     private String cron;
@@ -29,7 +29,7 @@ public class DataPullService implements IDataPullService {
     @Value("${rdb.poll.enabled}")
     private boolean rdbPollEnabled;
 
-    public DataPullService(IDataHandlingService dataHandlingService,
+    public DataPullService(INNDDataHandlingService dataHandlingService,
                            IRdbDataHandlingService rdbDataHandlingService) {
         this.dataHandlingService = dataHandlingService;
         this.rdbDataHandlingService = rdbDataHandlingService;

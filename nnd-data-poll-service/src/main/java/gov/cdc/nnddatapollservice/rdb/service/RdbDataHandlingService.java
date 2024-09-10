@@ -23,7 +23,9 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -53,19 +55,23 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList = getTableListFromConfig();
-        logger.info(" RDB TableList to be polled: {}",configTableList.size());
+        List<PollDataSyncConfig> rdbTablesList = getTablesConfigListBySOurceDB(configTableList,"RDB");
+        logger.info(" RDB TableList to be polled: {}",rdbTablesList.size());
+        List<PollDataSyncConfig> srteTablesList = getTablesConfigListBySOurceDB(configTableList,"SRTE");
+        logger.info(" SRTE TableList to be polled: {}",srteTablesList.size());
+
         boolean isInitalLoad = checkPollingIsInitailLoad(configTableList);
         logger.info("-----INITIAL LOAD: {}",isInitalLoad);
 
-        if (isInitalLoad) {
-            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
-            cleanupRDBTables(configTableList);
-        }
-
-        for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-            logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
-            pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
-        }
+//        if (isInitalLoad) {
+//            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
+//            cleanupRDBTables(configTableList);
+//        }
+//
+//        for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
+//            logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
+//            pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
+//        }
         logger.info("---END RDB POLLING---");
     }
 
@@ -146,5 +152,9 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         Timestamp timestamp = Timestamp.from(Instant.now());
         SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
         return formatter.format(timestamp);
+    }
+    private List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB){
+        List<PollDataSyncConfig> tablesList=configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).collect(Collectors.toList());
+        return tablesList;
     }
 }

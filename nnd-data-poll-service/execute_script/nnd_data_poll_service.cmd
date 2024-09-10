@@ -18,4 +18,5 @@ set OP_DBSERVER=localhost:1433
 set OP_DBUSER=sa
 set OP_DBNAME=MSGOUTE
 set RDB_DBNAME=RDB
+set SRTE_DBNAME=SRTE
 java -jar nnd-data-poll-service.jar

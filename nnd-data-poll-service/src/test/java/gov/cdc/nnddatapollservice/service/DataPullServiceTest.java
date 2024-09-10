@@ -2,7 +2,7 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.service.interfaces.IDataHandlingService;
+import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,7 +16,7 @@ import static org.mockito.Mockito.*;
 class DataPullServiceTest {
 
     @Mock
-    private IDataHandlingService dataHandlingService;
+    private INNDDataHandlingService dataHandlingService;
     @Mock
     private IRdbDataHandlingService rdbDataHandlingService;
     @InjectMocks

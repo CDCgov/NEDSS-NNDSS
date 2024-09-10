@@ -53,6 +53,8 @@ spring:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${OP_DBNAME};encrypt=true;trustServerCertificate=true;
     rdb:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${RDB_DBNAME};encrypt=true;trustServerCertificate=true;
+    srte:
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${SRTE_DBNAME};encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:
