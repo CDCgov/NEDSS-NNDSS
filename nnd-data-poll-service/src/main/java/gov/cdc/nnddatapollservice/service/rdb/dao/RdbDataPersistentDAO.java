@@ -263,7 +263,12 @@ public class RdbDataPersistentDAO {
     }
 
     public void deleteTable(String tableName) {
-        String deleteSql = "delete " + tableName;
-        jdbcTemplate.execute(deleteSql);
+        try {
+            String deleteSql = "delete " + tableName;
+            jdbcTemplate.execute(deleteSql);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+
     }
 }

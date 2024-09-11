@@ -103,9 +103,12 @@ spring:
       ddl-auto: none
 aws:
   auth:
-    key_id: ${AWS_KEY_ID}
-    access_key: ${AWS_ACCESS_KEY}
-    token: ${AWS_TOKEN}
+    static:
+      key_id: ${AWS_KEY_ID:}
+      access_key: ${AWS_ACCESS_KEY:}
+      token: ${AWS_TOKEN:}
+    profile:
+      profile_name: ${AWS_PROFILE:}
   s3:
     bucket-name: ${S3_BUCKET_NAME}
     region: ${S3_REGION}

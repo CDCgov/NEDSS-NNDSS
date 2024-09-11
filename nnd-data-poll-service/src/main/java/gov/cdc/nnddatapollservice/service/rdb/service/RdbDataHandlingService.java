@@ -5,6 +5,7 @@ import gov.cdc.nnddatapollservice.service.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.service.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.data.interfaces.ITokenService;
+import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -38,17 +39,24 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     @Value("${data_exchange.endpoint_generic}")
     protected String exchangeEndpoint;
 
+    @Value("${rdb.s3.enabled}")
+    protected boolean s3Enabled = false;
+
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
+    private final IS3DataService s3DataService;
 
     public RdbDataHandlingService(ITokenService tokenService,
-                                  RdbDataPersistentDAO rdbDataPersistentDAO) {
+                                  RdbDataPersistentDAO rdbDataPersistentDAO,
+                                  IS3DataService s3DataService) {
         this.tokenService = tokenService;
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
+        this.s3DataService = s3DataService;
     }
+
 
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START RDB POLLING---");
@@ -63,8 +71,11 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-            logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
-            pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
+            if (pollDataSyncConfig.getTableName().equalsIgnoreCase("D_PATIENT")) {
+                logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
+                pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
+            }
+
         }
         logger.info("---END RDB POLLING---");
     }
@@ -87,9 +98,17 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         String rawData = decodeAndDecompress(encodedData);
 
         Timestamp timestamp = Timestamp.from(Instant.now());
-        persistRdbData(tableName, rawData);
 
+        if (s3Enabled) {
+            s3DataService.persistToS3MultiPart(rawData, tableName, timestamp, isInitialLoad);
+        }
+        else
+        {
+            persistRdbData(tableName, rawData);
+        }
         rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
+
+
     }
 
     protected String callDataExchangeEndpoint(String token, String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {

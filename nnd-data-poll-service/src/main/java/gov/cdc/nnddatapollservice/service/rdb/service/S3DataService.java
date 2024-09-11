@@ -1,8 +1,19 @@
 package gov.cdc.nnddatapollservice.service.rdb.service;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.service.data.DataPullService;
 import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.IS3DataService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -10,56 +21,63 @@ import software.amazon.awssdk.services.s3.model.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+@Service
 public class S3DataService implements IS3DataService {
+    private static Logger logger = LoggerFactory.getLogger(S3DataService.class);
 
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
-    @Value("${aws.s3.region}")
-    private String region;
     private final S3Client s3Client;
 
-    public S3DataService() {
-        this.s3Client = S3Client.builder()
-                .region(Region.of(region))
-                .credentialsProvider(ProfileCredentialsProvider.create())
-                .build();
-    }
-
-    public void persistToS3(String records, String fileName) {
-        try {
-            // Create an InputStream from the JSON string
-            InputStream inputStream = new ByteArrayInputStream(records.getBytes(StandardCharsets.UTF_8));
-
-            // Create PutObjectRequest
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(fileName)
+    public S3DataService(
+            @Value("${aws.auth.static.key_id}") String keyId,
+            @Value("${aws.auth.static.access_key}") String accessKey,
+            @Value("${aws.auth.static.token}") String token,
+            @Value("${aws.s3.region}") String region,
+            @Value("${aws.auth.profile.profile_name}") String profile
+    ) throws DataPollException
+    {
+        if (!keyId.isEmpty() && !accessKey.isEmpty() && !token.isEmpty()) {
+            this.s3Client = S3Client.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(StaticCredentialsProvider.create(
+                            AwsSessionCredentials.create(keyId, accessKey, token)))
                     .build();
-
-            // Upload the file to S3
-            s3Client.putObject(putObjectRequest, software.amazon.awssdk.core.sync.RequestBody.fromInputStream(inputStream, records.length()));
-
-            System.out.println("Successfully persisted to S3: " + fileName);
-
-        } catch (S3Exception e) {
-            System.err.println("S3 error: " + e.awsErrorDetails().errorMessage());
-        } catch (Exception e) {
-            System.err.println("Error persisting data: " + e.getMessage());
+        } else if (!profile.isEmpty()) {
+            // Use profile credentials from ~/.aws/credentials
+            this.s3Client = S3Client.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(ProfileCredentialsProvider.create(profile))
+                    .build();
+        } else {
+            throw new DataPollException("No Valid AWS Profile or Credentials found");
         }
     }
 
-    public void persistToS3MultiPart(String records, String fileName) {
-        try {
-            // Create an InputStream from the data (we'll assume large data for this case)
-            InputStream inputStream = new ByteArrayInputStream(records.getBytes(StandardCharsets.UTF_8));
-            long contentLength = records.length();
 
-            // Use multipart upload for large files
-            String uploadId = initiateMultipartUpload(fileName);
+    public void persistToS3MultiPart(String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) throws DataPollException {
+        try {
+            String formattedTimestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(persistingTimestamp);
+
+            // Construct the file path: /filename/filename_timestamp.json
+            String s3Key = "";
+            if (initialLoad) {
+                s3Key = String.format("%s/%s/%s_%s.json", fileName,"initial_load_" + formattedTimestamp, fileName, formattedTimestamp);
+            }
+            else {
+                s3Key = String.format("%s/%s_%s.json", fileName, fileName, formattedTimestamp);
+
+            }
+
+            InputStream inputStream = new ByteArrayInputStream(records.getBytes(StandardCharsets.UTF_8));
+
+            String uploadId = initiateMultipartUpload(s3Key);
 
             List<CompletedPart> completedParts = new ArrayList<>();
             byte[] buffer = new byte[5 * 1024 * 1024]; // 5MB buffer size
@@ -74,7 +92,7 @@ public class S3DataService implements IS3DataService {
 
                 UploadPartRequest uploadPartRequest = UploadPartRequest.builder()
                         .bucket(bucketName)
-                        .key(fileName)
+                        .key(s3Key)
                         .uploadId(uploadId)
                         .partNumber(partNumber)
                         .build();
@@ -90,12 +108,14 @@ public class S3DataService implements IS3DataService {
                 partNumber++;
             }
 
-            // Complete the multipart upload
-            completeMultipartUpload(uploadId, fileName, completedParts);
-            System.out.println("Successfully persisted to S3: " + fileName);
+            completeMultipartUpload(uploadId, s3Key, completedParts);
 
-        } catch (Exception e) {
-            System.err.println("Error persisting data: " + e.getMessage());
+            logger.info("Successfully persisted to S3: " + s3Key);
+        }
+        catch (Exception e)
+        {
+            logger.info(e.getMessage());
+            throw new DataPollException(e.getMessage());
         }
     }
 

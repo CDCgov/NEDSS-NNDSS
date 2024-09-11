@@ -38,10 +38,10 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleNNDDataFetch() throws DataPollException {
         if (nndPollEnabled) {
-            logger.info("CRON STARTED");
-            logger.info(cron);
-            logger.info(zone);
-            dataHandlingService.handlingExchangedData();
+//            logger.info("CRON STARTED");
+//            logger.info(cron);
+//            logger.info(zone);
+//            dataHandlingService.handlingExchangedData();
         }
     }
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
