@@ -26,6 +26,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+
 @Service
 public class S3DataService implements IS3DataService {
     private static Logger logger = LoggerFactory.getLogger(S3DataService.class);
@@ -34,7 +36,6 @@ public class S3DataService implements IS3DataService {
     private String bucketName;
 
     private final S3Client s3Client;
-
     public S3DataService(
             @Value("${aws.auth.static.key_id}") String keyId,
             @Value("${aws.auth.static.access_key}") String accessKey,
@@ -61,8 +62,12 @@ public class S3DataService implements IS3DataService {
     }
 
 
-    public void persistToS3MultiPart(String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) throws DataPollException {
+    public String persistToS3MultiPart(String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) throws DataPollException {
+        String log = LOG_SUCCESS;
         try {
+            if (records.equalsIgnoreCase("[]") || records.isEmpty()) {
+                throw new DataPollException("Not data to persist for table " + fileName);
+            }
             String formattedTimestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(persistingTimestamp);
 
             // Construct the file path: /filename/filename_timestamp.json
@@ -115,8 +120,9 @@ public class S3DataService implements IS3DataService {
         catch (Exception e)
         {
             logger.info(e.getMessage());
-            throw new DataPollException(e.getMessage());
+            log = e.getMessage();
         }
+        return log;
     }
 
     private String initiateMultipartUpload(String fileName) {

@@ -234,8 +234,13 @@ public class RdbDataPersistentDAO {
         return val;
     }
 
-    public String getLastUpdatedTime(String tableName) {
-        String sql = "select last_update_time from POLL_DATA_SYNC_CONFIG where table_name=?";
+    public String getLastUpdatedTime(String tableName, boolean s3Enabled) {
+        String sql;
+        if (s3Enabled) {
+            sql = "select last_update_time_s3 from POLL_DATA_SYNC_CONFIG where table_name=?";
+        } else {
+            sql = "select last_update_time from POLL_DATA_SYNC_CONFIG where table_name=?";
+        }
         String updatedTime = "";
         Timestamp lastTime = this.jdbcTemplate.queryForObject(
                 sql,
@@ -248,9 +253,14 @@ public class RdbDataPersistentDAO {
         return updatedTime;
     }
 
-    public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
-        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
-        jdbcTemplate.update(updateSql, timestamp, tableName);
+    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
+        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    }
+
+    public void updateLastUpdatedTimeS3RunAndLog(String tableName, Timestamp timestamp, String log) {
+        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, log, tableName);
     }
 
     public List<PollDataSyncConfig> getTableListFromConfig() {

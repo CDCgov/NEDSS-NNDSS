@@ -26,6 +26,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+
 @Service
 @Slf4j
 public class RdbDataHandlingService implements IRdbDataHandlingService {
@@ -65,17 +67,18 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         boolean isInitalLoad = checkPollingIsInitailLoad(configTableList);
         logger.info("-----INITIAL LOAD: {}",isInitalLoad);
 
-        if (isInitalLoad) {
+        if (isInitalLoad && !s3Enabled) {
             logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
             cleanupRDBTables(configTableList);
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-            if (pollDataSyncConfig.getTableName().equalsIgnoreCase("D_PATIENT")) {
+            try {
                 logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
                 pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
             }
-
         }
         logger.info("---END RDB POLLING---");
     }
@@ -87,7 +90,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         if (isInitialLoad) {
             timeStampForPoll = getCurrentTimestamp();
         } else {
-            timeStampForPoll = rdbDataPersistentDAO.getLastUpdatedTime(tableName);
+            timeStampForPoll = rdbDataPersistentDAO.getLastUpdatedTime(tableName, s3Enabled);
         }
         logger.info("isInitalLoad {}", isInitialLoad);
 
@@ -100,13 +103,14 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         Timestamp timestamp = Timestamp.from(Instant.now());
 
         if (s3Enabled) {
-            s3DataService.persistToS3MultiPart(rawData, tableName, timestamp, isInitialLoad);
+            var log = s3DataService.persistToS3MultiPart(rawData, tableName, timestamp, isInitialLoad);
+            rdbDataPersistentDAO.updateLastUpdatedTimeS3RunAndLog(tableName, timestamp, "S3 Log: " + log);
         }
         else
         {
-            persistRdbData(tableName, rawData);
+            var log = persistRdbData(tableName, rawData);
+            rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, "SQL Log: " + log);
         }
-        rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
 
 
     }
@@ -137,8 +141,15 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
     }
 
-    private void persistRdbData(String tableName, String jsonData) {
-        rdbDataPersistentDAO.saveRDBData(tableName, jsonData);
+    private String persistRdbData(String tableName, String jsonData) {
+        String logInfo = LOG_SUCCESS;
+        try {
+            rdbDataPersistentDAO.saveRDBData(tableName, jsonData);
+        } catch (Exception e) {
+           logInfo = e.getMessage();
+        }
+
+        return logInfo;
     }
 
     private List<PollDataSyncConfig> getTableListFromConfig() {
@@ -154,7 +165,10 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     private boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
             logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
-            if (pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
+            if (!s3Enabled && pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
+                return false;
+            }
+            else if (s3Enabled && pollDataSyncConfig.getLastUpdateTimeS3() != null && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
                 return false;
             }
         }

@@ -83,7 +83,7 @@ class RdbDataPersistentDAOTest {
         when(jdbcTemplate.queryForObject(
                 anyString(), eq(Timestamp.class), anyString())).thenReturn(timetsamp);
 
-        String timetsampResult = rdbDataPersistentDAO.getLastUpdatedTime("TEST");
+        String timetsampResult = rdbDataPersistentDAO.getLastUpdatedTime("TEST", false);
         assertNotNull(timetsampResult);
     }
 
@@ -92,7 +92,7 @@ class RdbDataPersistentDAOTest {
         Timestamp timestamp = Timestamp.from(Instant.now());
 
         when(jdbcTemplate.update(anyString(), any(), anyString())).thenReturn(1);
-        rdbDataPersistentDAO.updateLastUpdatedTime("TEST_TABLE", timestamp);
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLog("TEST_TABLE", timestamp, "LOG");
 
         verify(jdbcTemplate, times(1)).update(anyString(), any(), anyString());
     }

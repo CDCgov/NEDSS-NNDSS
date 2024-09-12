@@ -50,6 +50,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING RDB");
             logger.info("{}, {} FOR RDB",cron,zone);
             rdbDataHandlingService.handlingExchangedData();
+            System.exit(1);
         }
     }
 }

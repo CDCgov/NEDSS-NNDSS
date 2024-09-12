@@ -6,5 +6,5 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface IS3DataService {
-    void persistToS3MultiPart(String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) throws DataPollException;
+    String persistToS3MultiPart(String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) throws DataPollException;
 }
