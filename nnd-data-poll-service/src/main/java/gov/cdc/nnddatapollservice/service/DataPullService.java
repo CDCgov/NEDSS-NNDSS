@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 public class DataPullService implements IDataPullService {
     private static Logger logger = LoggerFactory.getLogger(DataPullService.class);
 
-    private final INNDDataHandlingService dataHandlingService;
-    private final IRdbDataHandlingService rdbDataHandlingService;
     @Value("${scheduler.cron}")
     private String cron;
 
@@ -26,8 +24,12 @@ public class DataPullService implements IDataPullService {
 
     @Value("${nnd.poll.enabled}")
     private boolean nndPollEnabled;
+
     @Value("${rdb.poll.enabled}")
     private boolean rdbPollEnabled;
+
+    private final INNDDataHandlingService dataHandlingService;
+    private final IRdbDataHandlingService rdbDataHandlingService;
 
     public DataPullService(INNDDataHandlingService dataHandlingService,
                            IRdbDataHandlingService rdbDataHandlingService) {
@@ -44,6 +46,7 @@ public class DataPullService implements IDataPullService {
             dataHandlingService.handlingExchangedData();
         }
     }
+
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {

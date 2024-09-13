@@ -6,9 +6,6 @@ set NND_PULL_LIMIT=0
 set NND_INSERT_LIMIT=1000
 set NND_DE_CLIENT_ID=nnd-keycloak-client
 set NND_DE_SECRET=bpVTppDam4sxXt4hfgm5hZ6Rteponjb9
-@REM set NND_DE_TOKEN=/api/auth/token
-@REM set NND_DE_DE=/api/nnd/data-exchange
-@REM set NND_DE_GENERIC=/api/data-exchange-generic
 set NND_DE_URL=http://localhost:8081
 set NND_FILE_LOCATION=C:\Users\DucNguyen\Desktop\LOG\Poll
 set NND_POLL_ENABLED=true
@@ -19,4 +16,7 @@ set OP_DBUSER=sa
 set OP_DBNAME=MSGOUTE
 set RDB_DBNAME=RDB
 set SRTE_DBNAME=SRTE
+set DATASYNC_STORE_LOCAL=true
+set DATASYNC_STORE_S3=false
+set DATASYNC_LOCAL_FILE_PATH=/Users/SelvarasuSathiah/Desktop/OUTBOUND_POLL_DATA
 java -jar nnd-data-poll-service.jar

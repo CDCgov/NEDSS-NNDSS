@@ -1,8 +1,9 @@
-package gov.cdc.nnddatapollservice.rdb.dao;
+package gov.cdc.nnddatapollservice.srte;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

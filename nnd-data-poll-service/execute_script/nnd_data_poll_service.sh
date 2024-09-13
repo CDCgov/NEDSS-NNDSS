@@ -15,5 +15,8 @@ export OP_DBSERVER="localhost:1433"
 export OP_DBUSER="sa"
 export OP_DBNAME="MSGOUTE"
 export RDB_DBNAME="RDB"
-export SRTE_DBNAME=SRTE
+export SRTE_DBNAME="SRTE"
+export DATASYNC_STORE_LOCAL="true"
+export DATASYNC_STORE_S3="false"
+export DATASYNC_LOCAL_FILE_PATH="/Users/SelvarasuSathiah/Desktop/OUTBOUND_POLL_DATA"
 java -jar nnd-data-poll-service.jar

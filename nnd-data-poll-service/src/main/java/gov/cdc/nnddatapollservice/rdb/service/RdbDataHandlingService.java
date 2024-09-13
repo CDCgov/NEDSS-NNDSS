@@ -6,6 +6,8 @@ import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
+import gov.cdc.nnddatapollservice.share.JsonToFileWriter;
+import gov.cdc.nnddatapollservice.srte.SrteDataPersistentDAO;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,42 +42,52 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     @Value("${data_exchange.endpoint_generic}")
     protected String exchangeEndpoint;
 
+    @Value("${datasync.local_file_path}")
+    private String datasyncLocalFilePath;
+
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+    private static final String RDB="RDB";
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
-
+    private final SrteDataPersistentDAO srteDataPersistentDAO;
     public RdbDataHandlingService(ITokenService tokenService,
-                                  RdbDataPersistentDAO rdbDataPersistentDAO) {
+                                  RdbDataPersistentDAO rdbDataPersistentDAO,
+                                  SrteDataPersistentDAO srteDataPersistentDAO) {
         this.tokenService = tokenService;
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
+        this.srteDataPersistentDAO=srteDataPersistentDAO;
     }
 
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList = getTableListFromConfig();
-        List<PollDataSyncConfig> rdbTablesList = getTablesConfigListBySOurceDB(configTableList,"RDB");
+        List<PollDataSyncConfig> rdbTablesList = getTablesConfigListBySOurceDB(configTableList,RDB);
         logger.info(" RDB TableList to be polled: {}",rdbTablesList.size());
         List<PollDataSyncConfig> srteTablesList = getTablesConfigListBySOurceDB(configTableList,"SRTE");
         logger.info(" SRTE TableList to be polled: {}",srteTablesList.size());
 
-        boolean isInitalLoad = checkPollingIsInitailLoad(configTableList);
-        logger.info("-----INITIAL LOAD: {}",isInitalLoad);
+        boolean isInitialLoad = checkPollingIsInitailLoad(configTableList);
+        logger.info("-----INITIAL LOAD: {}",isInitialLoad);
 
-//        if (isInitalLoad) {
-//            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
-//            cleanupRDBTables(configTableList);
-//        }
-//
-//        for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-//            logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
-//            pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
-//        }
+        if (isInitialLoad) {
+            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
+            cleanupRDBTables(configTableList);
+        }
+
+        for (PollDataSyncConfig pollDataSyncConfig : rdbTablesList) {
+            logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
+            pollAndPersistRDBData(pollDataSyncConfig.getTableName(), isInitialLoad);
+        }
+        for (PollDataSyncConfig pollDataSyncConfig : srteTablesList) {
+            logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
+            pollAndPersistSRTEData(pollDataSyncConfig.getTableName(), isInitialLoad);
+        }
         logger.info("---END RDB POLLING---");
     }
 
-    private void pollAndPeristsRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
+    private void pollAndPersistRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
         var token = tokenService.getToken();
         logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
         String timeStampForPoll = "";
@@ -84,7 +96,30 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         } else {
             timeStampForPoll = rdbDataPersistentDAO.getLastUpdatedTime(tableName);
         }
-        logger.info("isInitalLoad {}", isInitialLoad);
+        logger.info("isInitialLoad {}", isInitialLoad);
+
+        logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
+        //call data exchange service api
+        String encodedData = callDataExchangeEndpoint(token, tableName, isInitialLoad, timeStampForPoll);
+
+        String rawJsonData = decodeAndDecompress(encodedData);
+
+        Timestamp timestamp = Timestamp.from(Instant.now());
+        persistRdbData(tableName, rawJsonData);
+
+        rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
+        JsonToFileWriter.writeJsonToFile(datasyncLocalFilePath,RDB,tableName,timestamp,rawJsonData);
+    }
+    private void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) throws DataPollException {
+        var token = tokenService.getToken();
+        logger.info("--START--pollAndPeristsSRTEData for table {}", tableName);
+        String timeStampForPoll = "";
+        if (isInitialLoad) {
+            timeStampForPoll = getCurrentTimestamp();
+        } else {
+            timeStampForPoll = rdbDataPersistentDAO.getLastUpdatedTime(tableName);
+        }
+        logger.info("isInitialLoad {}", isInitialLoad);
 
         logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
         //call data exchange service api
@@ -93,11 +128,10 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         String rawData = decodeAndDecompress(encodedData);
 
         Timestamp timestamp = Timestamp.from(Instant.now());
-        persistRdbData(tableName, rawData);
+        persistSrteData(tableName, rawData);
 
         rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
     }
-
     protected String callDataExchangeEndpoint(String token, String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -120,14 +154,16 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         }
     }
 
-    public String decodeAndDecompress(String base64EncodedData) {
+    private String decodeAndDecompress(String base64EncodedData) {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
     }
 
     private void persistRdbData(String tableName, String jsonData) {
         rdbDataPersistentDAO.saveRDBData(tableName, jsonData);
     }
-
+    private void persistSrteData(String tableName, String jsonData) {
+        srteDataPersistentDAO.saveSRTEData(tableName, jsonData);
+    }
     private List<PollDataSyncConfig> getTableListFromConfig() {
         return rdbDataPersistentDAO.getTableListFromConfig();
     }

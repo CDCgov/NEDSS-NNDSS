@@ -20,6 +20,10 @@ nnd:
 rdb:
   poll:
     enabled: ${RDB_POLL_ENABLED:true}
+datasync:
+  store_in_local: ${DATASYNC_STORE_LOCAL:true}
+  store_in_S3: ${DATASYNC_STORE_S3:true}
+  local_file_path: ${DATASYNC_LOCAL_FILE_PATH:/Users/SelvarasuSathiah/Desktop/NND_Datasync}
 
 spring:
   application:
