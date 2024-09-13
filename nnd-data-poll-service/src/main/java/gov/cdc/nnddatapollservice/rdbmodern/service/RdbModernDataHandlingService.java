@@ -1,9 +1,9 @@
-package gov.cdc.nnddatapollservice.rdb.service;
+package gov.cdc.nnddatapollservice.rdbmodern.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
-import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
+import gov.cdc.nnddatapollservice.rdbmodern.dao.RdbModernDataPersistentDAO;
+import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IOutboundPollCommonService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -16,18 +16,17 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class RdbDataHandlingService implements IRdbDataHandlingService {
-    private static Logger logger = LoggerFactory.getLogger(RdbDataHandlingService.class);
+public class RdbModernDataHandlingService implements IRdbModernDataHandlingService {
+    private static Logger logger = LoggerFactory.getLogger(RdbModernDataHandlingService.class);
 
     private static final String RDB = "RDB";
 
-    private final RdbDataPersistentDAO rdbDataPersistentDAO;
+    private final RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
     private final IOutboundPollCommonService outboundPollCommonService;
 
-    public RdbDataHandlingService(
-            RdbDataPersistentDAO rdbDataPersistentDAO,
-            IOutboundPollCommonService outboundPollCommonService) {
-        this.rdbDataPersistentDAO = rdbDataPersistentDAO;
+    public RdbModernDataHandlingService(RdbModernDataPersistentDAO rdbModernDataPersistentDAO,
+                                        IOutboundPollCommonService outboundPollCommonService) {
+        this.rdbModernDataPersistentDAO = rdbModernDataPersistentDAO;
         this.outboundPollCommonService = outboundPollCommonService;
     }
 
@@ -70,7 +69,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         String rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
 
         Timestamp timestamp = Timestamp.from(Instant.now());
-        rdbDataPersistentDAO.saveRDBData(tableName, rawJsonData);
+        rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
 
         outboundPollCommonService.updateLastUpdatedTime(tableName, timestamp);
 
@@ -79,7 +78,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
     private void cleanupRDBTables(List<PollDataSyncConfig> configTableList) {
         for (int j = configTableList.size() - 1; j >= 0; j = j - 1) {
-            rdbDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
+            rdbModernDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
         }
     }
 }

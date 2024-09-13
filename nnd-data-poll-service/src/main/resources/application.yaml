@@ -15,11 +15,17 @@ nnd:
   fullLoad: ${NND_FULL_LOAD:false}
   pullLimit: ${NND_PULL_LIMIT:0}
   insertLimit: ${NND_INSERT_LIMIT:1000}
-  poll:
+
+poll:
+  nnd:
     enabled: ${NND_POLL_ENABLED:true}
-rdb:
-  poll:
+  rdb:
     enabled: ${RDB_POLL_ENABLED:true}
+  rdb_modern:
+    enabled: ${RDB_MODERN_POLL_ENABLED:true}
+  srte:
+    enabled: ${SRTE_POLL_ENABLED:true}
+
 datasync:
   store_in_local: ${DATASYNC_STORE_LOCAL:true}
   store_in_S3: ${DATASYNC_STORE_S3:true}
@@ -31,7 +37,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 2
+        size: 4
 scheduler:
   zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
   # America/New_York
@@ -57,6 +63,8 @@ spring:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${OP_DBNAME};encrypt=true;trustServerCertificate=true;
     rdb:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${RDB_DBNAME};encrypt=true;trustServerCertificate=true;
+    rdb_modern:
+      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${RDB_MODERN_DBNAME};encrypt=true;trustServerCertificate=true;
     srte:
       url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${SRTE_DBNAME};encrypt=true;trustServerCertificate=true;
   jpa:

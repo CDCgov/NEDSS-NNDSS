@@ -1,13 +1,20 @@
 package gov.cdc.nnddatapollservice.share;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.Map;
 
-public class JsonToFileWriter {
+public class PollServiceUtil {
 
     private static final String TIMESTAMP_FOR_FILE_FORMAT = "yyyy-MM-dd.HH.mm.ss";
 
@@ -24,5 +31,15 @@ public class JsonToFileWriter {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    public static List<Map<String, Object>> jsonToListOfMap(String jsonData) {
+        List<Map<String, Object>> list = null;
+        if (jsonData != null && !jsonData.isEmpty()) {
+            Gson gson = new GsonBuilder().serializeNulls().create();
+            Type resultType = new TypeToken<List<Map<String, Object>>>() {
+            }.getType();
+            list = gson.fromJson(jsonData, resultType);
+        }
+        return list;
     }
 }

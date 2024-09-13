@@ -18,15 +18,17 @@ public class DataPullService implements IDataPullService {
 
     @Value("${scheduler.cron}")
     private String cron;
-
     @Value("${scheduler.zone}")
     private String zone;
 
-    @Value("${nnd.poll.enabled}")
+    @Value("${poll.nnd.enabled}")
     private boolean nndPollEnabled;
-
-    @Value("${rdb.poll.enabled}")
+    @Value("${poll.rdb.enabled}")
     private boolean rdbPollEnabled;
+    @Value("${poll.rdb_modern.enabled}")
+    private boolean rdbModernPollEnabled;
+    @Value("${poll.srte.enabled}")
+    private boolean srtePollEnabled;
 
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
@@ -43,7 +45,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED");
             logger.info(cron);
             logger.info(zone);
-            dataHandlingService.handlingExchangedData();
+            //dataHandlingService.handlingExchangedData();
         }
     }
 
@@ -53,6 +55,24 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING RDB");
             logger.info("{}, {} FOR RDB",cron,zone);
             rdbDataHandlingService.handlingExchangedData();
+        }
+    }
+
+    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+    public void scheduleRdbModernDataFetch() throws DataPollException {
+        if (rdbModernPollEnabled) {
+            logger.info("CRON STARTED FOR POLLING RDB");
+            logger.info("{}, {} FOR RDB",cron,zone);
+            //rdbDataHandlingService.handlingExchangedData();
+        }
+    }
+
+    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+    public void scheduleSRTEDataFetch() throws DataPollException {
+        if (srtePollEnabled) {
+            logger.info("CRON STARTED FOR POLLING RDB");
+            logger.info("{}, {} FOR RDB",cron,zone);
+            //rdbDataHandlingService.handlingExchangedData();
         }
     }
 }

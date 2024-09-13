@@ -1,9 +1,10 @@
-package gov.cdc.nnddatapollservice.srte;
+package gov.cdc.nnddatapollservice.srte.dao;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
+import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class SrteDataPersistentDAO {
             if (tableName != null && !tableName.isEmpty()) {
                 deleteTable(tableName);//Delete first
                 simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
-                List<Map<String, Object>> records = jsonToListOfMap(jsonData);
+                List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
                     logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
                     int[] noOfInserts = simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
@@ -57,18 +58,7 @@ public class SrteDataPersistentDAO {
         return noOfRecordsSaved;
     }
 
-    private List<Map<String, Object>> jsonToListOfMap(String jsonData) {
-        List<Map<String, Object>> list = null;
-        if (jsonData != null && !jsonData.isEmpty()) {
-            Gson gson = new GsonBuilder().serializeNulls().create();
-            Type resultType = new TypeToken<List<Map<String, Object>>>() {
-            }.getType();
-            list = gson.fromJson(jsonData, resultType);
-        }
-        return list;
-    }
-
-    private void deleteTable(String tableName) {
+    public void deleteTable(String tableName) {
         String deleteSql = "delete " + tableName;
         jdbcTemplate.execute(deleteSql);
     }
