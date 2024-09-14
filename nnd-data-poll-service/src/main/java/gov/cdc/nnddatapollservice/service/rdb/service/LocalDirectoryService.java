@@ -21,7 +21,7 @@ import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
 public class LocalDirectoryService implements ILocalDirectoryService {
     private static Logger logger = LoggerFactory.getLogger(LocalDirectoryService.class);
 
-    @Value("${local.file.directory}")
+    @Value("${local_dir.path}")
     private String baseDirectory;
 
     public LocalDirectoryService() {
