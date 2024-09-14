@@ -94,7 +94,7 @@ class RdbDataPersistentDAOTest {
         when(jdbcTemplate.update(anyString(), any(), anyString())).thenReturn(1);
         rdbDataPersistentDAO.updateLastUpdatedTimeAndLog("TEST_TABLE", timestamp, "LOG");
 
-        verify(jdbcTemplate, times(1)).update(anyString(), any(), anyString());
+        verify(jdbcTemplate, times(1)).update(anyString(), any(), anyString(), anyString());
     }
 
     @Test
