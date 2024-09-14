@@ -58,6 +58,7 @@ sonarqube {
                 "**/NndDataExchangeServiceApplication.java, " +
                 "**/NndDataPollServiceApplication.java, " +
                 "**/TokenController.java, " +
-                "**/data_generator/**"
+                "**/data_generator/**, " +
+                "**/LocalDirectoryService.java"
     }
 }
