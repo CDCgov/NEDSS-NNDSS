@@ -1,10 +1,10 @@
 package gov.cdc.nnddatapollservice.service.rdb.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.service.data.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.service.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.service.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.service.data.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
 import lombok.extern.slf4j.Slf4j;
@@ -167,10 +167,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     private boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
             logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
-            if (!s3Enabled && pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
-                return false;
-            }
-            else if (s3Enabled && pollDataSyncConfig.getLastUpdateTimeS3() != null && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
+            if (!s3Enabled && pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()
+            && s3Enabled && pollDataSyncConfig.getLastUpdateTimeS3() != null && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
                 return false;
             }
         }

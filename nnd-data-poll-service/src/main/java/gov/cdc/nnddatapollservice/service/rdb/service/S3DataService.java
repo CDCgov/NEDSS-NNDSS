@@ -117,8 +117,6 @@ public class S3DataService implements IS3DataService {
             }
 
             completeMultipartUpload(uploadId, s3Key, completedParts);
-
-            logger.info("Successfully persisted to S3: " + s3Key);
         }
         catch (Exception e)
         {
@@ -138,6 +136,7 @@ public class S3DataService implements IS3DataService {
         return response.uploadId();
     }
 
+    @SuppressWarnings("java:S6244")
     private void completeMultipartUpload(String uploadId, String fileName, List<CompletedPart> completedParts) {
         CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder()
                 .parts(completedParts)

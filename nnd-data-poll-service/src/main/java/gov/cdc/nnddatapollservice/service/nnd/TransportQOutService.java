@@ -3,9 +3,9 @@ package gov.cdc.nnddatapollservice.service.nnd;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.repository.msg.TransportQOutRepository;
 import gov.cdc.nnddatapollservice.repository.msg.model.TransportQOut;
+import gov.cdc.nnddatapollservice.service.data.model.dto.TransportQOutDto;
 import gov.cdc.nnddatapollservice.service.nnd.interfaces.IErrorHandlingService;
 import gov.cdc.nnddatapollservice.service.nnd.interfaces.ITransportQOutService;
-import gov.cdc.nnddatapollservice.service.data.model.dto.TransportQOutDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

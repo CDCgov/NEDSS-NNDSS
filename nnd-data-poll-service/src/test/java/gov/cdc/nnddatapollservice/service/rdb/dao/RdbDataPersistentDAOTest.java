@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.service.rdb.dao;
 
-import gov.cdc.nnddatapollservice.service.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.service.rdb.dto.PollDataSyncConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

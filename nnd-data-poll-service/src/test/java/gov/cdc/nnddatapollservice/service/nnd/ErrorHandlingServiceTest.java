@@ -2,7 +2,6 @@ package gov.cdc.nnddatapollservice.service.nnd;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import gov.cdc.nnddatapollservice.service.nnd.ErrorHandlingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

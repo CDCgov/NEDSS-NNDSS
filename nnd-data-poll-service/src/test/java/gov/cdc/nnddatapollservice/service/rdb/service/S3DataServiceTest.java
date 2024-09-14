@@ -1,33 +1,17 @@
 package gov.cdc.nnddatapollservice.service.rdb.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
 import java.sql.Timestamp;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-import gov.cdc.nnddatapollservice.exception.DataPollException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
-
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 
 class S3DataServiceTest {
 
@@ -168,20 +152,20 @@ class S3DataServiceTest {
     @Test
     void testConstructorWithStaticCredentials_Success() throws DataPollException {
         // Test the constructor with static credentials
-        S3DataService s3DataService = new S3DataService(
+        S3DataService s3DataService1 = new S3DataService(
                 "testBucket",
                 "testKeyId",
                 "testAccessKey",
                 "us-east-1",
                 ""
         );
-        assertNotNull(s3DataService);
+        assertNotNull(s3DataService1);
     }
 
     @Test
     void testConstructorWithProfile_Success() throws DataPollException {
         // Test the constructor with profile credentials
-        S3DataService s3DataService = new S3DataService(
+        S3DataService s3DataService1 = new S3DataService(
                 "testBucket",
                 "",
                 "",
@@ -189,7 +173,7 @@ class S3DataServiceTest {
                 "default"
         );
 
-        assertNotNull(s3DataService);
+        assertNotNull(s3DataService1);
     }
 
 

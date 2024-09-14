@@ -2,13 +2,13 @@ package gov.cdc.nnddatapollservice.service.data;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.data.interfaces.IDataHandlingService;
 import gov.cdc.nnddatapollservice.service.data.interfaces.ITokenService;
-import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.service.data.model.DataExchangeModel;
 import gov.cdc.nnddatapollservice.service.nnd.interfaces.ICNTransportQOutService;
 import gov.cdc.nnddatapollservice.service.nnd.interfaces.INetsstTransportService;
 import gov.cdc.nnddatapollservice.service.nnd.interfaces.ITransportQOutService;
-import gov.cdc.nnddatapollservice.service.data.model.DataExchangeModel;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;

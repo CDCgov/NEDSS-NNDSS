@@ -18,7 +18,7 @@ public class ErrorHandlingService implements IErrorHandlingService {
     private static Logger logger = LoggerFactory.getLogger(ErrorHandlingService.class);
 
     public <T> void dumpBatchToFile(List<T> batch, String fileName, String fileLocation) {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create(); ;
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         File file = new File(fileLocation, fileName);
         try (Writer writer = new FileWriter(file)) {

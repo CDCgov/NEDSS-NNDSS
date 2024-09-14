@@ -1,10 +1,9 @@
 package gov.cdc.nnddatapollservice.service.rdb.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.service.data.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.service.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.service.rdb.dto.PollDataSyncConfig;
-import gov.cdc.nnddatapollservice.service.data.interfaces.ITokenService;
-import gov.cdc.nnddatapollservice.service.rdb.service.RdbDataHandlingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

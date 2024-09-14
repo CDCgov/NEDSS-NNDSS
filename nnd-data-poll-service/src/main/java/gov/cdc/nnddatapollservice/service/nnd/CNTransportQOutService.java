@@ -3,9 +3,9 @@ package gov.cdc.nnddatapollservice.service.nnd;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.repository.odse.CNTransportQOutRepository;
 import gov.cdc.nnddatapollservice.repository.odse.model.CNTransportQOut;
+import gov.cdc.nnddatapollservice.service.data.model.dto.CNTransportQOutDto;
 import gov.cdc.nnddatapollservice.service.nnd.interfaces.ICNTransportQOutService;
 import gov.cdc.nnddatapollservice.service.nnd.interfaces.IErrorHandlingService;
-import gov.cdc.nnddatapollservice.service.data.model.dto.CNTransportQOutDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -49,6 +49,7 @@ public class CNTransportQOutService implements ICNTransportQOutService {
         }
     }
 
+    @SuppressWarnings("java:S1141")
     public void saveDataExchange(List<CNTransportQOutDto> transportQOutDtoList) throws DataPollException {
         try {
             List<CNTransportQOut> cnTransportQOutList = new ArrayList<>();
