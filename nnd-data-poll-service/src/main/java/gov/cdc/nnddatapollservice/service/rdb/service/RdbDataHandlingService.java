@@ -4,6 +4,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.data.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.service.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.service.rdb.dto.PollDataSyncConfig;
+import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.ILocalDirectoryService;
 import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
@@ -44,23 +45,28 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     @Value("${rdb.s3.enabled}")
     protected boolean s3Enabled = false;
 
+    @Value("${rdb.local_dir.enabled}")
+    protected boolean localDirEnabled = false;
+
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
     private final IS3DataService s3DataService;
+    private final ILocalDirectoryService localDirectoryService;
 
     public RdbDataHandlingService(ITokenService tokenService,
                                   RdbDataPersistentDAO rdbDataPersistentDAO,
-                                  IS3DataService s3DataService) {
+                                  IS3DataService s3DataService, ILocalDirectoryService localDirectoryService) {
         this.tokenService = tokenService;
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
         this.s3DataService = s3DataService;
+        this.localDirectoryService = localDirectoryService;
     }
 
 
-    public void handlingExchangedData() throws DataPollException {
+    public void handlingExchangedData() {
         logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList = getTableListFromConfig();
         logger.info(" RDB TableList to be polled: {}",configTableList.size());
@@ -69,7 +75,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
 
         // Dont clean up if S3 is enabled
-        if (isInitalLoad && !s3Enabled) {
+        if ((isInitalLoad && !s3Enabled) || (isInitalLoad && !localDirEnabled)) {
             logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
             cleanupRDBTables(configTableList);
         }
@@ -107,6 +113,10 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         if (s3Enabled) {
             var log = s3DataService.persistToS3MultiPart(rawData, tableName, timestamp, isInitialLoad);
             rdbDataPersistentDAO.updateLastUpdatedTimeS3RunAndLog(tableName, timestamp, "S3 Log: " + log);
+        }
+        else if (localDirEnabled) {
+            var log =  localDirectoryService.persistToLocalDirectory(rawData, tableName, timestamp, isInitialLoad);
+            rdbDataPersistentDAO.updateLastUpdatedTimeLocalDirRunAndLog(tableName, timestamp, "Local Directory Log: " + log);
         }
         else
         {
@@ -168,7 +178,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
             logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
             if (!s3Enabled && pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()
-            && s3Enabled && pollDataSyncConfig.getLastUpdateTimeS3() != null && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
+            || s3Enabled && pollDataSyncConfig.getLastUpdateTimeS3() != null && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
                 return false;
             }
         }

@@ -21,6 +21,7 @@ CREATE TABLE poll_data_sync_config
     table_order int NULL,
     last_update_time  DATETIME2 NULL,
     last_update_time_s3  DATETIME2 NULL,
+    last_update_time_local_dir  DATETIME2 NULL,
     last_executed_log NVARCHAR(MAX) NULL,
     query nvarchar(MAX) NULL
 );

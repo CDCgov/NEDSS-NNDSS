@@ -22,6 +22,8 @@ rdb:
     enabled: ${RDB_POLL_ENABLED:true}
   s3:
     enabled: ${RDB_S3_ENABLED:false}
+  local_dir:
+    enabled: ${RDB_LOCAL_DIR_ENABLED:false}
 
 spring:
   application:
@@ -64,6 +66,8 @@ rdb:
     enabled: ${RDB_POLL_ENABLED:true}
   s3:
     enabled: ${RDB_S3_ENABLED:false}
+  local_dir:
+      enabled: ${RDB_LOCAL_DIR_ENABLED:false}
 
 spring:
   application:
@@ -112,3 +116,5 @@ aws:
   s3:
     bucket-name: ${S3_BUCKET_NAME}
     region: ${S3_REGION}
+local_dir:
+  path: ${RBD_LOCAL_DIR_PATH:}
