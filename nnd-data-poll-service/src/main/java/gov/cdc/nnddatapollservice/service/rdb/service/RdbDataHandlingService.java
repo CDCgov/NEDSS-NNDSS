@@ -67,6 +67,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         boolean isInitalLoad = checkPollingIsInitailLoad(configTableList);
         logger.info("-----INITIAL LOAD: {}",isInitalLoad);
 
+
+        // Dont clean up if S3 is enabled
         if (isInitalLoad && !s3Enabled) {
             logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
             cleanupRDBTables(configTableList);

@@ -1,16 +1,12 @@
 package gov.cdc.nnddatapollservice.service.rdb.service;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.service.data.DataPullService;
 import gov.cdc.nnddatapollservice.service.rdb.service.interfaces.IS3DataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -36,6 +32,8 @@ public class S3DataService implements IS3DataService {
     private String bucketName;
 
     private final S3Client s3Client;
+
+    @Autowired
     public S3DataService(
             @Value("${aws.auth.static.key_id}") String keyId,
             @Value("${aws.auth.static.access_key}") String accessKey,
@@ -59,6 +57,11 @@ public class S3DataService implements IS3DataService {
         } else {
             throw new DataPollException("No Valid AWS Profile or Credentials found");
         }
+    }
+
+    public S3DataService(S3Client s3Client) {
+        // for unit test
+        this.s3Client = s3Client;
     }
 
 
