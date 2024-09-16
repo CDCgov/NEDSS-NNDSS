@@ -69,8 +69,8 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
-            logger.info("CRON STARTED FOR POLLING RDB");
-            logger.info("{}, {} FOR RDB",cron,zone);
+            logger.info("CRON STARTED FOR POLLING RDB_MODERN");
+            logger.info("{}, {} FOR RDB_MODERN",cron,zone);
             rdbModernDataHandlingService.handlingExchangedData();
         }
     }
@@ -78,8 +78,8 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleSRTEDataFetch() throws DataPollException {
         if (srtePollEnabled) {
-            logger.info("CRON STARTED FOR POLLING RDB");
-            logger.info("{}, {} FOR RDB",cron,zone);
+            logger.info("CRON STARTED FOR POLLING SRTE");
+            logger.info("{}, {} FOR SRTE",cron,zone);
             srteDataHandlingService.handlingExchangedData();
         }
     }

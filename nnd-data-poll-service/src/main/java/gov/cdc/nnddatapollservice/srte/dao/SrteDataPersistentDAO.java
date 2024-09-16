@@ -1,9 +1,5 @@
 package gov.cdc.nnddatapollservice.srte.dao;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -15,23 +11,20 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
 @Service
 @Slf4j
 public class SrteDataPersistentDAO {
-    private static Logger logger = LoggerFactory.getLogger(RdbDataPersistentDAO.class);
+    private static Logger logger = LoggerFactory.getLogger(SrteDataPersistentDAO.class);
     private JdbcTemplate jdbcTemplate;
-    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     @Autowired
     public SrteDataPersistentDAO(@Qualifier("srteJdbcTemplate") JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-   // @SuppressWarnings("java:S3776")
     public int saveSRTEData(String tableName, String jsonData) {
         logger.info("saveSRTEData tableName: {}", tableName);
         int noOfRecordsSaved = 0;

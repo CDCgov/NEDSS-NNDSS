@@ -3,12 +3,10 @@ package gov.cdc.nnddatapollservice.service;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
-import gov.cdc.nnddatapollservice.rdb.service.RdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
-import gov.cdc.nnddatapollservice.srte.dao.SrteDataPersistentDAO;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +31,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class PollCommonService implements IPollCommonService {
-    private static Logger logger = LoggerFactory.getLogger(RdbDataHandlingService.class);
+    private static Logger logger = LoggerFactory.getLogger(PollCommonService.class);
     @Value("${data_exchange.clientId}")
     private String clientId;
 
@@ -52,8 +50,7 @@ public class PollCommonService implements IPollCommonService {
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
 
     public PollCommonService(ITokenService tokenService,
-                             RdbDataPersistentDAO rdbDataPersistentDAO,
-                             SrteDataPersistentDAO srteDataPersistentDAO) {
+                             RdbDataPersistentDAO rdbDataPersistentDAO) {
         this.tokenService = tokenService;
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
     }
@@ -101,19 +98,23 @@ public class PollCommonService implements IPollCommonService {
         SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
         return formatter.format(timestamp);
     }
-    public String getLastUpdatedTime(String tableName){
+
+    public String getLastUpdatedTime(String tableName) {
         return rdbDataPersistentDAO.getLastUpdatedTime(tableName);
     }
-    public void updateLastUpdatedTime(String tableName, Timestamp timestamp){
+
+    public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
         rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
     }
+
     public List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB) {
-        return configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).collect(Collectors.toList());
+        return configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).toList();
     }
 
     public void writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
         PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData);
     }
+
     public String decodeAndDecompress(String base64EncodedData) {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
     }

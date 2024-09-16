@@ -33,7 +33,6 @@ class RdbDataHandlingServiceTest {
 
     @Test
     void handlingExchangedData_initialLoad() throws DataPollException {
-        //dataHandlingService.exchangeEndpoint = "http://ip.jsontest.com/";
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("D_ORGANIZATION");
@@ -54,7 +53,6 @@ class RdbDataHandlingServiceTest {
 
     @Test
     void handlingExchangedData_withTimestamp() throws DataPollException {
-        //dataHandlingService.exchangeEndpoint = "http://ip.jsontest.com/";
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("D_ORGANIZATION");

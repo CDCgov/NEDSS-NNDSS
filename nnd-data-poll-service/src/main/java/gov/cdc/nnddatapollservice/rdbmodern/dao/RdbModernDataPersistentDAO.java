@@ -19,7 +19,6 @@ import java.util.Map;
 public class RdbModernDataPersistentDAO {
     private static Logger logger = LoggerFactory.getLogger(RdbModernDataPersistentDAO.class);
     private JdbcTemplate jdbcTemplate;
-    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     @Autowired
     public RdbModernDataPersistentDAO(@Qualifier("rdbmodernJdbcTemplate") JdbcTemplate jdbcTemplate) {

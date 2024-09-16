@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.srte.dao;
 
-import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -8,7 +7,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SrteDataPersistentDAOTest {
     @Mock

@@ -17,7 +17,9 @@ import java.util.Map;
 public class PollServiceUtil {
 
     private static final String TIMESTAMP_FOR_FILE_FORMAT = "yyyy-MM-dd.HH.mm.ss";
-
+    private PollServiceUtil() {
+        throw new IllegalStateException("It cannot be instantiated");
+    }
     public static void writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
         try {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);

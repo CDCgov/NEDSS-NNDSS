@@ -35,7 +35,6 @@ class PollCommonServiceTest {
     private RestTemplate restTemplate;
     @InjectMocks
     private PollCommonService pollCommonService;
-    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     @BeforeEach
     void setUp() {
@@ -57,8 +56,7 @@ class PollCommonServiceTest {
     }
 
     @Test
-    void testPersistingExchangeData_Exception() throws DataPollException {
-        String data = "invalid json";
+    void testPersistingExchangeData_Exception() {
         String timestamp = "2024-09-15 10:15:20.123";
         assertThrows(DataPollException.class, () -> pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp));
 
@@ -67,7 +65,6 @@ class PollCommonServiceTest {
 
     @Test
     void checkPollingIsInitailLoad_true() {
-        String timestamp = "2024-09-15 10:15:20.123";
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("D_ORGANIZATION");
@@ -112,7 +109,8 @@ class PollCommonServiceTest {
 
         when(pollCommonService.getTableListFromConfig()).thenReturn(configTableList);
 
-        pollCommonService.getTableListFromConfig();
+        List<PollDataSyncConfig> tablesListActual = pollCommonService.getTableListFromConfig();
+        assertEquals(1, tablesListActual.size());
     }
 
     @Test

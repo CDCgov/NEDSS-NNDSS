@@ -9,7 +9,6 @@ import java.util.List;
 public interface IPollCommonService {
     String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
     List<PollDataSyncConfig> getTableListFromConfig();
-//    void deleteTables(List<PollDataSyncConfig> configTableList);
     boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList);
     String getCurrentTimestamp();
     List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB);

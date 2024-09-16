@@ -3,7 +3,6 @@ package gov.cdc.nnddatapollservice.srte.service;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
-import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.srte.dao.SrteDataPersistentDAO;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,16 +29,16 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
     private final SrteDataPersistentDAO srteDataPersistentDAO;
     private final IPollCommonService outboundPollCommonService;
 
-    public SrteDataHandlingService(ITokenService tokenService,
-                                   SrteDataPersistentDAO srteDataPersistentDAO,
-                                   IPollCommonService outboundPollCommonService) {
+    public SrteDataHandlingService(
+            SrteDataPersistentDAO srteDataPersistentDAO,
+            IPollCommonService outboundPollCommonService) {
         this.srteDataPersistentDAO = srteDataPersistentDAO;
         this.outboundPollCommonService = outboundPollCommonService;
     }
 
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START SRTE POLLING---");
-        List<PollDataSyncConfig> configTableList = outboundPollCommonService.getTableListFromConfig();//TODO
+        List<PollDataSyncConfig> configTableList = outboundPollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> srteTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, SRTE);
         logger.info("SRTE TableList to be polled: {}", srteTablesList.size());
 
@@ -77,10 +76,10 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
 
         outboundPollCommonService.updateLastUpdatedTime(tableName, timestamp);
 
-        if(storeJsonInLocalFolder) {
+        if (storeJsonInLocalFolder) {
             outboundPollCommonService.writeJsonDataToFile(SRTE, tableName, timestamp, rawJsonData);
         }
-        if(storeJsonInS3) {
+        if (storeJsonInS3) {
             //STORE JSON FILES in S3 FOLDER
         }
     }
