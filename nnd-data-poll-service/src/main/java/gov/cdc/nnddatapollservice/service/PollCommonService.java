@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class OutboundPollCommonService implements IOutboundPollCommonService {
+public class PollCommonService implements IOutboundPollCommonService {
     private static Logger logger = LoggerFactory.getLogger(RdbDataHandlingService.class);
     @Value("${data_exchange.clientId}")
     private String clientId;
@@ -51,9 +51,9 @@ public class OutboundPollCommonService implements IOutboundPollCommonService {
     private final ITokenService tokenService;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
 
-    public OutboundPollCommonService(ITokenService tokenService,
-                                     RdbDataPersistentDAO rdbDataPersistentDAO,
-                                     SrteDataPersistentDAO srteDataPersistentDAO) {
+    public PollCommonService(ITokenService tokenService,
+                             RdbDataPersistentDAO rdbDataPersistentDAO,
+                             SrteDataPersistentDAO srteDataPersistentDAO) {
         this.tokenService = tokenService;
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
     }

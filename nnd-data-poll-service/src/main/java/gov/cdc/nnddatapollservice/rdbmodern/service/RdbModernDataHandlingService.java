@@ -8,6 +8,7 @@ import gov.cdc.nnddatapollservice.service.interfaces.IOutboundPollCommonService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -18,8 +19,12 @@ import java.util.List;
 @Slf4j
 public class RdbModernDataHandlingService implements IRdbModernDataHandlingService {
     private static Logger logger = LoggerFactory.getLogger(RdbModernDataHandlingService.class);
+    @Value("${datasync.store_in_local}")
+    private boolean storeJsonInLocalFolder;
+    @Value("${datasync.store_in_S3}")
+    private boolean storeJsonInS3;
 
-    private static final String RDB = "RDB";
+    private static final String RDB_MODERN = "RDB_MODERN";
 
     private final RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
     private final IOutboundPollCommonService outboundPollCommonService;
@@ -33,7 +38,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList = outboundPollCommonService.getTableListFromConfig();
-        List<PollDataSyncConfig> rdbTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB);
+        List<PollDataSyncConfig> rdbTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB_MODERN);
         logger.info(" RDB TableList to be polled: {}", rdbTablesList.size());
 
         boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(configTableList);
@@ -73,7 +78,12 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
 
         outboundPollCommonService.updateLastUpdatedTime(tableName, timestamp);
 
-        outboundPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+        if(storeJsonInLocalFolder) {
+            outboundPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData);
+        }
+        if(storeJsonInS3) {
+            //STORE JSON FILES in S3 FOLDER
+        }
     }
 
     private void cleanupRDBTables(List<PollDataSyncConfig> configTableList) {

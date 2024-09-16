@@ -2,8 +2,10 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
+import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
+import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +34,17 @@ public class DataPullService implements IDataPullService {
 
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
+    private final IRdbModernDataHandlingService rdbModernDataHandlingService;
+    private final ISrteDataHandlingService srteDataHandlingService;
 
     public DataPullService(INNDDataHandlingService dataHandlingService,
-                           IRdbDataHandlingService rdbDataHandlingService) {
+                           IRdbDataHandlingService rdbDataHandlingService,
+                           IRdbModernDataHandlingService rdbModernDataHandlingService,
+                           ISrteDataHandlingService srteDataHandlingService) {
         this.dataHandlingService = dataHandlingService;
         this.rdbDataHandlingService = rdbDataHandlingService;
+        this.rdbModernDataHandlingService=rdbModernDataHandlingService;
+        this.srteDataHandlingService=srteDataHandlingService;
     }
 
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
@@ -45,7 +53,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED");
             logger.info(cron);
             logger.info(zone);
-            //dataHandlingService.handlingExchangedData();
+            dataHandlingService.handlingExchangedData();
         }
     }
 
@@ -63,7 +71,7 @@ public class DataPullService implements IDataPullService {
         if (rdbModernPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB");
             logger.info("{}, {} FOR RDB",cron,zone);
-            //rdbDataHandlingService.handlingExchangedData();
+            rdbModernDataHandlingService.handlingExchangedData();
         }
     }
 
@@ -72,7 +80,7 @@ public class DataPullService implements IDataPullService {
         if (srtePollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB");
             logger.info("{}, {} FOR RDB",cron,zone);
-            //rdbDataHandlingService.handlingExchangedData();
+            srteDataHandlingService.handlingExchangedData();
         }
     }
 }

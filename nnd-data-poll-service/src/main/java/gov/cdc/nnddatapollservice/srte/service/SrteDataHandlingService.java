@@ -9,6 +9,7 @@ import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingServi
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
@@ -19,6 +20,10 @@ import java.util.List;
 @Slf4j
 public class SrteDataHandlingService implements ISrteDataHandlingService {
     private static Logger logger = LoggerFactory.getLogger(SrteDataHandlingService.class);
+    @Value("${datasync.store_in_local}")
+    private boolean storeJsonInLocalFolder;
+    @Value("${datasync.store_in_S3}")
+    private boolean storeJsonInS3;
 
     private static final String SRTE = "SRTE";
 
@@ -72,7 +77,12 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
 
         outboundPollCommonService.updateLastUpdatedTime(tableName, timestamp);
 
-        outboundPollCommonService.writeJsonDataToFile(SRTE, tableName, timestamp, rawJsonData);
+        if(storeJsonInLocalFolder) {
+            outboundPollCommonService.writeJsonDataToFile(SRTE, tableName, timestamp, rawJsonData);
+        }
+        if(storeJsonInS3) {
+            //STORE JSON FILES in S3 FOLDER
+        }
     }
 
     private void cleanupTables(List<PollDataSyncConfig> configTableList) {
