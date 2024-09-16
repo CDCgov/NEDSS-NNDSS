@@ -4,7 +4,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.service.RdbDataHandlingService;
-import gov.cdc.nnddatapollservice.service.interfaces.IOutboundPollCommonService;
+import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class PollCommonService implements IOutboundPollCommonService {
+public class PollCommonService implements IPollCommonService {
     private static Logger logger = LoggerFactory.getLogger(RdbDataHandlingService.class);
     @Value("${data_exchange.clientId}")
     private String clientId;
@@ -108,8 +108,7 @@ public class PollCommonService implements IOutboundPollCommonService {
         rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
     }
     public List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB) {
-        List<PollDataSyncConfig> tablesList = configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).collect(Collectors.toList());
-        return tablesList;
+        return configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).collect(Collectors.toList());
     }
 
     public void writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {

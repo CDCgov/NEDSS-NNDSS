@@ -6,7 +6,7 @@ import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import java.sql.Timestamp;
 import java.util.List;
 
-public interface IOutboundPollCommonService {
+public interface IPollCommonService {
     String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
     List<PollDataSyncConfig> getTableListFromConfig();
 //    void deleteTables(List<PollDataSyncConfig> configTableList);

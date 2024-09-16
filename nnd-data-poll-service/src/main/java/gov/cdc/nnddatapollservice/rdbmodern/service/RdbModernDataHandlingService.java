@@ -4,7 +4,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdbmodern.dao.RdbModernDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
-import gov.cdc.nnddatapollservice.service.interfaces.IOutboundPollCommonService;
+import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +27,10 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     private static final String RDB_MODERN = "RDB_MODERN";
 
     private final RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
-    private final IOutboundPollCommonService outboundPollCommonService;
+    private final IPollCommonService outboundPollCommonService;
 
     public RdbModernDataHandlingService(RdbModernDataPersistentDAO rdbModernDataPersistentDAO,
-                                        IOutboundPollCommonService outboundPollCommonService) {
+                                        IPollCommonService outboundPollCommonService) {
         this.rdbModernDataPersistentDAO = rdbModernDataPersistentDAO;
         this.outboundPollCommonService = outboundPollCommonService;
     }

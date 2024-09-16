@@ -4,7 +4,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.service.interfaces.IOutboundPollCommonService;
+import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,22 +27,22 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     private static final String RDB = "RDB";
 
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
-    private final IOutboundPollCommonService outboundPollCommonService;
+    private final IPollCommonService pollCommonService;
 
     public RdbDataHandlingService(
             RdbDataPersistentDAO rdbDataPersistentDAO,
-            IOutboundPollCommonService outboundPollCommonService) {
+            IPollCommonService outboundPollCommonService) {
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
-        this.outboundPollCommonService = outboundPollCommonService;
+        this.pollCommonService = outboundPollCommonService;
     }
 
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START RDB POLLING---");
-        List<PollDataSyncConfig> configTableList = outboundPollCommonService.getTableListFromConfig();
-        List<PollDataSyncConfig> rdbTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB);
+        List<PollDataSyncConfig> configTableList = pollCommonService.getTableListFromConfig();
+        List<PollDataSyncConfig> rdbTablesList = pollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB);
         logger.info(" RDB TableList to be polled: {}", rdbTablesList.size());
 
-        boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(configTableList);
+        boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(configTableList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad) {
@@ -62,24 +62,24 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
         String timeStampForPoll = "";
         if (isInitialLoad) {
-            timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
+            timeStampForPoll = pollCommonService.getCurrentTimestamp();
         } else {
-            timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
+            timeStampForPoll = pollCommonService.getLastUpdatedTime(tableName);
         }
         logger.info("isInitialLoad {}", isInitialLoad);
 
         logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
         //call data exchange service api
-        String encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
+        String encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
 
-        String rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
+        String rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
 
         Timestamp timestamp = Timestamp.from(Instant.now());
         rdbDataPersistentDAO.saveRDBData(tableName, rawJsonData);
 
-        outboundPollCommonService.updateLastUpdatedTime(tableName, timestamp);
+        pollCommonService.updateLastUpdatedTime(tableName, timestamp);
         if(storeJsonInLocalFolder) {
-            outboundPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+            pollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
         }
         if(storeJsonInS3) {
             //STORE JSON FILES in S3 FOLDER

@@ -1,8 +1,8 @@
-package gov.cdc.nnddatapollservice.rdb.service;
+package gov.cdc.nnddatapollservice.rdbmodern.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
+import gov.cdc.nnddatapollservice.rdbmodern.dao.RdbModernDataPersistentDAO;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,16 +15,17 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-class RdbDataHandlingServiceTest {
+class RdbModernDataHandlingServiceTest {
 
     @Mock
-    private RdbDataPersistentDAO rdbDataPersistentDAO;
+    private RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
     @Mock
     IPollCommonService pollCommonService;
     @InjectMocks
-    private RdbDataHandlingService dataHandlingService;
+    private RdbModernDataHandlingService rdbModernDataHandlingService;
 
     @BeforeEach
     void setUp() {
@@ -33,43 +34,41 @@ class RdbDataHandlingServiceTest {
 
     @Test
     void handlingExchangedData_initialLoad() throws DataPollException {
-        //dataHandlingService.exchangeEndpoint = "http://ip.jsontest.com/";
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
-        config.setTableName("D_ORGANIZATION");
+        config.setTableName("TEST");
         config.setLastUpdateTime(null);
         config.setTableOrder(1);
         config.setQuery("");
-        config.setSourceDb("RDB");
+        config.setSourceDb("RDB_MODERN");
         configTableList.add(config);
 
         when(pollCommonService.getTableListFromConfig()).thenReturn(configTableList);
         when(pollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
         when(pollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
 
-        dataHandlingService.handlingExchangedData();
-        verify(rdbDataPersistentDAO, times(1)).deleteTable(anyString());
-        verify(rdbDataPersistentDAO, times(1)).saveRDBData(any(), any());
+        rdbModernDataHandlingService.handlingExchangedData();
+        verify(rdbModernDataPersistentDAO, times(1)).deleteTable(anyString());
+        verify(rdbModernDataPersistentDAO, times(1)).saveRdbModernData(any(), any());
     }
 
     @Test
     void handlingExchangedData_withTimestamp() throws DataPollException {
-        //dataHandlingService.exchangeEndpoint = "http://ip.jsontest.com/";
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
-        config.setTableName("D_ORGANIZATION");
+        config.setTableName("TEST");
         config.setLastUpdateTime(Timestamp.from(Instant.now()));
         config.setTableOrder(1);
         config.setQuery("");
-        config.setSourceDb("RDB");
+        config.setSourceDb("RDB_MODERN");
         configTableList.add(config);
 
         when(pollCommonService.getTableListFromConfig()).thenReturn(configTableList);
         when(pollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
         when(pollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(false);
 
-        dataHandlingService.handlingExchangedData();
-        verify(rdbDataPersistentDAO, times(0)).deleteTable(anyString());
-        verify(rdbDataPersistentDAO, times(1)).saveRDBData(any(), any());
+        rdbModernDataHandlingService.handlingExchangedData();
+        verify(rdbModernDataPersistentDAO, times(0)).deleteTable(anyString());
+        verify(rdbModernDataPersistentDAO, times(1)).saveRdbModernData(any(), any());
     }
 }

@@ -2,7 +2,7 @@ package gov.cdc.nnddatapollservice.srte.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
-import gov.cdc.nnddatapollservice.service.interfaces.IOutboundPollCommonService;
+import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.srte.dao.SrteDataPersistentDAO;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
@@ -28,11 +28,11 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
     private static final String SRTE = "SRTE";
 
     private final SrteDataPersistentDAO srteDataPersistentDAO;
-    private final IOutboundPollCommonService outboundPollCommonService;
+    private final IPollCommonService outboundPollCommonService;
 
     public SrteDataHandlingService(ITokenService tokenService,
                                    SrteDataPersistentDAO srteDataPersistentDAO,
-                                   IOutboundPollCommonService outboundPollCommonService) {
+                                   IPollCommonService outboundPollCommonService) {
         this.srteDataPersistentDAO = srteDataPersistentDAO;
         this.outboundPollCommonService = outboundPollCommonService;
     }
