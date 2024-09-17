@@ -8,6 +8,8 @@ public class ConstantValue {
     public static final String SQL_LOG = "SQL Log: ";
     public static final String S3_LOG = "S3 Log: ";
     public static final String LOCAL_DIR_LOG = "Local Directory Log: " ;
+    public static final String API_LEVEL = "APIs Level Log: " ;
+
 
 
 }

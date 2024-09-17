@@ -17,7 +17,7 @@ public class TransportQOutService implements ITransportQOutService {
     private final TransportQOutRepository transportQOutRepository;
     private final IErrorHandlingService errorHandlingService;
 
-    @Value("${io.finalLocation}")
+    @Value("${io.fileLocation}")
     private String fileLocation;
 
     @Value("${nnd.insertLimit}")

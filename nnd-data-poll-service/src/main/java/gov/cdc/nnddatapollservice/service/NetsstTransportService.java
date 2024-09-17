@@ -20,7 +20,7 @@ public class NetsstTransportService implements INetsstTransportService {
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private final IErrorHandlingService errorHandlingService;
 
-    @Value("${io.finalLocation}")
+    @Value("${io.fileLocation}")
     private String fileLocation;
 
     @Value("${nnd.insertLimit}")

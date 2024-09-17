@@ -67,7 +67,7 @@ class S3DataServiceTest {
         var res = s3DataService.persistToS3MultiPart("", "", "testFile", new Timestamp(System.currentTimeMillis()), false);
 
         // Verify exception message
-        assertEquals("Not data to persist for table testFile", res);
+        assertEquals("No data to persist for table testFile", res);
     }
 
     @Test

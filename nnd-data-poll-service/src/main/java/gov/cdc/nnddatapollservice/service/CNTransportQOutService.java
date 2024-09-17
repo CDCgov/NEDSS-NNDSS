@@ -20,7 +20,7 @@ public class CNTransportQOutService implements ICNTransportQOutService {
     private final IErrorHandlingService errorHandlingService;
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
-    @Value("${io.finalLocation}")
+    @Value("${io.fileLocation}")
     protected String fileLocation;
 
     @Value("${nnd.insertLimit}")

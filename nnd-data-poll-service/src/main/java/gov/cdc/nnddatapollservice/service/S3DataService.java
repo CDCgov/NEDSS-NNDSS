@@ -69,7 +69,7 @@ public class S3DataService implements IS3DataService {
         String log = LOG_SUCCESS;
         try {
             if (records.equalsIgnoreCase("[]") || records.isEmpty()) {
-                throw new DataPollException("Not data to persist for table " + fileName);
+                throw new DataPollException("No data to persist for table " + fileName);
             }
             String formattedTimestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(persistingTimestamp);
 
