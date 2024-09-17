@@ -39,7 +39,7 @@ public class SrteDataPersistentDAO {
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
                     logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                    int[] noOfInserts = simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                     logger.info("executeBatch completed. tableName: {}", tableName);
                 } else {
                     logger.info("Inside generic code tableName: {} Records size:0", tableName);

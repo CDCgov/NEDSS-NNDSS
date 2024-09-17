@@ -26,7 +26,7 @@ public class PollServiceUtil {
         throw new IllegalStateException("PollServiceUtil cannot be instantiated");
     }
 
-    public static String writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData, Boolean initialLoad) {
+    public static String writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData, boolean initialLoad) {
         String log = LOG_SUCCESS;
         try {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);

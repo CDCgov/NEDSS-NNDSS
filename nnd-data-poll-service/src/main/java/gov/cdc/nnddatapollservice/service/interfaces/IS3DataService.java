@@ -1,7 +1,5 @@
 package gov.cdc.nnddatapollservice.service.interfaces;
 
-import gov.cdc.nnddatapollservice.exception.DataPollException;
-
 import java.sql.Timestamp;
 
 public interface IS3DataService {
