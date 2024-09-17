@@ -17,6 +17,7 @@ nnd:
   insertLimit: ${NND_INSERT_LIMIT:1000}
 
 poll:
+  single_time_poll_enabled: ${SINGLE_TIME_POLL:false}
   nnd:
     enabled: ${NND_POLL_ENABLED:false}
   rdb:
