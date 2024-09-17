@@ -8,6 +8,7 @@ import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
+import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +78,7 @@ public class RdbDataPersistentDAO {
                         new SimpleJdbcInsert(jdbcTemplate);
                 if(tableName!=null && !tableName.isEmpty()) {
                     simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
-                    List<Map<String, Object>> records = jsonToListOfMap(jsonData);
+                    List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                     if (records != null && !records.isEmpty()) {
                         logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
                         int[] noOfInserts =simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
@@ -93,17 +94,6 @@ public class RdbDataPersistentDAO {
         }
         logger.info("saveRDBData tableName: {} Records size:{}",tableName, noOfRecordsSaved);
         return noOfRecordsSaved;
-    }
-
-    private List<Map<String, Object>> jsonToListOfMap(String jsonData) {
-        List<Map<String, Object>> list = null;
-        if (jsonData != null && !jsonData.isEmpty()) {
-            Gson gson = new GsonBuilder().serializeNulls().create();
-            Type resultType = new TypeToken<List<Map<String, Object>>>() {
-            }.getType();
-            list = gson.fromJson(jsonData, resultType);
-        }
-        return list;
     }
 
     private int upsertConfirmationMethod(ConfirmationMethod confirmationMethod) {
@@ -249,12 +239,12 @@ public class RdbDataPersistentDAO {
     }
 
     public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
-        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
+        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, tableName);
     }
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
-        String sql = "select * from RDB.dbo.poll_data_sync_config pdsc order by table_order";
+        String sql = "select * from poll_data_sync_config pdsc order by table_order";
         List<PollDataSyncConfig> tableList = jdbcTemplate.query(
                 sql,
                 new BeanPropertyRowMapper<>(PollDataSyncConfig.class));
@@ -263,7 +253,11 @@ public class RdbDataPersistentDAO {
     }
 
     public void deleteTable(String tableName) {
-        String deleteSql = "delete " + tableName;
-        jdbcTemplate.execute(deleteSql);
+        try{
+            String deleteSql = "delete " + tableName;
+            jdbcTemplate.execute(deleteSql);
+        }catch (Exception e){
+            logger.error("RDB:Error in deleting table:{}",e.getMessage());
+        }
     }
 }

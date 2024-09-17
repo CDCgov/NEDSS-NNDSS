@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
-class DataHandlingServiceTest {
+class NNDDataHandlingServiceTest {
 
     @Mock
     private ICNTransportQOutService icnTransportQOutService;
@@ -49,14 +49,14 @@ class DataHandlingServiceTest {
     private Gson gson;
 
     @InjectMocks
-    private DataHandlingService dataHandlingService;
+    private NNDDataHandlingService dataHandlingService;
 
     @BeforeEach
     void setUp() throws NoSuchFieldException, IllegalAccessException {
         MockitoAnnotations.openMocks(this);
 
         // Set the exchangeEndpoint value using reflection
-        Field exchangeEndpointField = DataHandlingService.class.getDeclaredField("exchangeEndpoint");
+        Field exchangeEndpointField = NNDDataHandlingService.class.getDeclaredField("exchangeEndpoint");
         exchangeEndpointField.setAccessible(true);
         exchangeEndpointField.set(dataHandlingService, "http://example.com/exchange");
     }

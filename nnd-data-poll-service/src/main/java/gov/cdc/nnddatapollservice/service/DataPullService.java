@@ -2,8 +2,10 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.service.interfaces.IDataHandlingService;
+import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
+import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
+import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,23 +18,33 @@ import org.springframework.stereotype.Service;
 public class DataPullService implements IDataPullService {
     private static Logger logger = LoggerFactory.getLogger(DataPullService.class);
 
-    private final IDataHandlingService dataHandlingService;
-    private final IRdbDataHandlingService rdbDataHandlingService;
     @Value("${scheduler.cron}")
     private String cron;
-
     @Value("${scheduler.zone}")
     private String zone;
 
-    @Value("${nnd.poll.enabled}")
+    @Value("${poll.nnd.enabled}")
     private boolean nndPollEnabled;
-    @Value("${rdb.poll.enabled}")
+    @Value("${poll.rdb.enabled}")
     private boolean rdbPollEnabled;
+    @Value("${poll.rdb_modern.enabled}")
+    private boolean rdbModernPollEnabled;
+    @Value("${poll.srte.enabled}")
+    private boolean srtePollEnabled;
 
-    public DataPullService(IDataHandlingService dataHandlingService,
-                           IRdbDataHandlingService rdbDataHandlingService) {
+    private final INNDDataHandlingService dataHandlingService;
+    private final IRdbDataHandlingService rdbDataHandlingService;
+    private final IRdbModernDataHandlingService rdbModernDataHandlingService;
+    private final ISrteDataHandlingService srteDataHandlingService;
+
+    public DataPullService(INNDDataHandlingService dataHandlingService,
+                           IRdbDataHandlingService rdbDataHandlingService,
+                           IRdbModernDataHandlingService rdbModernDataHandlingService,
+                           ISrteDataHandlingService srteDataHandlingService) {
         this.dataHandlingService = dataHandlingService;
         this.rdbDataHandlingService = rdbDataHandlingService;
+        this.rdbModernDataHandlingService = rdbModernDataHandlingService;
+        this.srteDataHandlingService = srteDataHandlingService;
     }
 
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
@@ -44,12 +56,31 @@ public class DataPullService implements IDataPullService {
             dataHandlingService.handlingExchangedData();
         }
     }
+
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB");
-            logger.info("{}, {} FOR RDB",cron,zone);
+            logger.info("{}, {} FOR RDB", cron, zone);
             rdbDataHandlingService.handlingExchangedData();
+        }
+    }
+
+    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+    public void scheduleRdbModernDataFetch() throws DataPollException {
+        if (rdbModernPollEnabled) {
+            logger.info("CRON STARTED FOR POLLING RDB_MODERN");
+            logger.info("{}, {} FOR RDB_MODERN", cron, zone);
+            rdbModernDataHandlingService.handlingExchangedData();
+        }
+    }
+
+    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+    public void scheduleSRTEDataFetch() throws DataPollException {
+        if (srtePollEnabled) {
+            logger.info("CRON STARTED FOR POLLING SRTE");
+            logger.info("{}, {} FOR SRTE", cron, zone);
+            srteDataHandlingService.handlingExchangedData();
         }
     }
 }

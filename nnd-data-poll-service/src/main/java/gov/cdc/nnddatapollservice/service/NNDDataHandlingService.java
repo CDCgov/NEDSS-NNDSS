@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class DataHandlingService implements IDataHandlingService {
+public class NNDDataHandlingService implements INNDDataHandlingService {
 
     @Value("${data_exchange.clientId}")
     private String clientId = "clientId";
@@ -47,10 +47,10 @@ public class DataHandlingService implements IDataHandlingService {
     private final ITransportQOutService transportQOutService;
     private final ITokenService tokenService;
 
-    public DataHandlingService(ICNTransportQOutService icnTransportQOutService,
-                               INetsstTransportService netsstTransportService,
-                               ITransportQOutService transportQOutService,
-                               ITokenService tokenService) {
+    public NNDDataHandlingService(ICNTransportQOutService icnTransportQOutService,
+                                  INetsstTransportService netsstTransportService,
+                                  ITransportQOutService transportQOutService,
+                                  ITokenService tokenService) {
         this.gson = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
                 .create();
