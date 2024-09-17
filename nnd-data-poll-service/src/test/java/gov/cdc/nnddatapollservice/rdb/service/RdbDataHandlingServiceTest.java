@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -118,5 +119,25 @@ class RdbDataHandlingServiceTest {
 
 
 
+    }
+
+
+    @Test
+    void testPollAndPersistRDBData_exceptionAtApiLevel() throws DataPollException {
+        String tableName = "testTable";
+        // Arrange
+        String expectedErrorMessage = "Simulated API Exception";
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString()))
+                .thenThrow(new RuntimeException(expectedErrorMessage));
+
+        // Act
+        dataHandlingService.pollAndPersistRDBData(tableName, true);
+
+        // Assert
+        verify(pollCommonService).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
+        verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
+        verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
+        verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString(), anyBoolean());
     }
 }

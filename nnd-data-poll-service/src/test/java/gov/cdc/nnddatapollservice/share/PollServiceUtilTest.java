@@ -1,9 +1,4 @@
 package gov.cdc.nnddatapollservice.share;
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,11 +9,14 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.logging.Level;
+
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 
 class PollServiceUtilTest {
 
@@ -28,7 +26,7 @@ class PollServiceUtilTest {
     private static final Timestamp TIME_STAMP = Timestamp.valueOf("2024-09-17 00:00:00");
     private static final String JSON_DATA = "{\"key\":\"value\"}";
     private static final boolean INITIAL_LOAD = true;
-    private Logger logger = LoggerFactory.getLogger(PollServiceUtil.class);
+    private Logger logger = LoggerFactory.getLogger(PollServiceUtil.class); //NOSONAR
 
     @BeforeEach
     void setUp() {

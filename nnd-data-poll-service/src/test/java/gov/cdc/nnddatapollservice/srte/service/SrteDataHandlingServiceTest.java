@@ -93,4 +93,21 @@ class SrteDataHandlingServiceTest {
         when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString())).thenReturn("encodedData");
 
     }
+
+
+    @Test
+    void testPollAndPersistRDBData_exceptionAtApiLevel() throws DataPollException {
+        String tableName = "testTable";
+        // Arrange
+        String expectedErrorMessage = "Simulated API Exception";
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString()))
+                .thenThrow(new RuntimeException(expectedErrorMessage));
+
+        // Act
+        srteDataHandlingService.pollAndPersistSRTEData(tableName, true);
+
+        // Assert
+        verify(pollCommonService).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
+    }
 }
