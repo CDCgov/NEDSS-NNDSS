@@ -67,7 +67,9 @@ rdb:
   s3:
     enabled: ${RDB_S3_ENABLED:false}
   local_dir:
-      enabled: ${RDB_LOCAL_DIR_ENABLED:false}
+    enabled: ${RDB_LOCAL_DIR_ENABLED:false}
+  sql:
+    enabled:  ${RDB_SQL_DB_ENABLED:false}
 
 spring:
   application:

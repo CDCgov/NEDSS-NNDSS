@@ -48,6 +48,9 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     @Value("${rdb.local_dir.enabled}")
     protected boolean localDirEnabled = false;
 
+    @Value("${rdb.sql.enabled}")
+    protected boolean sqlEnabled = false;
+
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -70,12 +73,12 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList = getTableListFromConfig();
         logger.info(" RDB TableList to be polled: {}",configTableList.size());
-        boolean isInitalLoad = checkPollingIsInitailLoad(configTableList);
-        logger.info("-----INITIAL LOAD: {}",isInitalLoad);
+        boolean isInitailLoadRds = checkPollingIsInitailLoad(configTableList);
+        boolean isInitialLoadS3 = checkPollingIsInitailLoadForS3(configTableList);
+        boolean isInitialLoadLocalDir = checkPollingIsInitailLoadForLocalDir(configTableList);
 
 
-        // Dont clean up if S3 is enabled
-        if ((isInitalLoad && !s3Enabled) || (isInitalLoad && !localDirEnabled)) {
+        if (sqlEnabled && isInitailLoadRds) {
             logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
             cleanupRDBTables(configTableList);
         }
@@ -83,7 +86,16 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
             try {
                 logger.info("Start polling: Table:{} order:{}",pollDataSyncConfig.getTableName(),pollDataSyncConfig.getTableOrder());
-                pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitalLoad);
+                if (s3Enabled) {
+                    pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitialLoadS3);
+                }
+                if (localDirEnabled) {
+                    pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitialLoadLocalDir);
+                }
+                if (sqlEnabled) {
+                    pollAndPeristsRDBData(pollDataSyncConfig.getTableName(), isInitailLoadRds);
+                }
+
             } catch (Exception e) {
                 logger.error(e.getMessage());
             }
@@ -114,12 +126,12 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             var log = s3DataService.persistToS3MultiPart(rawData, tableName, timestamp, isInitialLoad);
             rdbDataPersistentDAO.updateLastUpdatedTimeS3RunAndLog(tableName, timestamp, "S3 Log: " + log);
         }
-        else if (localDirEnabled) {
+        if (localDirEnabled) {
             var log =  localDirectoryService.persistToLocalDirectory(rawData, tableName, timestamp, isInitialLoad);
             rdbDataPersistentDAO.updateLastUpdatedTimeLocalDirRunAndLog(tableName, timestamp, "Local Directory Log: " + log);
         }
-        else
-        {
+
+        if(sqlEnabled) {
             var log = persistRdbData(tableName, rawData);
             rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, "SQL Log: " + log);
         }
@@ -177,8 +189,28 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     private boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
         for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
             logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
-            if (!s3Enabled && pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()
-            || s3Enabled && pollDataSyncConfig.getLastUpdateTimeS3() != null && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
+            if (pollDataSyncConfig.getLastUpdateTime() != null
+                    & !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean checkPollingIsInitailLoadForS3(List<PollDataSyncConfig> configTableList) {
+        for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
+            if(s3Enabled && pollDataSyncConfig.getLastUpdateTimeS3() != null
+                    && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean checkPollingIsInitailLoadForLocalDir(List<PollDataSyncConfig> configTableList) {
+        for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
+            if( localDirEnabled && pollDataSyncConfig.getLastUpdateTimeLocalDir() != null
+                    && !pollDataSyncConfig.getLastUpdateTimeLocalDir().toString().isBlank()) {
                 return false;
             }
         }
