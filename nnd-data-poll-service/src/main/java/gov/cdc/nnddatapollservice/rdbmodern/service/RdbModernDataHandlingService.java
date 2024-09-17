@@ -65,39 +65,55 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
 
     protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) throws DataPollException {
         logger.info("--START--pollAndPersistRDBData for table {}", tableName);
-        String timeStampForPoll = "";
-        if (isInitialLoad) {
-            timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
-        } else {
-            timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
-        }
-        logger.info("isInitialLoad {}", isInitialLoad);
+        String rawJsonData = null;
+        Timestamp timestamp = null;
+        String log = "";
+        boolean exceptionAtApiLevel = false;
+        try {
+            String timeStampForPoll = "";
+            if (isInitialLoad) {
+                timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
+            } else {
+                timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
+            }
+            logger.info("isInitialLoad {}", isInitialLoad);
 
-        logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
-        //call data exchange service api
-        String encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
+            logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
+            //call data exchange service api
+            String encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
 
-        String rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
-
-        Timestamp timestamp = Timestamp.from(Instant.now());
-
+            rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
+            timestamp = Timestamp.from(Instant.now());
 
 
-
-        if(storeJsonInS3) {
-            String log = is3DataService.persistToS3MultiPart(RDB_MODERN, rawJsonData, tableName, timestamp, isInitialLoad);
-            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
-        }
-
-        if (storeInSql) {
-            String log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
-            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+        } catch (Exception e) {
+            log = e.getMessage();
+            exceptionAtApiLevel = true;
         }
 
-        if(storeJsonInLocalFolder) {
-            outboundPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData, isInitialLoad);
-            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+        if (exceptionAtApiLevel)
+        {
+            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
         }
+        else
+        {
+            if(storeJsonInS3) {
+                log = is3DataService.persistToS3MultiPart(RDB_MODERN, rawJsonData, tableName, timestamp, isInitialLoad);
+                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
+            }
+
+            if (storeInSql) {
+                log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
+                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+            }
+
+            if(storeJsonInLocalFolder) {
+                outboundPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData, isInitialLoad);
+                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+            }
+        }
+
+
 
     }
 
