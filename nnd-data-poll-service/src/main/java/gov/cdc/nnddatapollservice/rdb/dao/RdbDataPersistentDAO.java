@@ -26,6 +26,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+
 @Service
 @Slf4j
 public class RdbDataPersistentDAO {
@@ -39,10 +41,12 @@ public class RdbDataPersistentDAO {
     }
 
     @SuppressWarnings("java:S3776")
-    public int saveRDBData(String tableName, String jsonData) {
+    public String saveRDBData(String tableName, String jsonData) {
         logger.info("saveRDBData tableName: {}", tableName);
-        int noOfRecordsSaved = 0;
-        if ("CONFIRMATION_METHOD".equalsIgnoreCase(tableName)) {
+        StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
+        if ("CONFIRMATION_METHOD".equalsIgnoreCase(tableName))
+        {
+            logBuilder = new StringBuilder();
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
                     .create();
@@ -50,9 +54,12 @@ public class RdbDataPersistentDAO {
             }.getType();
             List<ConfirmationMethod> list = gson.fromJson(jsonData, resultType);
             for (ConfirmationMethod confirmationMethod : list) {
-                noOfRecordsSaved=upsertConfirmationMethod(confirmationMethod);
+                logBuilder.append(", ").append(upsertConfirmationMethod(confirmationMethod));
             }
-        } else if ("CONDITION".equalsIgnoreCase(tableName)) {
+        }
+        else if ("CONDITION".equalsIgnoreCase(tableName))
+        {
+            logBuilder = new StringBuilder();
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
                     .create();
@@ -60,9 +67,12 @@ public class RdbDataPersistentDAO {
             }.getType();
             List<Condition> list = gson.fromJson(jsonData, resultType);
             for (Condition condition : list) {
-                noOfRecordsSaved=upsertCondition(condition);
+                logBuilder.append(", ").append(upsertCondition(condition));
             }
-        } else if ("RDB_DATE".equalsIgnoreCase(tableName)) {
+        }
+        else if ("RDB_DATE".equalsIgnoreCase(tableName))
+        {
+            logBuilder = new StringBuilder();
             Gson gson = new GsonBuilder()
                     .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
                     .create();
@@ -70,9 +80,11 @@ public class RdbDataPersistentDAO {
             }.getType();
             List<RdbDate> list = gson.fromJson(jsonData, resultType);
             for (RdbDate rdbDate : list) {
-                noOfRecordsSaved=upsertRdbDate(rdbDate);
+                logBuilder.append(", ").append(upsertRdbDate(rdbDate));
             }
-        } else {
+        }
+        else
+        {
             try {
                 SimpleJdbcInsert simpleJdbcInsert =
                         new SimpleJdbcInsert(jdbcTemplate);
@@ -81,23 +93,22 @@ public class RdbDataPersistentDAO {
                     List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                     if (records != null && !records.isEmpty()) {
                         logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                        int[] noOfInserts =simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                        noOfRecordsSaved=noOfInserts.length;
+                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                         logger.info("executeBatch completed. tableName: {}", tableName);
                     } else {
                         logger.info("Inside generic code tableName: {} Records size:0", tableName);
                     }
                 }
             } catch (Exception e) {
+                logBuilder = new StringBuilder(e.getMessage());
                 logger.error("Error executeBatch. tableName: {}, Error:{}", tableName, e.getMessage());
             }
         }
-        logger.info("saveRDBData tableName: {} Records size:{}",tableName, noOfRecordsSaved);
-        return noOfRecordsSaved;
+        return logBuilder.toString();
     }
 
-    private int upsertConfirmationMethod(ConfirmationMethod confirmationMethod) {
-        int noOfRecordsUpdated = 0;
+    private String upsertConfirmationMethod(ConfirmationMethod confirmationMethod) {
+        String log = LOG_SUCCESS;
         String sql = "MERGE INTO CONFIRMATION_METHOD AS target USING " +
                 "(select " + confirmationMethod.getConfirmationMethodKey() + " as id) AS source " +
                 "ON (target.CONFIRMATION_METHOD_KEY = source.id) " +
@@ -110,15 +121,15 @@ public class RdbDataPersistentDAO {
                 "," + getSqlString(confirmationMethod.getConfirmationMethodCd()) +
                 "," + getSqlString(confirmationMethod.getConfirmationMethodDesc()) + ");";
         try {
-            noOfRecordsUpdated= jdbcTemplate.update(sql);
+            jdbcTemplate.update(sql);
         } catch (Exception e) {
             logger.error("Error in upsert for CONFIRMATION_METHOD table:{}",e.getMessage());
+            log = e.getMessage();
         }
-        return noOfRecordsUpdated;
+        return log;
     }
 
-    private int upsertCondition(Condition condition) {
-        int noOfRecordsUpdated = 0;
+    private String upsertCondition(Condition condition) {
         String sql = "MERGE INTO CONDITION AS target " +
                 "USING (select " + condition.getConditionKey() + " as id) AS source ON" +
                 "(target.CONDITION_KEY = source.id)" +
@@ -163,16 +174,18 @@ public class RdbDataPersistentDAO {
                 getSqlString(condition.getAssigningAuthorityDesc()) + "," +
                 getSqlString(condition.getConditionCdSysCd()) +
                 ");";
+
+        String log = LOG_SUCCESS;
         try {
-            noOfRecordsUpdated= jdbcTemplate.update(sql);
+            jdbcTemplate.update(sql);
         } catch (Exception e) {
             logger.error("Error in upsert for CONDITION table:{}",e.getMessage());
+            log = e.getMessage();
         }
-        return noOfRecordsUpdated;
+        return log;
     }
 
-    private int upsertRdbDate(RdbDate rdbDate) {
-        int noOfRecordsUpdated = 0;
+    private String upsertRdbDate(RdbDate rdbDate) {
         String sql = "MERGE INTO RDB_DATE AS target " +
                 "USING (select " + rdbDate.getDateKey() + " as id) AS source ON" +
                 "(target.DATE_KEY = source.id)" +
@@ -209,12 +222,14 @@ public class RdbDataPersistentDAO {
                 rdbDate.getClndrYr() +
                 ");";
 
+        String log = LOG_SUCCESS;
         try {
-            noOfRecordsUpdated= jdbcTemplate.update(sql);
+            jdbcTemplate.update(sql);
         } catch (Exception e) {
             logger.error("Error in upsert for RDB_DATE table:{}",e.getMessage());
+            log = e.getMessage();
         }
-        return noOfRecordsUpdated;
+        return log;
     }
 
     private static String getSqlString(String val) {
@@ -242,6 +257,13 @@ public class RdbDataPersistentDAO {
         String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, tableName);
     }
+
+    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
+        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    }
+
+
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
         String sql = "select * from poll_data_sync_config pdsc order by table_order";

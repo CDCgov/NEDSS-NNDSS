@@ -5,6 +5,7 @@ import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdbmodern.dao.RdbModernDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
+import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,24 +16,29 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
+
 @Service
 @Slf4j
 public class RdbModernDataHandlingService implements IRdbModernDataHandlingService {
     private static Logger logger = LoggerFactory.getLogger(RdbModernDataHandlingService.class);
     @Value("${datasync.store_in_local}")
-    private boolean storeJsonInLocalFolder;
+    protected boolean storeJsonInLocalFolder = false;
     @Value("${datasync.store_in_S3}")
-    private boolean storeJsonInS3;
-
-    private static final String RDB_MODERN = "RDB_MODERN";
+    protected boolean storeJsonInS3 = false;
+    @Value("${datasync.store_in_sql}")
+    protected boolean storeInSql = false;
 
     private final RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
     private final IPollCommonService outboundPollCommonService;
+    private final IS3DataService is3DataService;
 
     public RdbModernDataHandlingService(RdbModernDataPersistentDAO rdbModernDataPersistentDAO,
-                                        IPollCommonService outboundPollCommonService) {
+                                        IPollCommonService outboundPollCommonService,
+                                        IS3DataService is3DataService) {
         this.rdbModernDataPersistentDAO = rdbModernDataPersistentDAO;
         this.outboundPollCommonService = outboundPollCommonService;
+        this.is3DataService = is3DataService;
     }
 
     public void handlingExchangedData() throws DataPollException {
@@ -74,17 +80,28 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         String rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
 
         Timestamp timestamp = Timestamp.from(Instant.now());
-        rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
 
-        outboundPollCommonService.updateLastUpdatedTime(tableName, timestamp);
+
+
+
+        if(storeJsonInS3) {
+            String log = is3DataService.persistToS3MultiPart(RDB_MODERN, rawJsonData, tableName, timestamp, isInitialLoad);
+            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
+        }
+
+        if (storeInSql) {
+            String log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
+            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+        }
 
         if(storeJsonInLocalFolder) {
-            outboundPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData);
+            outboundPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData, isInitialLoad);
+            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
         }
-        if(storeJsonInS3) {
-            //STORE JSON FILES in S3 FOLDER
-        }
+
     }
+
+
 
     private void cleanupTables(List<PollDataSyncConfig> configTableList) {
         for (int j = configTableList.size() - 1; j >= 0; j = j - 1) {

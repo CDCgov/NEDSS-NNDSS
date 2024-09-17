@@ -11,6 +11,7 @@ public class PollDataSyncConfig {
     private String tableName;
     private String sourceDb;
     private Timestamp lastUpdateTime;
+    private String lastExecutedLog;
     private int tableOrder;
     private String query;
 }

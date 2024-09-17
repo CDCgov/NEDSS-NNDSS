@@ -4,6 +4,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdbmodern.dao.RdbModernDataPersistentDAO;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
+import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -24,16 +25,22 @@ class RdbModernDataHandlingServiceTest {
     private RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
     @Mock
     IPollCommonService pollCommonService;
+    @Mock
+    IS3DataService is3DataService;
     @InjectMocks
     private RdbModernDataHandlingService rdbModernDataHandlingService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        rdbModernDataHandlingService.storeInSql = false;
+        rdbModernDataHandlingService.storeJsonInS3 = false;
+        rdbModernDataHandlingService.storeJsonInLocalFolder = false;
     }
 
     @Test
     void handlingExchangedData_initialLoad() throws DataPollException {
+        rdbModernDataHandlingService.storeInSql = true;
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("TEST");
@@ -54,6 +61,7 @@ class RdbModernDataHandlingServiceTest {
 
     @Test
     void handlingExchangedData_withTimestamp() throws DataPollException {
+        rdbModernDataHandlingService.storeInSql = true;
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("TEST");

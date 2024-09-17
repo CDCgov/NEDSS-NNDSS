@@ -20,7 +20,8 @@ CREATE TABLE poll_data_sync_config
     source_db       NVARCHAR(255) NOT NULL,
     table_order int NULL,
     last_update_time  DATETIME2,
-    query nvarchar(MAX) NULL
+    query nvarchar(MAX) NULL,
+    last_executed_log NVARCHAR(MAX) NULL,
 );
 END
 GO

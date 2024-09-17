@@ -39,8 +39,8 @@ class RdbDataPersistentDAOTest {
     void saveRDBData() {
         String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
                 "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
-        int recordsSaved = rdbDataPersistentDAO.saveRDBData("TEST_TABLE", jsondata);
-        assertEquals(0, recordsSaved);
+        var recordsSaved = rdbDataPersistentDAO.saveRDBData("TEST_TABLE", jsondata);
+        assertNotNull(recordsSaved);
     }
 
     @Test

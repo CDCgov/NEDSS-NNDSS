@@ -18,18 +18,31 @@ nnd:
 
 poll:
   nnd:
-    enabled: ${NND_POLL_ENABLED:true}
+    enabled: ${NND_POLL_ENABLED:false}
   rdb:
-    enabled: ${RDB_POLL_ENABLED:true}
+    enabled: ${RDB_POLL_ENABLED:false}
   rdb_modern:
-    enabled: ${RDB_MODERN_POLL_ENABLED:true}
+    enabled: ${RDB_MODERN_POLL_ENABLED:false}
   srte:
-    enabled: ${SRTE_POLL_ENABLED:true}
+    enabled: ${SRTE_POLL_ENABLED:false}
 
 datasync:
-  store_in_local: ${DATASYNC_STORE_LOCAL:true}
-  store_in_S3: ${DATASYNC_STORE_S3:true}
-  local_file_path: ${DATASYNC_LOCAL_FILE_PATH:/Users/SelvarasuSathiah/Desktop/NND_Datasync}
+  store_in_sql: ${DATASYNC_STORE_SQL:false}
+  store_in_local: ${DATASYNC_STORE_LOCAL:false}
+  store_in_S3: ${DATASYNC_STORE_S3:false}
+  local_file_path: ${DATASYNC_LOCAL_FILE_PATH:}
+
+aws:
+  auth:
+    static:
+      key_id: ${AWS_KEY_ID:}
+      access_key: ${AWS_ACCESS_KEY:}
+      token: ${AWS_TOKEN:}
+    profile:
+      profile_name: ${AWS_PROFILE:}
+  s3:
+    bucket-name: ${S3_BUCKET_NAME}
+    region: ${S3_REGION}
 
 spring:
   application:

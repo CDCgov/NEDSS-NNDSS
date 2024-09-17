@@ -37,6 +37,7 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter')
     testImplementation 'org.junit.jupiter:junit-jupiter-engine'
     testImplementation 'org.mockito:mockito-core'
+    implementation 'software.amazon.awssdk:s3:2.27.22'
 }
 
 test {
