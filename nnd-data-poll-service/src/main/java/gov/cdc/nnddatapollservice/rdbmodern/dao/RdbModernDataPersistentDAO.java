@@ -25,7 +25,6 @@ public class RdbModernDataPersistentDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // @SuppressWarnings("java:S3776")
     public int saveRdbModernData(String tableName, String jsonData) {
         logger.info("saveRdbModernData tableName: {}", tableName);
         int noOfRecordsSaved = 0;
@@ -53,7 +52,11 @@ public class RdbModernDataPersistentDAO {
     }
 
     public void deleteTable(String tableName) {
-        String deleteSql = "delete " + tableName;
-        jdbcTemplate.execute(deleteSql);
+        try{
+            String deleteSql = "delete " + tableName;
+            jdbcTemplate.execute(deleteSql);
+        }catch (Exception e){
+            logger.error("RDB_MODERN:Error in deleting table:{}",e.getMessage());
+        }
     }
 }

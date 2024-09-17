@@ -3,8 +3,8 @@ package gov.cdc.nnddatapollservice.service;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
-import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
+import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -43,8 +43,8 @@ public class DataPullService implements IDataPullService {
                            ISrteDataHandlingService srteDataHandlingService) {
         this.dataHandlingService = dataHandlingService;
         this.rdbDataHandlingService = rdbDataHandlingService;
-        this.rdbModernDataHandlingService=rdbModernDataHandlingService;
-        this.srteDataHandlingService=srteDataHandlingService;
+        this.rdbModernDataHandlingService = rdbModernDataHandlingService;
+        this.srteDataHandlingService = srteDataHandlingService;
     }
 
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
@@ -61,7 +61,7 @@ public class DataPullService implements IDataPullService {
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB");
-            logger.info("{}, {} FOR RDB",cron,zone);
+            logger.info("{}, {} FOR RDB", cron, zone);
             rdbDataHandlingService.handlingExchangedData();
         }
     }
@@ -70,7 +70,7 @@ public class DataPullService implements IDataPullService {
     public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB_MODERN");
-            logger.info("{}, {} FOR RDB_MODERN",cron,zone);
+            logger.info("{}, {} FOR RDB_MODERN", cron, zone);
             rdbModernDataHandlingService.handlingExchangedData();
         }
     }
@@ -79,7 +79,7 @@ public class DataPullService implements IDataPullService {
     public void scheduleSRTEDataFetch() throws DataPollException {
         if (srtePollEnabled) {
             logger.info("CRON STARTED FOR POLLING SRTE");
-            logger.info("{}, {} FOR SRTE",cron,zone);
+            logger.info("{}, {} FOR SRTE", cron, zone);
             srteDataHandlingService.handlingExchangedData();
         }
     }

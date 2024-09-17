@@ -52,7 +52,11 @@ public class SrteDataPersistentDAO {
     }
 
     public void deleteTable(String tableName) {
-        String deleteSql = "delete " + tableName;
-        jdbcTemplate.execute(deleteSql);
+        try{
+            String deleteSql = "delete " + tableName;
+            jdbcTemplate.execute(deleteSql);
+        }catch (Exception e){
+            logger.error("SRTE:Error in deleting table:{}",e.getMessage());
+        }
     }
 }

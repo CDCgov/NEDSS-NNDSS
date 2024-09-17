@@ -36,29 +36,29 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     }
 
     public void handlingExchangedData() throws DataPollException {
-        logger.info("---START RDB POLLING---");
+        logger.info("---START RDB_MODERN POLLING---");
         List<PollDataSyncConfig> configTableList = outboundPollCommonService.getTableListFromConfig();
-        List<PollDataSyncConfig> rdbTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB_MODERN);
-        logger.info(" RDB TableList to be polled: {}", rdbTablesList.size());
+        List<PollDataSyncConfig> rdbModernTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB_MODERN);
+        logger.info(" RDB_MODERN TableList to be polled: {}", rdbModernTablesList.size());
 
-        boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(configTableList);
+        boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad) {
-            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
-            cleanupRDBTables(configTableList);
+            logger.info("For INITIAL LOAD - CLEANING UP THE RDB_MODERN TABLES ");
+            cleanupTables(rdbModernTablesList);
         }
 
-        for (PollDataSyncConfig pollDataSyncConfig : rdbTablesList) {
+        for (PollDataSyncConfig pollDataSyncConfig : rdbModernTablesList) {
             logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
-            pollAndPersistRDBData(pollDataSyncConfig.getTableName(), isInitialLoad);
+            pollAndPersistRDBMOdernData(pollDataSyncConfig.getTableName(), isInitialLoad);
         }
 
-        logger.info("---END RDB POLLING---");
+        logger.info("---END RDB_MODERN POLLING---");
     }
 
-    private void pollAndPersistRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
-        logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
+    private void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) throws DataPollException {
+        logger.info("--START--pollAndPersistRDBData for table {}", tableName);
         String timeStampForPoll = "";
         if (isInitialLoad) {
             timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
@@ -86,7 +86,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         }
     }
 
-    private void cleanupRDBTables(List<PollDataSyncConfig> configTableList) {
+    private void cleanupTables(List<PollDataSyncConfig> configTableList) {
         for (int j = configTableList.size() - 1; j >= 0; j = j - 1) {
             rdbModernDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
         }

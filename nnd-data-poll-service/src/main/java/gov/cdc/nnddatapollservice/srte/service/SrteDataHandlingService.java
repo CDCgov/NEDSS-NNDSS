@@ -42,10 +42,10 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         List<PollDataSyncConfig> srteTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, SRTE);
         logger.info("SRTE TableList to be polled: {}", srteTablesList.size());
 
-        boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(configTableList);
+        boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(srteTablesList);
         logger.info("-----SRTE INITIAL LOAD: {}", isInitialLoad);
         //Delete the existing records
-        cleanupTables(configTableList);
+        cleanupTables(srteTablesList);
 
         for (PollDataSyncConfig pollDataSyncConfig : srteTablesList) {
             logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
