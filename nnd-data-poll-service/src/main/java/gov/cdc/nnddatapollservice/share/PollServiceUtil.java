@@ -26,15 +26,17 @@ public class PollServiceUtil {
 
     public static void writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
         try {
-            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);
-            String updatedTime = formatter.format(timeStamp);
-            Path dirPath
-                    = Paths.get(localfilePath, dbSource, tableName);
-            Path filePath
-                    = Paths.get(dirPath.toString(), tableName.toLowerCase() + "_" + updatedTime + ".json");
-            Files.createDirectories(dirPath);
-            Files.writeString(filePath, jsonData, StandardOpenOption.CREATE);
-            logger.info("Successfully wrote json file to {}", filePath);
+            if (jsonData != null && !jsonData.equalsIgnoreCase("[]") && !jsonData.isEmpty()) {
+                SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);
+                String updatedTime = formatter.format(timeStamp);
+                Path dirPath
+                        = Paths.get(localfilePath, dbSource, tableName);
+                Path filePath
+                        = Paths.get(dirPath.toString(), tableName.toLowerCase() + "_" + updatedTime + ".json");
+                Files.createDirectories(dirPath);
+                Files.writeString(filePath, jsonData, StandardOpenOption.CREATE);
+                logger.info("Successfully wrote json file to {}", filePath);
+            }
         } catch (Exception e) {
             logger.error("Error writing to file", e);
         }

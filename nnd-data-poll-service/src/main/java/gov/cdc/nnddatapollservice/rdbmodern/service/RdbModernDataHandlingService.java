@@ -51,13 +51,13 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
 
         for (PollDataSyncConfig pollDataSyncConfig : rdbModernTablesList) {
             logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
-            pollAndPersistRDBMOdernData(pollDataSyncConfig.getTableName(), isInitialLoad);
+            pollAndPersistRDBModernData(pollDataSyncConfig.getTableName(), isInitialLoad);
         }
 
         logger.info("---END RDB_MODERN POLLING---");
     }
 
-    private void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) throws DataPollException {
+    private void pollAndPersistRDBModernData(String tableName, boolean isInitialLoad) throws DataPollException {
         logger.info("--START--pollAndPersistRDBData for table {}", tableName);
         String timeStampForPoll = "";
         if (isInitialLoad) {
