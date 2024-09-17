@@ -90,6 +90,6 @@ class RdbModernDataPersistentDAOTest {
 
         rdbModernDataPersistentDAO.deleteTable(tableName);
 
-        verify(jdbcTemplate, times(1)).execute(eq("delete " + tableName));
+        verify(jdbcTemplate, times(1)).execute("delete " + tableName);
     }
 }

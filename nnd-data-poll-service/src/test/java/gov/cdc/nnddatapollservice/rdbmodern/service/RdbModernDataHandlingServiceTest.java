@@ -79,4 +79,43 @@ class RdbModernDataHandlingServiceTest {
         verify(rdbModernDataPersistentDAO, times(0)).deleteTable(anyString());
         verify(rdbModernDataPersistentDAO, times(1)).saveRdbModernData(any(), any());
     }
+
+    @Test
+    void testStoreJsonInS3() throws DataPollException {
+        // Arrange
+        setupServiceWithMockedDependencies();
+        String tableName = "exampleTable";
+        rdbModernDataHandlingService.storeJsonInS3= true;
+        // Act
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+
+        // Assert
+        verify(is3DataService).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
+        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+    }
+
+    @Test
+    void testStoreJsonInLocalDir() throws DataPollException {
+        // Arrange
+        setupServiceWithMockedDependencies();
+        String tableName = "exampleTable";
+        rdbModernDataHandlingService.storeJsonInLocalFolder= true;
+        // Act
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+
+        // Assert
+        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString(), anyBoolean());
+        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+    }
+
+    private void setupServiceWithMockedDependencies() throws DataPollException {
+
+        when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
+        when(pollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString())).thenReturn("encodedData");
+
+
+
+    }
 }

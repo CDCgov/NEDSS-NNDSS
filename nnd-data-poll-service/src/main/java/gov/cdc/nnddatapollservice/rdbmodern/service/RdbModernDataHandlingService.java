@@ -63,7 +63,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         logger.info("---END RDB_MODERN POLLING---");
     }
 
-    private void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) throws DataPollException {
+    protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) throws DataPollException {
         logger.info("--START--pollAndPersistRDBData for table {}", tableName);
         String timeStampForPoll = "";
         if (isInitialLoad) {

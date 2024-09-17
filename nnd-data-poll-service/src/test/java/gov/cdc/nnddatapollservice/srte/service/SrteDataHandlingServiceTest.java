@@ -56,4 +56,41 @@ class SrteDataHandlingServiceTest {
         verify(srteDataPersistentDAO, times(1)).deleteTable(anyString());
         verify(srteDataPersistentDAO, times(1)).saveSRTEData(any(), any());
     }
+
+    @Test
+    void testStoreJsonInS3() throws DataPollException {
+        // Arrange
+        setupServiceWithMockedDependencies();
+        String tableName = "exampleTable";
+        srteDataHandlingService.storeJsonInS3= true;
+        // Act
+        srteDataHandlingService.pollAndPersistSRTEData(tableName, true);
+
+        // Assert
+        verify(is3DataService).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
+        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+    }
+
+    @Test
+    void testStoreJsonInLocalDir() throws DataPollException {
+        // Arrange
+        setupServiceWithMockedDependencies();
+        String tableName = "exampleTable";
+        srteDataHandlingService.storeJsonInLocalFolder= true;
+        // Act
+        srteDataHandlingService.pollAndPersistSRTEData(tableName, true);
+
+        // Assert
+        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString(), anyBoolean());
+        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+    }
+
+    private void setupServiceWithMockedDependencies() throws DataPollException {
+
+        when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
+        when(pollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString())).thenReturn("encodedData");
+
+    }
 }

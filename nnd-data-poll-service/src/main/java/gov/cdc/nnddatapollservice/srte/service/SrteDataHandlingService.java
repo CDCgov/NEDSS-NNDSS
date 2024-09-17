@@ -61,7 +61,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         logger.info("---END SRTE POLLING---");
     }
 
-    private void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) throws DataPollException {
+    protected void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) throws DataPollException {
         logger.info("--START--pollAndPersistSRTEData for table {}", tableName);
         String timeStampForPoll = "";
         if (isInitialLoad) {

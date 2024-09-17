@@ -65,7 +65,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         logger.info("---END RDB POLLING---");
     }
 
-    private void pollAndPersistRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
+    protected void pollAndPersistRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
         logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
         String timeStampForPoll = "";
         if (isInitialLoad) {

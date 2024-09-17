@@ -1,8 +1,11 @@
 package gov.cdc.nnddatapollservice.rdb.dao;
 
+import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
+import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -116,4 +119,69 @@ class RdbDataPersistentDAOTest {
         rdbDataPersistentDAO.deleteTable("TEST");
         verify(jdbcTemplate, times(1)).execute(anyString());
     }
+
+    @Test
+    void deleteTable_shouldLogErrorOnException() {
+        String tableName = "non_existing_table";
+        doThrow(new RuntimeException("Simulated exception")).when(jdbcTemplate).execute(anyString());
+        rdbDataPersistentDAO.deleteTable(tableName);
+        verify(jdbcTemplate).execute("delete " + tableName);
+    }
+
+
+    @Test
+    void updateLastUpdatedTimeAndLog_shouldUpdateWithCorrectParameters() {
+        String tableName = "my_table";
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        String log = "Executed successfully";
+
+        // Act
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+
+        ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Object[]> paramsCaptor = ArgumentCaptor.forClass(Object[].class);
+
+        verify(jdbcTemplate).update(sqlCaptor.capture(), paramsCaptor.capture());
+
+        assertEquals("update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;", sqlCaptor.getValue());
+
+        Object[] capturedParams = paramsCaptor.getValue();
+        assertEquals(3, capturedParams.length);
+        assertEquals(timestamp, capturedParams[0]);
+        assertEquals(log, capturedParams[1]);
+        assertEquals(tableName, capturedParams[2]);
+    }
+
+    @Test
+    void upsertRdbDate_shouldReturnErrorMessageOnException() {
+        // Arrange
+        RdbDate rdbDate = new RdbDate();
+        rdbDate.setDateKey(20230917L);
+        String expectedErrorMessage = "Simulated exception";
+        doThrow(new RuntimeException(expectedErrorMessage)).when(jdbcTemplate).update(anyString());
+
+        // Act
+        String result = rdbDataPersistentDAO.upsertRdbDate(rdbDate);
+
+        // Assert
+        assertEquals(expectedErrorMessage, result);
+    }
+
+    @Test
+    void upsertCondition_shouldReturnErrorMessageOnException() {
+        // Arrange
+        Condition condition = new Condition();
+        condition.setConditionKey(123L);
+        String expectedErrorMessage = "Simulated exception";
+
+        doThrow(new RuntimeException(expectedErrorMessage)).when(jdbcTemplate).update(anyString());
+
+        // Act
+        String result = rdbDataPersistentDAO.upsertCondition(condition);
+
+        // Assert
+        assertEquals(expectedErrorMessage, result);
+
+    }
+
 }

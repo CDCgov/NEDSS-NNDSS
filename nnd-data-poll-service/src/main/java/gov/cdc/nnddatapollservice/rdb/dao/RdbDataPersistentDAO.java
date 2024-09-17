@@ -129,7 +129,7 @@ public class RdbDataPersistentDAO {
         return log;
     }
 
-    private String upsertCondition(Condition condition) {
+    protected String upsertCondition(Condition condition) {
         String sql = "MERGE INTO CONDITION AS target " +
                 "USING (select " + condition.getConditionKey() + " as id) AS source ON" +
                 "(target.CONDITION_KEY = source.id)" +
@@ -174,7 +174,6 @@ public class RdbDataPersistentDAO {
                 getSqlString(condition.getAssigningAuthorityDesc()) + "," +
                 getSqlString(condition.getConditionCdSysCd()) +
                 ");";
-
         String log = LOG_SUCCESS;
         try {
             jdbcTemplate.update(sql);
@@ -185,7 +184,7 @@ public class RdbDataPersistentDAO {
         return log;
     }
 
-    private String upsertRdbDate(RdbDate rdbDate) {
+    protected String upsertRdbDate(RdbDate rdbDate) {
         String sql = "MERGE INTO RDB_DATE AS target " +
                 "USING (select " + rdbDate.getDateKey() + " as id) AS source ON" +
                 "(target.DATE_KEY = source.id)" +

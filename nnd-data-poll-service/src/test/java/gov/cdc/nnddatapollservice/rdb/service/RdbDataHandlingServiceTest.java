@@ -4,6 +4,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
+import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -15,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class RdbDataHandlingServiceTest {
@@ -23,6 +25,8 @@ class RdbDataHandlingServiceTest {
     private RdbDataPersistentDAO rdbDataPersistentDAO;
     @Mock
     IPollCommonService pollCommonService;
+    @Mock
+    IS3DataService is3DataService;
     @InjectMocks
     private RdbDataHandlingService dataHandlingService;
 
@@ -74,5 +78,45 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.handlingExchangedData();
         verify(rdbDataPersistentDAO, times(0)).deleteTable(anyString());
         verify(rdbDataPersistentDAO, times(1)).saveRDBData(any(), any());
+    }
+
+
+    @Test
+    void testStoreJsonInS3() throws DataPollException {
+        // Arrange
+        setupServiceWithMockedDependencies();
+        String tableName = "exampleTable";
+        dataHandlingService.storeJsonInS3= true;
+        // Act
+        dataHandlingService.pollAndPersistRDBData(tableName, true);
+
+        // Assert
+        verify(is3DataService).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
+        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+    }
+
+    @Test
+    void testStoreJsonInLocalDir() throws DataPollException {
+        // Arrange
+        setupServiceWithMockedDependencies();
+        String tableName = "exampleTable";
+        dataHandlingService.storeJsonInLocalFolder= true;
+        // Act
+        dataHandlingService.pollAndPersistRDBData(tableName, true);
+
+        // Assert
+        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString(), anyBoolean());
+        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+    }
+
+    private void setupServiceWithMockedDependencies() throws DataPollException {
+
+        when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
+        when(pollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString())).thenReturn("encodedData");
+
+
+
     }
 }
