@@ -34,7 +34,7 @@ public class DataPullService implements IDataPullService {
     private boolean srtePollEnabled;
 
     @Value("${poll.single_time_poll_enabled}")
-    private boolean singlePoll = true;
+    private boolean singlePoll = false;
 
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
@@ -58,7 +58,7 @@ public class DataPullService implements IDataPullService {
             logger.info(cron);
             logger.info(zone);
             dataHandlingService.handlingExchangedData();
-//            closePoller();
+            closePoller();
         }
     }
 
@@ -68,7 +68,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING RDB");
             logger.info("{}, {} FOR RDB", cron, zone);
             rdbDataHandlingService.handlingExchangedData();
-//            closePoller();
+            closePoller();
         }
     }
 
@@ -78,7 +78,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING RDB_MODERN");
             logger.info("{}, {} FOR RDB_MODERN", cron, zone);
             rdbModernDataHandlingService.handlingExchangedData();
-//            closePoller();
+            closePoller();
         }
     }
 
@@ -88,14 +88,14 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING SRTE");
             logger.info("{}, {} FOR SRTE", cron, zone);
             srteDataHandlingService.handlingExchangedData();
-//            closePoller();
+            closePoller();
         }
 
     }
 
-//    private void closePoller() {
-//        if (singlePoll) {
-//            System.exit(0);
-//        }
-//    }
+    private void closePoller() {
+        if (singlePoll) {
+            System.exit(0);
+        }
+    }
 }
