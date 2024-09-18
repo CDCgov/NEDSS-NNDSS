@@ -30,24 +30,24 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     protected boolean storeInSql = false;
 
     private final RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
-    private final IPollCommonService outboundPollCommonService;
+    private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
 
     public RdbModernDataHandlingService(RdbModernDataPersistentDAO rdbModernDataPersistentDAO,
-                                        IPollCommonService outboundPollCommonService,
+                                        IPollCommonService iPollCommonService,
                                         IS3DataService is3DataService) {
         this.rdbModernDataPersistentDAO = rdbModernDataPersistentDAO;
-        this.outboundPollCommonService = outboundPollCommonService;
+        this.iPollCommonService = iPollCommonService;
         this.is3DataService = is3DataService;
     }
 
     public void handlingExchangedData() throws DataPollException {
         logger.info("---START RDB_MODERN POLLING---");
-        List<PollDataSyncConfig> configTableList = outboundPollCommonService.getTableListFromConfig();
-        List<PollDataSyncConfig> rdbModernTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB_MODERN);
+        List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
+        List<PollDataSyncConfig> rdbModernTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB_MODERN);
         logger.info(" RDB_MODERN TableList to be polled: {}", rdbModernTablesList.size());
 
-        boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
+        boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad) {
@@ -72,17 +72,17 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         try {
             String timeStampForPoll = "";
             if (isInitialLoad) {
-                timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
+                timeStampForPoll = iPollCommonService.getCurrentTimestamp();
             } else {
-                timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
+                timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
             }
             logger.info("isInitialLoad {}", isInitialLoad);
 
             logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
             //call data exchange service api
-            String encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
+            String encodedData = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
 
-            rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
+            rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
             timestamp = Timestamp.from(Instant.now());
 
 
@@ -93,23 +93,23 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
 
         if (exceptionAtApiLevel)
         {
-            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+            iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
         }
         else
         {
             if(storeJsonInS3) {
                 log = is3DataService.persistToS3MultiPart(RDB_MODERN, rawJsonData, tableName, timestamp, isInitialLoad);
-                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
+                iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
             }
 
             if (storeInSql) {
                 log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
-                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+                iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
             }
 
             if(storeJsonInLocalFolder) {
-                outboundPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData, isInitialLoad);
-                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+                iPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData, isInitialLoad);
+                iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
             }
         }
 
