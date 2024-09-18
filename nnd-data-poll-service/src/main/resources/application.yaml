@@ -31,19 +31,19 @@ datasync:
   store_in_sql: ${DATASYNC_STORE_SQL:false}
   store_in_local: ${DATASYNC_STORE_LOCAL:false}
   store_in_S3: ${DATASYNC_STORE_S3:false}
-  local_file_path: ${DATASYNC_LOCAL_FILE_PATH:}
+  local_file_path: ${DATASYNC_LOCAL_FILE_PATH:NA}
 
 aws:
   auth:
     static:
-      key_id: ${AWS_KEY_ID:}
-      access_key: ${AWS_ACCESS_KEY:}
-      token: ${AWS_TOKEN:}
+      key_id: ${AWS_KEY_ID:NA}
+      access_key: ${AWS_ACCESS_KEY:NA}
+      token: ${AWS_TOKEN:NA}
     profile:
-      profile_name: ${AWS_PROFILE:}
+      profile_name: ${AWS_PROFILE:NA}
   s3:
-    bucket-name: ${S3_BUCKET_NAME:}
-    region: ${S3_REGION:}
+    bucket-name: ${S3_BUCKET_NAME:NA}
+    region: ${S3_REGION:NA}
 
 spring:
   application:
