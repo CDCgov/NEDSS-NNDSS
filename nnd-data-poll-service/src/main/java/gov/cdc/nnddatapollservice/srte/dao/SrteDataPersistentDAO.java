@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.srte.dao;
 
+import gov.cdc.nnddatapollservice.constant.ConstantValue;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -39,14 +40,14 @@ public class SrteDataPersistentDAO {
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
                     logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                    if(records.size()>10000){
-                        int sublistSize=10000;
+                    if (records.size() > ConstantValue.SQL_BATCH_SIZE) {
+                        int sublistSize = ConstantValue.SQL_BATCH_SIZE;
                         for (int i = 0; i < records.size(); i += sublistSize) {
                             int end = Math.min(i + sublistSize, records.size());
-                            List<Map<String, Object>> sublist=records.subList(i, end);
+                            List<Map<String, Object>> sublist = records.subList(i, end);
                             simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
                         }
-                    }else {
+                    } else {
                         simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                     }
                 } else {
@@ -61,11 +62,11 @@ public class SrteDataPersistentDAO {
     }
 
     public void deleteTable(String tableName) {
-        try{
+        try {
             String deleteSql = "delete " + tableName;
             jdbcTemplate.execute(deleteSql);
-        }catch (Exception e){
-            logger.error("SRTE:Error in deleting table:{}",e.getMessage());
+        } catch (Exception e) {
+            logger.error("SRTE:Error in deleting table:{}", e.getMessage());
         }
     }
 }
