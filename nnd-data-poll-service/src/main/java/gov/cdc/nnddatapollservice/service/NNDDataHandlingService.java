@@ -6,6 +6,8 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.*;
 import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +25,7 @@ import java.util.Map;
 
 @Service
 public class NNDDataHandlingService implements INNDDataHandlingService {
+    private static Logger logger = LoggerFactory.getLogger(NNDDataHandlingService.class);
 
     @Value("${data_exchange.clientId}")
     private String clientId = "clientId";
@@ -77,6 +80,7 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
         String data = callDataExchangeEndpoint(token, param);
 
         var deCompressedData = DataSimplification.decodeAndDecompress(data);
+        logger.info("Decompress Data: {}", deCompressedData);
 
         persistingExchangeData(deCompressedData);
     }
@@ -129,6 +133,8 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
                     .queryParams(multiValueParams)
                     .build()
                     .toUri();
+
+            logger.info("API Request: {}", uri);
 
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
             return response.getBody();

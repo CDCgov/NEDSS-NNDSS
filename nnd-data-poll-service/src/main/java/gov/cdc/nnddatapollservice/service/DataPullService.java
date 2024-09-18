@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+
 @Service
 @Slf4j
 public class DataPullService implements IDataPullService {
@@ -31,6 +32,9 @@ public class DataPullService implements IDataPullService {
     private boolean rdbModernPollEnabled;
     @Value("${poll.srte.enabled}")
     private boolean srtePollEnabled;
+
+    @Value("${poll.single_time_poll_enabled}")
+    private boolean singlePoll = false;
 
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
@@ -54,6 +58,7 @@ public class DataPullService implements IDataPullService {
             logger.info(cron);
             logger.info(zone);
             dataHandlingService.handlingExchangedData();
+            closePoller();
         }
     }
 
@@ -63,6 +68,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING RDB");
             logger.info("{}, {} FOR RDB", cron, zone);
             rdbDataHandlingService.handlingExchangedData();
+            closePoller();
         }
     }
 
@@ -72,6 +78,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING RDB_MODERN");
             logger.info("{}, {} FOR RDB_MODERN", cron, zone);
             rdbModernDataHandlingService.handlingExchangedData();
+            closePoller();
         }
     }
 
@@ -81,6 +88,14 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING SRTE");
             logger.info("{}, {} FOR SRTE", cron, zone);
             srteDataHandlingService.handlingExchangedData();
+            closePoller();
+        }
+
+    }
+
+    private void closePoller() {
+        if (singlePoll) {
+            System.exit(0);
         }
     }
 }

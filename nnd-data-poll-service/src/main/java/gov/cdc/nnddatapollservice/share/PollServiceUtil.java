@@ -16,6 +16,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+
 public class PollServiceUtil {
     private static Logger logger = LoggerFactory.getLogger(PollServiceUtil.class);
     private static final String TIMESTAMP_FOR_FILE_FORMAT = "yyyyMMddHHmmss";
@@ -24,20 +26,28 @@ public class PollServiceUtil {
         throw new IllegalStateException("PollServiceUtil cannot be instantiated");
     }
 
-    public static void writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
+    public static String writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData, boolean initialLoad) {
+        String log = LOG_SUCCESS;
         try {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);
             String updatedTime = formatter.format(timeStamp);
             Path dirPath
                     = Paths.get(localfilePath, dbSource, tableName);
-            Path filePath
-                    = Paths.get(dirPath.toString(), tableName.toLowerCase() + "_" + updatedTime + ".json");
+            Path filePath;
+            if (initialLoad) {
+                filePath = Paths.get(dirPath.toString(), "InitialLoad_" + tableName.toLowerCase() + "_" + updatedTime + ".json");
+            } else {
+                filePath = Paths.get(dirPath.toString(), tableName.toLowerCase() + "_" + updatedTime + ".json");
+            }
             Files.createDirectories(dirPath);
             Files.writeString(filePath, jsonData, StandardOpenOption.CREATE);
             logger.info("Successfully wrote json file to {}", filePath);
         } catch (Exception e) {
             logger.error("Error writing to file", e);
+            log = e.getMessage();
         }
+
+        return log;
     }
 
     public static List<Map<String, Object>> jsonToListOfMap(String jsonData) {

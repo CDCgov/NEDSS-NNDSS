@@ -52,7 +52,7 @@ sonarqube {
                 "**/security/**," +
                 "**/repository/**, " +
                 "**/constant/**, " +
-                "**/service/model/** ," +
+                "**/model/** ," +
                 "**/json_config/**, " +
                 "**/NndMessageProcessorApplication.java, " +
                 "**/NndDataExchangeServiceApplication.java, " +

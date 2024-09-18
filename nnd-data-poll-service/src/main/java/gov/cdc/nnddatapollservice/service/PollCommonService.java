@@ -106,12 +106,17 @@ public class PollCommonService implements IPollCommonService {
         rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
     }
 
+    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+    }
+
+
     public List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB) {
         return configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).toList();
     }
 
-    public void writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
-        PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData);
+    public String writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData, boolean initialLoad) {
+        return PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData, initialLoad);
     }
 
     public String decodeAndDecompress(String base64EncodedData) {

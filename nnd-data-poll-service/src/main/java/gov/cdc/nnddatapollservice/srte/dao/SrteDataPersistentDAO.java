@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+
 @Service
 @Slf4j
 public class SrteDataPersistentDAO {
@@ -25,9 +27,9 @@ public class SrteDataPersistentDAO {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public int saveSRTEData(String tableName, String jsonData) {
+    public String saveSRTEData(String tableName, String jsonData) {
         logger.info("saveSRTEData tableName: {}", tableName);
-        int noOfRecordsSaved = 0;
+        String log = LOG_SUCCESS;
         try {
             SimpleJdbcInsert simpleJdbcInsert =
                     new SimpleJdbcInsert(jdbcTemplate);
@@ -37,18 +39,18 @@ public class SrteDataPersistentDAO {
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
                     logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                    int[] noOfInserts = simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                    noOfRecordsSaved = noOfInserts.length;
+                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                     logger.info("executeBatch completed. tableName: {}", tableName);
                 } else {
                     logger.info("Inside generic code tableName: {} Records size:0", tableName);
                 }
             }
+
         } catch (Exception e) {
-            logger.error("Error executeBatch. tableName: {}, Error:{}", tableName, e.getMessage());
+            log = e.getMessage();
         }
-        logger.info("saveSRTEData tableName: {} Records size:{}", tableName, noOfRecordsSaved);
-        return noOfRecordsSaved;
+
+        return log;
     }
 
     public void deleteTable(String tableName) {
