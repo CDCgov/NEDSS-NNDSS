@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,7 +43,7 @@ public class CNTransportQOutService implements ICNTransportQOutService {
                 java.util.Date parsedDate = formatter.parse(statusTime);
                 Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
                 if (limit == 0) {
-                    transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatus(recordStatusTime, statusCd);
+                    transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatus(statusTime, statusCd);
                 } else {
                     transportQOutResults = cnTransportQOutRepository.findTransportByCreationTimeAndStatusWLimit(recordStatusTime, statusCd, limit);
                 }
