@@ -25,12 +25,12 @@
     - DATASYNC_STORE_LOCAL: (optional) default is false, set to true to enable Polling into Local System Directory
     - DATASYNC_LOCAL_FILE_PATH: Support for DATASYNC_STORE_LOCAL, value is path to local system directory (ex: /Users/UserName/Desktop/File)
   - AWS
-    - AWS_KEY_ID: (optional) default is empty
-    - AWS_ACCESS_KEY: (optional) default is empty
-`  `- AWS_TOKEN: (optional) default is empty
-    - AWS_PROFILE:  (optional) default is empty, this is a path to default profile on your machine. If choosing to authenticate aws this way then we dont need to set value for AWS ID/KEY/TOKEN
-    - S3_BUCKET_NAME: (optional) default is empty, must a valid bucket name 
-    - S3_REGION: (optional) default is empty, region asssociate with the aws account
+    - AWS_KEY_ID: (optional) default is NA
+    - AWS_ACCESS_KEY: (optional) default is NA
+`  `- AWS_TOKEN: (optional) default is NA
+    - AWS_PROFILE:  (optional) default is NA, this is a path to default profile on your machine. If choosing to authenticate aws this way then we dont need to set value for AWS ID/KEY/TOKEN
+    - S3_BUCKET_NAME: (optional) default is NA, must a valid bucket name 
+    - S3_REGION: (optional) default is NA, region associate with the aws account
   - Client Database
     - OP_DBSERVER: server url
     - OP_DBNAME: NND DB name
