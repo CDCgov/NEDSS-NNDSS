@@ -29,19 +29,21 @@ public class PollServiceUtil {
     public static String writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData, boolean initialLoad) {
         String log = LOG_SUCCESS;
         try {
-            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);
-            String updatedTime = formatter.format(timeStamp);
-            Path dirPath
-                    = Paths.get(localfilePath, dbSource, tableName);
-            Path filePath;
-            if (initialLoad) {
-                filePath = Paths.get(dirPath.toString(), "InitialLoad_" + tableName.toLowerCase() + "_" + updatedTime + ".json");
-            } else {
-                filePath = Paths.get(dirPath.toString(), tableName.toLowerCase() + "_" + updatedTime + ".json");
+            if (jsonData != null && !jsonData.equalsIgnoreCase("[]") && !jsonData.isEmpty()) {
+                SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);
+                String updatedTime = formatter.format(timeStamp);
+                Path dirPath
+                        = Paths.get(localfilePath, dbSource, tableName);
+                Path filePath;
+                if (initialLoad) {
+                    filePath = Paths.get(dirPath.toString(), "InitialLoad_" + tableName.toLowerCase() + "_" + updatedTime + ".json");
+                } else {
+                    filePath = Paths.get(dirPath.toString(), tableName.toLowerCase() + "_" + updatedTime + ".json");
+                }
+                Files.createDirectories(dirPath);
+                Files.writeString(filePath, jsonData, StandardOpenOption.CREATE);
+                logger.info("Successfully wrote json file to {}", filePath);
             }
-            Files.createDirectories(dirPath);
-            Files.writeString(filePath, jsonData, StandardOpenOption.CREATE);
-            logger.info("Successfully wrote json file to {}", filePath);
         } catch (Exception e) {
             logger.error("Error writing to file", e);
             log = e.getMessage();
