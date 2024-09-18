@@ -39,13 +39,20 @@ public class SrteDataPersistentDAO {
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
                     logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                    logger.info("executeBatch completed. tableName: {}", tableName);
+                    if(records.size()>10000){
+                        int sublistSize=10000;
+                        for (int i = 0; i < records.size(); i += sublistSize) {
+                            int end = Math.min(i + sublistSize, records.size());
+                            List<Map<String, Object>> sublist=records.subList(i, end);
+                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                        }
+                    }else {
+                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                    }
                 } else {
-                    logger.info("Inside generic code tableName: {} Records size:0", tableName);
+                    logger.info("saveSRTEData tableName: {} Records size:0", tableName);
                 }
             }
-
         } catch (Exception e) {
             log = e.getMessage();
         }
