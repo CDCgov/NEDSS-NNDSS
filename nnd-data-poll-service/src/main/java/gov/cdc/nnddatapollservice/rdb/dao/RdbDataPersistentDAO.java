@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -81,9 +82,19 @@ public class RdbDataPersistentDAO {
                     List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                     if (records != null && !records.isEmpty()) {
                         logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                        int[] noOfInserts =simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                        noOfRecordsSaved=noOfInserts.length;
-                        logger.info("executeBatch completed. tableName: {}", tableName);
+                        if(records.size()>10000){
+                            int sublistSize=10000;
+                            for (int i = 0; i < records.size(); i += sublistSize) {
+                                int end = Math.min(i + sublistSize, records.size());
+                                List<Map<String, Object>> sublist=records.subList(i, end);
+                                logger.info("sublist: {} - {}",i,sublist.size());
+                                int[] noOfInserts =simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                                noOfRecordsSaved = noOfRecordsSaved+noOfInserts.length;
+                            }
+                        }else {
+                            int[] noOfInserts = simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                            noOfRecordsSaved = noOfInserts.length;
+                        }
                     } else {
                         logger.info("Inside generic code tableName: {} Records size:0", tableName);
                     }
