@@ -42,12 +42,12 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         List<PollDataSyncConfig> rdbTablesList = pollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB);
         logger.info(" RDB TableList to be polled: {}", rdbTablesList.size());
 
-        boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(configTableList);
+        boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(rdbTablesList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad) {
             logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
-            cleanupRDBTables(configTableList);
+            cleanupRDBTables(rdbTablesList);
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : rdbTablesList) {
