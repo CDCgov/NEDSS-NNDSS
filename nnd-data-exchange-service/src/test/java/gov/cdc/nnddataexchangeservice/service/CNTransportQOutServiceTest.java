@@ -78,12 +78,12 @@ class CNTransportQOutServiceTest {
         CNTransportQOut cnTransportQOut = new CNTransportQOut();
         List<CNTransportQOut> cnTransportQOutList = Arrays.asList(cnTransportQOut);
 
-        when(cnTransportQOutRepository.findTransportByCreationTimeAndStatus(recordStatusTime, statusCd)).thenReturn(Optional.of(cnTransportQOutList));
+        when(cnTransportQOutRepository.findTransportByCreationTimeAndStatus(statusTime, statusCd)).thenReturn(Optional.of(cnTransportQOutList));
 
         List<CNTransportQOutDto> result = cnTransportQOutService.getTransportData(statusCd, statusTime, 0);
 
         assertEquals(1, result.size());
-        verify(cnTransportQOutRepository, times(1)).findTransportByCreationTimeAndStatus(recordStatusTime, statusCd);
+        verify(cnTransportQOutRepository, times(1)).findTransportByCreationTimeAndStatus(statusTime, statusCd);
     }
 
     @Test
