@@ -101,7 +101,6 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
                 netsstTransportService.saveDataExchange(dataExchangeModel.getNetssTransportQOutDtoList());
             }
         } catch (Exception e) {
-            logger.info("Error While Persisting NND Data: {}", e.getMessage());
             throw new DataPollException(e.getMessage());
         }
 
