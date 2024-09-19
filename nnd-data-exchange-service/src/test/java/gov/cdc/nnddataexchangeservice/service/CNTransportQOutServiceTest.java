@@ -71,10 +71,6 @@ class CNTransportQOutServiceTest {
         String statusCd = "status";
         String statusTime = "2023-07-30 10:00:00.000";
 
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        java.util.Date parsedDate = formatter.parse(statusTime);
-        Timestamp recordStatusTime = new Timestamp(parsedDate.getTime());
-
         CNTransportQOut cnTransportQOut = new CNTransportQOut();
         List<CNTransportQOut> cnTransportQOutList = Arrays.asList(cnTransportQOut);
 
