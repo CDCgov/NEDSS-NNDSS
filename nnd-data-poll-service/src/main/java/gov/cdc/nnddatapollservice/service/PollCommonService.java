@@ -115,8 +115,8 @@ public class PollCommonService implements IPollCommonService {
         return configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).toList();
     }
 
-    public String writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData, boolean initialLoad) {
-        return PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData, initialLoad);
+    public String writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
+        return PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData);
     }
 
     public String decodeAndDecompress(String base64EncodedData) {

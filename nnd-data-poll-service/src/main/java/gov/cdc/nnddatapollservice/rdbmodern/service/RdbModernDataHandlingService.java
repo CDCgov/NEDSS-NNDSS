@@ -108,7 +108,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
             }
 
             if(storeJsonInLocalFolder) {
-                iPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData, isInitialLoad);
+                iPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData);
                 iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
             }
         }

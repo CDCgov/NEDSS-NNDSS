@@ -106,7 +106,7 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.pollAndPersistRDBData(tableName, true);
 
         // Assert
-        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString(), anyBoolean());
+        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString());
         verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
     }
 
@@ -138,6 +138,6 @@ class RdbDataHandlingServiceTest {
         verify(pollCommonService).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
         verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
         verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
-        verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString(), anyBoolean());
+        verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
     }
 }

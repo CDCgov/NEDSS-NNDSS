@@ -35,7 +35,6 @@ public class SrteDataPersistentDAO {
             SimpleJdbcInsert simpleJdbcInsert =
                     new SimpleJdbcInsert(jdbcTemplate);
             if (tableName != null && !tableName.isEmpty()) {
-                deleteTable(tableName);//Delete first
                 simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {

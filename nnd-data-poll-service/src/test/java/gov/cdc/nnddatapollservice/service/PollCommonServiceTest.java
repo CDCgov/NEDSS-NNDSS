@@ -152,10 +152,10 @@ class PollCommonServiceTest {
     void writeJsonDataToFile() {
         ReflectionTestUtils.setField(pollCommonService, "datasyncLocalFilePath", System.getProperty("java.io.tmpdir"));
         try (MockedStatic<PollServiceUtil> mocked = Mockito.mockStatic(PollServiceUtil.class)) {
-            mocked.when(() -> PollServiceUtil.writeJsonToFile(any(), any(), anyString(), any(), anyString(), anyBoolean()))
+            mocked.when(() -> PollServiceUtil.writeJsonToFile(any(), any(), anyString(), any(), anyString()))
                     .thenAnswer((Answer<Void>) invocation -> null);
-            pollCommonService.writeJsonDataToFile("RDB", "TEST_TABLE", Timestamp.from(Instant.now()), "TEST DATA", false);
-            mocked.verify(() -> PollServiceUtil.writeJsonToFile(any(), any(), any(), any(), any(), anyBoolean()));
+            pollCommonService.writeJsonDataToFile("RDB", "TEST_TABLE", Timestamp.from(Instant.now()), "TEST DATA");
+            mocked.verify(() -> PollServiceUtil.writeJsonToFile(any(), any(), any(), any(), any()));
         }
     }
 }

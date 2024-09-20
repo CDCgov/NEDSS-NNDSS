@@ -104,7 +104,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
 
         // Assert
-        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString(), anyBoolean());
+        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString());
         verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
     }
 

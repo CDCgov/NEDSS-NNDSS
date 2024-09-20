@@ -105,7 +105,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
             }
 
             if(storeJsonInLocalFolder) {
-                outboundPollCommonService.writeJsonDataToFile(SRTE, tableName, timestamp, rawJsonData, isInitialLoad);
+                outboundPollCommonService.writeJsonDataToFile(SRTE, tableName, timestamp, rawJsonData);
                 outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
             }
         }

@@ -74,14 +74,7 @@ public class S3DataService implements IS3DataService {
             String formattedTimestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(persistingTimestamp);
 
             // Construct the file path: /filename/filename_timestamp.json
-            String s3Key = "";
-            if (initialLoad) {
-                s3Key = String.format("%s/%s/%s/%s_%s.json", domain, fileName,"initial_load_" + formattedTimestamp, fileName, formattedTimestamp);
-            }
-            else {
-                s3Key = String.format("%s/%s/%s_%s.json", domain, fileName, fileName, formattedTimestamp);
-            }
-
+            String s3Key = String.format("%s/%s/%s_%s.json", domain, fileName, fileName, formattedTimestamp);
             InputStream inputStream = new ByteArrayInputStream(records.getBytes(StandardCharsets.UTF_8));
 
             String uploadId = initiateMultipartUpload(s3Key);

@@ -40,7 +40,7 @@ class PollServiceUtilTest {
             filesMock.when(() -> Files.writeString(any(Path.class), eq(JSON_DATA), eq(StandardOpenOption.CREATE)))
                     .thenReturn(null);
 
-            String result = PollServiceUtil.writeJsonToFile(LOCAL_FILE_PATH, DB_SOURCE, TABLE_NAME, TIME_STAMP, JSON_DATA, INITIAL_LOAD);
+            String result = PollServiceUtil.writeJsonToFile(LOCAL_FILE_PATH, DB_SOURCE, TABLE_NAME, TIME_STAMP, JSON_DATA);
 
             filesMock.verify(() -> Files.createDirectories(any(Path.class)));
             filesMock.verify(() -> Files.writeString(any(Path.class), eq(JSON_DATA), eq(StandardOpenOption.CREATE)));
@@ -57,7 +57,7 @@ class PollServiceUtilTest {
             filesMock.when(() -> Files.createDirectories(any(Path.class)))
                     .thenThrow(new RuntimeException(expectedErrorMessage));
 
-            String result = PollServiceUtil.writeJsonToFile(LOCAL_FILE_PATH, DB_SOURCE, TABLE_NAME, TIME_STAMP, JSON_DATA, INITIAL_LOAD);
+            String result = PollServiceUtil.writeJsonToFile(LOCAL_FILE_PATH, DB_SOURCE, TABLE_NAME, TIME_STAMP, JSON_DATA);
 
             assertEquals(expectedErrorMessage, result);
             filesMock.verify(() -> Files.createDirectories(any(Path.class)));

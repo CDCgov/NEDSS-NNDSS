@@ -12,7 +12,7 @@ public interface IPollCommonService {
     boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList);
     String getCurrentTimestamp();
     List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB);
-    String writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData, boolean initialLoad);
+    String writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData);
     String getLastUpdatedTime(String tableName);
     void updateLastUpdatedTime(String tableName, Timestamp timestamp);
     String decodeAndDecompress(String base64EncodedData);
