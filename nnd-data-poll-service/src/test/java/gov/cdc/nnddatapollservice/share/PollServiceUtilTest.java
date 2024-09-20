@@ -25,7 +25,6 @@ class PollServiceUtilTest {
     private static final String TABLE_NAME = "testtable";
     private static final Timestamp TIME_STAMP = Timestamp.valueOf("2024-09-17 00:00:00");
     private static final String JSON_DATA = "{\"key\":\"value\"}";
-    private static final boolean INITIAL_LOAD = true;
     private Logger logger = LoggerFactory.getLogger(PollServiceUtil.class); //NOSONAR
 
     @BeforeEach
