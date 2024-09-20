@@ -108,7 +108,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             }
 
             if (storeJsonInLocalFolder) {
-                log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData, isInitialLoad);
+                log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
                 pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
             }
         }

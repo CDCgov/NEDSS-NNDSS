@@ -26,7 +26,7 @@ public class PollServiceUtil {
         throw new IllegalStateException("PollServiceUtil cannot be instantiated");
     }
 
-    public static String writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData, boolean initialLoad) {
+    public static String writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
         String log = LOG_SUCCESS;
         try {
             if (jsonData != null && !jsonData.equalsIgnoreCase("[]") && !jsonData.isEmpty()) {
@@ -34,12 +34,7 @@ public class PollServiceUtil {
                 String updatedTime = formatter.format(timeStamp);
                 Path dirPath
                         = Paths.get(localfilePath, dbSource, tableName);
-                Path filePath;
-                if (initialLoad) {
-                    filePath = Paths.get(dirPath.toString(), "InitialLoad_" + tableName.toLowerCase() + "_" + updatedTime + ".json");
-                } else {
-                    filePath = Paths.get(dirPath.toString(), tableName.toLowerCase() + "_" + updatedTime + ".json");
-                }
+                Path filePath = Paths.get(dirPath.toString(), tableName.toLowerCase() + "_" + updatedTime + ".json");
                 Files.createDirectories(dirPath);
                 Files.writeString(filePath, jsonData, StandardOpenOption.CREATE);
                 logger.info("Successfully wrote json file to {}", filePath);

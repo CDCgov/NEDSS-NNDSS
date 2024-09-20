@@ -92,4 +92,11 @@ class RdbModernDataPersistentDAOTest {
 
         verify(jdbcTemplate, times(1)).execute("delete " + tableName);
     }
+    @Test
+    void deleteTable_shouldLogErrorOnException() {
+        String tableName = "non_existing_table";
+        doThrow(new RuntimeException("Simulated exception")).when(jdbcTemplate).execute(anyString());
+        rdbModernDataPersistentDAO.deleteTable(tableName);
+        verify(jdbcTemplate).execute("delete " + tableName);
+    }
 }
