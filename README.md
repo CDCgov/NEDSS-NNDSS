@@ -6,10 +6,10 @@ This architecture ensure the STLT can make a secure connection to CDC database w
 
 ## Services Overview
 - Data Exchange API Service Requirement
-    - Java 17
+    - Java 21
     - Keycloak for security
 - Data Poller Service Requirement
-    - Java 17
+    - Java 21
 
 ## Environment variable
 - Data Exchange API Service ENV:

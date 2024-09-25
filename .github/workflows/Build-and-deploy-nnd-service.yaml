@@ -23,7 +23,7 @@ jobs:
       microservice_name: nnd-data-exchange-service
       dockerfile_relative_path: -f ./nnd-data-exchange-service/Dockerfile .
       environment_classifier: SNAPSHOT
-      java_version: "17"
+      java_version: "21"
     secrets:
       CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
       ECR_REPO_BASE_NAME: ${{secrets.ECR_REPO_BASE_NAME}}
@@ -51,7 +51,7 @@ jobs:
     - uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
         cache: 'gradle'
 
     - name: create-nnd-data-poll-jar
