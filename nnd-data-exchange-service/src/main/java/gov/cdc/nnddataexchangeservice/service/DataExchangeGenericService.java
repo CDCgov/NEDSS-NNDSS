@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -47,7 +48,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     @SuppressWarnings({"javasecurity:S3649", "java:S3776"})
     public String getGenericDataExchange(String tableName, String timeStamp, Integer limit,boolean initialLoad) throws DataExchangeException {
         // Retrieve configuration based on table name
-        var dataConfig = dataSyncConfigRepository.findById(tableName).orElse(new DataSyncConfig());
+        DataSyncConfig dataConfig = dataSyncConfigRepository.findById(tableName).orElse(new DataSyncConfig());
 
         if (timeStamp == null) {
             timeStamp = "";
@@ -123,6 +124,145 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
     }
 
+    private void initialLoadByBatchOLD(String inputQuery, DataSyncConfig dataConfig,  Integer limit, String effectiveTimestamp) {
+
+        List<Map<String, Object>> data = null;
+        String query = inputQuery.replaceAll(">=", "<"); // NOSONAR
+
+        int totalRecords = 0;
+        if (dataConfig.getQueryCount() != null && !dataConfig.getQueryCount().isEmpty()) {
+            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+                totalRecords = srteJdbcTemplate.queryForObject(dataConfig.getQueryCount(), new Object[]{effectiveTimestamp}, Integer.class);
+            } else {
+                totalRecords = jdbcTemplate.queryForObject(dataConfig.getQueryCount(), new Object[]{effectiveTimestamp}, Integer.class);
+            }
+        }
+
+        int batchSize = limit;
+        int totalPages = (int) Math.ceil((double) totalRecords / batchSize);
+
+
+
+        if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+            for (int i = 0; i < totalPages; i++) {
+                Integer startRow = i * batchSize + 1;
+                Integer endRow = (i + 1) * batchSize;
+                List<Map<String, Object>> batchData = new ArrayList<>();
+                if (i == 0 && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+                    String queryPagination = query;
+                    queryPagination = queryPagination.replace(":startRow", startRow.toString()).replace(":endRow", endRow.toString());
+                    var nullQuery = dataConfig.getQueryWithNullTimeStamp();
+                    nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
+                    String queryWithNull = nullQuery + " UNION " + queryPagination + ";";
+                    batchData = srteJdbcTemplate.queryForList( queryWithNull); // UPDATE THIS TO WORK WITH BATCHES
+
+                } else {
+                    String queryContinualPagination = query;
+                    queryContinualPagination = queryContinualPagination.replace(":startRow", startRow.toString()).replace(":endRow", endRow.toString());
+
+                    // data = fetchProvidersByBatch(timestamp, startRow, endRow);
+                    batchData = srteJdbcTemplate.queryForList(queryContinualPagination); // UPDATE THIS TO WORK WITH BATCHES
+
+                }
+
+                data.addAll(batchData);
+
+            }
+        }
+        else {
+            for (int i = 0; i < totalPages; i++) {
+                Integer startRow = i * batchSize + 1;
+                Integer endRow = (i + 1) * batchSize;
+                List<Map<String, Object>> batchData = new ArrayList<>();
+                if (i == 0 && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+                    String queryPagination = query;
+                    queryPagination = queryPagination.replace(":startRow", startRow.toString()).replace(":endRow", endRow.toString());
+                    var nullQuery = dataConfig.getQueryWithNullTimeStamp();
+                    nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
+                    String queryWithNull = nullQuery + " UNION " + queryPagination + ";";
+                    batchData = jdbcTemplate.queryForList(queryWithNull); // UPDATE THIS TO WORK WITH BATCHES
+                } else {
+                    String queryContinualPagination = query;
+                    queryContinualPagination = queryContinualPagination.replace(":startRow", startRow.toString()).replace(":endRow", endRow.toString());
+                    // data = fetchProvidersByBatch(timestamp, startRow, endRow);
+                    batchData = jdbcTemplate.queryForList(queryContinualPagination); // UPDATE THIS TO WORK WITH BATCHES
+
+                }
+
+                data.addAll(batchData);
+            }
+        }
+
+    }
+
+
+    private void initialLoadByBatch(String inputQuery, DataSyncConfig dataConfig, Integer limit, String effectiveTimestamp) {
+        List<Map<String, Object>> data = new ArrayList<>(); // Initialize the data list
+        String query = inputQuery.replaceAll(">=", "<"); // NOSONAR to prevent query mutation
+
+        int totalRecords = getTotalRecords(dataConfig, effectiveTimestamp);
+        int batchSize = limit;
+        int totalPages = (int) Math.ceil((double) totalRecords / batchSize);
+
+        for (int i = 0; i < totalPages; i++) {
+            int startRow = i * batchSize + 1;
+            int endRow = (i + 1) * batchSize;
+            List<Map<String, Object>> batchData = new ArrayList<>();
+
+            if (i == 0 && isFirstBatchWithNullTimestamp(dataConfig))
+            {
+                batchData = executeFirstBatchWithNullTimestamp(query, dataConfig, startRow, endRow);
+            }
+            else
+            {
+                batchData = executeBatch(query, dataConfig, startRow, endRow);
+            }
+
+            data.addAll(batchData); // Append batch data to the main data list
+        }
+    }
+
+    private int getTotalRecords(DataSyncConfig dataConfig, String effectiveTimestamp) {
+        if (dataConfig.getQueryCount() != null && !dataConfig.getQueryCount().isEmpty()) {
+            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+                return srteJdbcTemplate.queryForObject(dataConfig.getQueryCount(), new Object[]{effectiveTimestamp}, Integer.class);
+            } else {
+                return jdbcTemplate.queryForObject(dataConfig.getQueryCount(), new Object[]{effectiveTimestamp}, Integer.class);
+            }
+        }
+        return 0; // Default if no queryCount provided
+    }
+
+    private boolean isFirstBatchWithNullTimestamp(DataSyncConfig dataConfig) {
+        return dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty();
+    }
+
+    private List<Map<String, Object>> executeFirstBatchWithNullTimestamp(String query, DataSyncConfig dataConfig, int startRow, int endRow) {
+        String queryPagination = paginateQuery(query, startRow, endRow);
+        String nullQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", ""); // NOSONAR to avoid mutation
+        String queryWithNull = nullQuery + " UNION " + queryPagination;
+
+        if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+            return srteJdbcTemplate.queryForList(queryWithNull); // Execute query for SRTE DB
+        } else {
+            return jdbcTemplate.queryForList(queryWithNull); // Execute query for default DB
+        }
+    }
+
+    private List<Map<String, Object>> executeBatch(String query, DataSyncConfig dataConfig, int startRow, int endRow) {
+        String paginatedQuery = paginateQuery(query, startRow, endRow);
+
+        if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+            return srteJdbcTemplate.queryForList(paginatedQuery); // Execute query for SRTE DB
+        } else {
+            return jdbcTemplate.queryForList(paginatedQuery); // Execute query for default DB
+        }
+    }
+
+    private String paginateQuery(String query, int startRow, int endRow) {
+        return query.replace(":startRow", String.valueOf(startRow))
+                .replace(":endRow", String.valueOf(endRow));
+    }
 
 
     // DECODE TEST METHOD

@@ -49,4 +49,10 @@ public class DataSyncConfig {
     @Column(name = "last_executed_timestamp")
     private Timestamp lastExecutedTimestamp;
 
+    @Column(name = "query_count")
+    private String queryCount;
+
+    @Column(name = "query_with_pagination")
+    private String queryWithPagination;
+
 }
