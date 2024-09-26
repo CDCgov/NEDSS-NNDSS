@@ -13,14 +13,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
 public class DataPullService implements IDataPullService {
-    private static Logger logger = LoggerFactory.getLogger(DataPullService.class);
 
-    @Value("${scheduler.cron}")
-    private String cron;
+    private static final Logger logger = LoggerFactory.getLogger(DataPullService.class);
+
+    @Value("${scheduler.nnd.cron}")
+    private String nndCron;
+    @Value("${scheduler.rdb.cron}")
+    private String rdbCron;
+    @Value("${scheduler.rdb_modern.cron}")
+    private String rdbModernCron;
+    @Value("${scheduler.srte.cron}")
+    private String srteCron;
     @Value("${scheduler.zone}")
     private String zone;
 
@@ -34,12 +44,14 @@ public class DataPullService implements IDataPullService {
     private boolean srtePollEnabled;
 
     @Value("${poll.single_time_poll_enabled}")
-    private boolean singlePoll = false;
+    private boolean singlePoll;
 
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
     private final IRdbModernDataHandlingService rdbModernDataHandlingService;
     private final ISrteDataHandlingService srteDataHandlingService;
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     public DataPullService(INNDDataHandlingService dataHandlingService,
                            IRdbDataHandlingService rdbDataHandlingService,
@@ -51,51 +63,90 @@ public class DataPullService implements IDataPullService {
         this.srteDataHandlingService = srteDataHandlingService;
     }
 
-    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
-    public void scheduleNNDDataFetch() throws DataPollException {
+    @Scheduled(cron = "${scheduler.nnd.cron}", zone = "${scheduler.zone}")
+    public void scheduleNNDDataFetch() {
         if (nndPollEnabled) {
-            logger.info("CRON STARTED FOR NND");
-            logger.info(cron);
-            logger.info(zone);
-            dataHandlingService.handlingExchangedData();
-            closePoller();
+            runTaskInThread("NND", () -> {
+                try {
+                    dataHandlingService.handlingExchangedData();
+                } catch (DataPollException e) {
+                    logger.error("Error during NND data handling: {}", e.getMessage());
+                    throw new RuntimeException(e); // Wrap checked exception in unchecked to propagate
+                }
+            });
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
-    public void scheduleRDBDataFetch() throws DataPollException {
+    @Scheduled(cron = "${scheduler.rdb.cron}", zone = "${scheduler.zone}")
+    public void scheduleRDBDataFetch() {
         if (rdbPollEnabled) {
-            logger.info("CRON STARTED FOR POLLING RDB");
-            logger.info("{}, {} FOR RDB", cron, zone);
-            rdbDataHandlingService.handlingExchangedData();
-            closePoller();
+            runTaskInThread("RDB", () -> {
+                try {
+                    rdbDataHandlingService.handlingExchangedData();
+                } catch (DataPollException e) {
+                    logger.error("Error during RDB data handling: {}", e.getMessage());
+                    throw new RuntimeException(e); // Wrap checked exception in unchecked to propagate
+                }
+            });
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
-    public void scheduleRdbModernDataFetch() throws DataPollException {
+    @Scheduled(cron = "${scheduler.rdb_modern.cron}", zone = "${scheduler.zone}")
+    public void scheduleRdbModernDataFetch() {
         if (rdbModernPollEnabled) {
-            logger.info("CRON STARTED FOR POLLING RDB_MODERN");
-            logger.info("{}, {} FOR RDB_MODERN", cron, zone);
-            rdbModernDataHandlingService.handlingExchangedData();
-            closePoller();
+            runTaskInThread("RDB_MODERN", () -> {
+                try {
+                    rdbModernDataHandlingService.handlingExchangedData();
+                } catch (DataPollException e) {
+                    logger.error("Error during RDB_MODERN data handling: {}", e.getMessage());
+                    throw new RuntimeException(e); // Wrap checked exception in unchecked to propagate
+                }
+            });
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
-    public void scheduleSRTEDataFetch() throws DataPollException {
+    @Scheduled(cron = "${scheduler.srte.cron}", zone = "${scheduler.zone}")
+    public void scheduleSRTEDataFetch() {
         if (srtePollEnabled) {
-            logger.info("CRON STARTED FOR POLLING SRTE");
-            logger.info("{}, {} FOR SRTE", cron, zone);
-            srteDataHandlingService.handlingExchangedData();
-            closePoller();
+            runTaskInThread("SRTE", () -> {
+                try {
+                    srteDataHandlingService.handlingExchangedData();
+                } catch (DataPollException e) {
+                    logger.error("Error during SRTE data handling: {}", e.getMessage());
+                    throw new RuntimeException(e); // Wrap checked exception in unchecked to propagate
+                }
+            });
         }
-
     }
 
-    private void closePoller() {
-        if (singlePoll) {
-            System.exit(0);
+    private void runTaskInThread(String taskName, Runnable task) {
+        executorService.submit(() -> {
+            try {
+                logger.info("Starting {} data poll", taskName);
+                task.run();
+                logger.info("{} data poll completed", taskName);
+                if (singlePoll) {
+                    shutdownPoller();
+                }
+            } catch (RuntimeException e) {
+                logger.error("Error occurred during {} data poll: {}", taskName, e.getMessage());
+            }
+        });
+    }
+
+    private void shutdownPoller() {
+        logger.info("Shutting down after single poll");
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+                if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
+                    logger.error("Executor did not terminate");
+                }
+            }
+        } catch (InterruptedException ie) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 }
