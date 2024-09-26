@@ -64,6 +64,8 @@ scheduler:
   # 0 (start at zero sec), * (run every min),  0-2 (run during 12 am to 3 am), * (run every day), * (run every month), * (run every year)
 ---
 spring:
+  main:
+    web-application-type: none
   config:
     activate:
       on-profile: default
