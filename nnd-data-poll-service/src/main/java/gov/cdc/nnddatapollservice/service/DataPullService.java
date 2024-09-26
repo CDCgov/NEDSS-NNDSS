@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +53,7 @@ public class DataPullService implements IDataPullService {
     private final ISrteDataHandlingService srteDataHandlingService;
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private CountDownLatch latch; // Added to track remaining active jobs
 
     public DataPullService(INNDDataHandlingService dataHandlingService,
                            IRdbDataHandlingService rdbDataHandlingService,
@@ -71,7 +73,7 @@ public class DataPullService implements IDataPullService {
                     dataHandlingService.handlingExchangedData();
                 } catch (DataPollException e) {
                     logger.error("Error during NND data handling: {}", e.getMessage());
-                    throw new RuntimeException(e); // Wrap checked exception in unchecked to propagate
+                    throw new RuntimeException(e);
                 }
             });
         }
@@ -85,7 +87,7 @@ public class DataPullService implements IDataPullService {
                     rdbDataHandlingService.handlingExchangedData();
                 } catch (DataPollException e) {
                     logger.error("Error during RDB data handling: {}", e.getMessage());
-                    throw new RuntimeException(e); // Wrap checked exception in unchecked to propagate
+                    throw new RuntimeException(e);
                 }
             });
         }
@@ -99,7 +101,7 @@ public class DataPullService implements IDataPullService {
                     rdbModernDataHandlingService.handlingExchangedData();
                 } catch (DataPollException e) {
                     logger.error("Error during RDB_MODERN data handling: {}", e.getMessage());
-                    throw new RuntimeException(e); // Wrap checked exception in unchecked to propagate
+                    throw new RuntimeException(e);
                 }
             });
         }
@@ -113,25 +115,42 @@ public class DataPullService implements IDataPullService {
                     srteDataHandlingService.handlingExchangedData();
                 } catch (DataPollException e) {
                     logger.error("Error during SRTE data handling: {}", e.getMessage());
-                    throw new RuntimeException(e); // Wrap checked exception in unchecked to propagate
+                    throw new RuntimeException(e);
                 }
             });
         }
     }
 
-    private void runTaskInThread(String taskName, Runnable task) {
+    private synchronized void runTaskInThread(String taskName, Runnable task) {
+        // Initialize the latch if it's the first task
+        if (latch == null) {
+            int activePolls = getActivePollCount();
+            latch = new CountDownLatch(activePolls);
+        }
+
         executorService.submit(() -> {
             try {
                 logger.info("Starting {} data poll", taskName);
                 task.run();
                 logger.info("{} data poll completed", taskName);
-                if (singlePoll) {
-                    shutdownPoller();
-                }
             } catch (RuntimeException e) {
                 logger.error("Error occurred during {} data poll: {}", taskName, e.getMessage());
+            } finally {
+                latch.countDown(); // Decrease the latch count when a task is finished
+                if (singlePoll && latch.getCount() == 0) {
+                    shutdownPoller();
+                }
             }
         });
+    }
+
+    private int getActivePollCount() {
+        int count = 0;
+        if (nndPollEnabled) count++;
+        if (rdbPollEnabled) count++;
+        if (rdbModernPollEnabled) count++;
+        if (srtePollEnabled) count++;
+        return count;
     }
 
     private void shutdownPoller() {
