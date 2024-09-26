@@ -40,6 +40,8 @@ public class PollCommonService implements IPollCommonService {
     @Value("${data_exchange.endpoint_generic}")
     protected String exchangeEndpoint;
 
+    protected String recordCountEndpoint = "";
+
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
 
@@ -52,6 +54,30 @@ public class PollCommonService implements IPollCommonService {
                              RdbDataPersistentDAO rdbDataPersistentDAO) {
         this.tokenService = tokenService;
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
+    }
+
+    public Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
+        try {
+            //Get token
+            var token = tokenService.getToken();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+            headers.add("clientid", clientId);
+            headers.add("clientsecret", clientSecret);
+            headers.add("initialLoad", String.valueOf(isInitialLoad));
+            HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+
+            URI uri = UriComponentsBuilder.fromHttpUrl(recordCountEndpoint)
+                    .path("/" + tableName)
+                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
+                    .build()
+                    .toUri();
+            logger.info("Exchange URI for rdb polling {} ", uri);
+            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+            return Integer.valueOf(response.getBody());
+        } catch (Exception e) {
+            throw new DataPollException(e.getMessage());
+        }
     }
 
     public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {

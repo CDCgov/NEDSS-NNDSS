@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 
@@ -28,6 +30,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     protected boolean storeJsonInS3 = false;
     @Value("${datasync.store_in_sql}")
     protected boolean storeInSql = false;
+    @Value("${nnd.pullLimit}")
+    protected Integer pullLimit = 0;
 
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
     private final IPollCommonService pollCommonService;
@@ -70,6 +74,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         Timestamp timestamp = null;
         String log = "";
         boolean exceptionAtApiLevel = false;
+        Integer totalRecordCounts = 0;
         try {
             logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
             String timeStampForPoll = "";
@@ -82,9 +87,31 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
             logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
             //call data exchange service api
-            String encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
-            rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
-            timestamp = Timestamp.from(Instant.now());
+            totalRecordCounts = pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
+            int batchSize = pullLimit;
+            int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
+
+            for (int i = 0; i < totalPages; i++) {
+                int startRow = i * batchSize + 1;
+                int endRow = (i + 1) * batchSize;
+
+                String encodedData = "";
+                if (i == 0)
+                {
+                    // First batch pull record will null time stamp
+                    encodedData = executeFirstBatchWithNullTimestamp(query, dataConfig, startRow, endRow);
+                }
+                else
+                {
+                    encodedData = executeBatch(query, dataConfig, startRow, endRow);
+                }
+//                String encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
+
+                rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
+                timestamp = Timestamp.from(Instant.now());
+
+            }
+
         } catch (Exception e) {
             log = e.getMessage();
             exceptionAtApiLevel = true;

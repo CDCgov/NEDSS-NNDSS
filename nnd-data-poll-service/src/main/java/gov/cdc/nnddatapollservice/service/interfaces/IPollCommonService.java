@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface IPollCommonService {
+    Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
     String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
     List<PollDataSyncConfig> getTableListFromConfig();
     boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList);
