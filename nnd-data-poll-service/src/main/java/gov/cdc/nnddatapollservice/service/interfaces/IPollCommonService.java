@@ -19,4 +19,12 @@ public interface IPollCommonService {
     void updateLastUpdatedTime(String tableName, Timestamp timestamp);
     String decodeAndDecompress(String base64EncodedData);
     void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log);
+
+    String getLastUpdatedTimeS3(String tableName);
+
+    String getLastUpdatedTimeLocalDir(String tableName);
+
+    void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log);
+
+    void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log);
 }

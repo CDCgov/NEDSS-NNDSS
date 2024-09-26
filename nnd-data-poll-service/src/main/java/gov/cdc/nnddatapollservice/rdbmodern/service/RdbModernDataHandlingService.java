@@ -51,7 +51,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
-        if (isInitialLoad) {
+        if (isInitialLoad && storeInSql) {
             logger.info("For INITIAL LOAD - CLEANING UP THE RDB_MODERN TABLES ");
             cleanupTables(rdbModernTablesList);
         }
@@ -75,7 +75,17 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         if (isInitialLoad) {
             timeStampForPoll = iPollCommonService.getCurrentTimestamp();
         } else {
-            timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
+            if(storeJsonInS3) {
+                timeStampForPoll = iPollCommonService.getLastUpdatedTimeS3(tableName);
+            }
+            else if (storeInSql)
+            {
+                timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
+            }
+            else
+            {
+                timeStampForPoll = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
+            }
         }
         logger.info("isInitialLoad {}", isInitialLoad);
 
@@ -107,21 +117,31 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
             }
 
             if (exceptionAtApiLevel) {
-                iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                if (storeInSql) {
+                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                }
+                else if (storeJsonInS3)
+                {
+                    iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
+                }
+                else
+                {
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
+                }
             } else {
                 if (storeJsonInS3) {
                     log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
-                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
+                    iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
                 }
-
-                if (storeInSql) {
+                else if (storeInSql)
+                {
                     log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
                     iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
                 }
-
-                if (storeJsonInLocalFolder) {
+                else
+                {
                     log = iPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
-                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
                 }
             }
         }

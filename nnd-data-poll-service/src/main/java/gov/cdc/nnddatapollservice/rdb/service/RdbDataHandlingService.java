@@ -56,7 +56,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(rdbTablesList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
-        if (isInitialLoad) {
+        if (isInitialLoad && storeInSql) {
             logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
             cleanupRDBTables(rdbTablesList);
         }
@@ -80,7 +80,13 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         if (isInitialLoad) {
             timeStampForPoll = pollCommonService.getCurrentTimestamp();
         } else {
-            timeStampForPoll = pollCommonService.getLastUpdatedTime(tableName);
+            if (storeInSql) {
+                timeStampForPoll = pollCommonService.getLastUpdatedTime(tableName);
+            } else if (storeJsonInS3) {
+                timeStampForPoll = pollCommonService.getLastUpdatedTimeS3(tableName);
+            } else {
+                timeStampForPoll = pollCommonService.getLastUpdatedTimeLocalDir(tableName);
+            }
         }
         logger.info("isInitialLoad {}", isInitialLoad);
 
@@ -115,23 +121,31 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
             if (exceptionAtApiLevel)
             {
-                pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                if (storeInSql) {
+                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                }
+                else if (storeJsonInS3)
+                {
+                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
+                }
+                else
+                {
+                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
+                }
             }
             else
             {
                 if (storeJsonInS3) {
                     log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
+                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
                 }
-
-                if (storeInSql) {
+                else if (storeInSql) {
                     log =  rdbDataPersistentDAO.saveRDBData(tableName, rawJsonData);
                     pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
                 }
-
-                if (storeJsonInLocalFolder) {
+                else  {
                     log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
                 }
             }
         }

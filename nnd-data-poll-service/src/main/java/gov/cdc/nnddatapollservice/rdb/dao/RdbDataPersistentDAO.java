@@ -254,15 +254,55 @@ public class RdbDataPersistentDAO {
         return updatedTime;
     }
 
+    public String getLastUpdatedTimeS3(String tableName) {
+        String sql = "select last_update_time_s3 from POLL_DATA_SYNC_CONFIG where table_name=?";
+        String updatedTime = "";
+        Timestamp lastTime = this.jdbcTemplate.queryForObject(
+                sql,
+                Timestamp.class, tableName);
+        if (lastTime != null) {
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            updatedTime = formatter.format(lastTime);
+        }
+        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
+        return updatedTime;
+    }
+
+    public String getLastUpdatedTimeLocalDir(String tableName) {
+        String sql = "select last_update_time_local_dir from POLL_DATA_SYNC_CONFIG where table_name=?";
+        String updatedTime = "";
+        Timestamp lastTime = this.jdbcTemplate.queryForObject(
+                sql,
+                Timestamp.class, tableName);
+        if (lastTime != null) {
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            updatedTime = formatter.format(lastTime);
+        }
+        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
+        return updatedTime;
+    }
+
     public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
         String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, tableName);
     }
 
+
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
         String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, log, tableName);
     }
+
+    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log) {
+        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    }
+
+    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log) {
+        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    }
+
 
 
     public List<PollDataSyncConfig> getTableListFromConfig() {

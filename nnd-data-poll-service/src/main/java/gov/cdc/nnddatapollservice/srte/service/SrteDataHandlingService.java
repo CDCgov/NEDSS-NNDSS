@@ -52,7 +52,9 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(srteTablesList);
         logger.info("-----SRTE INITIAL LOAD: {}", isInitialLoad);
         //Delete the existing records
-        cleanupTables(srteTablesList);
+        if (isInitialLoad && storeInSql) {
+            cleanupTables(srteTablesList);
+        }
 
         for (PollDataSyncConfig pollDataSyncConfig : srteTablesList) {
             logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
@@ -73,7 +75,15 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         if (isInitialLoad) {
             timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
         } else {
-            timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
+            if (storeInSql) {
+                timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
+            }
+            else if (storeJsonInS3) {
+                timeStampForPoll = outboundPollCommonService.getLastUpdatedTimeS3(tableName);
+            }
+            else {
+                timeStampForPoll = outboundPollCommonService.getLastUpdatedTimeLocalDir(tableName);
+            }
         }
         logger.info("isInitialLoad {}", isInitialLoad);
 
@@ -107,23 +117,29 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
 
             if (exceptionAtApiLevel)
             {
-                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                if (storeInSql) {
+                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                }
+                else if (storeJsonInS3) {
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
+                }
+                else {
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
+                }
             }
             else
             {
                 if (storeJsonInS3) {
                     log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
-                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
                 }
-
-                if (storeInSql) {
+                else if (storeInSql) {
                     log =  srteDataPersistentDAO.saveSRTEData(tableName, rawJsonData);
                     outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
                 }
-
-                if (storeJsonInLocalFolder) {
+                else {
                     log = outboundPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
-                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
                 }
             }
         }
