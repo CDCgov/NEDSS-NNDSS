@@ -21,10 +21,8 @@ CREATE TABLE data_sync_config
     query NVARCHAR(MAX) NOT NULL,
     query_count                NVARCHAR( MAX) NOT NULL,
     query_with_pagination      NVARCHAR( MAX) NOT NULL,
-    query_with_limit NVARCHAR(MAX) NULL,
     query_with_null_timestamp NVARCHAR(MAX) NULL,
     created_at      DATETIME2 DEFAULT GETDATE(),
-    updated_at      DATETIME2 DEFAULT GETDATE(),
     last_executed_timestamp DATETIME2 NULL DEFAULT NULL,
     last_executed_run_time NVARCHAR(255) NULL DEFAULT NULL,
     last_executed_result_count INTEGER NULL DEFAULT NULL

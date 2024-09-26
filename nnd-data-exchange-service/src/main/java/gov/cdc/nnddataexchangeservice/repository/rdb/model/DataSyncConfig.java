@@ -28,17 +28,12 @@ public class DataSyncConfig {
     @Column(name = "query")
     private String query;
 
-    @Column(name = "query_with_limit")
-    private String queryWithLimit;
 
     @Column(name = "query_with_null_timestamp")
     private String queryWithNullTimeStamp;
 
     @Column(name = "created_at")
     private Timestamp createdAt;
-
-    @Column(name = "updated_at")
-    private Timestamp updatedAt;
 
     @Column(name = "last_executed_run_time")
     private String lastExecutedRunTime;
