@@ -28,7 +28,8 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     protected boolean storeJsonInS3 = false;
     @Value("${datasync.store_in_sql}")
     protected boolean storeInSql = false;
-
+    @Value("${nnd.pullLimit}")
+    protected Integer pullLimit = 0;
     private final RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
     private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
@@ -63,58 +64,67 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         logger.info("---END RDB_MODERN POLLING---");
     }
 
-    protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) {
+    protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) throws DataPollException {
         logger.info("--START--pollAndPersistRDBData for table {}", tableName);
         String rawJsonData = null;
         Timestamp timestamp = null;
         String log = "";
         boolean exceptionAtApiLevel = false;
-        try {
-            String timeStampForPoll = "";
-            if (isInitialLoad) {
-                timeStampForPoll = iPollCommonService.getCurrentTimestamp();
+        Integer totalRecordCounts = 0;
+        String timeStampForPoll = "";
+        if (isInitialLoad) {
+            timeStampForPoll = iPollCommonService.getCurrentTimestamp();
+        } else {
+            timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
+        }
+        logger.info("isInitialLoad {}", isInitialLoad);
+
+        logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
+        //call data exchange service api
+        totalRecordCounts = iPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
+
+        int batchSize = pullLimit;
+        int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
+
+        for (int i = 0; i < totalPages; i++) {
+            try {
+                int startRow = i * batchSize + 1;
+                int endRow = (i + 1) * batchSize;
+
+                String encodedData = "";
+                if (i == 0) {
+                    // First batch pull record will null time stamp
+                    encodedData = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, String.valueOf(startRow), String.valueOf(endRow));
+                } else {
+                    encodedData = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
+                }
+
+                rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
+                timestamp = Timestamp.from(Instant.now());
+            } catch (Exception e) {
+                log = e.getMessage();
+                exceptionAtApiLevel = true;
+            }
+
+            if (exceptionAtApiLevel) {
+                iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
             } else {
-                timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
-            }
-            logger.info("isInitialLoad {}", isInitialLoad);
+                if (storeJsonInS3) {
+                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
+                }
 
-            logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
-            //call data exchange service api
-            String encodedData = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
+                if (storeInSql) {
+                    log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
+                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+                }
 
-            rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
-            timestamp = Timestamp.from(Instant.now());
-
-
-        } catch (Exception e) {
-            log = e.getMessage();
-            exceptionAtApiLevel = true;
-        }
-
-        if (exceptionAtApiLevel)
-        {
-            iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
-        }
-        else
-        {
-            if(storeJsonInS3) {
-                log = is3DataService.persistToS3MultiPart(RDB_MODERN, rawJsonData, tableName, timestamp, isInitialLoad);
-                iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
-            }
-
-            if (storeInSql) {
-                log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
-                iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
-            }
-
-            if(storeJsonInLocalFolder) {
-                iPollCommonService.writeJsonDataToFile(RDB_MODERN, tableName, timestamp, rawJsonData);
-                iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+                if (storeJsonInLocalFolder) {
+                    log = iPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+                }
             }
         }
-
-
-
     }
 
 

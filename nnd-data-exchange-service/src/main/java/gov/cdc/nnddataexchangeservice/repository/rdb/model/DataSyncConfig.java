@@ -50,4 +50,10 @@ public class DataSyncConfig {
     @Column(name = "query_with_pagination")
     private String queryWithPagination;
 
+    @Column(name = "log_start_row")
+    private String startRow;
+
+    @Column(name = "log_end_row")
+    private String endRow;
+
 }

@@ -10,7 +10,8 @@ data_exchange:
   url: ${NND_DE_URL}
   endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN:/api/auth/token}
   endpoint_de: ${NND_DE_URL}${NND_DE_DE:/api/nnd/data-exchange}
-  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/api/data-exchange-generic}
+  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/api/datasync}
+  endpoint_generic_total_record: ${NND_DE_URL}${NND_DE_GENERIC_TOTAL_RECORD:/api/datasync/count}
 nnd:
   fullLoad: ${NND_FULL_LOAD:false}
   pullLimit: ${NND_PULL_LIMIT:0}

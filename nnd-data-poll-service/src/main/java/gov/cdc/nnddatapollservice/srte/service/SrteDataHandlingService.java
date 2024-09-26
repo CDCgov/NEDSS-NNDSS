@@ -28,7 +28,8 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
     protected boolean storeJsonInS3 = false;
     @Value("${datasync.store_in_sql}")
     protected boolean storeInSql = false;
-
+    @Value("${nnd.pullLimit}")
+    protected Integer pullLimit = 0;
     private final SrteDataPersistentDAO srteDataPersistentDAO;
     private final IPollCommonService outboundPollCommonService;
     private final IS3DataService is3DataService;
@@ -61,55 +62,71 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         logger.info("---END SRTE POLLING---");
     }
 
-    protected void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) {
+    protected void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) throws DataPollException {
         logger.info("--START--pollAndPersistSRTEData for table {}", tableName);
         String rawJsonData = null;
         Timestamp timestamp = null;
         String log = "";
         boolean exceptionAtApiLevel = false;
-        try {
-            String timeStampForPoll = "";
-            if (isInitialLoad) {
-                timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
-            } else {
-                timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
-            }
-            logger.info("isInitialLoad {}", isInitialLoad);
-
-            logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
-            //call data exchange service api
-            String encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll);
-
-            rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
-
-            timestamp = Timestamp.from(Instant.now());
-        } catch (Exception e) {
-            log = e.getMessage();
-            exceptionAtApiLevel = true;
+        String timeStampForPoll = "";
+        Integer totalRecordCounts = 0;
+        if (isInitialLoad) {
+            timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
+        } else {
+            timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
         }
+        logger.info("isInitialLoad {}", isInitialLoad);
 
-        if (exceptionAtApiLevel)
-        {
-            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+        logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
+        //call data exchange service api
+        totalRecordCounts = outboundPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
+        int batchSize = pullLimit;
+        int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
+
+        for (int i = 0; i < totalPages; i++) {
+            try {
+                int startRow = i * batchSize + 1;
+                int endRow = (i + 1) * batchSize;
+
+                String encodedData = "";
+                if (i == 0)
+                {
+                    // First batch pull record will null time stamp
+                    encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, String.valueOf(startRow), String.valueOf(endRow));
+                }
+                else
+                {
+                    encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
+                }
+                rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
+                timestamp = Timestamp.from(Instant.now());
+            } catch (Exception e) {
+                log = e.getMessage();
+                exceptionAtApiLevel = true;
+            }
+
+            if (exceptionAtApiLevel)
+            {
+                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+            }
+            else
+            {
+                if (storeJsonInS3) {
+                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
+                }
+
+                if (storeInSql) {
+                    log =  srteDataPersistentDAO.saveSRTEData(tableName, rawJsonData);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+                }
+
+                if (storeJsonInLocalFolder) {
+                    log = outboundPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
+                }
+            }
         }
-        else
-        {
-            if(storeJsonInS3) {
-                log = is3DataService.persistToS3MultiPart(SRTE, rawJsonData, tableName, timestamp, isInitialLoad);
-                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, S3_LOG + log);
-            }
-
-            if (storeInSql) {
-                log = srteDataPersistentDAO.saveSRTEData(tableName, rawJsonData);
-                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
-            }
-
-            if(storeJsonInLocalFolder) {
-                outboundPollCommonService.writeJsonDataToFile(SRTE, tableName, timestamp, rawJsonData);
-                outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, LOCAL_DIR_LOG + log);
-            }
-        }
-
     }
 
 

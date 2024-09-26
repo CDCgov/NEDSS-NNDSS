@@ -64,6 +64,7 @@ public class DataExchangeController {
         return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportStatusTime,netssTime, statusCd, intLimit, compressCheck));
     }
 
+
     @Operation(
             summary = "Getting generic data from NND",
             description = "Getting generic data from NND",
@@ -79,16 +80,40 @@ public class DataExchangeController {
                             required = true,
                             schema = @Schema(type = "string"))}
     )
-    @GetMapping(path = "/api/data-exchange-generic/{tableName}")
-    public ResponseEntity<String> exchangingData(@PathVariable String tableName, @RequestParam(required = false) String timestamp,
-                                                 @RequestHeader(name = "limit", defaultValue = "0") String limit,
-                                                 @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
-        int intLimit = Integer.parseInt(limit);
+    @GetMapping(path = "/api/datasync/{tableName}")
+    public ResponseEntity<String> dataSync(@PathVariable String tableName, @RequestParam(required = false) String timestamp,
+                                                 @RequestHeader(name = "startRow", defaultValue = "0", required = false) String startRow,
+                                                 @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
+                                                 @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
+                                                 @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull) throws DataExchangeException {
 
-        boolean initialLoad = initialLoadApplied.equalsIgnoreCase("true");
 
-        var base64CompressedData = dataExchangeGenericService.getGenericDataExchange(tableName, timestamp, intLimit, initialLoad);
-            return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
+        var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, timestamp, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
+                Boolean.parseBoolean(allowNull));
+        return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Getting generic data from NND",
+            description = "Getting generic data from NND",
+            parameters = {
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientid",
+                            description = "The Client Id",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientsecret",
+                            description = "The Client Secret",
+                            required = true,
+                            schema = @Schema(type = "string"))}
+    )
+    @GetMapping(path = "/api/datasync/count/{tableName}")
+    public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
+                                                       @RequestParam(required = false) String timestamp,
+                                           @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
+        var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), timestamp);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     @PostMapping(path = "/api/data-exchange-generic")

@@ -3,6 +3,9 @@ package gov.cdc.nnddataexchangeservice.service.interfaces;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 
 public interface IDataExchangeGenericService {
-    String getGenericDataExchange(String tableName, String timeStamp, Integer limit, boolean initialLoad) throws DataExchangeException;
+    Integer getTotalRecord(String tableName, boolean initialLoad, String timestamp) throws DataExchangeException;
+    String getDataForDataSync(String tableName, String timeStamp, String startRow, String endRow,
+                            boolean initialLoad, boolean allowNull) throws DataExchangeException;
     String decodeAndDecompress(String base64EncodedData) throws DataExchangeException;
+
 }

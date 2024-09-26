@@ -40,7 +40,9 @@ public class PollCommonService implements IPollCommonService {
     @Value("${data_exchange.endpoint_generic}")
     protected String exchangeEndpoint;
 
-    protected String recordCountEndpoint = "";
+    @Value("${data_exchange.endpoint_generic_total_record")
+    protected String exchangeTotalRecordEndpoint;
+
 
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
@@ -67,7 +69,7 @@ public class PollCommonService implements IPollCommonService {
             headers.add("initialLoad", String.valueOf(isInitialLoad));
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
-            URI uri = UriComponentsBuilder.fromHttpUrl(recordCountEndpoint)
+            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
                     .path("/" + tableName)
                     .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
                     .build()
@@ -80,7 +82,8 @@ public class PollCommonService implements IPollCommonService {
         }
     }
 
-    public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
+    public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
+                                           String startRow, String endRow) throws DataPollException {
         try {
             //Get token
             var token = tokenService.getToken();
@@ -89,6 +92,9 @@ public class PollCommonService implements IPollCommonService {
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
             headers.add("initialLoad", String.valueOf(isInitialLoad));
+            headers.add("allowNull", String.valueOf(allowNull));
+            headers.add("startRow", startRow);
+            headers.add("endRow",  endRow);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
             URI uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)

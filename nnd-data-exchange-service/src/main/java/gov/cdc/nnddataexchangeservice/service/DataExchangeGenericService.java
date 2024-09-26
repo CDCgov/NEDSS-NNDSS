@@ -45,17 +45,48 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 .create();
     }
 
-    @SuppressWarnings({"javasecurity:S3649", "java:S3776"})
-    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit,boolean initialLoad) throws DataExchangeException {
+    public Integer getTotalRecord(String tableName, boolean initialLoad, String timestamp) throws DataExchangeException {
+        DataSyncConfig dataConfig = dataSyncConfigRepository.findById(tableName)
+                .orElseThrow(() -> new DataExchangeException("No Table Found"));
+
+        if (dataConfig.getTableName() != null && !dataConfig.getTableName().isEmpty()) {
+            String query = dataConfig.getQueryCount();
+
+            // Set the appropriate comparison operator
+            if (initialLoad) {
+                query = query.replaceAll(OPERATION, LESS);
+            } else {
+                query = query.replaceAll(OPERATION, GREATER_EQUAL);
+            }
+
+            // Replace the timestamp placeholder
+            query = query.replaceAll(TIME_STAMP_PARAM, timestamp);
+
+            // Execute the query based on the source database
+            try {
+                if (dataConfig.getSourceDb().equalsIgnoreCase(DB_RDB)) {
+                    return jdbcTemplate.queryForObject(query, Integer.class);
+                } else if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+                    return srteJdbcTemplate.queryForObject(query, Integer.class);
+                } else if (dataConfig.getSourceDb().equalsIgnoreCase(DB_RDB_MODERN)) {
+                    throw new DataExchangeException("TO BE IMPLEMENTED");
+                } else {
+                    throw new DataExchangeException("Database Not Supported: " + dataConfig.getSourceDb());
+                }
+            } catch (Exception e) {
+                throw new DataExchangeException("Error executing query: " + e.getMessage());
+            }
+        } else {
+            throw new DataExchangeException("No Table Found");
+        }
+    }
+    public String getDataForDataSync(String tableName, String timeStamp, String startRow, String endRow,
+                                   boolean initialLoad, boolean allowNull) throws DataExchangeException {
         // Retrieve configuration based on table name
         DataSyncConfig dataConfig = dataSyncConfigRepository.findById(tableName).orElse(new DataSyncConfig());
 
-        if (timeStamp == null) {
-            timeStamp = "";
-        }
 
         AtomicInteger dataCountHolder = new AtomicInteger();
-        String finalTimeStamp = timeStamp;
 
         Callable<String> callable = () -> {
             String dataCompressed = "";
@@ -67,37 +98,45 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 }
 
                 // Execute the query and retrieve the dataset
-                String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
-                        ? dataConfig.getQueryWithLimit()
-                        : dataConfig.getQuery();
+                String baseQuery =  dataConfig.getQueryWithPagination();
+                baseQuery = baseQuery.replaceAll(TIME_STAMP_PARAM, timeStamp);
+                baseQuery = baseQuery.replaceAll(START_ROW, startRow);
+                baseQuery = baseQuery.replaceAll(END_ROW, endRow);
 
-                String effectiveTimestamp = finalTimeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP + "'" : "'" + finalTimeStamp + "'";
-                String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
 
                 if (initialLoad) {
-                    query = query.replaceAll(">=", "<"); // NOSONAR
-                    if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                        query = query.replaceAll(";", ""); // NOSONAR
-                        var nullQuery = dataConfig.getQueryWithNullTimeStamp();
+                    baseQuery = baseQuery.replaceAll(OPERATION, LESS);
+                    if (allowNull && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+                        baseQuery = baseQuery.replaceAll(";", ""); // NOSONAR
+                        String nullQuery = dataConfig.getQueryWithNullTimeStamp();
                         nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
-                        query = nullQuery + " UNION " + query + ";";
+                        baseQuery = nullQuery + " UNION " + baseQuery + ";";
                     }
                 }
-
-                if (baseQuery.contains(LIMIT_PARAM)) {
-                    query = query.replace(LIMIT_PARAM, limit.toString());
+                else {
+                    baseQuery = baseQuery.replaceAll(OPERATION, GREATER_EQUAL);
                 }
 
 
-                if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-                    data = srteJdbcTemplate.queryForList(query);
-                } else {
-                    data = jdbcTemplate.queryForList(query);
+
+                if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE))
+                {
+                    data = srteJdbcTemplate.queryForList(baseQuery);
+                }
+                else if (dataConfig.getSourceDb().equalsIgnoreCase(DB_RDB))
+                {
+                    data = jdbcTemplate.queryForList(baseQuery);
+                }
+                else if (dataConfig.getSourceDb().equalsIgnoreCase(DB_RDB_MODERN))
+                {
+                    throw new DataExchangeException("TO BE IMPLEMENTED");
+                }
+                else {
+                    throw new DataExchangeException("DB IS NOT SUPPORTED: " + dataConfig.getSourceDb());
                 }
 
                 // Serialize the data to JSON using Gson
                 dataCompressed = DataSimplification.dataCompressionAndEncodeV2(gson, data);
-
                 dataCount = data.size();
 
                 // Store values for later use
@@ -116,152 +155,12 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         try {
             var metricData = MetricCollector.measureExecutionTime(callable);
             var currentTime = getCurrentTimeStamp();
-
-            dataSyncConfigRepository.updateDataSyncConfig(dataCountHolder.get(), metricData.getExecutionTime(), currentTime, tableName.toUpperCase());
+            dataSyncConfigRepository.updateDataSyncConfig(dataCountHolder.get(), metricData.getExecutionTime(), currentTime, tableName.toUpperCase(),
+                    startRow, endRow);
             return metricData.getResult();
         } catch (Exception e) {
             throw new DataExchangeException(e.getMessage());
         }
-    }
-
-    private void initialLoadByBatchOLD(String inputQuery, DataSyncConfig dataConfig,  Integer limit, String effectiveTimestamp) {
-
-        List<Map<String, Object>> data = null;
-        String query = inputQuery.replaceAll(">=", "<"); // NOSONAR
-
-        int totalRecords = 0;
-        if (dataConfig.getQueryCount() != null && !dataConfig.getQueryCount().isEmpty()) {
-            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-                totalRecords = srteJdbcTemplate.queryForObject(dataConfig.getQueryCount(), new Object[]{effectiveTimestamp}, Integer.class);
-            } else {
-                totalRecords = jdbcTemplate.queryForObject(dataConfig.getQueryCount(), new Object[]{effectiveTimestamp}, Integer.class);
-            }
-        }
-
-        int batchSize = limit;
-        int totalPages = (int) Math.ceil((double) totalRecords / batchSize);
-
-
-
-        if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-            for (int i = 0; i < totalPages; i++) {
-                Integer startRow = i * batchSize + 1;
-                Integer endRow = (i + 1) * batchSize;
-                List<Map<String, Object>> batchData = new ArrayList<>();
-                if (i == 0 && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                    String queryPagination = query;
-                    queryPagination = queryPagination.replace(":startRow", startRow.toString()).replace(":endRow", endRow.toString());
-                    var nullQuery = dataConfig.getQueryWithNullTimeStamp();
-                    nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
-                    String queryWithNull = nullQuery + " UNION " + queryPagination + ";";
-                    batchData = srteJdbcTemplate.queryForList( queryWithNull); // UPDATE THIS TO WORK WITH BATCHES
-
-                } else {
-                    String queryContinualPagination = query;
-                    queryContinualPagination = queryContinualPagination.replace(":startRow", startRow.toString()).replace(":endRow", endRow.toString());
-
-                    // data = fetchProvidersByBatch(timestamp, startRow, endRow);
-                    batchData = srteJdbcTemplate.queryForList(queryContinualPagination); // UPDATE THIS TO WORK WITH BATCHES
-
-                }
-
-                data.addAll(batchData);
-
-            }
-        }
-        else {
-            for (int i = 0; i < totalPages; i++) {
-                Integer startRow = i * batchSize + 1;
-                Integer endRow = (i + 1) * batchSize;
-                List<Map<String, Object>> batchData = new ArrayList<>();
-                if (i == 0 && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                    String queryPagination = query;
-                    queryPagination = queryPagination.replace(":startRow", startRow.toString()).replace(":endRow", endRow.toString());
-                    var nullQuery = dataConfig.getQueryWithNullTimeStamp();
-                    nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
-                    String queryWithNull = nullQuery + " UNION " + queryPagination + ";";
-                    batchData = jdbcTemplate.queryForList(queryWithNull); // UPDATE THIS TO WORK WITH BATCHES
-                } else {
-                    String queryContinualPagination = query;
-                    queryContinualPagination = queryContinualPagination.replace(":startRow", startRow.toString()).replace(":endRow", endRow.toString());
-                    // data = fetchProvidersByBatch(timestamp, startRow, endRow);
-                    batchData = jdbcTemplate.queryForList(queryContinualPagination); // UPDATE THIS TO WORK WITH BATCHES
-
-                }
-
-                data.addAll(batchData);
-            }
-        }
-
-    }
-
-
-    private void initialLoadByBatch(String inputQuery, DataSyncConfig dataConfig, Integer limit, String effectiveTimestamp) {
-        List<Map<String, Object>> data = new ArrayList<>(); // Initialize the data list
-        String query = inputQuery.replaceAll(">=", "<"); // NOSONAR to prevent query mutation
-
-        int totalRecords = getTotalRecords(dataConfig, effectiveTimestamp);
-        int batchSize = limit;
-        int totalPages = (int) Math.ceil((double) totalRecords / batchSize);
-
-        for (int i = 0; i < totalPages; i++) {
-            int startRow = i * batchSize + 1;
-            int endRow = (i + 1) * batchSize;
-            List<Map<String, Object>> batchData = new ArrayList<>();
-
-            if (i == 0 && isFirstBatchWithNullTimestamp(dataConfig))
-            {
-                batchData = executeFirstBatchWithNullTimestamp(query, dataConfig, startRow, endRow);
-            }
-            else
-            {
-                batchData = executeBatch(query, dataConfig, startRow, endRow);
-            }
-
-            data.addAll(batchData); // Append batch data to the main data list
-        }
-    }
-
-    private int getTotalRecords(DataSyncConfig dataConfig, String effectiveTimestamp) {
-        if (dataConfig.getQueryCount() != null && !dataConfig.getQueryCount().isEmpty()) {
-            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-                return srteJdbcTemplate.queryForObject(dataConfig.getQueryCount(), new Object[]{effectiveTimestamp}, Integer.class);
-            } else {
-                return jdbcTemplate.queryForObject(dataConfig.getQueryCount(), new Object[]{effectiveTimestamp}, Integer.class);
-            }
-        }
-        return 0; // Default if no queryCount provided
-    }
-
-    private boolean isFirstBatchWithNullTimestamp(DataSyncConfig dataConfig) {
-        return dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty();
-    }
-
-    private List<Map<String, Object>> executeFirstBatchWithNullTimestamp(String query, DataSyncConfig dataConfig, int startRow, int endRow) {
-        String queryPagination = paginateQuery(query, startRow, endRow);
-        String nullQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", ""); // NOSONAR to avoid mutation
-        String queryWithNull = nullQuery + " UNION " + queryPagination;
-
-        if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-            return srteJdbcTemplate.queryForList(queryWithNull); // Execute query for SRTE DB
-        } else {
-            return jdbcTemplate.queryForList(queryWithNull); // Execute query for default DB
-        }
-    }
-
-    private List<Map<String, Object>> executeBatch(String query, DataSyncConfig dataConfig, int startRow, int endRow) {
-        String paginatedQuery = paginateQuery(query, startRow, endRow);
-
-        if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-            return srteJdbcTemplate.queryForList(paginatedQuery); // Execute query for SRTE DB
-        } else {
-            return jdbcTemplate.queryForList(paginatedQuery); // Execute query for default DB
-        }
-    }
-
-    private String paginateQuery(String query, int startRow, int endRow) {
-        return query.replace(":startRow", String.valueOf(startRow))
-                .replace(":endRow", String.valueOf(endRow));
     }
 
 
