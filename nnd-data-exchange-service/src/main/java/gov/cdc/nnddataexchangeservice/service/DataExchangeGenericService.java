@@ -61,7 +61,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private String prepareQuery(String query, boolean initialLoad, String timestamp) {
         String operator = initialLoad ? LESS : GREATER_EQUAL;
         return query.replaceAll(OPERATION, operator)
-                .replaceAll(TIME_STAMP_PARAM, timestamp);
+                .replaceAll(TIME_STAMP_PARAM, "'" + timestamp + "'");
     }
 
     private Integer executeQueryForTotalRecords(String query, String sourceDb) throws DataExchangeException {
@@ -104,7 +104,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                                           String endRow, boolean initialLoad, boolean allowNull) {
 
         String baseQuery = dataConfig.getQueryWithPagination()
-                .replaceAll(TIME_STAMP_PARAM, timeStamp)
+                .replaceAll(TIME_STAMP_PARAM, "'" + timeStamp + "'")
                 .replaceAll(START_ROW, startRow)
                 .replaceAll(END_ROW, endRow);
 

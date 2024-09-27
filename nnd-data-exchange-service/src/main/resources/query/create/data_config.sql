@@ -25,7 +25,9 @@ CREATE TABLE data_sync_config
     created_at      DATETIME2 DEFAULT GETDATE(),
     last_executed_timestamp DATETIME2 NULL DEFAULT NULL,
     last_executed_run_time NVARCHAR(255) NULL DEFAULT NULL,
-    last_executed_result_count INTEGER NULL DEFAULT NULL
+    last_executed_result_count INTEGER NULL DEFAULT NULL,
+    log_start_row NVARCHAR(255) NULL,
+    log_end_row NVARCHAR(255) NULL
 );
 END
 GO
