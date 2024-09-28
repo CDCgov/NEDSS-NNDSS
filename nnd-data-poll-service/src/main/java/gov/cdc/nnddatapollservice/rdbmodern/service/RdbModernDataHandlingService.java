@@ -66,8 +66,6 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
 
     protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) throws DataPollException {
         logger.info("--START--pollAndPersistRDBData for table {}", tableName);
-        String rawJsonData = null;
-        Timestamp timestamp = null;
         String log = "";
         boolean exceptionAtApiLevel = false;
         Integer totalRecordCounts = 0;
@@ -95,8 +93,25 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
 
         int batchSize = pullLimit;
         int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
+        var encodedDataWithNull = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
+        var rawJsonDataWithNull = iPollCommonService.decodeAndDecompress(encodedDataWithNull);
+        var timestampWithNull = Timestamp.from(Instant.now());
+        if (storeJsonInS3) {
+            log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
+            iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
+        }
+        else if (storeInSql) {
+            log =  rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonDataWithNull);
+            iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
+        }
+        else  {
+            log = iPollCommonService.writeJsonDataToFile(RDB, tableName, timestampWithNull, rawJsonDataWithNull);
+            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
+        }
 
         for (int i = 0; i < totalPages; i++) {
+            String rawJsonData = "";
+            Timestamp timestamp = null;
             try {
                 int startRow = i * batchSize + 1;
                 int endRow = (i + 1) * batchSize;

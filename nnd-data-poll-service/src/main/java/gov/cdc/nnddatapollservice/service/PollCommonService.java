@@ -40,7 +40,7 @@ public class PollCommonService implements IPollCommonService {
     @Value("${data_exchange.endpoint_generic}")
     protected String exchangeEndpoint;
 
-    @Value("${data_exchange.endpoint_generic_total_record")
+    @Value("${data_exchange.endpoint_generic_total_record}")
     protected String exchangeTotalRecordEndpoint;
 
 

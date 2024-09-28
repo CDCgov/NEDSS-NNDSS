@@ -70,8 +70,6 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     }
 
     protected void pollAndPersistRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
-        String rawJsonData = null;
-        Timestamp timestamp = null;
         String log = "";
         boolean exceptionAtApiLevel = false;
         Integer totalRecordCounts = 0;
@@ -96,21 +94,33 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         int batchSize = pullLimit;
         int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
 
+        var encodedDataWithNull = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
+        var rawJsonDataWithNull = pollCommonService.decodeAndDecompress(encodedDataWithNull);
+        var timestampWithNull = Timestamp.from(Instant.now());
+        if (storeJsonInS3) {
+            log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
+            pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
+        }
+        else if (storeInSql) {
+            log =  rdbDataPersistentDAO.saveRDBData(tableName, rawJsonDataWithNull);
+            pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
+        }
+        else  {
+            log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestampWithNull, rawJsonDataWithNull);
+            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
+        }
+
         for (int i = 0; i < totalPages; i++) {
+            String rawJsonData = "";
+            Timestamp timestamp = null;
+
             try {
                 int startRow = i * batchSize + 1;
                 int endRow = (i + 1) * batchSize;
 
                 String encodedData = "";
-                if (i == 0)
-                {
-                    // First batch pull record will null time stamp
-                    encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, String.valueOf(startRow), String.valueOf(endRow));
-                }
-                else
-                {
-                    encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
-                }
+                encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
+
 
                 rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
                 timestamp = Timestamp.from(Instant.now());

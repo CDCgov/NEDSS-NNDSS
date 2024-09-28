@@ -6,6 +6,7 @@ import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHan
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +25,8 @@ public class DataPullService implements IDataPullService {
 
     private static final Logger logger = LoggerFactory.getLogger(DataPullService.class);
 
-    @Value("${scheduler.nnd.cron}")
-    private String nndCron;
-    @Value("${scheduler.rdb.cron}")
-    private String rdbCron;
-    @Value("${scheduler.rdb_modern.cron}")
-    private String rdbModernCron;
-    @Value("${scheduler.srte.cron}")
-    private String srteCron;
+    @Value("${scheduler.cron}")
+    private String cron;
     @Value("${scheduler.zone}")
     private String zone;
 
@@ -47,13 +42,13 @@ public class DataPullService implements IDataPullService {
     @Value("${poll.single_time_poll_enabled}")
     private boolean singlePoll;
 
+    @Value("${datasync.sql_reprocessing_data}")
+    private boolean reprocessFailedSQL = false;
+
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
     private final IRdbModernDataHandlingService rdbModernDataHandlingService;
     private final ISrteDataHandlingService srteDataHandlingService;
-
-    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
-    private CountDownLatch latch; // Added to track remaining active jobs
 
     public DataPullService(INNDDataHandlingService dataHandlingService,
                            IRdbDataHandlingService rdbDataHandlingService,
@@ -65,107 +60,60 @@ public class DataPullService implements IDataPullService {
         this.srteDataHandlingService = srteDataHandlingService;
     }
 
-    @Scheduled(cron = "${scheduler.nnd.cron}", zone = "${scheduler.zone}")
-    public void scheduleNNDDataFetch() {
-        if (nndPollEnabled) {
-            runTaskInThread("NND", () -> {
-                try {
-                    dataHandlingService.handlingExchangedData();
-                } catch (DataPollException e) {
-                    logger.error("Error during NND data handling: {}", e.getMessage());
-                    throw new RuntimeException(e);
-                }
-            });
-        }
+    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+    public void scheduleNNDDataFetch() throws DataPollException {
+    if (nndPollEnabled) {
+        logger.info("CRON STARTED FOR NND");
+        logger.info(cron);
+        logger.info(zone);
+        dataHandlingService.handlingExchangedData();
+        closePoller();
     }
+}
 
-    @Scheduled(cron = "${scheduler.rdb.cron}", zone = "${scheduler.zone}")
-    public void scheduleRDBDataFetch() {
+    @Scheduled(cron = "${scheduler.cron_rdb}", zone = "${scheduler.zone}")
+    public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
-            runTaskInThread("RDB", () -> {
-                try {
-                    rdbDataHandlingService.handlingExchangedData();
-                } catch (DataPollException e) {
-                    logger.error("Error during RDB data handling: {}", e.getMessage());
-                    throw new RuntimeException(e);
-                }
-            });
+            logger.info("CRON STARTED FOR POLLING RDB");
+            logger.info("{}, {} FOR RDB", cron, zone);
+            rdbDataHandlingService.handlingExchangedData();
+            closePoller();
         }
     }
 
-    @Scheduled(cron = "${scheduler.rdb_modern.cron}", zone = "${scheduler.zone}")
-    public void scheduleRdbModernDataFetch() {
+    @Scheduled(cron = "${scheduler.cron_rdb_modern}", zone = "${scheduler.zone}")
+    public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
-            runTaskInThread("RDB_MODERN", () -> {
-                try {
-                    rdbModernDataHandlingService.handlingExchangedData();
-                } catch (DataPollException e) {
-                    logger.error("Error during RDB_MODERN data handling: {}", e.getMessage());
-                    throw new RuntimeException(e);
-                }
-            });
+            logger.info("CRON STARTED FOR POLLING RDB_MODERN");
+            logger.info("{}, {} FOR RDB_MODERN", cron, zone);
+            rdbModernDataHandlingService.handlingExchangedData();
+            closePoller();
         }
     }
 
-    @Scheduled(cron = "${scheduler.srte.cron}", zone = "${scheduler.zone}")
-    public void scheduleSRTEDataFetch() {
+
+    @Scheduled(cron = "${scheduler.cron_srte}", zone = "${scheduler.zone}")
+    public void scheduleSRTEDataFetch() throws DataPollException {
         if (srtePollEnabled) {
-            runTaskInThread("SRTE", () -> {
-                try {
-                    srteDataHandlingService.handlingExchangedData();
-                } catch (DataPollException e) {
-                    logger.error("Error during SRTE data handling: {}", e.getMessage());
-                    throw new RuntimeException(e);
-                }
-            });
+            logger.info("CRON STARTED FOR POLLING SRTE");
+            logger.info("{}, {} FOR SRTE", cron, zone);
+            srteDataHandlingService.handlingExchangedData();
+            closePoller();
+        }
+
+    }
+
+    @PostConstruct
+    public void reprocessingFailedSQLData() {
+        if (reprocessFailedSQL) {
+            // TODO: Template for reprocessing
         }
     }
 
-    private synchronized void runTaskInThread(String taskName, Runnable task) {
-        // Initialize the latch if it's the first task
-        if (latch == null) {
-            int activePolls = getActivePollCount();
-            latch = new CountDownLatch(activePolls);
-        }
 
-        executorService.submit(() -> {
-            try {
-                logger.info("Starting {} data poll", taskName);
-                task.run();
-                logger.info("{} data poll completed", taskName);
-            } catch (RuntimeException e) {
-                logger.error("Error occurred during {} data poll: {}", taskName, e.getMessage());
-            } finally {
-                latch.countDown(); // Decrease the latch count when a task is finished
-                if (singlePoll && latch.getCount() == 0) {
-                    shutdownPoller();
-                }
-            }
-        });
-    }
-
-    private int getActivePollCount() {
-        int count = 0;
-        if (nndPollEnabled) count++;
-        if (rdbPollEnabled) count++;
-        if (rdbModernPollEnabled) count++;
-        if (srtePollEnabled) count++;
-        return count;
-    }
-
-    private void shutdownPoller() {
-        logger.info("Shutting down after single poll");
-        executorService.shutdown();
-        try {
-            if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
-                if (!executorService.awaitTermination(60, TimeUnit.SECONDS)) {
-                    logger.error("Executor did not terminate");
-                }
-            }
-        } catch (InterruptedException ie) {
-            executorService.shutdownNow();
-            Thread.currentThread().interrupt();
+    private void closePoller() {
+        if (singlePoll) {
+            System.exit(0);
         }
     }
 }

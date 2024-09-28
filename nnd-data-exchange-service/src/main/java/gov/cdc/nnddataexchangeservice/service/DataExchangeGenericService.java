@@ -103,16 +103,20 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private String preparePaginationQuery(DataSyncConfig dataConfig, String timeStamp, String startRow,
                                           String endRow, boolean initialLoad, boolean allowNull) {
 
-        String baseQuery = dataConfig.getQueryWithPagination()
-                .replaceAll(TIME_STAMP_PARAM, "'" + timeStamp + "'")
-                .replaceAll(START_ROW, startRow)
-                .replaceAll(END_ROW, endRow);
+        String baseQuery;
 
-        String operator = initialLoad ? LESS : GREATER_EQUAL;
-        baseQuery = baseQuery.replaceAll(OPERATION, operator);
+        if (allowNull && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+            baseQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", "") ;
+        }
+        else
+        {
+            baseQuery = dataConfig.getQueryWithPagination()
+                    .replaceAll(TIME_STAMP_PARAM, "'" + timeStamp + "'")
+                    .replaceAll(START_ROW, startRow)
+                    .replaceAll(END_ROW, endRow);
 
-        if (initialLoad && allowNull && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-            baseQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", "") + " UNION " + baseQuery;
+            String operator = initialLoad ? LESS : GREATER_EQUAL;
+            baseQuery = baseQuery.replaceAll(OPERATION, operator);
         }
 
         return baseQuery + ";";
