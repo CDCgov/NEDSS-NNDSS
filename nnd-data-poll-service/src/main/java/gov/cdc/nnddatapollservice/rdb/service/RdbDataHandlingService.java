@@ -70,95 +70,117 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     }
 
     protected void pollAndPersistRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
-        String log = "";
-        boolean exceptionAtApiLevel = false;
-        Integer totalRecordCounts = 0;
-        logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
-        String timeStampForPoll = "";
-        if (isInitialLoad) {
-            timeStampForPoll = pollCommonService.getCurrentTimestamp();
-        } else {
-            if (storeInSql) {
-                timeStampForPoll = pollCommonService.getLastUpdatedTime(tableName);
-            } else if (storeJsonInS3) {
-                timeStampForPoll = pollCommonService.getLastUpdatedTimeS3(tableName);
+        try {
+            String log = "";
+            boolean exceptionAtApiLevel = false;
+            Integer totalRecordCounts = 0;
+            logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
+            String timeStampForPoll = "";
+            if (isInitialLoad) {
+                timeStampForPoll = pollCommonService.getCurrentTimestamp();
             } else {
-                timeStampForPoll = pollCommonService.getLastUpdatedTimeLocalDir(tableName);
+                if (storeInSql) {
+                    timeStampForPoll = pollCommonService.getLastUpdatedTime(tableName);
+                } else if (storeJsonInS3) {
+                    timeStampForPoll = pollCommonService.getLastUpdatedTimeS3(tableName);
+                } else {
+                    timeStampForPoll = pollCommonService.getLastUpdatedTimeLocalDir(tableName);
+                }
             }
-        }
-        logger.info("isInitialLoad {}", isInitialLoad);
+            logger.info("isInitialLoad {}", isInitialLoad);
 
-        logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
-        //call data exchange service api
-        totalRecordCounts = pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
-        int batchSize = pullLimit;
-        int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
-
-        var encodedDataWithNull = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
-        var rawJsonDataWithNull = pollCommonService.decodeAndDecompress(encodedDataWithNull);
-        var timestampWithNull = Timestamp.from(Instant.now());
-        if (storeJsonInS3) {
-            log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
-            pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
-        }
-        else if (storeInSql) {
-            log =  rdbDataPersistentDAO.saveRDBData(tableName, rawJsonDataWithNull);
-            pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
-        }
-        else  {
-            log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestampWithNull, rawJsonDataWithNull);
-            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
-        }
-
-        for (int i = 0; i < totalPages; i++) {
-            String rawJsonData = "";
-            Timestamp timestamp = null;
+            logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
+            //call data exchange service api
+            var timestampWithNull = Timestamp.from(Instant.now());
 
             try {
-                int startRow = i * batchSize + 1;
-                int endRow = (i + 1) * batchSize;
-
-                String encodedData = "";
-                encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
-
-
-                rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
-                timestamp = Timestamp.from(Instant.now());
+                totalRecordCounts = pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
-                log = e.getMessage();
-                exceptionAtApiLevel = true;
+                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LEVEL + log);
+                throw new DataPollException("TASK FAILED");
             }
-
-            if (exceptionAtApiLevel)
-            {
-                if (storeInSql) {
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
-                }
-                else if (storeJsonInS3)
-                {
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
-                }
-                else
-                {
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
-                }
-            }
-            else
-            {
+            int batchSize = pullLimit;
+            int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
+            try {
+                var encodedDataWithNull = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
+                var rawJsonDataWithNull = pollCommonService.decodeAndDecompress(encodedDataWithNull);
                 if (storeJsonInS3) {
-                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
+                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
+                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
                 }
                 else if (storeInSql) {
-                    log =  rdbDataPersistentDAO.saveRDBData(tableName, rawJsonData);
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+                    log =  rdbDataPersistentDAO.saveRDBData(tableName, rawJsonDataWithNull);
+                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
                 }
                 else  {
-                    log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
+                    log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestampWithNull, rawJsonDataWithNull);
+                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
                 }
+            } catch (Exception e) {
+                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LEVEL + log);
+                throw new DataPollException("TASK FAILED");
             }
+
+
+            for (int i = 0; i < totalPages; i++) {
+                String rawJsonData = "";
+                Timestamp timestamp = null;
+
+                try {
+                    int startRow = i * batchSize + 1;
+                    int endRow = (i + 1) * batchSize;
+
+                    String encodedData = "";
+                    encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
+
+
+                    rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
+                    timestamp = Timestamp.from(Instant.now());
+                } catch (Exception e) {
+                    log = e.getMessage();
+                    exceptionAtApiLevel = true;
+                }
+
+                try {
+                    if (exceptionAtApiLevel)
+                    {
+                        if (storeInSql) {
+                            pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                        }
+                        else if (storeJsonInS3)
+                        {
+                            pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
+                        }
+                        else
+                        {
+                            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
+                        }
+                    }
+                    else
+                    {
+                        if (storeJsonInS3) {
+                            log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+                            pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
+                        }
+                        else if (storeInSql) {
+                            log =  rdbDataPersistentDAO.saveRDBData(tableName, rawJsonData);
+                            pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+                        }
+                        else  {
+                            log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
+                        }
+                    }
+                } catch (Exception e) {
+                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + log);
+                }
+
+            }
+        }catch (Exception e) {
+            logger.error("TASK failed. tableName: {}, message: {}", tableName, e.getMessage());
+            throw new DataPollException("TASK FAILED");
         }
+
     }
 
     private void cleanupRDBTables(List<PollDataSyncConfig> configTableList) {
