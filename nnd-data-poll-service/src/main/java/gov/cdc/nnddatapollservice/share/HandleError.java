@@ -20,6 +20,20 @@ import java.util.regex.Pattern;
 public class HandleError {
     private static Logger logger = LoggerFactory.getLogger(HandleError.class);
 
+    public static void writeRecordToFileTypedObject(Gson gson, Object record, String fileName, String directory) {
+        try {
+            Path dirPath = Paths.get(directory);
+            Path filePath = Paths.get(dirPath.toString(), "failed_records_" + fileName  + ".json");
+            Files.createDirectories(dirPath);
+            String jsonData = gson.toJson(record);
+            Files.writeString(filePath, jsonData + System.lineSeparator(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+            logger.info("Record written to file for later reprocessing: {}", gson.toJson(record));
+        } catch (Exception e) {
+            logger.error("Failed to write record to file: {}", e.getMessage());
+        }
+
+    }
+
     public static void writeRecordToFile(Gson gson, Map<String, Object> record, String fileName, String directory) {
         try {
             Path dirPath = Paths.get(directory);

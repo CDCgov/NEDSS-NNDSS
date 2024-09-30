@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.rdbmodern.dao;
 
+import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class RdbModernDataPersistentDAOTest {
     }
 
     @Test
-    void saveRdbModernData() {
+    void saveRdbModernData() throws DataPollException {
         String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
                 "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
         var recordsSaved = rdbModernDataPersistentDAO.saveRdbModernData("TEST_TABLE", jsondata);
@@ -45,7 +46,7 @@ class RdbModernDataPersistentDAOTest {
     }
 
     @Test
-    void testSaveRdbModernData_withValidData() {
+    void testSaveRdbModernData_withValidData() throws DataPollException {
         String tableName = "test_table";
         String jsonData = "[{\"key1\":\"value1\", \"key2\":\"value2\"}]";
 
@@ -66,7 +67,7 @@ class RdbModernDataPersistentDAOTest {
     }
 
     @Test
-    void testSaveRdbModernData_withNoData() {
+    void testSaveRdbModernData_withNoData() throws DataPollException {
         String tableName = "test_table";
         String jsonData = "[]";
 
