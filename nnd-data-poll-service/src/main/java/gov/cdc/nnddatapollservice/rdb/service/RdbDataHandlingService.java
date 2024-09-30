@@ -71,6 +71,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         logger.info("---END RDB POLLING---");
     }
 
+    @SuppressWarnings("java:S1141")
     protected void pollAndPersistRDBData(String tableName, boolean isInitialLoad) {
         try {
             String log = "";

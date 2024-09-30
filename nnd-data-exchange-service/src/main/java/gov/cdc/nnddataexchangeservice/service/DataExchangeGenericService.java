@@ -108,7 +108,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         String baseQuery;
 
         if (allowNull && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-            baseQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", "") ;
+            baseQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", "") ; //NOSONAR
         }
         else
         {

@@ -4,7 +4,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.constant.ConstantValue;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
@@ -70,13 +69,14 @@ public class RdbModernDataPersistentDAO {
         }
     }
 
+    @SuppressWarnings({"java:S3776","java:S1141"})
     protected StringBuilder persistingGenericTable (StringBuilder logBuilder, String tableName, String jsonData) {
         try {
-            SimpleJdbcInsert simpleJdbcInsert =
+            SimpleJdbcInsert jdbcInsert =
                     new SimpleJdbcInsert(jdbcTemplate);
             if (tableName != null && !tableName.isEmpty()) {
                 deleteTable(tableName);//Delete first
-                simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
+                jdbcInsert = jdbcInsert.withTableName(tableName);
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
                     logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
@@ -87,15 +87,15 @@ public class RdbModernDataPersistentDAO {
                             for (int i = 0; i < records.size(); i += sublistSize) {
                                 int end = Math.min(i + sublistSize, records.size());
                                 List<Map<String, Object>> sublist = records.subList(i, end);
-                                simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                                jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
                             }
                         } else {
-                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                            jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                         }
                     } catch (Exception e) {
                         for (Map<String, Object> record : records) {
                             try {
-                                simpleJdbcInsert.execute(new MapSqlParameterSource(record));
+                                jdbcInsert.execute(new MapSqlParameterSource(record));
                             } catch (Exception ei) {
                                 logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
                                 handleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
@@ -122,7 +122,7 @@ public class RdbModernDataPersistentDAO {
         logger.info("saveRdbModernData tableName: {}", tableName);
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
         if ("NRT_OBSERVATION".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder();
+            logBuilder = new StringBuilder(LOG_SUCCESS);
             Type resultType = new TypeToken<List<NrtObservationDto>>() {
             }.getType();
             List<NrtObservationDto> list = gson.fromJson(jsonData, resultType);

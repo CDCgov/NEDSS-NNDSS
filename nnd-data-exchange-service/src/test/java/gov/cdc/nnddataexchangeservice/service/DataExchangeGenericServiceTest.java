@@ -49,10 +49,9 @@ class DataExchangeGenericServiceTest {
 
 
     @Test
-    void getGenericDataExchange_WithMissingTable_NoRelevantData() throws DataExchangeException {
+    void getGenericDataExchange_WithMissingTable_NoRelevantData() {
         String tableName = "invalid_table";
         String timeStamp = "2024-07-11";
-        int limit = 10;
 
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.empty());
 
@@ -76,7 +75,6 @@ class DataExchangeGenericServiceTest {
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         config.setQueryWithNullTimeStamp("TEST SELECT");
-        int limit = 0;
 
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
@@ -105,7 +103,6 @@ class DataExchangeGenericServiceTest {
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         config.setQueryWithNullTimeStamp("");
-        int limit = 0;
 
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
@@ -134,7 +131,6 @@ class DataExchangeGenericServiceTest {
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         config.setQueryWithNullTimeStamp(null);
-        int limit = 0;
 
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
@@ -162,7 +158,6 @@ class DataExchangeGenericServiceTest {
         config.setQueryCount("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
-        int limit = 0;
 
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
@@ -190,7 +185,6 @@ class DataExchangeGenericServiceTest {
         config.setQueryCount("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
-        int limit = 10;
 
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
@@ -219,7 +213,6 @@ class DataExchangeGenericServiceTest {
         config.setQueryWithNullTimeStamp("SELECT * FROM HERE NULL");
         config.setTableName(tableName);
         config.setSourceDb("SRTE");
-        int limit = 10;
 
         List<Map<String, Object>> data = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();

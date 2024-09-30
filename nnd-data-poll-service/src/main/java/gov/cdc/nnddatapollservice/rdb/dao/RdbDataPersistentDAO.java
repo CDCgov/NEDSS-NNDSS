@@ -4,7 +4,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.constant.ConstantValue;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
@@ -56,6 +55,7 @@ public class RdbDataPersistentDAO {
         this.handleError = handleError;
     }
 
+    @SuppressWarnings("java:S3776")
     protected void persistingGenericTable (String tableName, String jsonData) throws DataPollException {
         if (tableName != null && !tableName.isEmpty()) {
             SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
@@ -79,7 +79,6 @@ public class RdbDataPersistentDAO {
                         try {
                             simpleJdbcInsert.execute(new MapSqlParameterSource(record));
                         } catch (Exception ei) {
-                            // TODO: LOG THESE
                             logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
                             handleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                             throw new DataPollException("Tried individual process, but not success");
@@ -98,7 +97,7 @@ public class RdbDataPersistentDAO {
         logger.info("saveRDBData tableName: {}", tableName);
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
         if ("CONFIRMATION_METHOD".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder();
+            logBuilder = new StringBuilder(LOG_SUCCESS);
             Type resultType = new TypeToken<List<ConfirmationMethod>>() {
             }.getType();
             List<ConfirmationMethod> list = gson.fromJson(jsonData, resultType);
@@ -106,7 +105,7 @@ public class RdbDataPersistentDAO {
                 logBuilder.append(", ").append(upsertConfirmationMethod(confirmationMethod));
             }
         } else if ("CONDITION".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder();
+            logBuilder = new StringBuilder(LOG_SUCCESS);
             Type resultType = new TypeToken<List<Condition>>() {
             }.getType();
             List<Condition> list = gson.fromJson(jsonData, resultType);
@@ -114,7 +113,7 @@ public class RdbDataPersistentDAO {
                 logBuilder.append(", ").append(upsertCondition(condition));
             }
         } else if ("RDB_DATE".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder();
+            logBuilder = new StringBuilder(LOG_SUCCESS);
             Type resultType = new TypeToken<List<RdbDate>>() {
             }.getType();
             List<RdbDate> list = gson.fromJson(jsonData, resultType);
@@ -272,7 +271,7 @@ public class RdbDataPersistentDAO {
                 Timestamp.class, tableName);
         if (lastTime != null) {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            updatedTime = formatter.format(lastTime);
+            updatedTime = formatter.format(lastTime); // NOSONAR
         }
         logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
         return updatedTime;
@@ -286,7 +285,7 @@ public class RdbDataPersistentDAO {
                 Timestamp.class, tableName);
         if (lastTime != null) {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            updatedTime = formatter.format(lastTime);
+            updatedTime = formatter.format(lastTime); // NOSONAR
         }
         logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
         return updatedTime;
@@ -300,7 +299,7 @@ public class RdbDataPersistentDAO {
                 Timestamp.class, tableName);
         if (lastTime != null) {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            updatedTime = formatter.format(lastTime);
+            updatedTime = formatter.format(lastTime); // NOSONAR
         }
         logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
         return updatedTime;

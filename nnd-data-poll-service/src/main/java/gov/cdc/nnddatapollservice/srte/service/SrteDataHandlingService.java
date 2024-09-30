@@ -64,7 +64,8 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         logger.info("---END SRTE POLLING---");
     }
 
-    protected void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) throws DataPollException {
+    @SuppressWarnings("java:S1141")
+    protected void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) {
         try {
             logger.info("--START--pollAndPersistSRTEData for table {}", tableName);
             String log = "";

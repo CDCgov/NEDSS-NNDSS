@@ -136,7 +136,6 @@ class DataExchangeControllerTest {
     void dataSyncTotalRecords_Test() throws Exception {
         String tableName = "test_table";
         String timestamp = "2024-07-11";
-        String base64CompressedData = "mockBase64Data";
 
         when(dataExchangeGenericService.getTotalRecord(anyString(), anyBoolean(),anyString()))
                 .thenReturn(10);

@@ -64,6 +64,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         logger.info("---END RDB_MODERN POLLING---");
     }
 
+    @SuppressWarnings("java:S1141")
     protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) {
         try {
             logger.info("--START--pollAndPersistRDBData for table {}", tableName);

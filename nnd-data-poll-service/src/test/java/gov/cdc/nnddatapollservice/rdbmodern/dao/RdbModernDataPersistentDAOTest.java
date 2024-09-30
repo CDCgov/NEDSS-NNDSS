@@ -2,7 +2,6 @@ package gov.cdc.nnddatapollservice.rdbmodern.dao;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.constant.ConstantValue;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
@@ -166,27 +165,6 @@ class RdbModernDataPersistentDAOTest {
         // Assert
         verify(nrtObservationRepository, times(1)).save(any(NrtObservation.class));
     }
-
-//    @Test
-//    void testSaveRdbModernData_NrtObservation_Exception() throws DataPollException {
-//        // Arrange
-//        String tableName = "NRT_OBSERVATION";
-//        String jsonData = "[{\"observation_uid\": 1, \"class_cd\": \"OBS\"}]";
-//
-//        Type resultType = new TypeToken<List<NrtObservationDto>>() {}.getType();
-//        List<NrtObservationDto> observationDtos = new ArrayList<>();
-//        observationDtos.add(new NrtObservationDto());
-//
-//        when(gson.fromJson(jsonData, resultType)).thenReturn(observationDtos);
-//        doThrow(new DataAccessException("Database Error") {}).when(nrtObservationRepository).save(any(NrtObservation.class));
-//
-//        // Act & Assert
-//        rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData);
-//
-//
-//        verify(nrtObservationRepository, times(1)).save(any(NrtObservation.class));
-//    }
-
 
     @Test
     void testSaveRdbModernData_Else_Success() throws DataPollException {

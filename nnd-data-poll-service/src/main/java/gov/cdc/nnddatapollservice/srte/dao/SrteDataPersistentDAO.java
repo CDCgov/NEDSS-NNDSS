@@ -1,7 +1,6 @@
 package gov.cdc.nnddatapollservice.srte.dao;
 
 import com.google.gson.Gson;
-import gov.cdc.nnddatapollservice.constant.ConstantValue;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
@@ -40,9 +39,11 @@ public class SrteDataPersistentDAO {
         this.handleError = handleError;
     }
 
-    protected void persistingGenericTable (String tableName, String jsonData) throws DataPollException {
-        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
-        simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
+    @SuppressWarnings("java:S3776")
+    protected String persistingGenericTable (String tableName, String jsonData) throws DataPollException {
+        String log = LOG_SUCCESS;
+        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
+        jdbcInsert = jdbcInsert.withTableName(tableName);
         List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
         if (records != null && !records.isEmpty()) {
             logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
@@ -53,17 +54,17 @@ public class SrteDataPersistentDAO {
                     for (int i = 0; i < records.size(); i += sublistSize) {
                         int end = Math.min(i + sublistSize, records.size());
                         List<Map<String, Object>> sublist = records.subList(i, end);
-                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                        jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
                     }
                 } else {
-                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                    jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                 }
             } catch (Exception e) {
                 for (Map<String, Object> record : records) {
                     try {
-                        simpleJdbcInsert.execute(new MapSqlParameterSource(record));
+                        jdbcInsert.execute(new MapSqlParameterSource(record));
                     } catch (Exception ei) {
-                        // TODO: LOG THESE
+                        log = ei.getMessage();
                         logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
                         handleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                         throw new DataPollException("Tried individual process, but not success");
@@ -72,15 +73,17 @@ public class SrteDataPersistentDAO {
             }
 
         } else {
+            log = "No Data";
             logger.info("saveSRTEData tableName: {} Records size:0", tableName);
         }
+        return log;
     }
     public String saveSRTEData(String tableName, String jsonData) {
         logger.info("saveSRTEData tableName: {}", tableName);
         String log = LOG_SUCCESS;
         try {
             if (tableName != null && !tableName.isEmpty()) {
-                persistingGenericTable ( tableName,  jsonData);
+              log = persistingGenericTable ( tableName,  jsonData);
             }
         } catch (Exception e) {
             log = e.getMessage();
