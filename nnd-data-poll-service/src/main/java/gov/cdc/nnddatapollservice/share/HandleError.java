@@ -3,6 +3,7 @@ package gov.cdc.nnddatapollservice.share;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -17,10 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+@Component
 public class HandleError {
     private static Logger logger = LoggerFactory.getLogger(HandleError.class);
 
-    public static void writeRecordToFileTypedObject(Gson gson, Object record, String fileName, String directory) {
+    public void writeRecordToFileTypedObject(Gson gson, Object record, String fileName, String directory) {
         try {
             Path dirPath = Paths.get(directory);
             Path filePath = Paths.get(dirPath.toString(), "failed_records_" + fileName  + ".json");
@@ -34,7 +36,7 @@ public class HandleError {
 
     }
 
-    public static void writeRecordToFile(Gson gson, Map<String, Object> record, String fileName, String directory) {
+    public void writeRecordToFile(Gson gson, Map<String, Object> record, String fileName, String directory) {
         try {
             Path dirPath = Paths.get(directory);
             Path filePath = Paths.get(dirPath.toString(), "failed_records_" + fileName  + ".json");
@@ -48,7 +50,7 @@ public class HandleError {
 
     }
 
-    public static List<Map<String, Object>> readFailedRecordsFromFile(Gson gson, String fileName, String directory) {
+    public List<Map<String, Object>> readFailedRecordsFromFile(Gson gson, String fileName, String directory) {
         List<Map<String, Object>> failedRecords = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(directory + "failed_records_" + fileName + ".json"))) {
             String line;

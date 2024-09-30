@@ -39,6 +39,8 @@ public class RdbModernDataPersistentDAO {
 
     private final NrtObservationRepository nrtObservationRepository;
 
+    private final HandleError handleError;
+
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
     private final Gson gsonNorm = new Gson();
@@ -47,9 +49,71 @@ public class RdbModernDataPersistentDAO {
             .create();
     @Autowired
     public RdbModernDataPersistentDAO(@Qualifier("rdbmodernJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                      NrtObservationRepository nrtObservationRepository) {
+                                      NrtObservationRepository nrtObservationRepository, HandleError handleError) {
         this.jdbcTemplate = jdbcTemplate;
         this.nrtObservationRepository = nrtObservationRepository;
+        this.handleError = handleError;
+    }
+
+    protected void persistingNrtObs( List<NrtObservationDto> list, String tableName) throws DataPollException {
+        for (NrtObservationDto data : list) {
+            try {
+                var domainModel = new NrtObservation(data);
+                nrtObservationRepository.save(domainModel);
+            } catch (Exception e) {
+                logger.error("ERROR occured at record: {}", gsonNorm.toJson(data));
+                handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/");
+                throw new DataPollException("Tried individual process, but not success");
+            }
+        }
+    }
+
+    protected StringBuilder persistingGenericTable (StringBuilder logBuilder, String tableName, String jsonData) {
+        try {
+            SimpleJdbcInsert simpleJdbcInsert =
+                    new SimpleJdbcInsert(jdbcTemplate);
+            if (tableName != null && !tableName.isEmpty()) {
+                deleteTable(tableName);//Delete first
+                simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
+                List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+                if (records != null && !records.isEmpty()) {
+                    logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
+
+                    try {
+                        if (records.size() > ConstantValue.SQL_BATCH_SIZE) {
+                            int sublistSize = ConstantValue.SQL_BATCH_SIZE;
+                            for (int i = 0; i < records.size(); i += sublistSize) {
+                                int end = Math.min(i + sublistSize, records.size());
+                                List<Map<String, Object>> sublist = records.subList(i, end);
+                                simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                            }
+                        } else {
+                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                        }
+                    } catch (Exception e) {
+                        for (Map<String, Object> record : records) {
+                            try {
+                                simpleJdbcInsert.execute(new MapSqlParameterSource(record));
+                            } catch (Exception ei) {
+                                logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
+                                handleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
+                                throw new DataPollException("Tried individual process, but not success");
+                            }
+                        }
+                    }
+
+
+                } else {
+                    logger.info("saveRdbModernData tableName: {} Records size:0", tableName);
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
+            logBuilder = new StringBuilder(e.getMessage());
+        }
+
+        return logBuilder;
     }
 
     public String saveRdbModernData(String tableName, String jsonData) throws DataPollException {
@@ -60,65 +124,10 @@ public class RdbModernDataPersistentDAO {
             Type resultType = new TypeToken<List<NrtObservationDto>>() {
             }.getType();
             List<NrtObservationDto> list = gson.fromJson(jsonData, resultType);
-            for (NrtObservationDto data : list) {
-                try {
-                    var domainModel = new NrtObservation(data);
-                    nrtObservationRepository.save(domainModel);
-                } catch (Exception e) {
-                    logger.error("ERROR occured at record: {}", gsonNorm.toJson(data));
-                    HandleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/");
-                    throw new DataPollException("Tried individual process, but not success");
-                }
-            }
+            persistingNrtObs(list, tableName);
         } else {
-            try {
-                SimpleJdbcInsert simpleJdbcInsert =
-                        new SimpleJdbcInsert(jdbcTemplate);
-                if (tableName != null && !tableName.isEmpty()) {
-                    deleteTable(tableName);//Delete first
-                    simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
-                    List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
-                    if (records != null && !records.isEmpty()) {
-                        logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-
-                        try {
-                            if (records.size() > ConstantValue.SQL_BATCH_SIZE) {
-                                int sublistSize = ConstantValue.SQL_BATCH_SIZE;
-                                for (int i = 0; i < records.size(); i += sublistSize) {
-                                    int end = Math.min(i + sublistSize, records.size());
-                                    List<Map<String, Object>> sublist = records.subList(i, end);
-                                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
-                                }
-                            } else {
-                                simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                            }
-                        } catch (DuplicateKeyException e) {
-                            for (Map<String, Object> record : records) {
-                                try {
-                                    simpleJdbcInsert.execute(new MapSqlParameterSource(record));
-                                } catch (Exception ei) {
-                                    // TODO: LOG THESE
-                                    logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
-                                    HandleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
-                                    throw new DataPollException("Tried individual process, but not success");
-                                }
-                            }
-                        }
-
-
-                    } else {
-                        logger.info("saveRdbModernData tableName: {} Records size:0", tableName);
-                    }
-                }
-
-            } catch (Exception e) {
-                logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
-                logBuilder = new StringBuilder(e.getMessage());
-            }
-
+            logBuilder = persistingGenericTable (logBuilder, tableName, jsonData);
         }
-
-
 
         return logBuilder.toString();
     }

@@ -40,6 +40,7 @@ public class RdbDataPersistentDAO {
     private static Logger logger = LoggerFactory.getLogger(RdbDataPersistentDAO.class);
     private JdbcTemplate jdbcTemplate;
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+    private final HandleError handleError;
     private final Gson gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
@@ -48,8 +49,46 @@ public class RdbDataPersistentDAO {
     protected String sqlErrorPath = "";
     private final Gson gsonNorm = new Gson();
     @Autowired
-    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate) {
+    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError) {
         this.jdbcTemplate = jdbcTemplate;
+        this.handleError = handleError;
+    }
+
+    protected void persistingGenericTable (String tableName, String jsonData) throws DataPollException {
+        if (tableName != null && !tableName.isEmpty()) {
+            SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
+            simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
+            List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+            if (records != null && !records.isEmpty()) {
+                logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
+                try {
+                    if (records.size() > ConstantValue.SQL_BATCH_SIZE) {
+                        int sublistSize = ConstantValue.SQL_BATCH_SIZE;
+                        for (int i = 0; i < records.size(); i += sublistSize) {
+                            int end = Math.min(i + sublistSize, records.size());
+                            List<Map<String, Object>> sublist = records.subList(i, end);
+                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                        }
+                    } else {
+                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                    }
+                } catch (Exception e) {
+                    for (Map<String, Object> record : records) {
+                        try {
+                            simpleJdbcInsert.execute(new MapSqlParameterSource(record));
+                        } catch (Exception ei) {
+                            // TODO: LOG THESE
+                            logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
+                            handleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
+                            throw new DataPollException("Tried individual process, but not success");
+                        }
+                    }
+                }
+
+            } else {
+                logger.info("Inside generic code tableName: {} Records size:0", tableName);
+            }
+        }
     }
 
     @SuppressWarnings("java:S3776")
@@ -82,41 +121,7 @@ public class RdbDataPersistentDAO {
             }
         } else {
             try {
-                SimpleJdbcInsert simpleJdbcInsert =
-                        new SimpleJdbcInsert(jdbcTemplate);
-                if (tableName != null && !tableName.isEmpty()) {
-                    simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
-                    List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
-                    if (records != null && !records.isEmpty()) {
-                        logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                        try {
-                            if (records.size() > ConstantValue.SQL_BATCH_SIZE) {
-                                int sublistSize = ConstantValue.SQL_BATCH_SIZE;
-                                for (int i = 0; i < records.size(); i += sublistSize) {
-                                    int end = Math.min(i + sublistSize, records.size());
-                                    List<Map<String, Object>> sublist = records.subList(i, end);
-                                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
-                                }
-                            } else {
-                                simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                            }
-                        } catch (Exception e) {
-                            for (Map<String, Object> record : records) {
-                                try {
-                                    simpleJdbcInsert.execute(new MapSqlParameterSource(record));
-                                } catch (Exception ei) {
-                                    // TODO: LOG THESE
-                                    logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
-                                    HandleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
-                                    throw new DataPollException("Tried individual process, but not success");
-                                }
-                            }
-                        }
-
-                    } else {
-                        logger.info("Inside generic code tableName: {} Records size:0", tableName);
-                    }
-                }
+                persistingGenericTable (tableName, jsonData);
             }
             catch (Exception e) {
                 logBuilder = new StringBuilder(e.getMessage());
