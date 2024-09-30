@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class DataExchangeControllerTest {
@@ -95,10 +97,16 @@ class DataExchangeControllerTest {
         String base64CompressedData = "mockBase64Data";
         String load = "true";
 
-        when(dataExchangeGenericService.getGenericDataExchange(anyString(), anyString(), anyInt(), anyBoolean()))
+        when(dataExchangeGenericService.getDataForDataSync(anyString(), anyString(),anyString(), anyString(), anyBoolean(), anyBoolean()))
                 .thenReturn(base64CompressedData);
 
-        ResponseEntity<String> response = dataExchangeController.exchangingData(tableName, timestamp, limit, load);
+        ResponseEntity<String> response = dataExchangeController.dataSync(
+                tableName,
+                timestamp,
+                "0",
+                "1",
+                limit,
+                load);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());

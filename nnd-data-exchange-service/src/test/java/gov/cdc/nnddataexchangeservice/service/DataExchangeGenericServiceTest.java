@@ -50,9 +50,10 @@ class DataExchangeGenericServiceTest {
 
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.empty());
 
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
-
-        assertNotNull(res);
+        DataExchangeException exception = assertThrows(DataExchangeException.class, () -> {
+            dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", false, false);
+        });
+        assertNotNull(exception);
 
     }
 
@@ -64,6 +65,8 @@ class DataExchangeGenericServiceTest {
 
         DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE");
+        config.setQueryWithPagination("SELECT * FROM HERE");
+        config.setQueryCount("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         config.setQueryWithNullTimeStamp("TEST SELECT");
@@ -79,7 +82,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", true, false);
         assertNotNull(res);
     }
 
@@ -91,6 +94,8 @@ class DataExchangeGenericServiceTest {
 
         DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE");
+        config.setQueryWithPagination("SELECT * FROM HERE");
+        config.setQueryCount("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         config.setQueryWithNullTimeStamp("");
@@ -106,7 +111,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", true, false);
         assertNotNull(res);
     }
 
@@ -118,6 +123,8 @@ class DataExchangeGenericServiceTest {
 
         DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE");
+        config.setQueryWithPagination("SELECT * FROM HERE");
+        config.setQueryCount("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         config.setQueryWithNullTimeStamp(null);
@@ -133,7 +140,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, true);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", true, false);
         assertNotNull(res);
     }
 
@@ -145,6 +152,8 @@ class DataExchangeGenericServiceTest {
 
         DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE :timestamp");
+        config.setQueryWithPagination("SELECT * FROM HERE");
+        config.setQueryCount("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         int limit = 0;
@@ -159,7 +168,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", true, false);
         assertNotNull(res);
     }
 
@@ -171,7 +180,8 @@ class DataExchangeGenericServiceTest {
 
         DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE :timestamp ");
-        config.setQueryWithLimit("SELECT * FROM HERE :timestamp :limit");
+        config.setQueryWithPagination("SELECT * FROM HERE :timestamp :limit");
+        config.setQueryCount("SELECT * FROM HERE");
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         int limit = 10;
@@ -186,7 +196,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", false, false);
         assertNotNull(res);
     }
 
@@ -198,7 +208,8 @@ class DataExchangeGenericServiceTest {
 
         DataSyncConfig config = new DataSyncConfig();
         config.setQuery("SELECT * FROM HERE :timestamp ");
-        config.setQueryWithLimit("SELECT * FROM HERE :timestamp :limit");
+        config.setQueryWithPagination("SELECT * FROM HERE :timestamp :limit");
+        config.setQueryCount("SELECT * FROM HERE");
         config.setQueryWithNullTimeStamp("SELECT * FROM HERE NULL");
         config.setTableName(tableName);
         config.setSourceDb("SRTE");
@@ -214,7 +225,7 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(config));
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
-        var res = dataExchangeGenericService.getGenericDataExchange(tableName, timeStamp, limit, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", false, false);
         assertNotNull(res);
     }
 
