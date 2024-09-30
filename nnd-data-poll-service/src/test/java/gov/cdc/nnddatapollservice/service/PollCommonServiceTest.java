@@ -231,7 +231,7 @@ class PollCommonServiceTest {
         pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
 
         // Assert
-        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLog(eq(tableName), eq(timestamp), eq(log));
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, log);
     }
 
     @Test
@@ -245,7 +245,7 @@ class PollCommonServiceTest {
         pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
 
         // Assert
-        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogS3(eq(tableName), eq(timestamp), eq(log));
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
     }
 
     @Test
@@ -259,6 +259,6 @@ class PollCommonServiceTest {
         pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
 
         // Assert
-        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName), eq(timestamp), eq(log));
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
     }
 }

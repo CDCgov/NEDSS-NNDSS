@@ -33,6 +33,7 @@ class SrteDataPersistentDAOTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        srteDataPersistentDAO.batchSize = 1000;
     }
 
     @Test
@@ -84,5 +85,28 @@ class SrteDataPersistentDAOTest {
                 anyString(),
                 any()
         );
+    }
+
+
+    @Test
+    void persistingGenericTable_Test()  {
+        srteDataPersistentDAO.batchSize = 0;
+        String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
+                "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
+        assertThrows(DataPollException.class, () ->
+                srteDataPersistentDAO.persistingGenericTable("TEST_TABLE", jsondata)
+        );
+
+    }
+
+    @Test
+    void persistingGenericTable_Test_2()  {
+        srteDataPersistentDAO.batchSize = 1000;
+        String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
+                "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
+        assertThrows(DataPollException.class, () ->
+                srteDataPersistentDAO.persistingGenericTable("TEST_TABLE", jsondata)
+        );
+
     }
 }
