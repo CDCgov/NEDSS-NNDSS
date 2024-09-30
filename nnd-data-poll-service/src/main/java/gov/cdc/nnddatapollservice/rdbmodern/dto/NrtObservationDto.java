@@ -2,7 +2,6 @@ package gov.cdc.nnddatapollservice.rdbmodern.dto;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
-import java.sql.Timestamp;
 
 @Data
 public class NrtObservationDto {

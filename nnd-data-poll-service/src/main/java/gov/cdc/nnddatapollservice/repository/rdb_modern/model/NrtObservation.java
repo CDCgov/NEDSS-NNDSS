@@ -1,7 +1,11 @@
 package gov.cdc.nnddatapollservice.repository.rdb_modern.model;
 
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

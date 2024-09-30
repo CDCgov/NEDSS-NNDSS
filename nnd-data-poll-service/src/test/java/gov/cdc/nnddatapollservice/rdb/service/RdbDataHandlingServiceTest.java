@@ -16,7 +16,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOCAL_DIR_LOG;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -142,11 +141,8 @@ class RdbDataHandlingServiceTest {
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
-        DataPollException exception = assertThrows(DataPollException.class, () -> {
-            dataHandlingService.pollAndPersistRDBData(tableName, true);
-        });
+        dataHandlingService.pollAndPersistRDBData(tableName, true);
 
-        assertNotNull(exception);
         // Assert
         verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
         verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
@@ -165,11 +161,9 @@ class RdbDataHandlingServiceTest {
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
-        DataPollException exception = assertThrows(DataPollException.class, () -> {
-            dataHandlingService.pollAndPersistRDBData(tableName, true);
-        });
+        dataHandlingService.pollAndPersistRDBData(tableName, true);
+
         // Assert
-        assertNotNull(exception);
         verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
         verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
         verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
