@@ -75,12 +75,12 @@ public class RdbDataPersistentDAO {
                         simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                     }
                 } catch (Exception e) {
-                    for (Map<String, Object> record : records) {
+                    for (Map<String, Object> res : records) {
                         try {
-                            simpleJdbcInsert.execute(new MapSqlParameterSource(record));
+                            simpleJdbcInsert.execute(new MapSqlParameterSource(res));
                         } catch (Exception ei) {
-                            logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
-                            handleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
+                            logger.error("ERROR occured at record: {}", gsonNorm.toJson(res));
+                            handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                             throw new DataPollException("Tried individual process, but not success");
                         }
                     }
@@ -273,7 +273,7 @@ public class RdbDataPersistentDAO {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
             updatedTime = formatter.format(lastTime); // NOSONAR
         }
-        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
+        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
         return updatedTime;
     }
 
@@ -287,7 +287,7 @@ public class RdbDataPersistentDAO {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
             updatedTime = formatter.format(lastTime); // NOSONAR
         }
-        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
+        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
         return updatedTime;
     }
 
@@ -301,7 +301,7 @@ public class RdbDataPersistentDAO {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
             updatedTime = formatter.format(lastTime); // NOSONAR
         }
-        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
+        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
         return updatedTime;
     }
 

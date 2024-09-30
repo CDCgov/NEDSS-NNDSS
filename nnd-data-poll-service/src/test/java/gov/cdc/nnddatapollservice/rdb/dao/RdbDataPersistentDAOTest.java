@@ -219,7 +219,7 @@ class RdbDataPersistentDAOTest {
     }
 
     @Test
-    void testSaveRdbModernData_Else_Success_2() throws DataPollException {
+    void testSaveRdbModernData_Else_Success_2() {
         // Arrange
         rdbDataPersistentDAO.batchSize = 0;
         String tableName = "SOME_TABLE";

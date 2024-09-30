@@ -189,4 +189,76 @@ class PollCommonServiceTest {
             mocked.verify(() -> PollServiceUtil.writeJsonToFile(any(), any(), any(), any(), any()));
         }
     }
+
+    @Test
+    void testGetLastUpdatedTimeS3() {
+        // Arrange
+        String tableName = "testTable";
+        String expectedTime = "2024-09-30 12:00:00";
+        when(rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName)).thenReturn(expectedTime);
+
+        // Act
+        String result = pollCommonService.getLastUpdatedTimeS3(tableName);
+
+        // Assert
+        assertEquals(expectedTime, result);
+        verify(rdbDataPersistentDAO, times(1)).getLastUpdatedTimeS3(tableName);
+    }
+
+    @Test
+    void testGetLastUpdatedTimeLocalDir() {
+        // Arrange
+        String tableName = "testTable";
+        String expectedTime = "2024-09-30 12:00:00";
+        when(rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName)).thenReturn(expectedTime);
+
+        // Act
+        String result = pollCommonService.getLastUpdatedTimeLocalDir(tableName);
+
+        // Assert
+        assertEquals(expectedTime, result);
+        verify(rdbDataPersistentDAO, times(1)).getLastUpdatedTimeLocalDir(tableName);
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLog() {
+        // Arrange
+        String tableName = "testTable";
+        Timestamp timestamp = Timestamp.valueOf("2024-09-30 12:00:00");
+        String log = "Update successful";
+
+        // Act
+        pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+
+        // Assert
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLog(eq(tableName), eq(timestamp), eq(log));
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLogS3() {
+        // Arrange
+        String tableName = "testTable";
+        Timestamp timestamp = Timestamp.valueOf("2024-09-30 12:00:00");
+        String log = "S3 Update successful";
+
+        // Act
+        pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+
+        // Assert
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogS3(eq(tableName), eq(timestamp), eq(log));
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLogLocalDir() {
+        // Arrange
+        String tableName = "testTable";
+        Timestamp timestamp = Timestamp.valueOf("2024-09-30 12:00:00");
+        String log = "Local Dir Update successful";
+
+        // Act
+        pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+
+        // Assert
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName), eq(timestamp), eq(log));
+    }
 }

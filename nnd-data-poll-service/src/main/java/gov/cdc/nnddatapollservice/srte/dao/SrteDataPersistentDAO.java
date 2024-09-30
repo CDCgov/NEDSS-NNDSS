@@ -60,13 +60,12 @@ public class SrteDataPersistentDAO {
                     jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                 }
             } catch (Exception e) {
-                for (Map<String, Object> record : records) {
+                for (Map<String, Object> res : records) {
                     try {
-                        jdbcInsert.execute(new MapSqlParameterSource(record));
+                        jdbcInsert.execute(new MapSqlParameterSource(res));
                     } catch (Exception ei) {
-                        log = ei.getMessage();
-                        logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
-                        handleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
+                        logger.error("ERROR occured at record: {}", gsonNorm.toJson(res));
+                        handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                         throw new DataPollException("Tried individual process, but not success");
                     }
                 }
