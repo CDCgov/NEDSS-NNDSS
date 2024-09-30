@@ -64,7 +64,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         logger.info("---END RDB_MODERN POLLING---");
     }
 
-    protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) throws DataPollException {
+    protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) {
         try {
             logger.info("--START--pollAndPersistRDBData for table {}", tableName);
             String log = "";
@@ -95,7 +95,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                 totalRecordCounts = iPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
                 iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LEVEL + log);
-                throw new DataPollException("TASK FAILED");
+                throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
             int batchSize = pullLimit;
@@ -117,8 +117,8 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                     iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
                 }
             } catch (Exception e) {
-                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LEVEL + log);
-                throw new DataPollException("TASK FAILED");
+                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LEVEL + e.getMessage());
+                throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
 
@@ -174,8 +174,8 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                         }
                     }
                 } catch (Exception e) {
-                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + log);
-                    throw new DataPollException("TASK FAILED");
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + e.getMessage());
+                    throw new DataPollException("TASK FAILED: " + e.getMessage());
                 }
 
             }

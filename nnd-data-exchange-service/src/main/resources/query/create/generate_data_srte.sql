@@ -18,18 +18,3 @@ INSERT INTO [RDB].[dbo].[data_sync_config] (table_name, source_db, query, query_
     'SELECT COUNT(*) FROM Program_area_code;',
     'WITH PaginatedResults AS (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum FROM Program_area_code) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;')
 ;
-
-INSERT INTO [RDB].[dbo].[data_sync_config]
-(table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
-VALUES
-    ('PROGRAM_AREA_CODE', 'SRTE',
-    'SELECT * FROM PROGRAM_AREA_CODE;',
-    NULL,
-    'SELECT COUNT(*) FROM PROGRAM_AREA_CODE;',
-    'WITH PaginatedResults AS (
-        SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
-        FROM PROGRAM_AREA_CODE
-    )
-    SELECT * FROM PaginatedResults
-    WHERE RowNum BETWEEN :startRow AND :endRow;')
-;

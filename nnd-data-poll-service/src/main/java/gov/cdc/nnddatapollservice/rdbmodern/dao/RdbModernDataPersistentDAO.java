@@ -6,8 +6,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import gov.cdc.nnddatapollservice.constant.ConstantValue;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
+import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
+import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,8 @@ public class RdbModernDataPersistentDAO {
     private static Logger logger = LoggerFactory.getLogger(RdbModernDataPersistentDAO.class);
     private JdbcTemplate jdbcTemplate;
 
+    private final NrtObservationRepository nrtObservationRepository;
+
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
     private final Gson gsonNorm = new Gson();
@@ -44,8 +47,10 @@ public class RdbModernDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
     @Autowired
-    public RdbModernDataPersistentDAO(@Qualifier("rdbmodernJdbcTemplate") JdbcTemplate jdbcTemplate) {
+    public RdbModernDataPersistentDAO(@Qualifier("rdbmodernJdbcTemplate") JdbcTemplate jdbcTemplate,
+                                      NrtObservationRepository nrtObservationRepository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.nrtObservationRepository = nrtObservationRepository;
     }
 
     public String saveRdbModernData(String tableName, String jsonData) throws DataPollException {
@@ -53,12 +58,13 @@ public class RdbModernDataPersistentDAO {
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
         if ("NRT_OBSERVATION".equalsIgnoreCase(tableName)) {
             logBuilder = new StringBuilder();
-            Type resultType = new TypeToken<List<ConfirmationMethod>>() {
+            Type resultType = new TypeToken<List<NrtObservationDto>>() {
             }.getType();
             List<NrtObservationDto> list = gson.fromJson(jsonData, resultType);
             for (NrtObservationDto data : list) {
                 try {
-                    logBuilder.append(", ").append(upsertNrtObservation(data));
+                    var domainModel = new NrtObservation(data);
+                    nrtObservationRepository.save(domainModel);
                 } catch (Exception e) {
                     logger.error("ERROR occured at record: {}", gsonNorm.toJson(data));
                     HandleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/");
@@ -137,15 +143,15 @@ public class RdbModernDataPersistentDAO {
                 "target.prog_area_cd = " + getSqlString(observation.getProgAreaCd()) + ", " +
                 "target.pregnant_ind_cd = " + getSqlString(observation.getPregnantIndCd()) + ", " +
                 "target.local_id = " + getSqlString(observation.getLocalId()) + ", " +
-                "target.activity_to_time = " + getSqlTimestamp(observation.getActivityToTime()) + ", " +
-                "target.effective_from_time = " + getSqlTimestamp(observation.getEffectiveFromTime()) + ", " +
-                "target.rpt_to_state_time = " + getSqlTimestamp(observation.getRptToStateTime()) + ", " +
+                "target.activity_to_time = " + getSqlString(observation.getActivityToTime()) + ", " +
+                "target.effective_from_time = " + getSqlString(observation.getEffectiveFromTime()) + ", " +
+                "target.rpt_to_state_time = " + getSqlString(observation.getRptToStateTime()) + ", " +
                 "target.electronic_ind = " + getSqlString(observation.getElectronicInd()) + ", " +
                 "target.version_ctrl_nbr = " + observation.getVersionCtrlNbr() + ", " +
                 "target.ordering_person_id = " + observation.getOrderingPersonId() + ", " +
                 "target.patient_id = " + observation.getPatientId() + ", " +
-                "target.last_chg_time = " + getSqlTimestamp(observation.getLastChgTime()) + ", " +
-                "target.refresh_datetime = " + getSqlTimestamp(observation.getRefreshDatetime()) + " " +
+                "target.last_chg_time = " + getSqlString(observation.getLastChgTime()) + ", " +
+                "target.refresh_datetime = " + getSqlString(observation.getRefreshDatetime()) + " " +
                 "WHEN NOT MATCHED THEN " +
                 " INSERT (observation_uid, class_cd, mood_cd, act_uid, cd_desc_text, record_status_cd, jurisdiction_cd, " +
                 "program_jurisdiction_oid, prog_area_cd, pregnant_ind_cd, local_id, activity_to_time, effective_from_time, " +
@@ -162,15 +168,15 @@ public class RdbModernDataPersistentDAO {
                 getSqlString(observation.getProgAreaCd()) + ", " +
                 getSqlString(observation.getPregnantIndCd()) + ", " +
                 getSqlString(observation.getLocalId()) + ", " +
-                getSqlTimestamp(observation.getActivityToTime()) + ", " +
-                getSqlTimestamp(observation.getEffectiveFromTime()) + ", " +
-                getSqlTimestamp(observation.getRptToStateTime()) + ", " +
+                getSqlString(observation.getActivityToTime()) + ", " +
+                getSqlString(observation.getEffectiveFromTime()) + ", " +
+                getSqlString(observation.getRptToStateTime()) + ", " +
                 getSqlString(observation.getElectronicInd()) + ", " +
                 observation.getVersionCtrlNbr() + ", " +
                 observation.getOrderingPersonId() + ", " +
                 observation.getPatientId() + ", " +
-                getSqlTimestamp(observation.getLastChgTime()) + ", " +
-                getSqlTimestamp(observation.getRefreshDatetime()) + ");";
+                getSqlString(observation.getLastChgTime()) + ", " +
+                getSqlString(observation.getRefreshDatetime()) + ");";
         try {
             jdbcTemplate.update(sql);
         } catch (Exception e) {

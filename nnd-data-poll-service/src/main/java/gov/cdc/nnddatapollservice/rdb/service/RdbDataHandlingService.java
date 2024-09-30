@@ -71,7 +71,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         logger.info("---END RDB POLLING---");
     }
 
-    protected void pollAndPersistRDBData(String tableName, boolean isInitialLoad) throws DataPollException {
+    protected void pollAndPersistRDBData(String tableName, boolean isInitialLoad) {
         try {
             String log = "";
             boolean exceptionAtApiLevel = false;
@@ -98,8 +98,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             try {
                 totalRecordCounts = pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
-                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LEVEL + log);
-                throw new DataPollException("TASK FAILED");
+                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LEVEL + e.getMessage());
+                throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
             int batchSize = pullLimit;
             int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
@@ -119,8 +119,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                     pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
                 }
             } catch (Exception e) {
-                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LEVEL + log);
-                throw new DataPollException("TASK FAILED");
+                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LEVEL + e.getMessage());
+                throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
 
@@ -180,7 +180,6 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             }
         }catch (Exception e) {
             logger.error("TASK failed. tableName: {}, message: {}", tableName, e.getMessage());
-            throw new DataPollException("TASK FAILED");
         }
 
     }
