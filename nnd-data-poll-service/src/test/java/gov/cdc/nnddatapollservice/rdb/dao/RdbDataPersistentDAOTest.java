@@ -125,7 +125,7 @@ class RdbDataPersistentDAOTest {
         String tableName = "non_existing_table";
         doThrow(new RuntimeException("Simulated exception")).when(jdbcTemplate).execute(anyString());
         rdbDataPersistentDAO.deleteTable(tableName);
-        verify(jdbcTemplate).execute("delete " + tableName);
+        verify(jdbcTemplate).execute("delete FROM " + tableName);
     }
 
 

@@ -51,14 +51,14 @@ class PollCommonServiceTest {
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(mockResponse);
 
-        pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp);
+        pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp, true, "0", "1");
         verify(tokenService, times(1)).getToken();
     }
 
     @Test
     void testPersistingExchangeData_Exception() {
         String timestamp = "2024-09-15 10:15:20.123";
-        assertThrows(DataPollException.class, () -> pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp));
+        assertThrows(DataPollException.class, () -> pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp, true, "0", "1"));
 
         verify(tokenService, times(1)).getToken();
     }

@@ -16,6 +16,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -35,6 +37,7 @@ class RdbModernDataHandlingServiceTest {
         MockitoAnnotations.openMocks(this);
         rdbModernDataHandlingService.storeInSql = false;
         rdbModernDataHandlingService.storeJsonInS3 = false;
+        rdbModernDataHandlingService.pullLimit = 1000;
         rdbModernDataHandlingService.storeJsonInLocalFolder = false;
     }
 
@@ -86,12 +89,13 @@ class RdbModernDataHandlingServiceTest {
         setupServiceWithMockedDependencies();
         String tableName = "exampleTable";
         rdbModernDataHandlingService.storeJsonInS3= true;
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
         // Act
         rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
 
         // Assert
-        verify(is3DataService).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
-        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+        verify(is3DataService, times(2)).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
+        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogS3(anyString(), any(), anyString());
     }
 
     @Test
@@ -100,12 +104,13 @@ class RdbModernDataHandlingServiceTest {
         setupServiceWithMockedDependencies();
         String tableName = "exampleTable";
         rdbModernDataHandlingService.storeJsonInLocalFolder= true;
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
         // Act
         rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
 
         // Assert
-        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString());
-        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+        verify(pollCommonService, times(2)).writeJsonDataToFile(anyString(), anyString(), any(),anyString());
+        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(anyString(), any(), anyString());
     }
 
     private void setupServiceWithMockedDependencies() throws DataPollException {
@@ -113,10 +118,43 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
         when(pollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
         when(pollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString())).thenReturn("encodedData");
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("encodedData");
 
 
 
+    }
+
+    @Test
+    void testPollAndPersistRDBData_exception_task_failed_1() throws DataPollException {
+        String tableName = "testTable";
+        // Arrange
+        String expectedErrorMessage = "Simulated API Exception";
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+                .thenThrow(new RuntimeException(expectedErrorMessage));
+
+        // Act
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+        // Assert
+        verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
+    }
+
+    @Test
+    void testPollAndPersistRDBData_exception_FailedTask_2() throws DataPollException {
+        String tableName = "testTable";
+        // Arrange
+        String expectedErrorMessage = "Simulated API Exception";
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+                .thenReturn(1000);
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString()))
+                .thenThrow(new RuntimeException(expectedErrorMessage));
+
+        // Act
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+
+        // Assert
+        verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
     }
 
     @Test
@@ -125,13 +163,21 @@ class RdbModernDataHandlingServiceTest {
         // Arrange
         String expectedErrorMessage = "Simulated API Exception";
         when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString()))
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+                .thenReturn(1000);
+        when(pollCommonService.callDataExchangeEndpoint(
+                eq("testTable"),
+                eq(true),
+                anyString(),
+                eq(false),
+                anyString(),
+                anyString()))
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
         rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
 
         // Assert
-        verify(pollCommonService).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
+        verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
     }
 }

@@ -16,6 +16,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOCAL_DIR_LOG;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -37,6 +40,7 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.storeJsonInS3 = false;
         dataHandlingService.storeInSql = false;
         dataHandlingService.storeJsonInLocalFolder = false;
+        dataHandlingService.pullLimit = 1000;
     }
 
     @Test
@@ -88,12 +92,17 @@ class RdbDataHandlingServiceTest {
         setupServiceWithMockedDependencies();
         String tableName = "exampleTable";
         dataHandlingService.storeJsonInS3= true;
+
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
+
         // Act
         dataHandlingService.pollAndPersistRDBData(tableName, true);
 
         // Assert
-        verify(is3DataService).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
-        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+        verify(is3DataService, times(2)).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
+        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogS3(anyString(), any(), anyString());
+
+
     }
 
     @Test
@@ -102,12 +111,14 @@ class RdbDataHandlingServiceTest {
         setupServiceWithMockedDependencies();
         String tableName = "exampleTable";
         dataHandlingService.storeJsonInLocalFolder= true;
+
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
         // Act
         dataHandlingService.pollAndPersistRDBData(tableName, true);
 
         // Assert
-        verify(pollCommonService).writeJsonDataToFile(anyString(), anyString(), any(),anyString());
-        verify(pollCommonService).updateLastUpdatedTimeAndLog(anyString(), any(), anyString());
+        verify(pollCommonService, times(2)).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
+        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(anyString(), any(), anyString());
     }
 
     private void setupServiceWithMockedDependencies() throws DataPollException {
@@ -115,12 +126,54 @@ class RdbDataHandlingServiceTest {
         when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
         when(pollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
         when(pollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString())).thenReturn("encodedData");
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("encodedData");
 
 
 
     }
 
+    @Test
+    void testPollAndPersistRDBData_exception_task_failed_1() throws DataPollException {
+        String tableName = "testTable";
+        // Arrange
+        String expectedErrorMessage = "Simulated API Exception";
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+                .thenThrow(new RuntimeException(expectedErrorMessage));
+
+        // Act
+        DataPollException exception = assertThrows(DataPollException.class, () -> {
+            dataHandlingService.pollAndPersistRDBData(tableName, true);
+        });
+
+        assertNotNull(exception);
+        // Assert
+        verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
+        verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
+        verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
+    }
+
+    @Test
+    void testPollAndPersistRDBData_exceptionAtApiLevel_FailedTask_2() throws DataPollException {
+        String tableName = "testTable";
+        // Arrange
+        String expectedErrorMessage = "Simulated API Exception";
+        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+                .thenReturn(1000);
+        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString()))
+                .thenThrow(new RuntimeException(expectedErrorMessage));
+
+        // Act
+        DataPollException exception = assertThrows(DataPollException.class, () -> {
+            dataHandlingService.pollAndPersistRDBData(tableName, true);
+        });
+        // Assert
+        assertNotNull(exception);
+        verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
+        verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
+        verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
+    }
 
     @Test
     void testPollAndPersistRDBData_exceptionAtApiLevel() throws DataPollException {
@@ -128,16 +181,25 @@ class RdbDataHandlingServiceTest {
         // Arrange
         String expectedErrorMessage = "Simulated API Exception";
         when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString()))
+        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+                .thenReturn(1000);
+        when(pollCommonService.callDataExchangeEndpoint(
+                eq("testTable"),
+                eq(true),
+                anyString(),
+                eq(false),
+                anyString(),
+                anyString()))
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
         dataHandlingService.pollAndPersistRDBData(tableName, true);
 
         // Assert
-        verify(pollCommonService).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
+        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName), any(), any());
         verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
         verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
         verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
     }
+
 }

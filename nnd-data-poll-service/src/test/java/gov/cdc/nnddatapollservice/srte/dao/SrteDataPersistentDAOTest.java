@@ -46,6 +46,6 @@ class SrteDataPersistentDAOTest {
         String tableName = "non_existing_table";
         doThrow(new RuntimeException("Simulated exception")).when(jdbcTemplate).execute(anyString());
         srteDataPersistentDAO.deleteTable(tableName);
-        verify(jdbcTemplate).execute("delete " + tableName);
+        verify(jdbcTemplate).execute("delete FROM " + tableName);
     }
 }

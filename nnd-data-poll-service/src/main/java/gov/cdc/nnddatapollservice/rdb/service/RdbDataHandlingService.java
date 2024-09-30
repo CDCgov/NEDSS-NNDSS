@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 

@@ -93,7 +93,7 @@ public class RdbModernDataPersistentDAO {
 
     public void deleteTable(String tableName) {
         try {
-            String deleteSql = "delete FROM" + tableName;
+            String deleteSql = "delete FROM " + tableName;
             jdbcTemplate.execute(deleteSql);
         } catch (Exception e) {
             logger.error("RDB_MODERN:Error in deleting table:{}", e.getMessage());
