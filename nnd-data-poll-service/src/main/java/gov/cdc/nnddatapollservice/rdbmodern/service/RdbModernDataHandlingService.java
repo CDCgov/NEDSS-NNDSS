@@ -70,22 +70,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
             String log = "";
             boolean exceptionAtApiLevel = false;
             Integer totalRecordCounts = 0;
-            String timeStampForPoll = "";
-            if (isInitialLoad) {
-                timeStampForPoll = iPollCommonService.getCurrentTimestamp();
-            } else {
-                if(storeJsonInS3) {
-                    timeStampForPoll = iPollCommonService.getLastUpdatedTimeS3(tableName);
-                }
-                else if (storeInSql)
-                {
-                    timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
-                }
-                else
-                {
-                    timeStampForPoll = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
-                }
-            }
+            String timeStampForPoll = getPollTimestamp(isInitialLoad, tableName);
             logger.info("isInitialLoad {}", isInitialLoad);
 
             logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
@@ -144,39 +129,8 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                     exceptionAtApiLevel = true;
                 }
 
-                try {
-                    if (exceptionAtApiLevel) {
-                        if (storeInSql) {
-                            iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
-                        }
-                        else if (storeJsonInS3)
-                        {
-                            iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
-                        }
-                        else
-                        {
-                            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
-                        }
-                    } else {
-                        if (storeJsonInS3) {
-                            log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
-                            iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
-                        }
-                        else if (storeInSql)
-                        {
-                            log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
-                            iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
-                        }
-                        else
-                        {
-                            log = iPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
-                            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
-                        }
-                    }
-                } catch (Exception e) {
-                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + e.getMessage());
-                    throw new DataPollException("TASK FAILED: " + e.getMessage());
-                }
+                updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+                        rawJsonData, isInitialLoad, log);
 
             }
         } catch (Exception e) {
@@ -184,6 +138,61 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         }
     }
 
+    protected String getPollTimestamp(boolean isInitialLoad, String tableName) {
+        String timeStampForPoll;
+        if (isInitialLoad) {
+            timeStampForPoll = iPollCommonService.getCurrentTimestamp();
+        } else {
+            if(storeJsonInS3) {
+                timeStampForPoll = iPollCommonService.getLastUpdatedTimeS3(tableName);
+            }
+            else if (storeInSql)
+            {
+                timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
+            }
+            else
+            {
+                timeStampForPoll = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
+            }
+        }
+        return timeStampForPoll;
+    }
+
+    protected void updateDataHelper(boolean exceptionAtApiLevel, String tableName, Timestamp timestamp,
+                                    String rawJsonData, boolean isInitialLoad, String log) {
+        try {
+            if (exceptionAtApiLevel) {
+                if (storeInSql) {
+                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                }
+                else if (storeJsonInS3)
+                {
+                    iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
+                }
+                else
+                {
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
+                }
+            } else {
+                if (storeJsonInS3) {
+                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+                    iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
+                }
+                else if (storeInSql)
+                {
+                    log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
+                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+                }
+                else
+                {
+                    log = iPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
+                }
+            }
+        } catch (Exception e) {
+            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + e.getMessage());
+        }
+    }
 
 
     private void cleanupTables(List<PollDataSyncConfig> configTableList) {

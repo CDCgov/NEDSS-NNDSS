@@ -69,22 +69,8 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
             logger.info("--START--pollAndPersistSRTEData for table {}", tableName);
             String log = "";
             boolean exceptionAtApiLevel = false;
-            String timeStampForPoll = "";
+            String timeStampForPoll = getPollTimestamp( isInitialLoad, tableName);
             Integer totalRecordCounts = 0;
-            if (isInitialLoad) {
-                timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
-            } else {
-                if (storeInSql) {
-                    timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
-                }
-                else if (storeJsonInS3) {
-                    timeStampForPoll = outboundPollCommonService.getLastUpdatedTimeS3(tableName);
-                }
-                else {
-                    timeStampForPoll = outboundPollCommonService.getLastUpdatedTimeLocalDir(tableName);
-                }
-            }
-            logger.info("isInitialLoad {}", isInitialLoad);
 
             logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
             var timestampWithNull = Timestamp.from(Instant.now());
@@ -138,44 +124,67 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
                     exceptionAtApiLevel = true;
                 }
 
-                try {
-                    if (exceptionAtApiLevel)
-                    {
-                        if (storeInSql) {
-                            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
-                        }
-                        else if (storeJsonInS3) {
-                            outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
-                        }
-                        else {
-                            outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
-                        }
-                    }
-                    else
-                    {
-                        if (storeJsonInS3) {
-                            log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
-                            outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
-                        }
-                        else if (storeInSql) {
-                            log =  srteDataPersistentDAO.saveSRTEData(tableName, rawJsonData);
-                            outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
-                        }
-                        else {
-                            log = outboundPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
-                            outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
-                        }
-                    }
-                } catch (Exception e) {
-                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + e.getMessage());
-                    throw new DataPollException("TASK FAILED: " + e.getMessage());
-                }
+                updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+                        rawJsonData, isInitialLoad, log);
 
             }
         } catch (Exception e) {
             logger.error("TASK failed. tableName: {}, message: {}", tableName, e.getMessage());
         }
 
+    }
+
+    protected String getPollTimestamp(boolean isInitialLoad, String tableName) {
+        String timeStampForPoll;
+        if (isInitialLoad) {
+            timeStampForPoll = outboundPollCommonService.getCurrentTimestamp();
+        } else {
+            if (storeInSql) {
+                timeStampForPoll = outboundPollCommonService.getLastUpdatedTime(tableName);
+            }
+            else if (storeJsonInS3) {
+                timeStampForPoll = outboundPollCommonService.getLastUpdatedTimeS3(tableName);
+            }
+            else {
+                timeStampForPoll = outboundPollCommonService.getLastUpdatedTimeLocalDir(tableName);
+            }
+        }
+        return timeStampForPoll;
+    }
+
+    protected void updateDataHelper(boolean exceptionAtApiLevel, String tableName, Timestamp timestamp,
+                                    String rawJsonData, boolean isInitialLoad, String log) {
+        try {
+            if (exceptionAtApiLevel)
+            {
+                if (storeInSql) {
+                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+                }
+                else if (storeJsonInS3) {
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
+                }
+                else {
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
+                }
+            }
+            else
+            {
+                if (storeJsonInS3) {
+                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
+                }
+                else if (storeInSql) {
+                    log =  srteDataPersistentDAO.saveSRTEData(tableName, rawJsonData);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
+                }
+                else {
+                    log = outboundPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
+                }
+            }
+        } catch (Exception e) {
+            outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + e.getMessage());
+        }
     }
 
 
