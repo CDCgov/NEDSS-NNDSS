@@ -10,16 +10,19 @@ import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -40,6 +43,36 @@ class PollCommonServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
+
+    @Test
+    void testCallDataCountEndpoint_Success() {
+        // Arrange
+        pollCommonService.exchangeTotalRecordEndpoint = "http://ip.jsontest.com/";
+        String tableName = "NRT_OBSERVATION";
+        boolean isInitialLoad = true;
+        String lastUpdatedTime = "2024-10-01";
+        String token = "sampleToken";
+
+        when(tokenService.getToken()).thenReturn(token);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.add("clientid", "clientId");
+        headers.add("clientsecret", "clientSecret");
+        headers.add("initialLoad", String.valueOf(isInitialLoad));
+
+        when(tokenService.getToken()).thenReturn("testtoken");
+
+        ResponseEntity<String> mockResponse = ResponseEntity.ok("Mock Response Body");
+        when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(mockResponse);
+
+        // Act
+        assertThrows(DataPollException.class,
+                () ->
+                        pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, lastUpdatedTime));
+
+    }
+
 
     @Test
     void handlingExchangedData_initialLoad() throws DataPollException {

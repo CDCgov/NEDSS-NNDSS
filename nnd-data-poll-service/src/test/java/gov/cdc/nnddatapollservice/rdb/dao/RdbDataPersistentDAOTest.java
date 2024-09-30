@@ -43,6 +43,7 @@ class RdbDataPersistentDAOTest {
 
     @InjectMocks
     RdbDataPersistentDAO rdbDataPersistentDAO;
+    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     @Mock
     private Gson gson;
@@ -245,4 +246,106 @@ class RdbDataPersistentDAOTest {
         assertNotNull(result);
     }
 
+
+    @Test
+    void testGetLastUpdatedTimeS3_Success() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+        Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
+        SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+        String expectedFormattedTime = formatter.format(timestamp) + ".000";
+
+        when(jdbcTemplate.queryForObject(
+                "select last_update_time_s3 from POLL_DATA_SYNC_CONFIG where table_name=?",
+                Timestamp.class, tableName)).thenReturn(timestamp);
+
+        // Act
+        String result = rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName);
+
+        // Assert
+        assertEquals(expectedFormattedTime, result);
+    }
+
+    @Test
+    void testGetLastUpdatedTimeS3_NullTimestamp() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+
+        when(jdbcTemplate.queryForObject(
+                "select last_update_time_s3 from POLL_DATA_SYNC_CONFIG where table_name=?",
+                Timestamp.class, tableName)).thenReturn(null);
+
+        // Act
+        String result = rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName);
+
+        // Assert
+        assertEquals("", result);
+    }
+
+    @Test
+    void testGetLastUpdatedTimeLocalDir_Success() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+        Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
+        SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+        String expectedFormattedTime = formatter.format(timestamp) + ".000";
+
+        when(jdbcTemplate.queryForObject(
+                "select last_update_time_local_dir from POLL_DATA_SYNC_CONFIG where table_name=?",
+                Timestamp.class, tableName)).thenReturn(timestamp);
+
+        // Act
+        String result = rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName);
+
+        // Assert
+        assertEquals(expectedFormattedTime, result);
+    }
+
+    @Test
+    void testGetLastUpdatedTimeLocalDir_NullTimestamp() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+
+        when(jdbcTemplate.queryForObject(
+                "select last_update_time_local_dir from POLL_DATA_SYNC_CONFIG where table_name=?",
+                Timestamp.class, tableName)).thenReturn(null);
+
+        // Act
+        String result = rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName);
+
+        // Assert
+        assertEquals("", result);
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLogS3_Success() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+        Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
+        String log = "Update successful";
+
+        String expectedSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
+
+        // Act
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+
+        // Assert
+        verify(jdbcTemplate).update(expectedSql, timestamp, log, tableName);
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLogLocalDir_Success() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+        Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
+        String log = "Local dir update successful";
+
+        String expectedSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
+
+        // Act
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+
+        // Assert
+        verify(jdbcTemplate).update(expectedSql, timestamp, log, tableName);
+    }
 }
