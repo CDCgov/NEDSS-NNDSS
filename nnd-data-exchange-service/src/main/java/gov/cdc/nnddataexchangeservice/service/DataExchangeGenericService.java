@@ -29,14 +29,17 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final DataSyncConfigRepository dataSyncConfigRepository;
     private final JdbcTemplate jdbcTemplate;
     private final JdbcTemplate srteJdbcTemplate;
+    private final JdbcTemplate rdbModernJdbcTemplate;
     private final Gson gson;
 
     public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository,
                                       @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                      @Qualifier("srteJdbcTemplate")  JdbcTemplate srteJdbcTemplate) {
+                                      @Qualifier("srteJdbcTemplate")  JdbcTemplate srteJdbcTemplate,
+                                      @Qualifier("rdbModernJdbcTemplate")  JdbcTemplate rdbModernJdbcTemplate) {
         this.dataSyncConfigRepository = dataSyncConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.srteJdbcTemplate = srteJdbcTemplate;
+        this.rdbModernJdbcTemplate = rdbModernJdbcTemplate;
 
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
@@ -71,7 +74,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             } else if (sourceDb.equalsIgnoreCase(DB_SRTE)) {
                 return srteJdbcTemplate.queryForObject(query, Integer.class);
             } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
-                throw new DataExchangeException("TO BE IMPLEMENTED");
+                return rdbModernJdbcTemplate.queryForObject(query, Integer.class);
             } else {
                 throw new DataExchangeException("Database Not Supported: " + sourceDb);
             }
@@ -128,7 +131,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         } else if (sourceDb.equalsIgnoreCase(DB_RDB)) {
             return jdbcTemplate.queryForList(query);
         } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
-            throw new DataExchangeException("TO BE IMPLEMENTED");
+            return rdbModernJdbcTemplate.queryForList(query);
         } else {
             throw new DataExchangeException("DB IS NOT SUPPORTED: " + sourceDb);
         }
