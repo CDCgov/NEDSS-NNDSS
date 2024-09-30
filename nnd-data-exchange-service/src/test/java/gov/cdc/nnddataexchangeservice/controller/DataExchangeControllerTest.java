@@ -18,7 +18,8 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.when;
 
 class DataExchangeControllerTest {
 
@@ -129,5 +130,25 @@ class DataExchangeControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(decodedData, response.getBody());
     }
+
+
+    @Test
+    void dataSyncTotalRecords_Test() throws Exception {
+        String tableName = "test_table";
+        String timestamp = "2024-07-11";
+        String base64CompressedData = "mockBase64Data";
+
+        when(dataExchangeGenericService.getTotalRecord(anyString(), anyBoolean(),anyString()))
+                .thenReturn(10);
+
+        ResponseEntity<Integer> response = dataExchangeController.dataSyncTotalRecords(
+                tableName,
+                timestamp,
+                "true");
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
 
 }

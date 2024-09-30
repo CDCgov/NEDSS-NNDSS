@@ -1,19 +1,31 @@
 package gov.cdc.nnddatapollservice.srte.dao;
 
+import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.share.HandleError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 class SrteDataPersistentDAOTest {
     @Mock
     private JdbcTemplate jdbcTemplate;
+    @Mock
+    private HandleError handleError;
 
     @InjectMocks
     private SrteDataPersistentDAO srteDataPersistentDAO;
@@ -47,5 +59,30 @@ class SrteDataPersistentDAOTest {
         doThrow(new RuntimeException("Simulated exception")).when(jdbcTemplate).execute(anyString());
         srteDataPersistentDAO.deleteTable(tableName);
         verify(jdbcTemplate).execute("delete FROM " + tableName);
+    }
+
+    @Test
+    void testPersistingGenericTable_ExceptionDuringInsert_WritesToFile()  {
+        // Arrange
+        String tableName = "GENERIC_TABLE";
+        String jsonData = "[{\"key\": \"value\"}]";
+        List<Map<String, Object>> records = Collections.singletonList(Collections.singletonMap("key", "value"));
+        SimpleJdbcInsert mockSimpleJdbcInsert = mock(SimpleJdbcInsert.class);
+
+        doThrow(new RuntimeException("Insert Error")).when(mockSimpleJdbcInsert).executeBatch(any(SqlParameterSource[].class));
+        doThrow(new RuntimeException("Insert Error")).when(mockSimpleJdbcInsert).execute(any(MapSqlParameterSource.class));
+
+        // Act & Assert
+        assertThrows(DataPollException.class, () ->
+                srteDataPersistentDAO.persistingGenericTable(tableName, jsonData)
+        );
+
+        // Ensure that writing to file is called
+        verify(handleError, times(1)).writeRecordToFile(
+                any(),
+                eq(records.get(0)),
+                anyString(),
+                any()
+        );
     }
 }

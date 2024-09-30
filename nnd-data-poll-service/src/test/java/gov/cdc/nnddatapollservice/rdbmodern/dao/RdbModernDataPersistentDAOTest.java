@@ -7,13 +7,13 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
+import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -21,12 +21,11 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import javax.sql.DataSource;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -43,11 +42,46 @@ class RdbModernDataPersistentDAOTest {
     @InjectMocks
     private RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
 
+    @Mock
+    private HandleError handleError;
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(jdbcTemplate.getDataSource()).thenReturn(dataSource);
         ConstantValue.SQL_BATCH_SIZE = 10000;
+    }
+
+    @Test
+    void testPersistingNrtObs_CatchBlock() {
+        // Arrange
+        NrtObservationDto dto = new NrtObservationDto();
+        dto.setObservationUid(12345L);
+        List<NrtObservationDto>  nrtObservationList = Collections.singletonList(dto);
+        String tableName = "NRT_OBSERVATION";
+        RuntimeException mockException = new RuntimeException("Database save error");
+
+        doThrow(mockException).when(nrtObservationRepository).save(any(NrtObservation.class));
+
+        DataPollException exception = assertThrows(DataPollException.class, () ->
+                rdbModernDataPersistentDAO.persistingNrtObs(nrtObservationList, tableName));
+
+        assertEquals("Tried individual process, but not success", exception.getMessage());
+    }
+
+    @Test
+    void testPersistingGenericTable_ExceptionCase_WritesToFile()  {
+        // Arrange
+        String tableName = "GENERIC_TABLE";
+        String jsonData = "[{\"key\": \"value\"}]";
+        SimpleJdbcInsert mockSimpleJdbcInsert = mock(SimpleJdbcInsert.class);
+
+        doThrow(new RuntimeException("SQL Error")).when(mockSimpleJdbcInsert).executeBatch(any(SqlParameterSource[].class));
+
+        StringBuilder logBuilder = new StringBuilder();
+
+        StringBuilder resultLog = rdbModernDataPersistentDAO.persistingGenericTable(logBuilder, tableName, jsonData);
+
+        assertEquals("Tried individual process, but not success", resultLog.toString());
     }
 
     @Test

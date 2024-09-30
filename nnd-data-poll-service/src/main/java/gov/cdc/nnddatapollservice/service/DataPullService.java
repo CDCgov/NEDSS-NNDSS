@@ -6,7 +6,6 @@ import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHan
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,14 +96,6 @@ public class DataPullService implements IDataPullService {
         }
 
     }
-
-    @PostConstruct
-    public void reprocessingFailedSQLData() {
-        if (reprocessFailedSQL) {
-            // TODO: Template for reprocessing
-        }
-    }
-
 
     private void closePoller() {
         if (singlePoll) {

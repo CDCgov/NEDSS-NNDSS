@@ -19,7 +19,6 @@ import java.util.zip.GZIPOutputStream;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.DB_RDB_MODERN;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 

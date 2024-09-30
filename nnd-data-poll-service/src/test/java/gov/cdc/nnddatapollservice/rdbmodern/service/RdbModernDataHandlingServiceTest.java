@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.CRITICAL_NON_NULL_LEVEL;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
