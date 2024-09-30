@@ -60,14 +60,14 @@ public class SrteDataPersistentDAO {
                         } else {
                             simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                         }
-                    } catch (DuplicateKeyException e) {
+                    } catch (Exception e) {
                         for (Map<String, Object> record : records) {
                             try {
                                 simpleJdbcInsert.execute(new MapSqlParameterSource(record));
                             } catch (Exception ei) {
                                 // TODO: LOG THESE
                                 logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
-                                HandleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/DuplicateException/" + tableName + "/");
+                                HandleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                                 throw new DataPollException("Tried individual process, but not success");
                             }
                         }

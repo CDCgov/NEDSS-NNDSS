@@ -71,7 +71,7 @@ public class RdbModernDataPersistentDAO {
                             } catch (Exception ei) {
                                 // TODO: LOG THESE
                                 logger.error("ERROR occured at record: {}", gsonNorm.toJson(record));
-                                HandleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/DuplicateException/" + tableName + "/");
+                                HandleError.writeRecordToFile(gsonNorm, record, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                                 throw new DataPollException("Tried individual process, but not success");
                             }
                         }
