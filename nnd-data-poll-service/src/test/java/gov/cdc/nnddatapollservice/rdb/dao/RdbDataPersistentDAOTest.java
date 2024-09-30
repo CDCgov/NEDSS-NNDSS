@@ -1,8 +1,15 @@
 package gov.cdc.nnddatapollservice.rdb.dao;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.constant.ConstantValue;
+import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
+import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
+import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
+import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -11,7 +18,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
+import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -20,6 +30,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,6 +43,9 @@ class RdbDataPersistentDAOTest {
 
     @InjectMocks
     RdbDataPersistentDAO rdbDataPersistentDAO;
+
+    @Mock
+    private Gson gson;
 
     @BeforeEach
     void setUp() {
@@ -182,6 +196,53 @@ class RdbDataPersistentDAOTest {
         // Assert
         assertEquals(expectedErrorMessage, result);
 
+    }
+
+
+
+    @Test
+    void testSaveRdbModernData_Else_Success()   {
+        // Arrange
+        String tableName = "SOME_TABLE";
+        String jsonData = "[{\"key1\": \"value1\", \"key2\": \"value2\"}]";
+
+        List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+        assert records != null;
+
+        SimpleJdbcInsert mockSimpleJdbcInsert = mock(SimpleJdbcInsert.class);
+        when(mockSimpleJdbcInsert.withTableName(anyString())).thenReturn(mockSimpleJdbcInsert);
+        when(mockSimpleJdbcInsert.executeBatch(any(SqlParameterSource[].class))).thenReturn(new int[]{1});
+
+        doNothing().when(jdbcTemplate).execute(anyString());
+
+        // Act
+        String result = rdbDataPersistentDAO.saveRDBData(tableName, jsonData);
+
+        // Assert
+        assertNotNull(result);
+    }
+
+    @Test
+    void testSaveRdbModernData_Else_Success_2() throws DataPollException {
+        // Arrange
+        ConstantValue.SQL_BATCH_SIZE = 0;
+        String tableName = "SOME_TABLE";
+        String jsonData = "[{\"key1\": \"value1\", \"key2\": \"value2\"}]";
+
+        List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+        assert records != null;
+
+        SimpleJdbcInsert mockSimpleJdbcInsert = mock(SimpleJdbcInsert.class);
+        when(mockSimpleJdbcInsert.withTableName(anyString())).thenReturn(mockSimpleJdbcInsert);
+        when(mockSimpleJdbcInsert.executeBatch(any(SqlParameterSource[].class))).thenReturn(new int[]{1});
+
+        doNothing().when(jdbcTemplate).execute(anyString());
+
+        // Act
+        String result = rdbDataPersistentDAO.saveRDBData(tableName, jsonData);
+
+        // Assert
+        assertNotNull(result);
     }
 
 }
