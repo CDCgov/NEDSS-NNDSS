@@ -135,9 +135,13 @@ INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('VAR_PAM_LDF', 'RDB',45);
 
+
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('CONDITION_CODE', 'SRTE',46);
+VALUES('PROGRAM_AREA_CODE', 'SRTE',46);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('CODE_TO_CONDITION', 'SRTE',47);
+VALUES('CONDITION_CODE', 'SRTE',47);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('CODE_TO_CONDITION', 'SRTE',48);
