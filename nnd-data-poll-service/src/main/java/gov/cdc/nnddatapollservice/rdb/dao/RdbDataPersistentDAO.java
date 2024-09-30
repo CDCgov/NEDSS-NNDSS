@@ -47,6 +47,8 @@ public class RdbDataPersistentDAO {
 
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
+    @Value("${datasync.data_sync_batch_limit}")
+    protected Integer batchSize = 1000;
     private final Gson gsonNorm = new Gson();
     @Autowired
     public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError) {
@@ -62,8 +64,8 @@ public class RdbDataPersistentDAO {
             if (records != null && !records.isEmpty()) {
                 logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
                 try {
-                    if (records.size() > ConstantValue.SQL_BATCH_SIZE) {
-                        int sublistSize = ConstantValue.SQL_BATCH_SIZE;
+                    if (records.size() > batchSize) {
+                        int sublistSize = batchSize;
                         for (int i = 0; i < records.size(); i += sublistSize) {
                             int end = Math.min(i + sublistSize, records.size());
                             List<Map<String, Object>> sublist = records.subList(i, end);

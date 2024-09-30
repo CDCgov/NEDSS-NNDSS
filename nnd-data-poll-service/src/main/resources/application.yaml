@@ -35,6 +35,7 @@ datasync:
   local_file_path: ${DATASYNC_LOCAL_FILE_PATH:NA}
   sql_error_handle_log: ${DATASYNC_SQL_ERROR_PATH:NA}
   sql_reprocessing_data: ${DATASYNC_STORE_SQL_REPOCESSING_DATA:false}
+  data_sync_batch_limit : ${DATASYNC_BATCH_LIMIT:1000}
 
 aws:
   auth:

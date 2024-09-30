@@ -48,7 +48,7 @@ class RdbModernDataPersistentDAOTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(jdbcTemplate.getDataSource()).thenReturn(dataSource);
-        ConstantValue.SQL_BATCH_SIZE = 10000;
+        rdbModernDataPersistentDAO.batchSize = 10000;
     }
 
     @Test
@@ -213,7 +213,7 @@ class RdbModernDataPersistentDAOTest {
     @Test
     void testSaveRdbModernData_Else_Success_2() throws DataPollException {
         // Arrange
-        ConstantValue.SQL_BATCH_SIZE = 0;
+        rdbModernDataPersistentDAO.batchSize = 0;
         String tableName = "SOME_TABLE";
         String jsonData = "[{\"key1\": \"value1\", \"key2\": \"value2\"}]";
 
