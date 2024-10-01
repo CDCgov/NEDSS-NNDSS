@@ -4,7 +4,10 @@
   - Share Process:
     - SINGLE_TIME_POLL: (optional) default is false, can be set to true. Forcing the application to exist the process after it executed
     - NBS_NND_CRON_TIME_ZONE: (optional) Time zone for CRON process, default is UTC
-    - NBS_NND_CRON: (optional) CRON scheduler, default is 0 */1 * * * * -> every one minutes
+    - NBS_NND_CRON: (optional) NND CRON scheduler, default is 0 */1 * * * * -> every one minutes
+    - NBS_RDB_CRON: same as above but for RDB CRON
+    - NBS_SRTE_CRON: same as above but for SRTE CRON
+    - NBS_RDB_MODERN_CRON: same as above but for RDB MODERN CRON
   - NND Process
     - NND_POLL_ENABLED: (optional) default is false, must set to true to enable the NND POLL  
     - NND_FILE_LOCATION: Log location for NND process (ex: /Users/UserName/Desktop/LOG)
@@ -15,7 +18,7 @@
     - NND_DE_CLIENT_ID: Data Sync API Client Id
     - NND_DE_SECRET: Data Sync API Secret
     - NND_DE_URL: Data Sync API Url
-    - NND_DE_TOKEN/NND_DE_DE/NND_DE_GENERIC: Data Sync Endpoints (Optional; already hardcoded in the app config)
+    - NND_DE_TOKEN/NND_DE_DE/NND_DE_GENERIC/NND_DE_GENERIC_TOTAL_RECORD: Data Sync Endpoints (Optional; already hardcoded in the app config)
   - DATA SYNC Process
     - RDB_POLL_ENABLED: (optional) default is false, set to true to enable RDB POLL
     - RDB_MODERN_POLL_ENABLED: (optional) default is false, set to true to enable RDB MODERN POLL
@@ -24,6 +27,9 @@
     - DATASYNC_STORE_S3: (optional) default is false, set to true to enable Polling into S3
     - DATASYNC_STORE_LOCAL: (optional) default is false, set to true to enable Polling into Local System Directory
     - DATASYNC_LOCAL_FILE_PATH: Support for DATASYNC_STORE_LOCAL, value is path to local system directory (ex: /Users/UserName/Desktop/File)
+    - DATASYNC_SQL_ERROR_PATH: Error path for Datasync, value is path to local system directory (ex: /Users/UserName/Desktop/File)
+    - DATASYNC_BATCH_LIMIT: Data sync batch pull limiter, default is 1000; meaning each request it call out to APIs will pull maximum of 1000 records
+    - DATASYNC_DELETE: Default is false, set this to true to allow data poll to clean up local table before proceed
   - AWS
     - AWS_KEY_ID: (optional) default is NA
     - AWS_ACCESS_KEY: (optional) default is NA
