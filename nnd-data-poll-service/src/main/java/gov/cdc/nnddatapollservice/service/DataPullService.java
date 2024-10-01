@@ -13,11 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-
 @Service
 @Slf4j
 public class DataPullService implements IDataPullService {
-    private static Logger logger = LoggerFactory.getLogger(DataPullService.class);
+
+    private static final Logger logger = LoggerFactory.getLogger(DataPullService.class);
 
     @Value("${scheduler.cron}")
     private String cron;
@@ -34,7 +34,10 @@ public class DataPullService implements IDataPullService {
     private boolean srtePollEnabled;
 
     @Value("${poll.single_time_poll_enabled}")
-    private boolean singlePoll = false;
+    private boolean singlePoll;
+
+    @Value("${datasync.sql_reprocessing_data}")
+    private boolean reprocessFailedSQL = false;
 
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
@@ -53,16 +56,16 @@ public class DataPullService implements IDataPullService {
 
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleNNDDataFetch() throws DataPollException {
-        if (nndPollEnabled) {
-            logger.info("CRON STARTED FOR NND");
-            logger.info(cron);
-            logger.info(zone);
-            dataHandlingService.handlingExchangedData();
-            closePoller();
-        }
+    if (nndPollEnabled) {
+        logger.info("CRON STARTED FOR NND");
+        logger.info(cron);
+        logger.info(zone);
+        dataHandlingService.handlingExchangedData();
+        closePoller();
     }
+}
 
-    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron_rdb}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB");
@@ -72,7 +75,7 @@ public class DataPullService implements IDataPullService {
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron_rdb_modern}", zone = "${scheduler.zone}")
     public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB_MODERN");
@@ -82,7 +85,8 @@ public class DataPullService implements IDataPullService {
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
+
+    @Scheduled(cron = "${scheduler.cron_srte}", zone = "${scheduler.zone}")
     public void scheduleSRTEDataFetch() throws DataPollException {
         if (srtePollEnabled) {
             logger.info("CRON STARTED FOR POLLING SRTE");

@@ -7,7 +7,9 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface IPollCommonService {
-    String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
+    Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
+    String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
+                             String startRow, String endRow) throws DataPollException;
     List<PollDataSyncConfig> getTableListFromConfig();
     boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList);
     String getCurrentTimestamp();
@@ -17,4 +19,12 @@ public interface IPollCommonService {
     void updateLastUpdatedTime(String tableName, Timestamp timestamp);
     String decodeAndDecompress(String base64EncodedData);
     void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log);
+
+    String getLastUpdatedTimeS3(String tableName);
+
+    String getLastUpdatedTimeLocalDir(String tableName);
+
+    void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log);
+
+    void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log);
 }

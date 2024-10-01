@@ -4,19 +4,22 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.constant.ConstantValue;
+import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
+import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
 
@@ -35,10 +39,57 @@ public class RdbDataPersistentDAO {
     private static Logger logger = LoggerFactory.getLogger(RdbDataPersistentDAO.class);
     private JdbcTemplate jdbcTemplate;
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+    private final HandleError handleError;
+    private final Gson gson = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
+            .create();
 
+    @Value("${datasync.sql_error_handle_log}")
+    protected String sqlErrorPath = "";
+    @Value("${datasync.data_sync_batch_limit}")
+    protected Integer batchSize = 1000;
+    private final Gson gsonNorm = new Gson();
     @Autowired
-    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate) {
+    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError) {
         this.jdbcTemplate = jdbcTemplate;
+        this.handleError = handleError;
+    }
+
+    @SuppressWarnings("java:S3776")
+    protected void persistingGenericTable (String tableName, String jsonData) throws DataPollException {
+        if (tableName != null && !tableName.isEmpty()) {
+            SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
+            simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
+            List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+            if (records != null && !records.isEmpty()) {
+                logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
+                try {
+                    if (records.size() > batchSize) {
+                        int sublistSize = batchSize;
+                        for (int i = 0; i < records.size(); i += sublistSize) {
+                            int end = Math.min(i + sublistSize, records.size());
+                            List<Map<String, Object>> sublist = records.subList(i, end);
+                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                        }
+                    } else {
+                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                    }
+                } catch (Exception e) {
+                    for (Map<String, Object> res : records) {
+                        try {
+                            simpleJdbcInsert.execute(new MapSqlParameterSource(res));
+                        } catch (Exception ei) {
+                            logger.error("ERROR occured at record: {}", gsonNorm.toJson(res));
+                            handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
+                            throw new DataPollException("Tried individual process, but not success");
+                        }
+                    }
+                }
+
+            } else {
+                logger.info("Inside generic code tableName: {} Records size:0", tableName);
+            }
+        }
     }
 
     @SuppressWarnings("java:S3776")
@@ -46,10 +97,7 @@ public class RdbDataPersistentDAO {
         logger.info("saveRDBData tableName: {}", tableName);
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
         if ("CONFIRMATION_METHOD".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder();
-            Gson gson = new GsonBuilder()
-                    .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
-                    .create();
+            logBuilder = new StringBuilder(LOG_SUCCESS);
             Type resultType = new TypeToken<List<ConfirmationMethod>>() {
             }.getType();
             List<ConfirmationMethod> list = gson.fromJson(jsonData, resultType);
@@ -57,10 +105,7 @@ public class RdbDataPersistentDAO {
                 logBuilder.append(", ").append(upsertConfirmationMethod(confirmationMethod));
             }
         } else if ("CONDITION".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder();
-            Gson gson = new GsonBuilder()
-                    .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
-                    .create();
+            logBuilder = new StringBuilder(LOG_SUCCESS);
             Type resultType = new TypeToken<List<Condition>>() {
             }.getType();
             List<Condition> list = gson.fromJson(jsonData, resultType);
@@ -68,10 +113,7 @@ public class RdbDataPersistentDAO {
                 logBuilder.append(", ").append(upsertCondition(condition));
             }
         } else if ("RDB_DATE".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder();
-            Gson gson = new GsonBuilder()
-                    .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
-                    .create();
+            logBuilder = new StringBuilder(LOG_SUCCESS);
             Type resultType = new TypeToken<List<RdbDate>>() {
             }.getType();
             List<RdbDate> list = gson.fromJson(jsonData, resultType);
@@ -80,30 +122,11 @@ public class RdbDataPersistentDAO {
             }
         } else {
             try {
-                SimpleJdbcInsert simpleJdbcInsert =
-                        new SimpleJdbcInsert(jdbcTemplate);
-                if (tableName != null && !tableName.isEmpty()) {
-                    simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
-                    List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
-                    if (records != null && !records.isEmpty()) {
-                        logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                        if (records.size() > ConstantValue.SQL_BATCH_SIZE) {
-                            int sublistSize = ConstantValue.SQL_BATCH_SIZE;
-                            for (int i = 0; i < records.size(); i += sublistSize) {
-                                int end = Math.min(i + sublistSize, records.size());
-                                List<Map<String, Object>> sublist = records.subList(i, end);
-                                simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
-                            }
-                        } else {
-                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                        }
-                    } else {
-                        logger.info("Inside generic code tableName: {} Records size:0", tableName);
-                    }
-                }
-            } catch (Exception e) {
+                persistingGenericTable (tableName, jsonData);
+            }
+            catch (Exception e) {
                 logBuilder = new StringBuilder(e.getMessage());
-                logger.error("Error executeBatch. tableName: {}, Error:{}", tableName, e.getMessage());
+                logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
             }
         }
         return logBuilder.toString();
@@ -248,9 +271,37 @@ public class RdbDataPersistentDAO {
                 Timestamp.class, tableName);
         if (lastTime != null) {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
-            updatedTime = formatter.format(lastTime);
+            updatedTime = formatter.format(lastTime); // NOSONAR
         }
-        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime);
+        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
+        return updatedTime;
+    }
+
+    public String getLastUpdatedTimeS3(String tableName) {
+        String sql = "select last_update_time_s3 from POLL_DATA_SYNC_CONFIG where table_name=?";
+        String updatedTime = "";
+        Timestamp lastTime = this.jdbcTemplate.queryForObject(
+                sql,
+                Timestamp.class, tableName);
+        if (lastTime != null) {
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            updatedTime = formatter.format(lastTime); // NOSONAR
+        }
+        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
+        return updatedTime;
+    }
+
+    public String getLastUpdatedTimeLocalDir(String tableName) {
+        String sql = "select last_update_time_local_dir from POLL_DATA_SYNC_CONFIG where table_name=?";
+        String updatedTime = "";
+        Timestamp lastTime = this.jdbcTemplate.queryForObject(
+                sql,
+                Timestamp.class, tableName);
+        if (lastTime != null) {
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            updatedTime = formatter.format(lastTime); // NOSONAR
+        }
+        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
         return updatedTime;
     }
 
@@ -259,10 +310,22 @@ public class RdbDataPersistentDAO {
         jdbcTemplate.update(updateSql, timestamp, tableName);
     }
 
+
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
         String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, log, tableName);
     }
+
+    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log) {
+        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    }
+
+    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log) {
+        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    }
+
 
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
@@ -276,7 +339,7 @@ public class RdbDataPersistentDAO {
 
     public void deleteTable(String tableName) {
         try {
-            String deleteSql = "delete " + tableName;
+            String deleteSql = "delete FROM " + tableName;
             jdbcTemplate.execute(deleteSql);
         } catch (Exception e) {
             logger.error("RDB:Error in deleting table:{}", e.getMessage());

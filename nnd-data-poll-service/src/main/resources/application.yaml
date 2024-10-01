@@ -2,7 +2,7 @@ server:
   port: 8082
 
 io:
-  fileLocation: ${NND_FILE_LOCATION:}
+  fileLocation: ${NND_FILE_LOCATION:NA}
 
 data_exchange:
   clientId: ${NND_DE_CLIENT_ID}
@@ -10,7 +10,8 @@ data_exchange:
   url: ${NND_DE_URL}
   endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN:/api/auth/token}
   endpoint_de: ${NND_DE_URL}${NND_DE_DE:/api/nnd/data-exchange}
-  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/api/data-exchange-generic}
+  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/api/datasync}
+  endpoint_generic_total_record: ${NND_DE_URL}${NND_DE_GENERIC_TOTAL_RECORD:/api/datasync/count}
 nnd:
   fullLoad: ${NND_FULL_LOAD:false}
   pullLimit: ${NND_PULL_LIMIT:0}
@@ -32,6 +33,10 @@ datasync:
   store_in_local: ${DATASYNC_STORE_LOCAL:false}
   store_in_S3: ${DATASYNC_STORE_S3:false}
   local_file_path: ${DATASYNC_LOCAL_FILE_PATH:NA}
+  sql_error_handle_log: ${DATASYNC_SQL_ERROR_PATH:NA}
+  sql_reprocessing_data: ${DATASYNC_STORE_SQL_REPOCESSING_DATA:false}
+  data_sync_batch_limit: ${DATASYNC_BATCH_LIMIT:1000}
+  data_sync_delete_on_initial: ${DATASYNC_DELETE:false}
 
 aws:
   auth:
@@ -57,12 +62,17 @@ scheduler:
   # America/New_York
   # UTC
   cron: ${NBS_NND_CRON:0 */1 * * * * }
+  cron_rdb: ${NBS_RDB_CRON:0 */1 * * * * }
+  cron_srte: ${NBS_SRTE_CRON:0 */1 * * * * }
+  cron_rdb_modern: ${NBS_RDB_MODERN_CRON:0 */1 * * * * }
   # "0 */5 0-2 * * *"
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *
   # 0 (start at zero sec), * (run every min),  0-2 (run during 12 am to 3 am), * (run every day), * (run every month), * (run every year)
 ---
 spring:
+  main:
+    web-application-type: none
   config:
     activate:
       on-profile: default

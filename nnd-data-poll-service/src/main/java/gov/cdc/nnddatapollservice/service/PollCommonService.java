@@ -40,6 +40,10 @@ public class PollCommonService implements IPollCommonService {
     @Value("${data_exchange.endpoint_generic}")
     protected String exchangeEndpoint;
 
+    @Value("${data_exchange.endpoint_generic_total_record}")
+    protected String exchangeTotalRecordEndpoint;
+
+
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
 
@@ -54,7 +58,7 @@ public class PollCommonService implements IPollCommonService {
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
     }
 
-    public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
+    public Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
         try {
             //Get token
             var token = tokenService.getToken();
@@ -63,6 +67,34 @@ public class PollCommonService implements IPollCommonService {
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
             headers.add("initialLoad", String.valueOf(isInitialLoad));
+            HttpEntity<String> httpEntity = new HttpEntity<>(headers);
+
+            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
+                    .path("/" + tableName)
+                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
+                    .build()
+                    .toUri();
+            logger.info("Exchange URI for rdb polling {} ", uri);
+            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
+            return Integer.valueOf(response.getBody());
+        } catch (Exception e) {
+            throw new DataPollException(e.getMessage());
+        }
+    }
+
+    public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
+                                           String startRow, String endRow) throws DataPollException {
+        try {
+            //Get token
+            var token = tokenService.getToken();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(token);
+            headers.add("clientid", clientId);
+            headers.add("clientsecret", clientSecret);
+            headers.add("initialLoad", String.valueOf(isInitialLoad));
+            headers.add("allowNull", String.valueOf(allowNull));
+            headers.add("startRow", startRow);
+            headers.add("endRow",  endRow);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
             URI uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
@@ -102,13 +134,31 @@ public class PollCommonService implements IPollCommonService {
         return rdbDataPersistentDAO.getLastUpdatedTime(tableName);
     }
 
-    public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
-        rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
+    public String getLastUpdatedTimeS3(String tableName) {
+        return rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName);
+    }
+
+    public String getLastUpdatedTimeLocalDir(String tableName) {
+        return rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName);
     }
 
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
         rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
     }
+
+    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log) {
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+    }
+
+    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log) {
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+    }
+
+    public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
+        rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
+    }
+
+
 
 
     public List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB) {

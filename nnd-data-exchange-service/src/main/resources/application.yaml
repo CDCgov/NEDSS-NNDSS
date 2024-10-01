@@ -46,6 +46,8 @@ spring:
       url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
     srte:
       url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
+    rdbModern:
+      url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
     rdb:
       url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=RDB;encrypt=true;trustServerCertificate=true;
   jpa:
@@ -72,6 +74,8 @@ spring:
       url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
     srte:
       url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
+    rdbModern:
+      url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=RDB_MODERN;encrypt=true;trustServerCertificate=true;
     rdb:
       url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=RDB;encrypt=true;trustServerCertificate=true;
   jpa:

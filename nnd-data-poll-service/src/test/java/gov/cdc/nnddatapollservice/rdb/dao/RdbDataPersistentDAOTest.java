@@ -1,8 +1,10 @@
 package gov.cdc.nnddatapollservice.rdb.dao;
 
+import com.google.gson.Gson;
 import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
+import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -11,6 +13,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
@@ -20,6 +24,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -32,6 +37,10 @@ class RdbDataPersistentDAOTest {
 
     @InjectMocks
     RdbDataPersistentDAO rdbDataPersistentDAO;
+    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+    @Mock
+    private Gson gson;
 
     @BeforeEach
     void setUp() {
@@ -125,7 +134,7 @@ class RdbDataPersistentDAOTest {
         String tableName = "non_existing_table";
         doThrow(new RuntimeException("Simulated exception")).when(jdbcTemplate).execute(anyString());
         rdbDataPersistentDAO.deleteTable(tableName);
-        verify(jdbcTemplate).execute("delete " + tableName);
+        verify(jdbcTemplate).execute("delete FROM " + tableName);
     }
 
 
@@ -184,4 +193,153 @@ class RdbDataPersistentDAOTest {
 
     }
 
+
+
+    @Test
+    void testSaveRdbModernData_Else_Success()   {
+        // Arrange
+        String tableName = "SOME_TABLE";
+        String jsonData = "[{\"key1\": \"value1\", \"key2\": \"value2\"}]";
+
+        List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+        assert records != null;
+
+        SimpleJdbcInsert mockSimpleJdbcInsert = mock(SimpleJdbcInsert.class);
+        when(mockSimpleJdbcInsert.withTableName(anyString())).thenReturn(mockSimpleJdbcInsert);
+        when(mockSimpleJdbcInsert.executeBatch(any(SqlParameterSource[].class))).thenReturn(new int[]{1});
+
+        doNothing().when(jdbcTemplate).execute(anyString());
+
+        // Act
+        String result = rdbDataPersistentDAO.saveRDBData(tableName, jsonData);
+
+        // Assert
+        assertNotNull(result);
+    }
+
+    @Test
+    void testSaveRdbModernData_Else_Success_2() {
+        // Arrange
+        rdbDataPersistentDAO.batchSize = 0;
+        String tableName = "SOME_TABLE";
+        String jsonData = "[{\"key1\": \"value1\", \"key2\": \"value2\"}]";
+
+        List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+        assert records != null;
+
+        SimpleJdbcInsert mockSimpleJdbcInsert = mock(SimpleJdbcInsert.class);
+        when(mockSimpleJdbcInsert.withTableName(anyString())).thenReturn(mockSimpleJdbcInsert);
+        when(mockSimpleJdbcInsert.executeBatch(any(SqlParameterSource[].class))).thenReturn(new int[]{1});
+
+        doNothing().when(jdbcTemplate).execute(anyString());
+
+        // Act
+        String result = rdbDataPersistentDAO.saveRDBData(tableName, jsonData);
+
+        // Assert
+        assertNotNull(result);
+    }
+
+
+    @Test
+    void testGetLastUpdatedTimeS3_Success() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+        Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
+        SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+        String expectedFormattedTime = formatter.format(timestamp) + ".000";
+
+        when(jdbcTemplate.queryForObject(
+                "select last_update_time_s3 from POLL_DATA_SYNC_CONFIG where table_name=?",
+                Timestamp.class, tableName)).thenReturn(timestamp);
+
+        // Act
+        String result = rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName);
+
+        // Assert
+        assertEquals(expectedFormattedTime, result);
+    }
+
+    @Test
+    void testGetLastUpdatedTimeS3_NullTimestamp() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+
+        when(jdbcTemplate.queryForObject(
+                "select last_update_time_s3 from POLL_DATA_SYNC_CONFIG where table_name=?",
+                Timestamp.class, tableName)).thenReturn(null);
+
+        // Act
+        String result = rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName);
+
+        // Assert
+        assertEquals("", result);
+    }
+
+    @Test
+    void testGetLastUpdatedTimeLocalDir_Success() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+        Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
+        SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+        String expectedFormattedTime = formatter.format(timestamp) + ".000";
+
+        when(jdbcTemplate.queryForObject(
+                "select last_update_time_local_dir from POLL_DATA_SYNC_CONFIG where table_name=?",
+                Timestamp.class, tableName)).thenReturn(timestamp);
+
+        // Act
+        String result = rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName);
+
+        // Assert
+        assertEquals(expectedFormattedTime, result);
+    }
+
+    @Test
+    void testGetLastUpdatedTimeLocalDir_NullTimestamp() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+
+        when(jdbcTemplate.queryForObject(
+                "select last_update_time_local_dir from POLL_DATA_SYNC_CONFIG where table_name=?",
+                Timestamp.class, tableName)).thenReturn(null);
+
+        // Act
+        String result = rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName);
+
+        // Assert
+        assertEquals("", result);
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLogS3_Success() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+        Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
+        String log = "Update successful";
+
+        String expectedSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
+
+        // Act
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+
+        // Assert
+        verify(jdbcTemplate).update(expectedSql, timestamp, log, tableName);
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLogLocalDir_Success() {
+        // Arrange
+        String tableName = "NRT_OBSERVATION";
+        Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
+        String log = "Local dir update successful";
+
+        String expectedSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
+
+        // Act
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+
+        // Assert
+        verify(jdbcTemplate).update(expectedSql, timestamp, log, tableName);
+    }
 }

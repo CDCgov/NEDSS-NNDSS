@@ -16,7 +16,10 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.when;
 
 class DataExchangeControllerTest {
 
@@ -95,10 +98,16 @@ class DataExchangeControllerTest {
         String base64CompressedData = "mockBase64Data";
         String load = "true";
 
-        when(dataExchangeGenericService.getGenericDataExchange(anyString(), anyString(), anyInt(), anyBoolean()))
+        when(dataExchangeGenericService.getDataForDataSync(anyString(), anyString(),anyString(), anyString(), anyBoolean(), anyBoolean()))
                 .thenReturn(base64CompressedData);
 
-        ResponseEntity<String> response = dataExchangeController.exchangingData(tableName, timestamp, limit, load);
+        ResponseEntity<String> response = dataExchangeController.dataSync(
+                tableName,
+                timestamp,
+                "0",
+                "1",
+                limit,
+                load);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -121,5 +130,24 @@ class DataExchangeControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(decodedData, response.getBody());
     }
+
+
+    @Test
+    void dataSyncTotalRecords_Test() throws Exception {
+        String tableName = "test_table";
+        String timestamp = "2024-07-11";
+
+        when(dataExchangeGenericService.getTotalRecord(anyString(), anyBoolean(),anyString()))
+                .thenReturn(10);
+
+        ResponseEntity<Integer> response = dataExchangeController.dataSyncTotalRecords(
+                tableName,
+                timestamp,
+                "true");
+
+        assertNotNull(response);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
 
 }

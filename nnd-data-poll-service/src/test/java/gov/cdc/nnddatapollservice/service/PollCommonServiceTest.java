@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -42,6 +43,36 @@ class PollCommonServiceTest {
     }
 
     @Test
+    void testCallDataCountEndpoint_Success() {
+        // Arrange
+        pollCommonService.exchangeTotalRecordEndpoint = "http://ip.jsontest.com/";
+        String tableName = "NRT_OBSERVATION";
+        boolean isInitialLoad = true;
+        String lastUpdatedTime = "2024-10-01";
+        String token = "sampleToken";
+
+        when(tokenService.getToken()).thenReturn(token);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.add("clientid", "clientId");
+        headers.add("clientsecret", "clientSecret");
+        headers.add("initialLoad", String.valueOf(isInitialLoad));
+
+        when(tokenService.getToken()).thenReturn("testtoken");
+
+        ResponseEntity<String> mockResponse = ResponseEntity.ok("Mock Response Body");
+        when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(mockResponse);
+
+        // Act
+        assertThrows(DataPollException.class,
+                () ->
+                        pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, lastUpdatedTime));
+
+    }
+
+
+    @Test
     void handlingExchangedData_initialLoad() throws DataPollException {
         pollCommonService.exchangeEndpoint = "http://ip.jsontest.com/";
         String timestamp = "2024-09-15 10:15:20.123";
@@ -51,14 +82,14 @@ class PollCommonServiceTest {
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(mockResponse);
 
-        pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp);
+        pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp, true, "0", "1");
         verify(tokenService, times(1)).getToken();
     }
 
     @Test
     void testPersistingExchangeData_Exception() {
         String timestamp = "2024-09-15 10:15:20.123";
-        assertThrows(DataPollException.class, () -> pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp));
+        assertThrows(DataPollException.class, () -> pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp, true, "0", "1"));
 
         verify(tokenService, times(1)).getToken();
     }
@@ -157,5 +188,77 @@ class PollCommonServiceTest {
             pollCommonService.writeJsonDataToFile("RDB", "TEST_TABLE", Timestamp.from(Instant.now()), "TEST DATA");
             mocked.verify(() -> PollServiceUtil.writeJsonToFile(any(), any(), any(), any(), any()));
         }
+    }
+
+    @Test
+    void testGetLastUpdatedTimeS3() {
+        // Arrange
+        String tableName = "testTable";
+        String expectedTime = "2024-09-30 12:00:00";
+        when(rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName)).thenReturn(expectedTime);
+
+        // Act
+        String result = pollCommonService.getLastUpdatedTimeS3(tableName);
+
+        // Assert
+        assertEquals(expectedTime, result);
+        verify(rdbDataPersistentDAO, times(1)).getLastUpdatedTimeS3(tableName);
+    }
+
+    @Test
+    void testGetLastUpdatedTimeLocalDir() {
+        // Arrange
+        String tableName = "testTable";
+        String expectedTime = "2024-09-30 12:00:00";
+        when(rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName)).thenReturn(expectedTime);
+
+        // Act
+        String result = pollCommonService.getLastUpdatedTimeLocalDir(tableName);
+
+        // Assert
+        assertEquals(expectedTime, result);
+        verify(rdbDataPersistentDAO, times(1)).getLastUpdatedTimeLocalDir(tableName);
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLog() {
+        // Arrange
+        String tableName = "testTable";
+        Timestamp timestamp = Timestamp.valueOf("2024-09-30 12:00:00");
+        String log = "Update successful";
+
+        // Act
+        pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+
+        // Assert
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLogS3() {
+        // Arrange
+        String tableName = "testTable";
+        Timestamp timestamp = Timestamp.valueOf("2024-09-30 12:00:00");
+        String log = "S3 Update successful";
+
+        // Act
+        pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+
+        // Assert
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+    }
+
+    @Test
+    void testUpdateLastUpdatedTimeAndLogLocalDir() {
+        // Arrange
+        String tableName = "testTable";
+        Timestamp timestamp = Timestamp.valueOf("2024-09-30 12:00:00");
+        String log = "Local Dir Update successful";
+
+        // Act
+        pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+
+        // Assert
+        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
     }
 }

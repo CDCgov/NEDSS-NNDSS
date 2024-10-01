@@ -24,7 +24,8 @@ import java.util.HashMap;
         entityManagerFactoryRef = "ingestEntityManagerFactory",
         transactionManagerRef = "ingestTransactionManager",
         basePackages = {
-                "gov.cdc.nnddatapollservice.repository"
+                "gov.cdc.nnddatapollservice.repository.msg",
+                "gov.cdc.nnddatapollservice.repository.odse"
         }
 )
 public class DataIngestDataSourceConfig {
@@ -63,7 +64,8 @@ public class DataIngestDataSourceConfig {
             @Qualifier("ingestDataSource") DataSource ingestDataSource ) {
         return ingestEntityManagerFactoryBuilder
                 .dataSource(ingestDataSource)
-                .packages("gov.cdc.nnddatapollservice.repository")
+                .packages("gov.cdc.nnddatapollservice.repository.msg", "gov.cdc.nnddatapollservice.repository.msg",
+                        "gov.cdc.nnddatapollservice.repository.msg", "gov.cdc.nnddatapollservice.repository.odse")
                 .persistenceUnit("ingest")
                 .build();
     }

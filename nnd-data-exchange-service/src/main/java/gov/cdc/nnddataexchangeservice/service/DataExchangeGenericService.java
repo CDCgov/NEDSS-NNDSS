@@ -28,14 +28,17 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final DataSyncConfigRepository dataSyncConfigRepository;
     private final JdbcTemplate jdbcTemplate;
     private final JdbcTemplate srteJdbcTemplate;
+    private final JdbcTemplate rdbModernJdbcTemplate;
     private final Gson gson;
 
     public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository,
                                       @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                      @Qualifier("srteJdbcTemplate")  JdbcTemplate srteJdbcTemplate) {
+                                      @Qualifier("srteJdbcTemplate")  JdbcTemplate srteJdbcTemplate,
+                                      @Qualifier("rdbModernJdbcTemplate")  JdbcTemplate rdbModernJdbcTemplate) {
         this.dataSyncConfigRepository = dataSyncConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.srteJdbcTemplate = srteJdbcTemplate;
+        this.rdbModernJdbcTemplate = rdbModernJdbcTemplate;
 
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
@@ -44,85 +47,109 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 .create();
     }
 
-    @SuppressWarnings({"javasecurity:S3649", "java:S3776"})
-    public String getGenericDataExchange(String tableName, String timeStamp, Integer limit,boolean initialLoad) throws DataExchangeException {
-        // Retrieve configuration based on table name
-        var dataConfig = dataSyncConfigRepository.findById(tableName).orElse(new DataSyncConfig());
+    public Integer getTotalRecord(String tableName, boolean initialLoad, String timestamp) throws DataExchangeException {
+        DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
-        if (timeStamp == null) {
-            timeStamp = "";
+        String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, timestamp);
+
+        return executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+    }
+
+    private DataSyncConfig getConfigByTableName(String tableName) throws DataExchangeException {
+        return dataSyncConfigRepository.findById(tableName)
+                .orElseThrow(() -> new DataExchangeException("No Table Found"));
+    }
+
+    private String prepareQuery(String query, boolean initialLoad, String timestamp) {
+        String operator = initialLoad ? LESS : GREATER_EQUAL;
+        return query.replaceAll(OPERATION, operator)
+                .replaceAll(TIME_STAMP_PARAM, "'" + timestamp + "'");
+    }
+
+    private Integer executeQueryForTotalRecords(String query, String sourceDb) throws DataExchangeException {
+        try {
+            if (sourceDb.equalsIgnoreCase(DB_RDB)) {
+                return jdbcTemplate.queryForObject(query, Integer.class);
+            } else if (sourceDb.equalsIgnoreCase(DB_SRTE)) {
+                return srteJdbcTemplate.queryForObject(query, Integer.class);
+            } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
+                return rdbModernJdbcTemplate.queryForObject(query, Integer.class);
+            } else {
+                throw new DataExchangeException("Database Not Supported: " + sourceDb);
+            }
+        } catch (Exception e) {
+            throw new DataExchangeException("Error executing query: " + e.getMessage());
         }
+    }
+
+    public String getDataForDataSync(String tableName, String timeStamp, String startRow, String endRow,
+                                     boolean initialLoad, boolean allowNull) throws DataExchangeException {
+
+        DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
         AtomicInteger dataCountHolder = new AtomicInteger();
-        String finalTimeStamp = timeStamp;
 
         Callable<String> callable = () -> {
-            String dataCompressed = "";
-            Integer dataCount = 0;
-            List<Map<String, Object>> data = null;
-            try {
-                if (dataConfig.getTableName() == null) {
-                    return DataSimplification.dataCompressionAndEncode("");
-                }
+            String baseQuery = preparePaginationQuery(dataConfig, timeStamp, startRow, endRow, initialLoad, allowNull);
 
-                // Execute the query and retrieve the dataset
-                String baseQuery = (limit > 0 && dataConfig.getQueryWithLimit() != null && !dataConfig.getQueryWithLimit().isEmpty())
-                        ? dataConfig.getQueryWithLimit()
-                        : dataConfig.getQuery();
+            List<Map<String, Object>> data = executeQueryForData(baseQuery, dataConfig.getSourceDb());
 
-                String effectiveTimestamp = finalTimeStamp.isEmpty() ? "'" + DEFAULT_TIME_STAMP + "'" : "'" + finalTimeStamp + "'";
-                String query = baseQuery.replace(TIME_STAMP_PARAM, effectiveTimestamp);
+            dataCountHolder.set(data.size());
 
-                if (initialLoad) {
-                    query = query.replaceAll(">=", "<"); // NOSONAR
-                    if (dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
-                        query = query.replaceAll(";", ""); // NOSONAR
-                        var nullQuery = dataConfig.getQueryWithNullTimeStamp();
-                        nullQuery = nullQuery.replaceAll(";", ""); // NOSONAR
-                        query = nullQuery + " UNION " + query + ";";
-                    }
-                }
-
-                if (baseQuery.contains(LIMIT_PARAM)) {
-                    query = query.replace(LIMIT_PARAM, limit.toString());
-                }
-
-
-                if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
-                    data = srteJdbcTemplate.queryForList(query);
-                } else {
-                    data = jdbcTemplate.queryForList(query);
-                }
-
-                // Serialize the data to JSON using Gson
-                dataCompressed = DataSimplification.dataCompressionAndEncodeV2(gson, data);
-
-                dataCount = data.size();
-
-                // Store values for later use
-                dataCountHolder.set(dataCount);
-
-                return dataCompressed;
-            } finally {
-                // Explicitly nullify references to large objects to make them eligible for garbage collection
-                if (data != null) {
-                    data.clear();
-                }
-            }
-
+            return DataSimplification.dataCompressionAndEncodeV2(gson, data);
         };
 
+        return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder);
+    }
+
+    private String preparePaginationQuery(DataSyncConfig dataConfig, String timeStamp, String startRow,
+                                          String endRow, boolean initialLoad, boolean allowNull) {
+
+        String baseQuery;
+
+        if (allowNull && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+            baseQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", "") ; //NOSONAR
+        }
+        else
+        {
+            baseQuery = dataConfig.getQueryWithPagination()
+                    .replaceAll(TIME_STAMP_PARAM, "'" + timeStamp + "'")
+                    .replaceAll(START_ROW, startRow)
+                    .replaceAll(END_ROW, endRow);
+
+            String operator = initialLoad ? LESS : GREATER_EQUAL;
+            baseQuery = baseQuery.replaceAll(OPERATION, operator);
+        }
+
+        return baseQuery + ";";
+    }
+
+    private List<Map<String, Object>> executeQueryForData(String query, String sourceDb) throws DataExchangeException {
+        if (sourceDb.equalsIgnoreCase(DB_SRTE)) {
+            return srteJdbcTemplate.queryForList(query);
+        } else if (sourceDb.equalsIgnoreCase(DB_RDB)) {
+            return jdbcTemplate.queryForList(query);
+        } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
+            return rdbModernJdbcTemplate.queryForList(query);
+        } else {
+            throw new DataExchangeException("DB IS NOT SUPPORTED: " + sourceDb);
+        }
+    }
+
+    private String executeDataSyncQuery(Callable<String> callable, String tableName, String startRow, String endRow,
+                                        AtomicInteger dataCountHolder) throws DataExchangeException {
         try {
             var metricData = MetricCollector.measureExecutionTime(callable);
             var currentTime = getCurrentTimeStamp();
 
-            dataSyncConfigRepository.updateDataSyncConfig(dataCountHolder.get(), metricData.getExecutionTime(), currentTime, tableName.toUpperCase());
+            dataSyncConfigRepository.updateDataSyncConfig(dataCountHolder.get(), metricData.getExecutionTime(), currentTime,
+                    tableName.toUpperCase(), startRow, endRow);
+
             return metricData.getResult();
         } catch (Exception e) {
             throw new DataExchangeException(e.getMessage());
         }
     }
-
 
 
     // DECODE TEST METHOD
