@@ -30,6 +30,8 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
     protected boolean storeInSql = false;
     @Value("${nnd.pullLimit}")
     protected Integer pullLimit = 0;
+    @Value("${datasync.data_sync_delete_on_initial}")
+    protected boolean deleteOnInit = false;
     private final SrteDataPersistentDAO srteDataPersistentDAO;
     private final IPollCommonService outboundPollCommonService;
     private final IS3DataService is3DataService;
@@ -52,7 +54,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(srteTablesList);
         logger.info("-----SRTE INITIAL LOAD: {}", isInitialLoad);
         //Delete the existing records
-        if (isInitialLoad && storeInSql) {
+        if (isInitialLoad && storeInSql && deleteOnInit) {
             cleanupTables(srteTablesList);
         }
 

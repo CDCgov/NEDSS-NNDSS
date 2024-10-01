@@ -39,6 +39,7 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.storeInSql = false;
         dataHandlingService.storeJsonInLocalFolder = false;
         dataHandlingService.pullLimit = 1000;
+        dataHandlingService.deleteOnInit = true;
     }
 
     @Test

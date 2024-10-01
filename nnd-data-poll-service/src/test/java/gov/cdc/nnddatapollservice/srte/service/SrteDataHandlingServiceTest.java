@@ -37,6 +37,7 @@ class SrteDataHandlingServiceTest {
         srteDataHandlingService.storeJsonInS3 = false;
         srteDataHandlingService.storeJsonInLocalFolder = false;
         srteDataHandlingService.pullLimit = 1000;
+        srteDataHandlingService.deleteOnInit = true;
     }
 
     @Test

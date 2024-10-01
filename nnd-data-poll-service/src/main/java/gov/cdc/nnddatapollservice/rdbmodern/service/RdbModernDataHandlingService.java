@@ -30,6 +30,9 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     protected boolean storeInSql = false;
     @Value("${nnd.pullLimit}")
     protected Integer pullLimit = 0;
+
+    @Value("${datasync.data_sync_delete_on_initial}")
+    protected boolean deleteOnInit = false;
     private final RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
     private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
@@ -51,7 +54,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
-        if (isInitialLoad && storeInSql) {
+        if (isInitialLoad && storeInSql && deleteOnInit) {
             logger.info("For INITIAL LOAD - CLEANING UP THE RDB_MODERN TABLES ");
             cleanupTables(rdbModernTablesList);
         }

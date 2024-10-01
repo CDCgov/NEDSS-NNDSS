@@ -30,7 +30,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     protected boolean storeInSql = false;
     @Value("${nnd.pullLimit}")
     protected Integer pullLimit = 0;
-
+    @Value("${datasync.data_sync_delete_on_initial}")
+    protected boolean deleteOnInit = false;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
     private final IPollCommonService pollCommonService;
 
@@ -54,7 +55,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(rdbTablesList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
-        if (isInitialLoad && storeInSql) {
+        if (isInitialLoad && storeInSql && deleteOnInit) {
             logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
             cleanupRDBTables(rdbTablesList);
         }

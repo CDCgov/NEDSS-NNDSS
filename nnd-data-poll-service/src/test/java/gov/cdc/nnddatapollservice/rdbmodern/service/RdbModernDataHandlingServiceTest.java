@@ -38,6 +38,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInS3 = false;
         rdbModernDataHandlingService.pullLimit = 1000;
         rdbModernDataHandlingService.storeJsonInLocalFolder = false;
+        rdbModernDataHandlingService.deleteOnInit = true;
     }
 
     @Test
