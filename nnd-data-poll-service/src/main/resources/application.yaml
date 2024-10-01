@@ -2,7 +2,7 @@ server:
   port: 8082
 
 io:
-  fileLocation: ${NND_FILE_LOCATION:}
+  fileLocation: ${NND_FILE_LOCATION:NA}
 
 data_exchange:
   clientId: ${NND_DE_CLIENT_ID}
