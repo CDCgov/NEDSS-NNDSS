@@ -28,7 +28,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
     protected boolean storeJsonInS3 = false;
     @Value("${datasync.store_in_sql}")
     protected boolean storeInSql = false;
-    @Value("${nnd.pullLimit}")
+    @Value("${datasync.data_sync_batch_limit}")
     protected Integer pullLimit = 0;
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;

@@ -28,13 +28,12 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     protected boolean storeJsonInS3 = false;
     @Value("${datasync.store_in_sql}")
     protected boolean storeInSql = false;
-    @Value("${nnd.pullLimit}")
+    @Value("${datasync.data_sync_batch_limit}")
     protected Integer pullLimit = 0;
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
     private final IPollCommonService pollCommonService;
-
     private final IS3DataService is3DataService;
 
     public RdbDataHandlingService(

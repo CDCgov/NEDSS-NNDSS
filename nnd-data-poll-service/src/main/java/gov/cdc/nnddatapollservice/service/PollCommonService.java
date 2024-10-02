@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
+import com.google.gson.Gson;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
@@ -88,13 +89,13 @@ public class PollCommonService implements IPollCommonService {
             //Get token
             var token = tokenService.getToken();
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.add("clientid", clientId);
-            headers.add("clientsecret", clientSecret);
             headers.add("initialLoad", String.valueOf(isInitialLoad));
             headers.add("allowNull", String.valueOf(allowNull));
             headers.add("startRow", startRow);
             headers.add("endRow",  endRow);
+            headers.add("clientid", clientId);
+            headers.add("clientsecret", clientSecret);
+            headers.setBearerAuth(token);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
             URI uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
