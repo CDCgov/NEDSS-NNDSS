@@ -4,6 +4,7 @@ package gov.cdc.nnddataexchangeservice.controller;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -31,8 +32,8 @@ public class DataExchangeController {
     }
 
     @Operation(
-            summary = "Get data for NND process",
-            description = "Fetches data based on various parameters related to the NND process. Requires client authentication headers.",
+            summary = "Get data from multiple tables related to NND process",
+            description = "Fetches data based on various parameters related to the NND process.",
             parameters = {
                     @Parameter(in = ParameterIn.HEADER,
                             name = "clientid",
@@ -76,7 +77,7 @@ public class DataExchangeController {
                             required = false)
             }
     )
-    @GetMapping(path = "/api/nnd/data-exchange")
+    @GetMapping(path = "/api/data-sync/nnd-data")
     public ResponseEntity<String> exchangingData(@RequestParam("cnStatusTime") String cnStatusTime,
                                                             @RequestParam("transportStatusTime") String transportStatusTime,
                                                             @RequestParam("netssTime") String netssTime,
@@ -99,8 +100,8 @@ public class DataExchangeController {
 
 
     @Operation(
-            summary = "Get generic data for data sync",
-            description = "Fetches data from the specified table based on the timestamp for data synchronization. Requires client authentication headers.",
+            summary = "Get data from multiple tables related to Datasync process",
+            description = "Fetches data from the specified table based on the timestamp for data synchronization.",
             parameters = {
                     @Parameter(in = ParameterIn.HEADER,
                             name = "clientid",
@@ -196,18 +197,7 @@ public class DataExchangeController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @Operation(
-            summary = "Decode and decompress data for generic data exchange",
-            description = "This endpoint takes a table name as input and decodes and decompresses the data for the data exchange process.",
-            parameters = {
-                    @Parameter(
-                            name = "tableName",
-                            description = "The name of the table to decode and decompress data for",
-                            required = true,
-                            schema = @Schema(type = "string")
-                    )
-            }
-    )
+    @Hidden
     @PostMapping(path = "/api/data-exchange-generic")
     public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) throws DataExchangeException {
         var val = dataExchangeGenericService.decodeAndDecompress(tableName);
