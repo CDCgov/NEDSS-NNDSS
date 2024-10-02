@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.io.IOException;
 
 @RestController
 @SecurityRequirement(name = "bearer-key")
+@Tag(name = "Data Exchange", description = "Data Exchange API")
 public class DataExchangeController {
 
     private final IDataExchangeService dataExchangeService;
@@ -29,19 +31,50 @@ public class DataExchangeController {
     }
 
     @Operation(
-            summary = "Getting data from NND",
-            description = "Getting data from NND",
+            summary = "Get data for NND process",
+            description = "Fetches data based on various parameters related to the NND process. Requires client authentication headers.",
             parameters = {
                     @Parameter(in = ParameterIn.HEADER,
                             name = "clientid",
-                            description = "The Client Id",
+                            description = "The Client Id for authentication",
                             required = true,
                             schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.HEADER,
                             name = "clientsecret",
-                            description = "The Client Secret",
+                            description = "The Client Secret for authentication",
                             required = true,
-                            schema = @Schema(type = "string"))}
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "cnStatusTime",
+                            description = "CN Status time parameter",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "transportStatusTime",
+                            description = "Transport Status time parameter",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "netssTime",
+                            description = "NETSS time parameter",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "statusCd",
+                            description = "Status code for filtering",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "limit",
+                            description = "Limit on the number of records returned",
+                            schema = @Schema(type = "string", defaultValue = "0"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "compress",
+                            description = "Boolean flag to compress the response",
+                            schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false)
+            }
     )
     @GetMapping(path = "/api/nnd/data-exchange")
     public ResponseEntity<String> exchangingData(@RequestParam("cnStatusTime") String cnStatusTime,
@@ -66,22 +99,53 @@ public class DataExchangeController {
 
 
     @Operation(
-            summary = "Getting generic data from NND",
-            description = "Getting generic data from NND",
+            summary = "Get generic data for data sync",
+            description = "Fetches data from the specified table based on the timestamp for data synchronization. Requires client authentication headers.",
             parameters = {
                     @Parameter(in = ParameterIn.HEADER,
                             name = "clientid",
-                            description = "The Client Id",
+                            description = "The Client Id for authentication",
                             required = true,
                             schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.HEADER,
                             name = "clientsecret",
-                            description = "The Client Secret",
+                            description = "The Client Secret for authentication",
                             required = true,
-                            schema = @Schema(type = "string"))}
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.PATH,
+                            name = "tableName",
+                            description = "The name of the table from which data is to be synced",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "timestamp",
+                            description = "Timestamp parameter used to filter data",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "startRow",
+                            description = "The starting row for pagination",
+                            schema = @Schema(type = "string", defaultValue = "0"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "endRow",
+                            description = "The ending row for pagination",
+                            schema = @Schema(type = "string", defaultValue = "0"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "initialLoad",
+                            description = "Flag indicating whether this is an initial data load",
+                            schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "allowNull",
+                            description = "Flag indicating whether null timestamps are allowed",
+                            schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false)
+            }
     )
     @GetMapping(path = "/api/datasync/{tableName}")
-    public ResponseEntity<String> dataSync(@PathVariable String tableName, @RequestParam(required = false) String timestamp,
+    public ResponseEntity<String> dataSync(@PathVariable String tableName, @RequestParam String timestamp,
                                                  @RequestHeader(name = "startRow", defaultValue = "0", required = false) String startRow,
                                                  @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
                                                  @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
@@ -94,28 +158,56 @@ public class DataExchangeController {
     }
 
     @Operation(
-            summary = "Getting generic data from NND",
-            description = "Getting generic data from NND",
+            summary = "Get total record count for data sync from NND",
+            description = "Fetches the total number of records from the specified table based on the timestamp for data synchronization. Requires client authentication headers.",
             parameters = {
                     @Parameter(in = ParameterIn.HEADER,
                             name = "clientid",
-                            description = "The Client Id",
+                            description = "The Client Id for authentication",
                             required = true,
                             schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.HEADER,
                             name = "clientsecret",
-                            description = "The Client Secret",
+                            description = "The Client Secret for authentication",
                             required = true,
-                            schema = @Schema(type = "string"))}
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.PATH,
+                            name = "tableName",
+                            description = "The name of the table to retrieve the record count from",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "timestamp",
+                            description = "Timestamp parameter used to filter records",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "initialLoad",
+                            description = "Flag indicating whether this is an initial data load",
+                            schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false)
+            }
     )
     @GetMapping(path = "/api/datasync/count/{tableName}")
     public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
-                                                       @RequestParam(required = false) String timestamp,
+                                                       @RequestParam String timestamp,
                                            @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
         var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), timestamp);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Decode and decompress data for generic data exchange",
+            description = "This endpoint takes a table name as input and decodes and decompresses the data for the data exchange process.",
+            parameters = {
+                    @Parameter(
+                            name = "tableName",
+                            description = "The name of the table to decode and decompress data for",
+                            required = true,
+                            schema = @Schema(type = "string")
+                    )
+            }
+    )
     @PostMapping(path = "/api/data-exchange-generic")
     public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) throws DataExchangeException {
         var val = dataExchangeGenericService.decodeAndDecompress(tableName);
