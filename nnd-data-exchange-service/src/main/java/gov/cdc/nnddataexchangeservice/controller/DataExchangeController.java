@@ -77,7 +77,7 @@ public class DataExchangeController {
                             required = false)
             }
     )
-    @GetMapping(path = "/api/data-sync/nnd-data") //api/nnd/data-exchange
+    @GetMapping(path = "/api/data-sync/nnd-data")
     public ResponseEntity<String> exchangingData(@RequestParam("cnStatusTime") String cnStatusTime,
                                                             @RequestParam("transportStatusTime") String transportStatusTime,
                                                             @RequestParam("netssTime") String netssTime,
