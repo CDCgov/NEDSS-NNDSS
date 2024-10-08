@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.convertTimestampFromString;
+
 @RestController
 @SecurityRequirement(name = "bearer-key")
 @Tag(name = "Data Exchange", description = "Data Exchange API")
@@ -152,8 +154,8 @@ public class DataExchangeController {
                                                  @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
                                                  @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull) throws DataExchangeException {
 
-
-        var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, timestamp, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
+        var ts = convertTimestampFromString(timestamp);
+        var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, ts, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
                 Boolean.parseBoolean(allowNull));
         return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
     }
@@ -193,7 +195,8 @@ public class DataExchangeController {
     public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
                                                        @RequestParam String timestamp,
                                            @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
-        var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), timestamp);
+        var ts = convertTimestampFromString(timestamp);
+        var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), ts);
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
