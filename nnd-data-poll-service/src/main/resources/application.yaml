@@ -8,10 +8,10 @@ data_exchange:
   clientId: ${NND_DE_CLIENT_ID}
   secret: ${NND_DE_SECRET}
   url: ${NND_DE_URL}
-  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN:/api/auth/token}
-  endpoint_de: ${NND_DE_URL}${NND_DE_DE:/api/data-sync/nnd-data}
-  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/api/datasync}
-  endpoint_generic_total_record: ${NND_DE_URL}${NND_DE_GENERIC_TOTAL_RECORD:/api/datasync/count}
+  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN:/data-sync/api/auth/token}
+  endpoint_de: ${NND_DE_URL}${NND_DE_DE:/data-sync/api/data-sync/nnd-data}
+  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/data-sync/api/datasync}
+  endpoint_generic_total_record: ${NND_DE_URL}${NND_DE_GENERIC_TOTAL_RECORD:/data-sync/api/datasync/count}
 nnd:
   fullLoad: ${NND_FULL_LOAD:false}
   pullLimit: ${NND_PULL_LIMIT:0}
