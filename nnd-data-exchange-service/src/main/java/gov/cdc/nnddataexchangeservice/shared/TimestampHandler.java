@@ -21,8 +21,7 @@ public class TimestampHandler {
             LocalDateTime dateTime = LocalDateTime.parse(timestamp, inputFormatter);
             LocalDateTime truncatedDateTime = dateTime.truncatedTo(ChronoUnit.MILLIS);
             DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-            String formattedDateTime = truncatedDateTime.format(outputFormatter);
-            return formattedDateTime;
+            return truncatedDateTime.format(outputFormatter);
         }
         else {
             return timestamp;
