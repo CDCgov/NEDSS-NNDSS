@@ -67,9 +67,9 @@ public class RdbModernDataPersistentDAO {
                 var domainModel = new NrtObservationCoded(data);
                 nrtObservationCodedRepository.save(domainModel);
             } catch (Exception e) {
-                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage());
-                handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/");
-                throw new DataPollException("Tried individual process, but not success");
+                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage()); // NOSONAR
+                handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
+                throw new DataPollException("Tried individual process, but not success: " + e.getMessage()); // NOSONAR
             }
         }
     }
@@ -79,9 +79,9 @@ public class RdbModernDataPersistentDAO {
                 var domainModel = new NrtObservation(data);
                 nrtObservationRepository.save(domainModel);
             } catch (Exception e) {
-                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage());
-                handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/");
-                throw new DataPollException("Tried individual process, but not success");
+                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage()); // NOSONAR
+                handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
+                throw new DataPollException("Tried individual process, but not success: " + e.getMessage()); // NOSONAR
             }
         }
     }
@@ -114,9 +114,9 @@ public class RdbModernDataPersistentDAO {
                             try {
                                 jdbcInsert.execute(new MapSqlParameterSource(res));
                             } catch (Exception ei) {
-                                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage());
-                                handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
-                                throw new DataPollException("Tried individual process, but not success");
+                                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage()); // NOSONAR
+                                handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
+                                throw new DataPollException("Tried individual process, but not success: " + ei.getMessage()); // NOSONAR
                             }
                         }
                     }

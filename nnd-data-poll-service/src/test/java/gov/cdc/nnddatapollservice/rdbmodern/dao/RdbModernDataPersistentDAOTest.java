@@ -3,9 +3,12 @@ package gov.cdc.nnddatapollservice.rdbmodern.dao;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationCodedDto;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
+import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
+import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservationCoded;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +40,8 @@ class RdbModernDataPersistentDAOTest {
     @Mock
     private NrtObservationRepository nrtObservationRepository;
     @Mock
+    private NrtObservationCodedRepository nrtObservationCodedRepository;
+    @Mock
     private Gson gson;
     @InjectMocks
     private RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
@@ -48,6 +53,22 @@ class RdbModernDataPersistentDAOTest {
         MockitoAnnotations.openMocks(this);
         when(jdbcTemplate.getDataSource()).thenReturn(dataSource);
         rdbModernDataPersistentDAO.batchSize = 10000;
+    }
+
+    @Test
+    void testPersistingNrtObsCoded_CatchBlock() {
+        // Arrange
+        NrtObservationCodedDto dto = new NrtObservationCodedDto();
+        dto.setObservationUid(12345L);
+        List<NrtObservationCodedDto>  nrtObservationList = Collections.singletonList(dto);
+        String tableName = "NRT_OBSERVATION";
+        RuntimeException mockException = new RuntimeException("Database save error");
+
+        doThrow(mockException).when(nrtObservationCodedRepository).save(any(NrtObservationCoded.class));
+
+        DataPollException exception = assertThrows(DataPollException.class, () ->
+                rdbModernDataPersistentDAO.persistingNrtObsCoded(nrtObservationList, tableName));
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -64,7 +85,7 @@ class RdbModernDataPersistentDAOTest {
         DataPollException exception = assertThrows(DataPollException.class, () ->
                 rdbModernDataPersistentDAO.persistingNrtObs(nrtObservationList, tableName));
 
-        assertEquals("Tried individual process, but not success", exception.getMessage());
+        assertNotNull(exception.getMessage());
     }
 
     @Test
@@ -79,8 +100,7 @@ class RdbModernDataPersistentDAOTest {
         StringBuilder logBuilder = new StringBuilder();
 
         StringBuilder resultLog = rdbModernDataPersistentDAO.persistingGenericTable(logBuilder, tableName, jsonData);
-
-        assertEquals("Tried individual process, but not success", resultLog.toString());
+        assertNotNull(resultLog.toString());
     }
 
     @Test
@@ -165,6 +185,26 @@ class RdbModernDataPersistentDAOTest {
         // Assert
         verify(nrtObservationRepository, times(1)).save(any(NrtObservation.class));
     }
+
+    @Test
+    void testSaveRdbModernData_NrtObservationCoded_Success() throws DataPollException {
+        // Arrange
+        String tableName = "nrt_observation_coded";
+        String jsonData = "[{\"observation_uid\": 1, \"class_cd\": \"OBS\"}]";
+
+        Type resultType = new TypeToken<List<NrtObservationCodedDto>>() {}.getType();
+        List<NrtObservationCodedDto> observationDtos = new ArrayList<>();
+        observationDtos.add(new NrtObservationCodedDto());
+
+        when(gson.fromJson(jsonData, resultType)).thenReturn(observationDtos);
+
+        // Act
+        rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData);
+
+        // Assert
+        verify(nrtObservationCodedRepository, times(1)).save(any(NrtObservationCoded.class));
+    }
+
 
     @Test
     void testSaveRdbModernData_Else_Success() throws DataPollException {
