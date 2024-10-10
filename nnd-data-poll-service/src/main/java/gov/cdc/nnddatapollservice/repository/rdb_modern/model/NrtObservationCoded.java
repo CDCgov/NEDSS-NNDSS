@@ -38,7 +38,7 @@ public class NrtObservationCoded {
     @Column(name = "ovc_alt_cd_system_desc_txt", length = 100)
     private String ovcAltCdSystemDescTxt;
 
-    @Column(name = "max_datetime", nullable = false)
+    @Column(name = "max_datetime")
     private Timestamp maxDatetime;
 
 
