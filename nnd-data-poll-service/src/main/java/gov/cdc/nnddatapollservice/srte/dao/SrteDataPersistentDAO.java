@@ -64,7 +64,7 @@ public class SrteDataPersistentDAO {
                     try {
                         jdbcInsert.execute(new MapSqlParameterSource(res));
                     } catch (Exception ei) {
-                        logger.error("ERROR occured at record: {}", gsonNorm.toJson(res));
+                        logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), ei.getMessage());
                         handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                         throw new DataPollException("Tried individual process, but not success");
                     }

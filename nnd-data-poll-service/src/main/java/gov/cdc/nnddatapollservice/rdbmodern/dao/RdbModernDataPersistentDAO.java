@@ -5,9 +5,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationCodedDto;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
+import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
+import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservationCoded;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +39,7 @@ public class RdbModernDataPersistentDAO {
     private JdbcTemplate jdbcTemplate;
 
     private final NrtObservationRepository nrtObservationRepository;
+    private final NrtObservationCodedRepository nrtObservationCodedRepository;
 
     private final HandleError handleError;
 
@@ -50,19 +54,32 @@ public class RdbModernDataPersistentDAO {
             .create();
     @Autowired
     public RdbModernDataPersistentDAO(@Qualifier("rdbmodernJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                      NrtObservationRepository nrtObservationRepository, HandleError handleError) {
+                                      NrtObservationRepository nrtObservationRepository, NrtObservationCodedRepository nrtObservationCodedRepository, HandleError handleError) {
         this.jdbcTemplate = jdbcTemplate;
         this.nrtObservationRepository = nrtObservationRepository;
+        this.nrtObservationCodedRepository = nrtObservationCodedRepository;
         this.handleError = handleError;
     }
 
+    protected void persistingNrtObsCoded(List<NrtObservationCodedDto> list, String tableName) throws DataPollException {
+        for (NrtObservationCodedDto data : list) {
+            try {
+                var domainModel = new NrtObservationCoded(data);
+                nrtObservationCodedRepository.save(domainModel);
+            } catch (Exception e) {
+                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage());
+                handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/");
+                throw new DataPollException("Tried individual process, but not success");
+            }
+        }
+    }
     protected void persistingNrtObs( List<NrtObservationDto> list, String tableName) throws DataPollException {
         for (NrtObservationDto data : list) {
             try {
                 var domainModel = new NrtObservation(data);
                 nrtObservationRepository.save(domainModel);
             } catch (Exception e) {
-                logger.error("ERROR occured at record: {}", gsonNorm.toJson(data));
+                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage());
                 handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/");
                 throw new DataPollException("Tried individual process, but not success");
             }
@@ -97,7 +114,7 @@ public class RdbModernDataPersistentDAO {
                             try {
                                 jdbcInsert.execute(new MapSqlParameterSource(res));
                             } catch (Exception ei) {
-                                logger.error("ERROR occured at record: {}", gsonNorm.toJson(res));
+                                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage());
                                 handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                                 throw new DataPollException("Tried individual process, but not success");
                             }
@@ -127,7 +144,15 @@ public class RdbModernDataPersistentDAO {
             }.getType();
             List<NrtObservationDto> list = gson.fromJson(jsonData, resultType);
             persistingNrtObs(list, tableName);
-        } else {
+        }
+        else if ("nrt_observation_coded".equalsIgnoreCase(tableName)) {
+            logBuilder = new StringBuilder(LOG_SUCCESS);
+            Type resultType = new TypeToken<List<NrtObservationCodedDto>>() {
+            }.getType();
+            List<NrtObservationCodedDto> list = gson.fromJson(jsonData, resultType);
+            persistingNrtObsCoded(list, tableName);
+        }
+        else {
             logBuilder = persistingGenericTable (logBuilder, tableName, jsonData);
         }
 

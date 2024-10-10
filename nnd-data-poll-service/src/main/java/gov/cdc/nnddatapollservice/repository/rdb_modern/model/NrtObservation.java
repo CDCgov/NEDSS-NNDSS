@@ -162,29 +162,8 @@ public class NrtObservation {
     @Column(name = "interpretation_desc_txt", length = 100)
     private String interpretationDescTxt;
 
-    @Column(name = "report_observation_id")
-    private Long reportObservationId;
-
-    @Column(name = "followup_observation_id", columnDefinition = "nvarchar(max)")
-    private String followupObservationId;
-
-    @Column(name = "report_refr_id")
-    private Long reportRefrId;
-
-    @Column(name = "report_sprt_id")
-    private Long reportSprtId;
-
-    @Column(name = "morb_physician_id")
-    private Long morbPhysicianId;
-
-    @Column(name = "morb_reporter_id")
-    private Long morbReporterId;
-
     @Column(name = "transcriptionist_id")
     private Long transcriptionistId;
-
-    @Column(name = "transcriptionist_val", length = 20)
-    private String transcriptionistVal;
 
     @Column(name = "transcriptionist_first_nm", length = 50)
     private String transcriptionistFirstNm;
@@ -194,9 +173,6 @@ public class NrtObservation {
 
     @Column(name = "assistant_interpreter_id")
     private Long assistantInterpreterId;
-
-    @Column(name = "assistant_interpreter_val", length = 20)
-    private String assistantInterpreterVal;
 
     @Column(name = "assistant_interpreter_first_nm", length = 50)
     private String assistantInterpreterFirstNm;
@@ -215,12 +191,6 @@ public class NrtObservation {
 
     @Column(name = "lab_test_technician_id")
     private Long labTestTechnicianId;
-
-    @Column(name = "health_care_id")
-    private Long healthCareId;
-
-    @Column(name = "morb_hosp_reporter_id")
-    private Long morbHospReporterId;
 
 //    @Column(name = "refresh_datetime", columnDefinition = "datetime2(7) GENERATED ALWAYS AS ROW START NOT NULL", updatable = false)
 //    private Timestamp refreshDatetime;
@@ -282,26 +252,16 @@ public class NrtObservation {
         this.txt = dto.getTxt();
         this.interpretationCd = dto.getInterpretationCd();
         this.interpretationDescTxt = dto.getInterpretationDescTxt();
-        this.reportObservationId = dto.getReportObservationUid();
-        this.followupObservationId = dto.getFollowupObservationUid();
-        this.reportRefrId = dto.getReportRefrUid();
-        this.reportSprtId = dto.getReportSprtUid();
-        this.morbPhysicianId = dto.getMorbPhysicianId();
-        this.morbReporterId = dto.getMorbReporterId();
         this.transcriptionistId = dto.getTranscriptionistId();
-        this.transcriptionistVal = dto.getTranscriptionistVal();
         this.transcriptionistFirstNm = dto.getTranscriptionistFirstNm();
         this.transcriptionistLastNm = dto.getTranscriptionistLastNm();
         this.assistantInterpreterId = dto.getAssistantInterpreterId();
-        this.assistantInterpreterVal = dto.getAssistantInterpreterVal();
         this.assistantInterpreterFirstNm = dto.getAssistantInterpreterFirstNm();
         this.assistantInterpreterLastNm = dto.getAssistantInterpreterLastNm();
         this.resultInterpreterId = dto.getResultInterpreterId();
         this.specimenCollectorId = dto.getSpecimenCollectorId();
         this.copyToProviderId = dto.getCopyToProviderId();
         this.labTestTechnicianId = dto.getLabTestTechnicianId();
-        this.healthCareId = dto.getHealthCareId();
-        this.morbHospReporterId = dto.getMorbHospReporterId();
 //        this.refreshDatetime = parseTimestamp(dto.getRefreshDatetime());
 //        this.maxDatetime = parseTimestamp(dto.getMaxDatetime());
     }

@@ -153,29 +153,8 @@ public class NrtObservationDto {
     @SerializedName("interpretation_desc_txt")
     private String interpretationDescTxt;
 
-    @SerializedName("report_observation_id")
-    private Long reportObservationUid;
-
-    @SerializedName("followup_observation_id")
-    private String followupObservationUid;
-
-    @SerializedName("report_refr_id")
-    private Long reportRefrUid;
-
-    @SerializedName("report_sprt_id")
-    private Long reportSprtUid;
-
-    @SerializedName("morb_physician_id")
-    private Long morbPhysicianId;
-
-    @SerializedName("morb_reporter_id")
-    private Long morbReporterId;
-
     @SerializedName("transcriptionist_id")
     private Long transcriptionistId;
-
-    @SerializedName("transcriptionist_val")
-    private String transcriptionistVal;
 
     @SerializedName("transcriptionist_first_nm")
     private String transcriptionistFirstNm;
@@ -185,9 +164,6 @@ public class NrtObservationDto {
 
     @SerializedName("assistant_interpreter_id")
     private Long assistantInterpreterId;
-
-    @SerializedName("assistant_interpreter_val")
-    private String assistantInterpreterVal;
 
     @SerializedName("assistant_interpreter_first_nm")
     private String assistantInterpreterFirstNm;
@@ -206,12 +182,6 @@ public class NrtObservationDto {
 
     @SerializedName("lab_test_technician_id")
     private Long labTestTechnicianId;
-
-    @SerializedName("health_care_id")
-    private Long healthCareId;
-
-    @SerializedName("morb_hosp_reporter_id")
-    private Long morbHospReporterId;
 
     @SerializedName("refresh_datetime")
     private String refreshDatetime;

@@ -79,7 +79,7 @@ public class RdbDataPersistentDAO {
                         try {
                             simpleJdbcInsert.execute(new MapSqlParameterSource(res));
                         } catch (Exception ei) {
-                            logger.error("ERROR occured at record: {}", gsonNorm.toJson(res));
+                            logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage());
                             handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
                             throw new DataPollException("Tried individual process, but not success");
                         }
