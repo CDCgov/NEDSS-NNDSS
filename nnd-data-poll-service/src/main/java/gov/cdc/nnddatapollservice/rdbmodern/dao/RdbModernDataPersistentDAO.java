@@ -53,7 +53,7 @@ public class RdbModernDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
     @Autowired
-    public RdbModernDataPersistentDAO(@Qualifier("rdbmodernJdbcTemplate") JdbcTemplate jdbcTemplate,
+    public RdbModernDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
                                       NrtObservationRepository nrtObservationRepository, NrtObservationCodedRepository nrtObservationCodedRepository, HandleError handleError) {
         this.jdbcTemplate = jdbcTemplate;
         this.nrtObservationRepository = nrtObservationRepository;

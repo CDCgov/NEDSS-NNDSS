@@ -34,7 +34,7 @@ public class SrteDataPersistentDAO {
     private final HandleError handleError;
     private final Gson gsonNorm = new Gson();
     @Autowired
-    public SrteDataPersistentDAO(@Qualifier("srteJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError) {
+    public SrteDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError) {
         this.jdbcTemplate = jdbcTemplate;
         this.handleError = handleError;
     }
