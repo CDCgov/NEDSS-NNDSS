@@ -61,6 +61,7 @@ public class RdbModernDataPersistentDAO {
         this.handleError = handleError;
     }
 
+    @SuppressWarnings("java:S2139")
     protected void persistingNrtObsCoded(List<NrtObservationCodedDto> list, String tableName) {
         for (NrtObservationCodedDto data : list) {
             try {
@@ -72,6 +73,8 @@ public class RdbModernDataPersistentDAO {
             }
         }
     }
+
+    @SuppressWarnings("java:S2139")
     protected void persistingNrtObs( List<NrtObservationDto> list, String tableName) {
         for (NrtObservationDto data : list) {
             try {

@@ -55,6 +55,7 @@ public class RdbDataPersistentDAO {
     }
 
 
+    @SuppressWarnings("java:S3776")
     protected void persistingGenericTable(String tableName, String jsonData) throws DataPollException {
         if (tableName != null && !tableName.isEmpty()) {
             SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
@@ -105,6 +106,7 @@ public class RdbDataPersistentDAO {
     }
 
     // Helper method to handle filtering for special tables
+    @SuppressWarnings("java:S3776")
     protected void handleSpecialTableFiltering(String tableName, List<Map<String, Object>> records, SimpleJdbcInsert simpleJdbcInsert) throws DataPollException {
         String keyColumn = tableName + "_KEY"; // Assuming each table has a key column with the pattern [table]_KEY
 
@@ -117,30 +119,30 @@ public class RdbDataPersistentDAO {
         // Filter out records that have a matching key of 1
         List<Map<String, Object>> filteredRecords = records
                 .stream()
-                .filter(record -> {
+                .filter(rec -> {
                     // Check if the record contains the keyColumn
-                    if (record.containsKey(keyColumn)) {
+                    if (rec.containsKey(keyColumn)) {
                         // Get the value of the keyColumn from the record
-                        Object recordKey = record.get(keyColumn);
+                        Object recordKey = rec.get(keyColumn);
                         // Filter out the record if it matches the foundKey
                         return !recordKey.equals(foundKey);
                     }
                     // If the record doesn't contain keyColumn, keep it
                     return true;
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()); //NOSONAR
         logger.info("After filtering, Records size: {}", filteredRecords.size());
 
         // Additional logic block to remove records with duplicate keys based on keyColumn
         Set<Object> uniqueKeys = new HashSet<>();
         List<Map<String, Object>> deduplicatedRecords = new ArrayList<>();
 
-        for (Map<String, Object> record : filteredRecords) {
-            Object recordKey = record.get(keyColumn);
+        for (Map<String, Object> rec : filteredRecords) {
+            Object recordKey = rec.get(keyColumn);
 
             // If the keyColumn is present and the key hasn't been seen yet, keep the record
             if (recordKey != null && uniqueKeys.add(recordKey)) {
-                deduplicatedRecords.add(record);
+                deduplicatedRecords.add(rec);
             }
         }
 
@@ -167,7 +169,7 @@ public class RdbDataPersistentDAO {
 
 
     // Helper method to handle batch insertion failure
-    private void handleBatchInsertionFailure(List<Map<String, Object>> records, String tableName, SimpleJdbcInsert simpleJdbcInsert) throws DataPollException {
+    private void handleBatchInsertionFailure(List<Map<String, Object>> records, String tableName, SimpleJdbcInsert simpleJdbcInsert) {
         for (Map<String, Object> res : records) {
             try {
                 simpleJdbcInsert.execute(new MapSqlParameterSource(res));
@@ -178,7 +180,7 @@ public class RdbDataPersistentDAO {
         }
     }
 
-    @SuppressWarnings("java:S3776")
+    @SuppressWarnings({"java:S3776", "java:S125"})
     public String saveRDBData(String tableName, String jsonData) {
         logger.info("saveRDBData tableName: {}", tableName);
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);

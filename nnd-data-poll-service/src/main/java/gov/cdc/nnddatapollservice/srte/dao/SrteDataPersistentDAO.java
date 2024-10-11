@@ -40,7 +40,7 @@ public class SrteDataPersistentDAO {
     }
 
     @SuppressWarnings("java:S3776")
-    protected String persistingGenericTable (String tableName, String jsonData) throws DataPollException {
+    protected String persistingGenericTable (String tableName, String jsonData) {
         String log = LOG_SUCCESS;
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
         jdbcInsert = jdbcInsert.withTableName(tableName);
@@ -66,7 +66,6 @@ public class SrteDataPersistentDAO {
                     } catch (Exception ei) {
                         logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
                         handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
-                        throw new DataPollException("Tried individual process, but not success: " + ei.getMessage()); // NOSONAR
                     }
                 }
             }

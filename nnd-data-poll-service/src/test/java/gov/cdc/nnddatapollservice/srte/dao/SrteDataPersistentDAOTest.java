@@ -74,9 +74,7 @@ class SrteDataPersistentDAOTest {
         doThrow(new RuntimeException("Insert Error")).when(mockSimpleJdbcInsert).execute(any(MapSqlParameterSource.class));
 
         // Act & Assert
-        assertThrows(DataPollException.class, () ->
-                srteDataPersistentDAO.persistingGenericTable(tableName, jsonData)
-        );
+        srteDataPersistentDAO.persistingGenericTable(tableName, jsonData);
 
         // Ensure that writing to file is called
         verify(handleError, times(1)).writeRecordToFile(
@@ -93,10 +91,13 @@ class SrteDataPersistentDAOTest {
         srteDataPersistentDAO.batchSize = 0;
         String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
                 "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
-        assertThrows(DataPollException.class, () ->
-                srteDataPersistentDAO.persistingGenericTable("TEST_TABLE", jsondata)
+        srteDataPersistentDAO.persistingGenericTable("TEST_TABLE", jsondata);
+        verify(handleError, times(2)).writeRecordToFile(
+                any(),
+                any(),
+                anyString(),
+                any()
         );
-
     }
 
     @Test
@@ -104,9 +105,13 @@ class SrteDataPersistentDAOTest {
         srteDataPersistentDAO.batchSize = 1000;
         String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
                 "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
-        assertThrows(DataPollException.class, () ->
-                srteDataPersistentDAO.persistingGenericTable("TEST_TABLE", jsondata)
-        );
+        srteDataPersistentDAO.persistingGenericTable("TEST_TABLE", jsondata);
 
+        verify(handleError, times(2)).writeRecordToFile(
+                any(),
+                any(),
+                anyString(),
+                any()
+        );
     }
 }
