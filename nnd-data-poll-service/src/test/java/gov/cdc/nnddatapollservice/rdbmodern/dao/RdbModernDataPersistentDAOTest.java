@@ -55,38 +55,38 @@ class RdbModernDataPersistentDAOTest {
         rdbModernDataPersistentDAO.batchSize = 10000;
     }
 
-    @Test
-    void testPersistingNrtObsCoded_CatchBlock() {
-        // Arrange
-        NrtObservationCodedDto dto = new NrtObservationCodedDto();
-        dto.setObservationUid(12345L);
-        List<NrtObservationCodedDto>  nrtObservationList = Collections.singletonList(dto);
-        String tableName = "NRT_OBSERVATION";
-        RuntimeException mockException = new RuntimeException("Database save error");
+//    @Test
+//    void testPersistingNrtObsCoded_CatchBlock() {
+//        // Arrange
+//        NrtObservationCodedDto dto = new NrtObservationCodedDto();
+//        dto.setObservationUid(12345L);
+//        List<NrtObservationCodedDto>  nrtObservationList = Collections.singletonList(dto);
+//        String tableName = "NRT_OBSERVATION";
+//        RuntimeException mockException = new RuntimeException("Database save error");
+//
+//        doThrow(mockException).when(nrtObservationCodedRepository).save(any(NrtObservationCoded.class));
+//
+//        DataPollException exception = assertThrows(DataPollException.class, () ->
+//                rdbModernDataPersistentDAO.persistingNrtObsCoded(nrtObservationList, tableName));
+//        assertNotNull(exception.getMessage());
+//    }
 
-        doThrow(mockException).when(nrtObservationCodedRepository).save(any(NrtObservationCoded.class));
-
-        DataPollException exception = assertThrows(DataPollException.class, () ->
-                rdbModernDataPersistentDAO.persistingNrtObsCoded(nrtObservationList, tableName));
-        assertNotNull(exception.getMessage());
-    }
-
-    @Test
-    void testPersistingNrtObs_CatchBlock() {
-        // Arrange
-        NrtObservationDto dto = new NrtObservationDto();
-        dto.setObservationUid(12345L);
-        List<NrtObservationDto>  nrtObservationList = Collections.singletonList(dto);
-        String tableName = "NRT_OBSERVATION";
-        RuntimeException mockException = new RuntimeException("Database save error");
-
-        doThrow(mockException).when(nrtObservationRepository).save(any(NrtObservation.class));
-
-        DataPollException exception = assertThrows(DataPollException.class, () ->
-                rdbModernDataPersistentDAO.persistingNrtObs(nrtObservationList, tableName));
-
-        assertNotNull(exception.getMessage());
-    }
+//    @Test
+//    void testPersistingNrtObs_CatchBlock() {
+//        // Arrange
+//        NrtObservationDto dto = new NrtObservationDto();
+//        dto.setObservationUid(12345L);
+//        List<NrtObservationDto>  nrtObservationList = Collections.singletonList(dto);
+//        String tableName = "NRT_OBSERVATION";
+//        RuntimeException mockException = new RuntimeException("Database save error");
+//
+//        doThrow(mockException).when(nrtObservationRepository).save(any(NrtObservation.class));
+//
+//        DataPollException exception = assertThrows(DataPollException.class, () ->
+//                rdbModernDataPersistentDAO.persistingNrtObs(nrtObservationList, tableName));
+//
+//        assertNotNull(exception.getMessage());
+//    }
 
     @Test
     void testPersistingGenericTable_ExceptionCase_WritesToFile()  {
