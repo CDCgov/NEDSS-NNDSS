@@ -4,7 +4,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
@@ -56,7 +55,7 @@ public class RdbDataPersistentDAO {
 
 
     @SuppressWarnings("java:S3776")
-    protected void persistingGenericTable(String tableName, String jsonData) throws DataPollException {
+    protected void persistingGenericTable(String tableName, String jsonData) {
         if (tableName != null && !tableName.isEmpty()) {
             SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
             simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
@@ -107,7 +106,7 @@ public class RdbDataPersistentDAO {
 
     // Helper method to handle filtering for special tables
     @SuppressWarnings("java:S3776")
-    protected void handleSpecialTableFiltering(String tableName, List<Map<String, Object>> records, SimpleJdbcInsert simpleJdbcInsert) throws DataPollException {
+    protected void handleSpecialTableFiltering(String tableName, List<Map<String, Object>> records, SimpleJdbcInsert simpleJdbcInsert) {
         String keyColumn = tableName + "_KEY"; // Assuming each table has a key column with the pattern [table]_KEY
 
         // Query only the existing keys where the key is 1
@@ -169,7 +168,7 @@ public class RdbDataPersistentDAO {
 
 
     // Helper method to handle batch insertion failure
-    private void handleBatchInsertionFailure(List<Map<String, Object>> records, String tableName, SimpleJdbcInsert simpleJdbcInsert) {
+    protected void handleBatchInsertionFailure(List<Map<String, Object>> records, String tableName, SimpleJdbcInsert simpleJdbcInsert) {
         for (Map<String, Object> res : records) {
             try {
                 simpleJdbcInsert.execute(new MapSqlParameterSource(res));

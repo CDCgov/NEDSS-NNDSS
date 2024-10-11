@@ -14,7 +14,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import java.sql.Timestamp;
@@ -36,8 +35,8 @@ class RdbDataPersistentDAOTest {
     @Mock
     private SimpleJdbcInsert simpleJdbcInsertMock;
 
-    private final String tableName = "TEST_TABLE";
-    private final String keyColumn = tableName + "_KEY";
+    private final String tableNameMock = "TEST_TABLE";
+    private final String keyColumn = tableNameMock + "_KEY";
 
     @InjectMocks
     RdbDataPersistentDAO rdbDataPersistentDAO;
@@ -52,29 +51,29 @@ class RdbDataPersistentDAOTest {
     }
 
     @Test
-    void testHandleSpecialTableFiltering_allRecordsInserted() throws Exception {
+    void testHandleSpecialTableFiltering_allRecordsInserted()  {
         // Setup
         List<Map<String, Object>> records = createRecordsWithKeys(2, 3, 4); // No key = 1
 
-        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableName + " WHERE " + keyColumn + " = 1", Double.class))
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
                 .thenReturn(Collections.emptyList());
 
         // Call the method
-        rdbDataPersistentDAO.handleSpecialTableFiltering(tableName, records, simpleJdbcInsertMock);
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
 
         // Verify
         verify(simpleJdbcInsertMock).executeBatch(any(SqlParameterSource[].class));
     }
     @Test
-    void testHandleSpecialTableFiltering_recordsFiltered() throws Exception {
+    void testHandleSpecialTableFiltering_recordsFiltered() {
         // Setup: One record matches key = 1
         List<Map<String, Object>> records = createRecordsWithKeys(1, 2, 3);
 
-        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableName + " WHERE " + keyColumn + " = 1", Double.class))
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
                 .thenReturn(Collections.singletonList(1.0));
 
         // Call the method
-        rdbDataPersistentDAO.handleSpecialTableFiltering(tableName, records, simpleJdbcInsertMock);
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
 
         // Verify
         verify(simpleJdbcInsertMock).executeBatch(any(SqlParameterSource[].class));
@@ -82,30 +81,30 @@ class RdbDataPersistentDAOTest {
     }
 
     @Test
-    void testHandleSpecialTableFiltering_duplicateKeysDeduplicated() throws Exception {
+    void testHandleSpecialTableFiltering_duplicateKeysDeduplicated()  {
         // Setup: Duplicate records with key = 2
         List<Map<String, Object>> records = createRecordsWithKeys(2, 2, 3);
 
-        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableName + " WHERE " + keyColumn + " = 1", Double.class))
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
                 .thenReturn(Collections.emptyList());
 
         // Call the method
-        rdbDataPersistentDAO.handleSpecialTableFiltering(tableName, records, simpleJdbcInsertMock);
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
 
         // Verify
         verify(simpleJdbcInsertMock).executeBatch(any(SqlParameterSource[].class));
     }
 
     @Test
-    void testHandleSpecialTableFiltering_noRecords() throws Exception {
+    void testHandleSpecialTableFiltering_noRecords()  {
         // Setup: Empty records
         List<Map<String, Object>> records = new ArrayList<>();
 
-        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableName + " WHERE " + keyColumn + " = 1", Double.class))
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
                 .thenReturn(Collections.emptyList());
 
         // Call the method
-        rdbDataPersistentDAO.handleSpecialTableFiltering(tableName, records, simpleJdbcInsertMock);
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
 
         // Verify no insertion happens
         verify(simpleJdbcInsertMock, never()).executeBatch(any(SqlParameterSource[].class));
@@ -113,24 +112,25 @@ class RdbDataPersistentDAOTest {
     }
 
     @Test
-    void testHandleSpecialTableFiltering_batchInsert() throws Exception {
+    void testHandleSpecialTableFiltering_batchInsert()  {
         // Setup: Records exceed batch size (batchSize = 2)
         List<Map<String, Object>> records = createRecordsWithKeys(2, 3, 4, 5);
 
-        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableName + " WHERE " + keyColumn + " = 1", Double.class))
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
                 .thenReturn(Collections.emptyList());
 
         // Set batch size to 2 for testing
         rdbDataPersistentDAO.batchSize = 2;
 
         // Call the method
-        rdbDataPersistentDAO.handleSpecialTableFiltering(tableName, records, simpleJdbcInsertMock);
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
 
         // Verify batch processing
         verify(simpleJdbcInsertMock, times(2)).executeBatch(any(SqlParameterSource[].class));
     }
 
     // Helper method to create records with keys
+    @SuppressWarnings("java:S6213")
     private List<Map<String, Object>> createRecordsWithKeys(Integer... keys) {
         List<Map<String, Object>> records = new ArrayList<>();
         for (Integer key : keys) {

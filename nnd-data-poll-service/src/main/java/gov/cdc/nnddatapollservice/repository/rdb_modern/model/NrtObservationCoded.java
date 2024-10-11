@@ -1,10 +1,10 @@
 package gov.cdc.nnddatapollservice.repository.rdb_modern.model;
 
-import java.sql.Timestamp;
-
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationCodedDto;
-import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "nrt_observation_coded")

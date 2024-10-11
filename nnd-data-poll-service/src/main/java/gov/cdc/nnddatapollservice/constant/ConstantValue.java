@@ -13,5 +13,4 @@ public class ConstantValue {
     public static final String CRITICAL_COUNT_LEVEL = "Critical Count Log: ";
 
     public static final String CRITICAL_NON_NULL_LEVEL = "Critical Non Null Log: ";
-//    public static int SQL_BATCH_SIZE = 10000 ;
 }

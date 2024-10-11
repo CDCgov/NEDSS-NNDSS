@@ -4,7 +4,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationCodedDto;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;

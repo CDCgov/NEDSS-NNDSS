@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.service;
 
-import com.google.gson.Gson;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;

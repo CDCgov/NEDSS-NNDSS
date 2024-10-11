@@ -262,8 +262,6 @@ public class NrtObservation {
         this.specimenCollectorId = dto.getSpecimenCollectorId();
         this.copyToProviderId = dto.getCopyToProviderId();
         this.labTestTechnicianId = dto.getLabTestTechnicianId();
-//        this.refreshDatetime = parseTimestamp(dto.getRefreshDatetime());
-//        this.maxDatetime = parseTimestamp(dto.getMaxDatetime());
     }
 
     private Timestamp parseTimestamp(String dateString) throws ParseException {

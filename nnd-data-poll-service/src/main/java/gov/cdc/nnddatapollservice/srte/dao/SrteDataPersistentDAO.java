@@ -1,7 +1,6 @@
 package gov.cdc.nnddatapollservice.srte.dao;
 
 import com.google.gson.Gson;
-import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
