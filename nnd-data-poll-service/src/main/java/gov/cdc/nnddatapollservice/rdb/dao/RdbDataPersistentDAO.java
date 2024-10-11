@@ -110,19 +110,19 @@ public class RdbDataPersistentDAO {
 
         // Query only the existing keys where the key is 1
         String query = "SELECT " + keyColumn + " FROM " + tableName + " WHERE " + keyColumn + " = 1";
-        Set<Object> existingKeys = new HashSet<>(jdbcTemplate.queryForList(query, Object.class));
+        List<Double> existingKeys = new ArrayList<>(jdbcTemplate.queryForList(query, Double.class));
         logger.info("Found {} existing keys in {} with {} = 1", existingKeys.size(), tableName, keyColumn);
 
-
+        Double foundKey = existingKeys.isEmpty()? null : existingKeys.get(0);
         // Filter out records that have a matching key of 1
-        List<Map<String, Object>> filteredRecords = records.stream()
+        List<Map<String, Object>> filteredRecords = records
+                .stream()
                 .filter(record -> {
                     // Check if any value in the record map equals 1.0 (as a Double or String)
                     return record.values().stream()
-                            .noneMatch(value -> value != null && (value.equals(1.0) || value.equals("1.0")));
+                            .noneMatch(value -> value != null && (value.equals(foundKey)));
                 })
                 .collect(Collectors.toList());
-
         logger.info("After filtering, Records size: {}", filteredRecords.size());
 
         if (!filteredRecords.isEmpty()) {
