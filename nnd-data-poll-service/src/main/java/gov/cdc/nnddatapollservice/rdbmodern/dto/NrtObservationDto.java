@@ -18,7 +18,7 @@ public class NrtObservationDto {
     @SerializedName("act_uid")
     private Long actUid;
 
-    @SerializedName("cd_desc_text")
+    @SerializedName("cd_desc_txt")
     private String cdDescText;
 
     @SerializedName("record_status_cd")

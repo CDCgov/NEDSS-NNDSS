@@ -61,7 +61,7 @@ public class RdbModernDataPersistentDAO {
         this.handleError = handleError;
     }
 
-    protected void persistingNrtObsCoded(List<NrtObservationCodedDto> list, String tableName) throws DataPollException {
+    protected void persistingNrtObsCoded(List<NrtObservationCodedDto> list, String tableName) {
         for (NrtObservationCodedDto data : list) {
             try {
                 var domainModel = new NrtObservationCoded(data);
@@ -69,11 +69,10 @@ public class RdbModernDataPersistentDAO {
             } catch (Exception e) {
                 logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage()); // NOSONAR
                 handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
-                throw new DataPollException("Tried individual process, but not success: " + e.getMessage()); // NOSONAR
             }
         }
     }
-    protected void persistingNrtObs( List<NrtObservationDto> list, String tableName) throws DataPollException {
+    protected void persistingNrtObs( List<NrtObservationDto> list, String tableName) {
         for (NrtObservationDto data : list) {
             try {
                 var domainModel = new NrtObservation(data);
@@ -81,7 +80,6 @@ public class RdbModernDataPersistentDAO {
             } catch (Exception e) {
                 logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage()); // NOSONAR
                 handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
-                throw new DataPollException("Tried individual process, but not success: " + e.getMessage()); // NOSONAR
             }
         }
     }
@@ -116,7 +114,6 @@ public class RdbModernDataPersistentDAO {
                             } catch (Exception ei) {
                                 logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage()); // NOSONAR
                                 handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
-                                throw new DataPollException("Tried individual process, but not success: " + ei.getMessage()); // NOSONAR
                             }
                         }
                     }
@@ -135,7 +132,7 @@ public class RdbModernDataPersistentDAO {
         return logBuilder;
     }
 
-    public String saveRdbModernData(String tableName, String jsonData) throws DataPollException {
+    public String saveRdbModernData(String tableName, String jsonData) {
         logger.info("saveRdbModernData tableName: {}", tableName);
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
         if ("NRT_OBSERVATION".equalsIgnoreCase(tableName)) {

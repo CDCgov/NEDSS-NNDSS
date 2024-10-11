@@ -7,7 +7,7 @@ CREATE TABLE rdb_modern.dbo.nrt_observation (
 	class_cd varchar(10) NULL,
 	mood_cd varchar(10) NULL,
 	act_uid bigint NULL,
-	cd_desc_text varchar(1000) NULL,
+	cd_desc_txt varchar(1000) NULL,
 	record_status_cd varchar(20) NULL,
 	jurisdiction_cd varchar(20) NULL,
 	program_jurisdiction_oid bigint NULL,
@@ -78,17 +78,19 @@ CREATE TABLE rdb_modern.dbo.nrt_observation (
 );
 
 
-CREATE TABLE rdb_modern.dbo.nrt_observation_coded (
-	observation_uid bigint NOT NULL,
-	code varchar(20) NOT NULL,
-	code_system_cd varchar(300) NULL,
-	code_system_desc_txt varchar(100) NULL,
-	display_name varchar(300) NULL,
-	alt_cd varchar(50) NULL,
-	alt_cd_desc_txt varchar(100) NULL,
-	alt_cd_system_cd varchar(300) NULL,
-	alt_cd_system_desc_txt varchar(100) NULL,
-	refresh_datetime              datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
-    max_datetime                  datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
-    PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
-);
+
+CREATE TABLE [dbo].[nrt_observation_coded](
+	[observation_uid] [bigint] NOT NULL,
+	[ovc_code] [varchar](20) NOT NULL,
+	[ovc_code_system_cd] [varchar](300) NULL,
+	[ovc_code_system_desc_txt] [varchar](100) NULL,
+	[ovc_display_name] [varchar](300) NULL,
+	[ovc_alt_cd] [varchar](50) NULL,
+	[ovc_alt_cd_desc_txt] [varchar](100) NULL,
+	[ovc_alt_cd_system_cd] [varchar](300) NULL,
+	[ovc_alt_cd_system_desc_txt] [varchar](100) NULL,
+	[refresh_datetime] [datetime2](7) GENERATED ALWAYS AS ROW START NOT NULL,
+	[max_datetime] [datetime2](7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
+	PERIOD FOR SYSTEM_TIME ([refresh_datetime], [max_datetime])
+	) ON [PRIMARY];
+

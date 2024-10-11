@@ -27,7 +27,7 @@ public class NrtObservation {
     @Column(name = "act_uid")
     private Long actUid;
 
-    @Column(name = "cd_desc_text", length = 1000)
+    @Column(name = "cd_desc_txt", length = 1000)
     private String cdDescText;
 
     @Column(name = "record_status_cd", length = 20)

@@ -146,3 +146,6 @@ VALUES('CODE_TO_CONDITION', 'SRTE',48);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('NRT_OBSERVATION', 'RDB_MODERN',1);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('NRT_OBSERVATION_CODED', 'RDB_MODERN',2);
