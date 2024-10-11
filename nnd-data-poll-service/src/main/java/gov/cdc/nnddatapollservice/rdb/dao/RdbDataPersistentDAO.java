@@ -118,24 +118,44 @@ public class RdbDataPersistentDAO {
         List<Map<String, Object>> filteredRecords = records
                 .stream()
                 .filter(record -> {
-                    // Check if any value in the record map equals 1.0 (as a Double or String)
-                    return record.values().stream()
-                            .noneMatch(value -> value != null && (value.equals(foundKey)));
+                    // Check if the record contains the keyColumn
+                    if (record.containsKey(keyColumn)) {
+                        // Get the value of the keyColumn from the record
+                        Object recordKey = record.get(keyColumn);
+                        // Filter out the record if it matches the foundKey
+                        return !recordKey.equals(foundKey);
+                    }
+                    // If the record doesn't contain keyColumn, keep it
+                    return true;
                 })
                 .collect(Collectors.toList());
         logger.info("After filtering, Records size: {}", filteredRecords.size());
 
-        if (!filteredRecords.isEmpty()) {
+        // Additional logic block to remove records with duplicate keys based on keyColumn
+        Set<Object> uniqueKeys = new HashSet<>();
+        List<Map<String, Object>> deduplicatedRecords = new ArrayList<>();
+
+        for (Map<String, Object> record : filteredRecords) {
+            Object recordKey = record.get(keyColumn);
+
+            // If the keyColumn is present and the key hasn't been seen yet, keep the record
+            if (recordKey != null && uniqueKeys.add(recordKey)) {
+                deduplicatedRecords.add(record);
+            }
+        }
+
+
+        if (!deduplicatedRecords.isEmpty()) {
             try {
-                if (filteredRecords.size() > batchSize) {
+                if (deduplicatedRecords.size() > batchSize) {
                     int sublistSize = batchSize;
-                    for (int i = 0; i < filteredRecords.size(); i += sublistSize) {
-                        int end = Math.min(i + sublistSize, filteredRecords.size());
-                        List<Map<String, Object>> sublist = filteredRecords.subList(i, end);
+                    for (int i = 0; i < deduplicatedRecords.size(); i += sublistSize) {
+                        int end = Math.min(i + sublistSize, deduplicatedRecords.size());
+                        List<Map<String, Object>> sublist = deduplicatedRecords.subList(i, end);
                         simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
                     }
                 } else {
-                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(filteredRecords));
+                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(deduplicatedRecords));
                 }
             } catch (Exception e) {
                 handleBatchInsertionFailure(records, tableName, simpleJdbcInsert);
@@ -154,7 +174,6 @@ public class RdbDataPersistentDAO {
             } catch (Exception ei) {
                 logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
                 handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
-                throw new DataPollException("Tried individual process, but not successful: " + ei.getMessage()); // NOSONAR
             }
         }
     }
