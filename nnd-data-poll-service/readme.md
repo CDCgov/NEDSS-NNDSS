@@ -6,8 +6,6 @@
     - NBS_NND_CRON_TIME_ZONE: (optional) Time zone for CRON process, default is UTC
     - NBS_NND_CRON: (optional) NND CRON scheduler, default is 0 */1 * * * * -> every one minutes
     - NBS_RDB_CRON: same as above but for RDB CRON
-    - NBS_SRTE_CRON: same as above but for SRTE CRON
-    - NBS_RDB_MODERN_CRON: same as above but for RDB MODERN CRON
   - NND Process
     - NND_POLL_ENABLED: (optional) default is false, must set to true to enable the NND POLL  
     - NND_FILE_LOCATION: Log location for NND process (ex: /Users/UserName/Desktop/LOG)
@@ -21,8 +19,6 @@
     - NND_DE_TOKEN/NND_DE_DE/NND_DE_GENERIC/NND_DE_GENERIC_TOTAL_RECORD: Data Sync Endpoints (Optional; already hardcoded in the app config)
   - DATA SYNC Process
     - RDB_POLL_ENABLED: (optional) default is false, set to true to enable RDB POLL
-    - RDB_MODERN_POLL_ENABLED: (optional) default is false, set to true to enable RDB MODERN POLL
-    - SRTE_POLL_ENABLED: (optional) default is false, set to true to enable SRTE POLL
     - DATASYNC_STORE_SQL: (optional) default is false, set to true to enable Polling into SQL DB
     - DATASYNC_STORE_S3: (optional) default is false, set to true to enable Polling into S3
     - DATASYNC_STORE_LOCAL: (optional) default is false, set to true to enable Polling into Local System Directory
@@ -41,10 +37,15 @@
     - OP_DBSERVER: server url
     - OP_DBNAME: NND DB name
     - RDB_DBNAME: RDB DB name
-    - RDB_MODERN_DBNAME: RDB Modern DB name
-    - SRTE_DBNAME: SRTE DB name
     - OP_DBUSER: DB Username
     - OP_DBPASSWORD: DB Password
+  - OBSOLETED parameters
+    - RDB_MODERN_DBNAME: RDB Modern DB name
+    - SRTE_DBNAME: SRTE DB name
+    - RDB_MODERN_POLL_ENABLED: (optional) default is false, set to true to enable RDB MODERN POLL
+    - SRTE_POLL_ENABLED: (optional) default is false, set to true to enable SRTE POLL
+    - NBS_SRTE_CRON: same as above but for SRTE CRON
+    - NBS_RDB_MODERN_CRON: same as above but for RDB MODERN CRON
 
 ## CRON Guide
 - Ex: Setting up the scheduler time.
