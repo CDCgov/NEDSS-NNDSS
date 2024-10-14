@@ -5,7 +5,6 @@ import lombok.Data;
 
 @Data
 public class NrtObservationDto {
-
     @SerializedName("observation_uid")
     private Long observationUid;
 
@@ -19,7 +18,7 @@ public class NrtObservationDto {
     private Long actUid;
 
     @SerializedName("cd_desc_txt")
-    private String cdDescText;
+    private String cdDescTxt;
 
     @SerializedName("record_status_cd")
     private String recordStatusCd;
@@ -153,8 +152,29 @@ public class NrtObservationDto {
     @SerializedName("interpretation_desc_txt")
     private String interpretationDescTxt;
 
+    @SerializedName("report_observation_id")
+    private Long reportObservationId;
+
+    @SerializedName("followup_observation_id")
+    private String followupObservationId;
+
+    @SerializedName("report_refr_id")
+    private Long reportRefrId;
+
+    @SerializedName("report_sprt_id")
+    private Long reportSprtId;
+
+    @SerializedName("morb_physician_id")
+    private Long morbPhysicianId;
+
+    @SerializedName("morb_reporter_id")
+    private Long morbReporterId;
+
     @SerializedName("transcriptionist_id")
     private Long transcriptionistId;
+
+    @SerializedName("transcriptionist_val")
+    private String transcriptionistVal;
 
     @SerializedName("transcriptionist_first_nm")
     private String transcriptionistFirstNm;
@@ -164,6 +184,9 @@ public class NrtObservationDto {
 
     @SerializedName("assistant_interpreter_id")
     private Long assistantInterpreterId;
+
+    @SerializedName("assistant_interpreter_val")
+    private String assistantInterpreterVal;
 
     @SerializedName("assistant_interpreter_first_nm")
     private String assistantInterpreterFirstNm;
@@ -182,6 +205,15 @@ public class NrtObservationDto {
 
     @SerializedName("lab_test_technician_id")
     private Long labTestTechnicianId;
+
+    @SerializedName("health_care_id")
+    private Long healthCareId;
+
+    @SerializedName("morb_hosp_reporter_id")
+    private Long morbHospReporterId;
+
+    @SerializedName("priority_cd")
+    private String priorityCd;
 
     @SerializedName("refresh_datetime")
     private String refreshDatetime;

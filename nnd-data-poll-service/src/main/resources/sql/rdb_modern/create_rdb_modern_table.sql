@@ -71,6 +71,7 @@ CREATE TABLE dbo.nrt_observation (
 	lab_test_technician_id bigint NULL,
 	health_care_id bigint NULL,
 	morb_hosp_reporter_id bigint NULL,
+	priority_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	refresh_datetime              datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
     max_datetime                  datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
