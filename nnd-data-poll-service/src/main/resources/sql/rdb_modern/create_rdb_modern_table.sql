@@ -1,8 +1,7 @@
-USE RDB_MODERN;
 
 ------------Tables
 
-CREATE TABLE rdb_modern.dbo.nrt_observation (
+CREATE TABLE dbo.nrt_observation (
 	observation_uid bigint NOT NULL,
 	class_cd varchar(10) NULL,
 	mood_cd varchar(10) NULL,
