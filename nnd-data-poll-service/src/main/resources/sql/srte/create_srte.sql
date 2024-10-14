@@ -1,6 +1,6 @@
 
 
-CREATE TABLE NBS_SRTE.dbo.Condition_code (
+CREATE TABLE dbo.Condition_code (
 	condition_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	condition_codeset_nm varchar(256) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	condition_seq_num smallint NULL,
@@ -41,14 +41,14 @@ CREATE TABLE NBS_SRTE.dbo.Condition_code (
 	 ON [PRIMARY ] ;
 
 
--- NBS_SRTE.dbo.Condition_code foreign keys
+-- dbo.Condition_code foreign keys
 
-ALTER TABLE NBS_SRTE.dbo.Condition_code ADD CONSTRAINT FK_Condition_code336 FOREIGN KEY (prog_area_cd) REFERENCES NBS_SRTE.dbo.Program_area_code(prog_area_cd);
-
-
+ALTER TABLE dbo.Condition_code ADD CONSTRAINT FK_Condition_code336 FOREIGN KEY (prog_area_cd) REFERENCES dbo.Program_area_code(prog_area_cd);
 
 
-CREATE TABLE NBS_SRTE.dbo.Code_to_condition (
+
+
+CREATE TABLE dbo.Code_to_condition (
 	code_system_cd varchar(256) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	code_system_desc_txt varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	code varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -63,7 +63,7 @@ CREATE TABLE NBS_SRTE.dbo.Code_to_condition (
 	effective_to_time datetime NULL
 );
 
-CREATE TABLE NBS_SRTE.dbo.Jurisdiction_code (
+CREATE TABLE dbo.Jurisdiction_code (
 	code varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	type_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	assigning_authority_cd varchar(199) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -89,7 +89,7 @@ CREATE TABLE NBS_SRTE.dbo.Jurisdiction_code (
 );
 
 
-CREATE TABLE NBS_SRTE.dbo.Program_area_code (
+CREATE TABLE dbo.Program_area_code (
 	prog_area_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	prog_area_desc_txt varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	nbs_uid int NULL,
@@ -102,3 +102,32 @@ CREATE TABLE NBS_SRTE.dbo.Program_area_code (
  CREATE  UNIQUE NONCLUSTERED INDEX UQ__Program_area_cod__5441852A ON dbo.Program_area_code (  nbs_uid ASC  )
 	 WITH (  PAD_INDEX = OFF ,FILLFACTOR = 90   ,SORT_IN_TEMPDB = OFF , IGNORE_DUP_KEY = OFF , STATISTICS_NORECOMPUTE = OFF , ONLINE = OFF , ALLOW_ROW_LOCKS = ON , ALLOW_PAGE_LOCKS = ON  )
 	 ON [PRIMARY ] ;
+
+CREATE TABLE [dbo].[Jurisdiction_code](
+	[code] [varchar](20) NOT NULL,
+	[type_cd] [varchar](20) NOT NULL,
+	[assigning_authority_cd] [varchar](199) NULL,
+	[assigning_authority_desc_txt] [varchar](100) NULL,
+	[code_desc_txt] [varchar](255) NULL,
+	[code_short_desc_txt] [varchar](50) NULL,
+	[effective_from_time] [datetime] NULL,
+	[effective_to_time] [datetime] NULL,
+	[indent_level_nbr] [smallint] NULL,
+	[is_modifiable_ind] [char](1) NULL,
+	[parent_is_cd] [varchar](20) NULL,
+	[state_domain_cd] [varchar](20) NULL,
+	[status_cd] [varchar](1) NULL,
+	[status_time] [datetime] NULL,
+	[code_set_nm] [varchar](256) NULL,
+	[code_seq_num] [smallint] NULL,
+	[nbs_uid] [int] NULL,
+	[source_concept_id] [varchar](20) NULL,
+	[code_system_cd] [varchar](300) NULL,
+	[code_system_desc_txt] [varchar](100) NULL,
+	[export_ind] [char](1) NULL,
+	CONSTRAINT [PK_Jurisdiction_code] PRIMARY KEY CLUSTERED
+(
+[code] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, FILLFACTOR = 90) ON [PRIMARY]
+	) ON [PRIMARY]
+	GO;
