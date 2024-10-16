@@ -1,8 +1,8 @@
 @echo off
-set SINGLE_TIME_POLL = false
+set SINGLE_TIME_POLL=false
 set NBS_NND_CRON=0 */1 * * * *
 
-set NND_POLL_ENABLED =true
+set NND_POLL_ENABLED=true
 set NND_FILE_LOCATION=C:\Users\DucNguyen\Desktop\LOG\Poll
 set NND_FULL_LOAD=false
 set NND_PULL_LIMIT=1000
