@@ -54,7 +54,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(srteTablesList);
         logger.info("-----SRTE INITIAL LOAD: {}", isInitialLoad);
         //Delete the existing records
-        if (isInitialLoad && storeInSql) {
+        if (isInitialLoad && storeInSql && deleteOnInit) {
             cleanupTables(srteTablesList);
         }
 

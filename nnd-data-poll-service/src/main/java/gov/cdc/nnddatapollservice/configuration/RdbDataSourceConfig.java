@@ -23,6 +23,7 @@ import java.util.HashMap;
         transactionManagerRef = "rdbTransactionManager",
         basePackages = {
                 "gov.cdc.nnddatapollservice.repository.rdb_modern",
+                "gov.cdc.nnddatapollservice.repository.srte"
         }
 )
 public class RdbDataSourceConfig {
@@ -68,7 +69,8 @@ public class RdbDataSourceConfig {
             @Qualifier("rdbDataSource") DataSource dataSource) {
         return builder
                 .dataSource(dataSource)
-                .packages("gov.cdc.nnddatapollservice.repository.rdb_modern") // Adjust package for your entities
+                .packages("gov.cdc.nnddatapollservice.repository.rdb_modern",
+                        "gov.cdc.nnddatapollservice.repository.srte") // Adjust package for your entities
                 .persistenceUnit("rdb")
                 .build();
     }
