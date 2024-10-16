@@ -1,9 +1,10 @@
 package gov.cdc.nnddatapollservice.repository.srte.model;
 
+import gov.cdc.nnddatapollservice.srte.dto.CodeToConditionDto;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 @Entity
 @Table(name = "Code_to_condition", schema = "dbo")
@@ -30,18 +31,38 @@ public class CodeToCondition {
     private String diseaseNm;
 
     @Column(name = "status_cd", length = 1)
-    private Character statusCd;
+    private String statusCd;
 
     @Column(name = "status_time")
-    private LocalDateTime statusTime;
+    private Timestamp statusTime;
 
     @Column(name = "nbs_uid")
     private Integer nbsUid;
 
     @Column(name = "effective_from_time")
-    private LocalDateTime effectiveFromTime;
+    private Timestamp effectiveFromTime;
 
     @Column(name = "effective_to_time")
-    private LocalDateTime effectiveToTime;
+    private Timestamp effectiveToTime;
+
+    public CodeToCondition() {
+
+    }
+
+
+    public CodeToCondition(CodeToConditionDto dto) {
+        this.id = new CodeToConditionId(dto.getCode(), dto.getConditionCd());
+        this.codeSystemCd = dto.getCodeSystemCd();
+        this.codeSystemDescTxt = dto.getCodeSystemDescTxt();
+        this.codeDescTxt = dto.getCodeDescTxt();
+        this.codeSystemVersionId = dto.getCodeSystemVersionId();
+        this.diseaseNm = dto.getDiseaseNm();
+        this.statusCd = dto.getStatusCd();
+        this.statusTime = dto.getStatusTime() != null ? Timestamp.valueOf(dto.getStatusTime()) : null;
+        this.nbsUid = dto.getNbsUid();
+        this.effectiveFromTime = dto.getEffectiveFromTime() != null ? Timestamp.valueOf(dto.getEffectiveFromTime()) : null;
+        this.effectiveToTime = dto.getEffectiveToTime() != null ? Timestamp.valueOf(dto.getEffectiveToTime()) : null;
+    }
+
 }
 

@@ -15,4 +15,13 @@ public class CodeToConditionId implements Serializable {
 
     @Column(name = "condition_cd", length = 20)
     private String conditionCd;
+
+    public CodeToConditionId(String code, String conditionCd) {
+        this.code = code;
+        this.conditionCd = conditionCd;
+    }
+
+    public CodeToConditionId() {
+
+    }
 }

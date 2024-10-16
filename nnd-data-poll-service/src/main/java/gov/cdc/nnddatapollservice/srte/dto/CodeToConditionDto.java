@@ -27,7 +27,7 @@ public class CodeToConditionDto {
     private String diseaseNm;
 
     @SerializedName("status_cd")
-    private Character statusCd;
+    private String statusCd;
 
     @SerializedName("status_time")
     private String statusTime; // Use String if you plan to serialize the datetime
