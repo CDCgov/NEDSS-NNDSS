@@ -44,7 +44,7 @@ test {
     useJUnitPlatform()
 }
 bootJar {
-    archiveBaseName.set('nnd-data-poll-service')
+    archiveBaseName.set('data-sync-service')
     archiveVersion.set('')
     archiveClassifier.set('')
 }
