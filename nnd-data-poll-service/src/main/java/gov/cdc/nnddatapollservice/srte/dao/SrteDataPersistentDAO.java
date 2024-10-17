@@ -56,7 +56,7 @@ public class SrteDataPersistentDAO {
     protected String handlingSrteTable(String tableName, String jsonData) {
         String log = LOG_SUCCESS;
         if ("CODE_TO_CONDITION".equalsIgnoreCase(tableName)) {
-            Type resultType = new TypeToken<List<NrtObservationDto>>() {
+            Type resultType = new TypeToken<List<CodeToConditionDto>>() {
             }.getType();
             List<CodeToConditionDto> list = gson.fromJson(jsonData, resultType);
             persistingCodeToCondition(list, tableName);
