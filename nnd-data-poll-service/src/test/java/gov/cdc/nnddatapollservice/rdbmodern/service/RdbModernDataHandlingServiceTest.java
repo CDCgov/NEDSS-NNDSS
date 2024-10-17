@@ -421,7 +421,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
 
         // Assert
-        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + "S3 Error");
+        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LOG + "S3 Error");
     }
 
 }

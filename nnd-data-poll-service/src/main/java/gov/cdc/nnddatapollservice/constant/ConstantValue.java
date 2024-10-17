@@ -9,8 +9,8 @@ public class ConstantValue {
     public static final String S3_LOG = "S3 Log: ";
     public static final String LOCAL_DIR_LOG = "Local Directory Log: " ;
     public static final String API_LEVEL = "APIs Level Log: " ;
-    public static final String CRITICAL_NULL_LEVEL = "Critical Null Log: ";
-    public static final String CRITICAL_COUNT_LEVEL = "Critical Count Log: ";
+    public static final String CRITICAL_NULL_LOG = "Critical Null Log: ";
+    public static final String CRITICAL_COUNT_LOG = "Critical Count Log: ";
 
-    public static final String CRITICAL_NON_NULL_LEVEL = "Critical Non Null Log: ";
+    public static final String CRITICAL_NON_NULL_LOG = "Critical Non Null Log: ";
 }

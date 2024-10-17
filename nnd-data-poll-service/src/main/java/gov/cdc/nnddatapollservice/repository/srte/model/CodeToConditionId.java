@@ -2,7 +2,7 @@ package gov.cdc.nnddatapollservice.repository.srte.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
-import lombok.*;
+import lombok.Data;
 
 import java.io.Serializable;
 

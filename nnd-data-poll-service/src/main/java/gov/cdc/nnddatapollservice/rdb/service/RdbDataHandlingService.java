@@ -88,7 +88,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             try {
                 totalRecordCounts = pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
-                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LEVEL + e.getMessage());
+                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LOG + e.getMessage());
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
             int batchSize = pullLimit;
@@ -109,7 +109,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                     pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
                 }
             } catch (Exception e) {
-                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LEVEL + e.getMessage());
+                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LOG + e.getMessage());
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
@@ -192,7 +192,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                 }
             }
         } catch (Exception e) {
-            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + e.getMessage());
+            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LOG + e.getMessage());
         }
     }
 
