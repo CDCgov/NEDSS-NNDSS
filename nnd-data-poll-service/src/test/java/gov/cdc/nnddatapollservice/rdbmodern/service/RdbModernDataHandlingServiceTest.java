@@ -329,7 +329,7 @@ class RdbModernDataHandlingServiceTest {
 
 
     @Test
-    void testUpdateDataHelper_NoExceptionAtApiLevel_StoreInSql() throws DataPollException {
+    void testUpdateDataHelper_NoExceptionAtApiLevel_StoreInSql() {
         // Arrange
         boolean exceptionAtApiLevel = false;
         String tableName = "NRT_OBSERVATION";
