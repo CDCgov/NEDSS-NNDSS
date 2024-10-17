@@ -83,7 +83,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
             try {
                 totalRecordCounts = iPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
-                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LEVEL + log);
+                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LOG + log);
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
@@ -106,7 +106,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                     iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
                 }
             } catch (Exception e) {
-                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LEVEL + e.getMessage());
+                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LOG + e.getMessage());
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
@@ -194,7 +194,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                 }
             }
         } catch (Exception e) {
-            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + e.getMessage());
+            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LOG + e.getMessage());
         }
     }
 

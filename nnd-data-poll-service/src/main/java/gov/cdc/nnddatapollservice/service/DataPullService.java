@@ -71,6 +71,11 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING RDB");
             logger.info("{}, {} FOR RDB", cron, zone);
             rdbDataHandlingService.handlingExchangedData();
+
+            // RDB MODERN and SRTE are now part of RDB
+            rdbModernDataHandlingService.handlingExchangedData();
+            srteDataHandlingService.handlingExchangedData();
+            logger.info("CRON ENDED FOR POLLING RDB");
             closePoller();
         }
     }

@@ -21,10 +21,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,6 +31,12 @@ import static org.mockito.Mockito.*;
 class RdbDataPersistentDAOTest {
     @Mock
     private JdbcTemplate jdbcTemplate;
+
+    @Mock
+    private SimpleJdbcInsert simpleJdbcInsertMock;
+
+    private final String tableNameMock = "TEST_TABLE";
+    private final String keyColumn = tableNameMock + "_KEY";
 
     @InjectMocks
     RdbDataPersistentDAO rdbDataPersistentDAO;
@@ -45,6 +48,97 @@ class RdbDataPersistentDAOTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testHandleSpecialTableFiltering_allRecordsInserted()  {
+        // Setup
+        List<Map<String, Object>> records = createRecordsWithKeys(2, 3, 4); // No key = 1
+
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
+                .thenReturn(Collections.emptyList());
+
+        // Call the method
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
+
+        // Verify
+        verify(simpleJdbcInsertMock).executeBatch(any(SqlParameterSource[].class));
+    }
+    @Test
+    void testHandleSpecialTableFiltering_recordsFiltered() {
+        // Setup: One record matches key = 1
+        List<Map<String, Object>> records = createRecordsWithKeys(1, 2, 3);
+
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
+                .thenReturn(Collections.singletonList(1.0));
+
+        // Call the method
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
+
+        // Verify
+        verify(simpleJdbcInsertMock).executeBatch(any(SqlParameterSource[].class));
+
+    }
+
+    @Test
+    void testHandleSpecialTableFiltering_duplicateKeysDeduplicated()  {
+        // Setup: Duplicate records with key = 2
+        List<Map<String, Object>> records = createRecordsWithKeys(2, 2, 3);
+
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
+                .thenReturn(Collections.emptyList());
+
+        // Call the method
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
+
+        // Verify
+        verify(simpleJdbcInsertMock).executeBatch(any(SqlParameterSource[].class));
+    }
+
+    @Test
+    void testHandleSpecialTableFiltering_noRecords()  {
+        // Setup: Empty records
+        List<Map<String, Object>> records = new ArrayList<>();
+
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
+                .thenReturn(Collections.emptyList());
+
+        // Call the method
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
+
+        // Verify no insertion happens
+        verify(simpleJdbcInsertMock, never()).executeBatch(any(SqlParameterSource[].class));
+
+    }
+
+    @Test
+    void testHandleSpecialTableFiltering_batchInsert()  {
+        // Setup: Records exceed batch size (batchSize = 2)
+        List<Map<String, Object>> records = createRecordsWithKeys(2, 3, 4, 5);
+
+        when(jdbcTemplate.queryForList("SELECT " + keyColumn + " FROM " + tableNameMock + " WHERE " + keyColumn + " = 1", Double.class))
+                .thenReturn(Collections.emptyList());
+
+        // Set batch size to 2 for testing
+        rdbDataPersistentDAO.batchSize = 2;
+
+        // Call the method
+        rdbDataPersistentDAO.handleSpecialTableFiltering(tableNameMock, records, simpleJdbcInsertMock);
+
+        // Verify batch processing
+        verify(simpleJdbcInsertMock, times(2)).executeBatch(any(SqlParameterSource[].class));
+    }
+
+    // Helper method to create records with keys
+    @SuppressWarnings("java:S6213")
+    private List<Map<String, Object>> createRecordsWithKeys(Integer... keys) {
+        List<Map<String, Object>> records = new ArrayList<>();
+        for (Integer key : keys) {
+            Map<String, Object> record = new HashMap<>();
+            record.put(keyColumn, key);
+            records.add(record);
+        }
+        return records;
     }
 
     @Test

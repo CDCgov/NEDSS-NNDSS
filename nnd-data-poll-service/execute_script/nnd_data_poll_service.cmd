@@ -1,8 +1,8 @@
 @echo off
-set SINGLE_TIME_POLL = false
+set SINGLE_TIME_POLL=false
 set NBS_NND_CRON=0 */1 * * * *
 
-set NND_POLL_ENABLED =true
+set NND_POLL_ENABLED=true
 set NND_FILE_LOCATION=C:\Users\DucNguyen\Desktop\LOG\Poll
 set NND_FULL_LOAD=false
 set NND_PULL_LIMIT=1000
@@ -15,9 +15,7 @@ set NND_DE_URL=http://localhost:8081
 set OP_DBSERVER=localhost:1433
 set OP_DBNAME=MSGOUTE
 set RDB_DBNAME=RDB
-set RDB_MODERN_DBNAME=RDB_MODERN
-set SRTE_DBNAME=SRTE
 set OP_DBPASSWORD=fake.fake.fake.1234
 set OP_DBUSER=sa
 
-java -jar nnd-data-poll-service.jar
+java -jar data-sync-service.jar

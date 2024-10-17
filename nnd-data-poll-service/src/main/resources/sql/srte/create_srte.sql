@@ -1,6 +1,6 @@
 
 
-CREATE TABLE NBS_SRTE.dbo.Condition_code (
+CREATE TABLE dbo.Condition_code (
 	condition_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	condition_codeset_nm varchar(256) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	condition_seq_num smallint NULL,
@@ -41,14 +41,14 @@ CREATE TABLE NBS_SRTE.dbo.Condition_code (
 	 ON [PRIMARY ] ;
 
 
--- NBS_SRTE.dbo.Condition_code foreign keys
+-- dbo.Condition_code foreign keys
 
-ALTER TABLE NBS_SRTE.dbo.Condition_code ADD CONSTRAINT FK_Condition_code336 FOREIGN KEY (prog_area_cd) REFERENCES NBS_SRTE.dbo.Program_area_code(prog_area_cd);
-
-
+ALTER TABLE dbo.Condition_code ADD CONSTRAINT FK_Condition_code336 FOREIGN KEY (prog_area_cd) REFERENCES dbo.Program_area_code(prog_area_cd);
 
 
-CREATE TABLE NBS_SRTE.dbo.Code_to_condition (
+
+
+CREATE TABLE dbo.Code_to_condition (
 	code_system_cd varchar(256) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	code_system_desc_txt varchar(100) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	code varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -63,7 +63,7 @@ CREATE TABLE NBS_SRTE.dbo.Code_to_condition (
 	effective_to_time datetime NULL
 );
 
-CREATE TABLE NBS_SRTE.dbo.Jurisdiction_code (
+CREATE TABLE dbo.Jurisdiction_code (
 	code varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	type_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	assigning_authority_cd varchar(199) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
@@ -89,7 +89,7 @@ CREATE TABLE NBS_SRTE.dbo.Jurisdiction_code (
 );
 
 
-CREATE TABLE NBS_SRTE.dbo.Program_area_code (
+CREATE TABLE dbo.Program_area_code (
 	prog_area_cd varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS NOT NULL,
 	prog_area_desc_txt varchar(50) COLLATE SQL_Latin1_General_CP1_CI_AS NULL,
 	nbs_uid int NULL,

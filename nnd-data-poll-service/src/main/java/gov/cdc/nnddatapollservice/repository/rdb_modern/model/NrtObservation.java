@@ -27,8 +27,8 @@ public class NrtObservation {
     @Column(name = "act_uid")
     private Long actUid;
 
-    @Column(name = "cd_desc_text", length = 1000)
-    private String cdDescText;
+    @Column(name = "cd_desc_txt", length = 1000)
+    private String cdDescTxt;
 
     @Column(name = "record_status_cd", length = 20)
     private String recordStatusCd;
@@ -222,6 +222,10 @@ public class NrtObservation {
     @Column(name = "morb_hosp_reporter_id")
     private Long morbHospReporterId;
 
+    @Column(name = "priority_cd", length = 20, columnDefinition = "varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS")
+    private String priorityCd;
+
+
 //    @Column(name = "refresh_datetime", columnDefinition = "datetime2(7) GENERATED ALWAYS AS ROW START NOT NULL", updatable = false)
 //    private Timestamp refreshDatetime;
 //
@@ -231,13 +235,12 @@ public class NrtObservation {
     public NrtObservation() {
 
     }
-
     public NrtObservation(NrtObservationDto dto) throws ParseException {
         this.observationUid = dto.getObservationUid();
         this.classCd = dto.getClassCd();
         this.moodCd = dto.getMoodCd();
         this.actUid = dto.getActUid();
-        this.cdDescText = dto.getCdDescText();
+        this.cdDescTxt = dto.getCdDescTxt();
         this.recordStatusCd = dto.getRecordStatusCd();
         this.jurisdictionCd = dto.getJurisdictionCd();
         this.programJurisdictionOid = dto.getProgramJurisdictionOid();
@@ -282,29 +285,23 @@ public class NrtObservation {
         this.txt = dto.getTxt();
         this.interpretationCd = dto.getInterpretationCd();
         this.interpretationDescTxt = dto.getInterpretationDescTxt();
-        this.reportObservationId = dto.getReportObservationUid();
-        this.followupObservationId = dto.getFollowupObservationUid();
-        this.reportRefrId = dto.getReportRefrUid();
-        this.reportSprtId = dto.getReportSprtUid();
-        this.morbPhysicianId = dto.getMorbPhysicianId();
-        this.morbReporterId = dto.getMorbReporterId();
         this.transcriptionistId = dto.getTranscriptionistId();
-        this.transcriptionistVal = dto.getTranscriptionistVal();
+        this.transcriptionistVal = dto.getTranscriptionistVal(); // Added this field
         this.transcriptionistFirstNm = dto.getTranscriptionistFirstNm();
         this.transcriptionistLastNm = dto.getTranscriptionistLastNm();
         this.assistantInterpreterId = dto.getAssistantInterpreterId();
-        this.assistantInterpreterVal = dto.getAssistantInterpreterVal();
+        this.assistantInterpreterVal = dto.getAssistantInterpreterVal(); // Added this field
         this.assistantInterpreterFirstNm = dto.getAssistantInterpreterFirstNm();
         this.assistantInterpreterLastNm = dto.getAssistantInterpreterLastNm();
         this.resultInterpreterId = dto.getResultInterpreterId();
         this.specimenCollectorId = dto.getSpecimenCollectorId();
         this.copyToProviderId = dto.getCopyToProviderId();
         this.labTestTechnicianId = dto.getLabTestTechnicianId();
-        this.healthCareId = dto.getHealthCareId();
-        this.morbHospReporterId = dto.getMorbHospReporterId();
-//        this.refreshDatetime = parseTimestamp(dto.getRefreshDatetime());
-//        this.maxDatetime = parseTimestamp(dto.getMaxDatetime());
+        this.healthCareId = dto.getHealthCareId(); // Added this field
+        this.morbHospReporterId = dto.getMorbHospReporterId(); // Added this field
+        this.priorityCd = dto.getPriorityCd(); // Added this field
     }
+
 
     private Timestamp parseTimestamp(String dateString) throws ParseException {
         if (dateString == null || dateString.isEmpty()) {

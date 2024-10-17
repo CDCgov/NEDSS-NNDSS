@@ -4,7 +4,6 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
@@ -27,9 +26,8 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
 
@@ -55,44 +53,133 @@ public class RdbDataPersistentDAO {
         this.handleError = handleError;
     }
 
+
     @SuppressWarnings("java:S3776")
-    protected void persistingGenericTable (String tableName, String jsonData) throws DataPollException {
+    protected void persistingGenericTable(String tableName, String jsonData) {
         if (tableName != null && !tableName.isEmpty()) {
             SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
             simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
             List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+
             if (records != null && !records.isEmpty()) {
                 logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-                try {
-                    if (records.size() > batchSize) {
-                        int sublistSize = batchSize;
-                        for (int i = 0; i < records.size(); i += sublistSize) {
-                            int end = Math.min(i + sublistSize, records.size());
-                            List<Map<String, Object>> sublist = records.subList(i, end);
-                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+
+                // Handle special filtering for specified tables
+                Set<String> specialTables = new HashSet<>(Arrays.asList(
+                        "D_INV_HIV",
+                        "D_INV_ADMINISTRATIVE",
+                        "D_INV_EPIDEMIOLOGY",
+                        "D_INV_LAB_FINDING",
+                        "D_INV_MEDICAL_HISTORY",
+                        "D_INV_RISK_FACTOR",
+                        "D_INV_TREATMENT",
+                        "D_INV_VACCINATION"
+                ));
+
+                if (specialTables.contains(tableName.toUpperCase()))
+                {
+                    handleSpecialTableFiltering(tableName, records, simpleJdbcInsert);
+                }
+                else
+                {
+                    // For other tables, use the existing logic
+                    try {
+                        if (records.size() > batchSize) {
+                            int sublistSize = batchSize;
+                            for (int i = 0; i < records.size(); i += sublistSize) {
+                                int end = Math.min(i + sublistSize, records.size());
+                                List<Map<String, Object>> sublist = records.subList(i, end);
+                                simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                            }
+                        } else {
+                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                         }
-                    } else {
-                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-                    }
-                } catch (Exception e) {
-                    for (Map<String, Object> res : records) {
-                        try {
-                            simpleJdbcInsert.execute(new MapSqlParameterSource(res));
-                        } catch (Exception ei) {
-                            logger.error("ERROR occured at record: {}", gsonNorm.toJson(res));
-                            handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
-                            throw new DataPollException("Tried individual process, but not success");
-                        }
+                    } catch (Exception e) {
+                        handleBatchInsertionFailure(records, tableName, simpleJdbcInsert);
                     }
                 }
-
             } else {
-                logger.info("Inside generic code tableName: {} Records size:0", tableName);
+                logger.info("Inside generic code tableName: {} Records size: 0", tableName);
             }
         }
     }
 
+    // Helper method to handle filtering for special tables
     @SuppressWarnings("java:S3776")
+    protected void handleSpecialTableFiltering(String tableName, List<Map<String, Object>> records, SimpleJdbcInsert simpleJdbcInsert) {
+        String keyColumn = tableName + "_KEY"; // Assuming each table has a key column with the pattern [table]_KEY
+
+        // Query only the existing keys where the key is 1
+        String query = "SELECT " + keyColumn + " FROM " + tableName + " WHERE " + keyColumn + " = 1";
+        List<Double> existingKeys = new ArrayList<>(jdbcTemplate.queryForList(query, Double.class));
+        logger.info("Found {} existing keys in {} with {} = 1", existingKeys.size(), tableName, keyColumn);
+
+        Double foundKey = existingKeys.isEmpty()? null : existingKeys.get(0);
+        // Filter out records that have a matching key of 1
+        List<Map<String, Object>> filteredRecords = records
+                .stream()
+                .filter(rec -> {
+                    // Check if the record contains the keyColumn
+                    if (rec.containsKey(keyColumn)) {
+                        // Get the value of the keyColumn from the record
+                        Object recordKey = rec.get(keyColumn);
+                        // Filter out the record if it matches the foundKey
+                        return !recordKey.equals(foundKey);
+                    }
+                    // If the record doesn't contain keyColumn, keep it
+                    return true;
+                })
+                .collect(Collectors.toList()); //NOSONAR
+        logger.info("After filtering, Records size: {}", filteredRecords.size());
+
+        // Additional logic block to remove records with duplicate keys based on keyColumn
+        Set<Object> uniqueKeys = new HashSet<>();
+        List<Map<String, Object>> deduplicatedRecords = new ArrayList<>();
+
+        for (Map<String, Object> rec : filteredRecords) {
+            Object recordKey = rec.get(keyColumn);
+
+            // If the keyColumn is present and the key hasn't been seen yet, keep the record
+            if (recordKey != null && uniqueKeys.add(recordKey)) {
+                deduplicatedRecords.add(rec);
+            }
+        }
+
+
+        if (!deduplicatedRecords.isEmpty()) {
+            try {
+                if (deduplicatedRecords.size() > batchSize) {
+                    int sublistSize = batchSize;
+                    for (int i = 0; i < deduplicatedRecords.size(); i += sublistSize) {
+                        int end = Math.min(i + sublistSize, deduplicatedRecords.size());
+                        List<Map<String, Object>> sublist = deduplicatedRecords.subList(i, end);
+                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                    }
+                } else {
+                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(deduplicatedRecords));
+                }
+            } catch (Exception e) {
+                handleBatchInsertionFailure(records, tableName, simpleJdbcInsert);
+            }
+        } else {
+            logger.info("No new records to insert for {}.", tableName);
+        }
+    }
+
+
+    // Helper method to handle batch insertion failure
+    protected void handleBatchInsertionFailure(List<Map<String, Object>> records, String tableName, SimpleJdbcInsert simpleJdbcInsert) {
+        for (Map<String, Object> res : records) {
+            try {
+                simpleJdbcInsert.execute(new MapSqlParameterSource(res));
+            } catch (Exception ei) {
+                logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+                handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
+            }
+        }
+    }
+
+    @SuppressWarnings({"java:S3776", "java:S125"})
     public String saveRDBData(String tableName, String jsonData) {
         logger.info("saveRDBData tableName: {}", tableName);
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);

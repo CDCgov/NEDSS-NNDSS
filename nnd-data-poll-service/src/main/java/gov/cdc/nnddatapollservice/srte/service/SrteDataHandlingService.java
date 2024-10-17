@@ -82,7 +82,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
             try {
                 totalRecordCounts = outboundPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
-                outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LEVEL + e.getMessage());
+                outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_COUNT_LOG + e.getMessage());
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
             int batchSize = pullLimit;
@@ -104,7 +104,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
                     outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
                 }
             } catch (Exception e) {
-                outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LEVEL + e.getMessage());
+                outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LOG + e.getMessage());
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
@@ -186,7 +186,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
                 }
             }
         } catch (Exception e) {
-            outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LEVEL + e.getMessage());
+            outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LOG + e.getMessage());
         }
     }
 

@@ -91,58 +91,77 @@ INSERT INTO RDB.dbo.poll_data_sync_config
 VALUES('PERTUSSIS_TREATMENT_GROUP', 'RDB',30);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('BMIRD_CASE', 'RDB',31);
+VALUES('PERTUSSIS_SUSPECTED_SOURCE_FLD', 'RDB',31);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('CASE_COUNT', 'RDB',32);
+VALUES('PERTUSSIS_TREATMENT_FIELD', 'RDB',32);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('CONFIRMATION_METHOD_GROUP', 'RDB',33);
+VALUES('BMIRD_CASE', 'RDB',33);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('GENERIC_CASE', 'RDB',34);
+VALUES('CASE_COUNT', 'RDB',34);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('HEPATITIS_CASE', 'RDB',35);
+VALUES('CONFIRMATION_METHOD_GROUP', 'RDB',35);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('HEPATITIS_DATAMART', 'RDB',36);
+VALUES('GENERIC_CASE', 'RDB',36);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('LDF_DATA', 'RDB',37);
+VALUES('HEPATITIS_CASE', 'RDB',37);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('LDF_FOODBORNE', 'RDB',38);
+VALUES('HEP_MULTI_VALUE_FIELD_GROUP', 'RDB',38);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('MEASLES_CASE', 'RDB',39);
+VALUES('HEP_MULTI_VALUE_FIELD', 'RDB',39);
+
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('NOTIFICATION_EVENT', 'RDB',40);
+VALUES('HEPATITIS_DATAMART', 'RDB',40);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('PERTUSSIS_CASE', 'RDB',41);
+VALUES('LDF_DATA', 'RDB',41);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('RUBELLA_CASE', 'RDB',42);
+VALUES('LDF_FOODBORNE', 'RDB',42);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('TREATMENT', 'RDB',43);
+VALUES('MEASLES_CASE', 'RDB',43);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('TREATMENT_EVENT', 'RDB',44);
+VALUES('NOTIFICATION_EVENT', 'RDB',44);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('VAR_PAM_LDF', 'RDB',45);
+VALUES('PERTUSSIS_CASE', 'RDB',45);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('PROGRAM_AREA_CODE', 'SRTE',46);
+VALUES('RUBELLA_CASE', 'RDB',46);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('CONDITION_CODE', 'SRTE',47);
+VALUES('TREATMENT', 'RDB',47);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
-VALUES('CODE_TO_CONDITION', 'SRTE',48);
+VALUES('TREATMENT_EVENT', 'RDB',48);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('VAR_PAM_LDF', 'RDB',49);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('PROGRAM_AREA_CODE', 'SRTE',1);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('CONDITION_CODE', 'SRTE',2);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('CODE_TO_CONDITION', 'SRTE',3);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('JURISDICTION_CODE', 'SRTE',4);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('NRT_OBSERVATION', 'RDB_MODERN',1);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('NRT_OBSERVATION_CODED', 'RDB_MODERN',2);

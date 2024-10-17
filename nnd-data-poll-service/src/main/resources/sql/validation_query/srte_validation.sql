@@ -17,3 +17,8 @@ UNION ALL
 
 SELECT 'Program_area_code' AS table_name, COUNT(*) AS count_value
 FROM Program_area_code
+
+UNION ALL
+
+SELECT 'jurisdiction_code' AS table_name, COUNT(*) AS count_value
+FROM jurisdiction_code

@@ -17,7 +17,9 @@ set DATASYNC_DELETE=false
 set OP_DBSERVER=localhost:1433
 set OP_DBNAME=MSGOUTE
 set RDB_DBNAME=RDB
+set RDB_MODERN_DBNAME=RDB_MODERN
+set SRTE_DBNAME=SRTE
 set OP_DBPASSWORD=fake.fake.fake.1234
 set OP_DBUSER=sa
 
-java -jar data-sync-service.jar
+java -jar nnd-data-poll-service.jar

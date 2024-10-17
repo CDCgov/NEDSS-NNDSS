@@ -1,9 +1,14 @@
 package gov.cdc.nnddatapollservice.srte.dao;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
-import gov.cdc.nnddatapollservice.exception.DataPollException;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.repository.srte.CodeToConditionRepository;
+import gov.cdc.nnddatapollservice.repository.srte.model.CodeToCondition;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
+import gov.cdc.nnddatapollservice.srte.dto.CodeToConditionDto;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +21,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,15 +38,47 @@ public class SrteDataPersistentDAO {
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
     private final HandleError handleError;
+    private final CodeToConditionRepository codeToConditionRepository;
     private final Gson gsonNorm = new Gson();
+    private final Gson gson = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
+            .create();
     @Autowired
-    public SrteDataPersistentDAO(@Qualifier("srteJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError) {
+    public SrteDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, CodeToConditionRepository codeToConditionRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.handleError = handleError;
+        this.codeToConditionRepository = codeToConditionRepository;
     }
 
+    protected String handlingSrteTable(String tableName, String jsonData) {
+        String log = LOG_SUCCESS;
+        if ("CODE_TO_CONDITION".equalsIgnoreCase(tableName)) {
+            Type resultType = new TypeToken<List<CodeToConditionDto>>() {
+            }.getType();
+            List<CodeToConditionDto> list = gson.fromJson(jsonData, resultType);
+            persistingCodeToCondition(list, tableName);
+        } else {
+            log = persistingGenericTable(tableName, jsonData);
+        }
+
+        return log;
+    }
+
+    protected void persistingCodeToCondition(List<CodeToConditionDto> list, String tableName) {
+        for (CodeToConditionDto data : list) {
+            try {
+                var domainModel = new CodeToCondition(data);
+                codeToConditionRepository.save(domainModel);
+            } catch (Exception e) {
+                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage()); // NOSONAR
+                handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
+            }
+        }
+    }
+
+
     @SuppressWarnings("java:S3776")
-    protected String persistingGenericTable (String tableName, String jsonData) throws DataPollException {
+    protected String persistingGenericTable (String tableName, String jsonData) {
         String log = LOG_SUCCESS;
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
         jdbcInsert = jdbcInsert.withTableName(tableName);
@@ -64,9 +102,8 @@ public class SrteDataPersistentDAO {
                     try {
                         jdbcInsert.execute(new MapSqlParameterSource(res));
                     } catch (Exception ei) {
-                        logger.error("ERROR occured at record: {}", gsonNorm.toJson(res));
+                        logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
                         handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
-                        throw new DataPollException("Tried individual process, but not success");
                     }
                 }
             }
@@ -82,7 +119,7 @@ public class SrteDataPersistentDAO {
         String log = LOG_SUCCESS;
         try {
             if (tableName != null && !tableName.isEmpty()) {
-              log = persistingGenericTable ( tableName,  jsonData);
+              log = handlingSrteTable ( tableName,  jsonData);
             }
         } catch (Exception e) {
             log = e.getMessage();

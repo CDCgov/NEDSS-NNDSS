@@ -5,7 +5,6 @@ import lombok.Data;
 
 @Data
 public class NrtObservationDto {
-
     @SerializedName("observation_uid")
     private Long observationUid;
 
@@ -18,8 +17,8 @@ public class NrtObservationDto {
     @SerializedName("act_uid")
     private Long actUid;
 
-    @SerializedName("cd_desc_text")
-    private String cdDescText;
+    @SerializedName("cd_desc_txt")
+    private String cdDescTxt;
 
     @SerializedName("record_status_cd")
     private String recordStatusCd;
@@ -154,16 +153,16 @@ public class NrtObservationDto {
     private String interpretationDescTxt;
 
     @SerializedName("report_observation_id")
-    private Long reportObservationUid;
+    private Long reportObservationId;
 
     @SerializedName("followup_observation_id")
-    private String followupObservationUid;
+    private String followupObservationId;
 
     @SerializedName("report_refr_id")
-    private Long reportRefrUid;
+    private Long reportRefrId;
 
     @SerializedName("report_sprt_id")
-    private Long reportSprtUid;
+    private Long reportSprtId;
 
     @SerializedName("morb_physician_id")
     private Long morbPhysicianId;
@@ -212,6 +211,9 @@ public class NrtObservationDto {
 
     @SerializedName("morb_hosp_reporter_id")
     private Long morbHospReporterId;
+
+    @SerializedName("priority_cd")
+    private String priorityCd;
 
     @SerializedName("refresh_datetime")
     private String refreshDatetime;
