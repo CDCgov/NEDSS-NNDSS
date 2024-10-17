@@ -20,4 +20,4 @@ set RDB_DBNAME=RDB
 set OP_DBPASSWORD=fake.fake.fake.1234
 set OP_DBUSER=sa
 
-java -jar nnd-data-poll-service.jar
+java -jar data-sync-service.jar
