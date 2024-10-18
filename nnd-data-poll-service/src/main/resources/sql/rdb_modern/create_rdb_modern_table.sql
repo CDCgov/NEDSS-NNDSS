@@ -55,7 +55,7 @@ CREATE TABLE dbo.nrt_observation
     report_observation_uid               bigint NULL,
     followup_observation_uid             nvarchar(MAX) NULL,
     report_refr_uid                      bigint NULL,
-    report_sprt_uid NULL,
+    report_sprt_uid                      bigint NULL,
     morb_physician_id                    bigint NULL,
     morb_reporter_id                     bigint NULL,
     transcriptionist_id                  bigint NULL,
