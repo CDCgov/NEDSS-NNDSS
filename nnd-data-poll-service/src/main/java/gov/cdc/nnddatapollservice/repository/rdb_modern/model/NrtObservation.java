@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.repository.rdb_modern.model;
 
+import com.google.gson.annotations.SerializedName;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -162,17 +163,17 @@ public class NrtObservation {
     @Column(name = "interpretation_desc_txt", length = 100)
     private String interpretationDescTxt;
 
-    @Column(name = "report_observation_id")
-    private Long reportObservationId;
+    @Column(name = "report_observation_uid")
+    private Long reportObservationUid;
 
-    @Column(name = "followup_observation_id", columnDefinition = "nvarchar(max)")
-    private String followupObservationId;
+    @Column(name = "followup_observation_uid", columnDefinition = "nvarchar(max)")
+    private String followupObservationUid;
 
-    @Column(name = "report_refr_id")
-    private Long reportRefrId;
+    @Column(name = "report_refr_uid")
+    private Long reportRefrUid;
 
-    @Column(name = "report_sprt_id")
-    private Long reportSprtId;
+    @Column(name = "report_sprt_uid")
+    private Long reportSprtUid;
 
     @Column(name = "morb_physician_id")
     private Long morbPhysicianId;
@@ -222,9 +223,26 @@ public class NrtObservation {
     @Column(name = "morb_hosp_reporter_id")
     private Long morbHospReporterId;
 
-    @Column(name = "priority_cd", length = 20, columnDefinition = "varchar(20) COLLATE SQL_Latin1_General_CP1_CI_AS")
+    @Column(name = "priority_cd", length = 20)
     private String priorityCd;
 
+    @Column(name = "transcriptionist_auth_type")
+    private String transcriptionistAuthType;
+
+    @Column(name = "transcriptionist_id_assign_auth")
+    private String transcriptionistIdAssignAuth;
+
+    @Column(name = "assistant_interpreter_auth_type")
+    private String assistantInterpreterAuthType;
+
+    @Column(name = "assistant_interpreter_id_assign_auth")
+    private String assistantInterpreterIdAssignAuth;
+
+    @Column(name = "accession_number")
+    private String accessionNumber;
+
+    @Column(name = "morb_hosp_id")
+    private Long morbHospId;
 
 //    @Column(name = "refresh_datetime", columnDefinition = "datetime2(7) GENERATED ALWAYS AS ROW START NOT NULL", updatable = false)
 //    private Timestamp refreshDatetime;
@@ -300,8 +318,13 @@ public class NrtObservation {
         this.healthCareId = dto.getHealthCareId(); // Added this field
         this.morbHospReporterId = dto.getMorbHospReporterId(); // Added this field
         this.priorityCd = dto.getPriorityCd(); // Added this field
+        this.transcriptionistAuthType= dto.getTranscriptionistAuthType();
+        this.transcriptionistIdAssignAuth= dto.getTranscriptionistIdAssignAuth();
+        this.assistantInterpreterAuthType= dto.getAssistantInterpreterAuthType();
+        this.assistantInterpreterIdAssignAuth= dto.getAssistantInterpreterIdAssignAuth();
+        this.accessionNumber= dto.getAccessionNumber();
+        this.morbHospId= dto.getMorbHospId();
     }
-
 
     private Timestamp parseTimestamp(String dateString) throws ParseException {
         if (dateString == null || dateString.isEmpty()) {
