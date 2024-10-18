@@ -55,7 +55,7 @@ CREATE TABLE dbo.nrt_observation
     report_observation_uid               bigint NULL,
     followup_observation_uid             nvarchar(MAX) NULL,
     report_refr_uid                      bigint NULL,
-    report_sprt_uid NULL,
+    report_sprt_uid                      bigint NULL,
     morb_physician_id                    bigint NULL,
     morb_reporter_id                     bigint NULL,
     transcriptionist_id                  bigint NULL,
@@ -73,14 +73,14 @@ CREATE TABLE dbo.nrt_observation
     health_care_id                       bigint NULL,
     morb_hosp_reporter_id                bigint NULL,
     priority_cd                          varchar(20) NULL,
-    refresh_datetime                     datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
-    max_datetime                         datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     transcriptionist_auth_type           varchar(100) NULL,
     transcriptionist_id_assign_auth      varchar(199) NULL,
     assistant_interpreter_auth_type      varchar(100) NULL,
     assistant_interpreter_id_assign_auth varchar(199) NULL,
     accession_number                     varchar(199) NULL,
     morb_hosp_id                         bigint NULL,
+    refresh_datetime                     datetime2(7) GENERATED ALWAYS AS ROW START      NOT NULL,
+    max_datetime                         datetime2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
     PERIOD FOR SYSTEM_TIME (refresh_datetime, max_datetime)
 );
 
