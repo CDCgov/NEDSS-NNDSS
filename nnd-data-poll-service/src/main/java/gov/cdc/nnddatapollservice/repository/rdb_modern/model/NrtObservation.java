@@ -324,6 +324,12 @@ public class NrtObservation {
         this.assistantInterpreterIdAssignAuth= dto.getAssistantInterpreterIdAssignAuth();
         this.accessionNumber= dto.getAccessionNumber();
         this.morbHospId= dto.getMorbHospId();
+        this.reportObservationUid=dto.getReportObservationUid();
+        this.followupObservationUid=dto.getFollowupObservationUid();
+        this.reportRefrUid=dto.getReportRefrUid();
+        this.reportSprtUid=dto.getReportSprtUid();
+        this.morbPhysicianId=dto.getMorbPhysicianId();
+        this.morbReporterId=dto.getMorbReporterId();
     }
 
     private Timestamp parseTimestamp(String dateString) throws ParseException {
