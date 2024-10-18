@@ -152,17 +152,17 @@ public class NrtObservationDto {
     @SerializedName("interpretation_desc_txt")
     private String interpretationDescTxt;
 
-    @SerializedName("report_observation_id")
-    private Long reportObservationId;
+    @SerializedName("report_observation_uid")
+    private Long reportObservationUid;
 
-    @SerializedName("followup_observation_id")
-    private String followupObservationId;
+    @SerializedName("followup_observation_uid")
+    private String followupObservationUid;
 
-    @SerializedName("report_refr_id")
-    private Long reportRefrId;
+    @SerializedName("report_refr_uid")
+    private Long reportRefrUid;
 
-    @SerializedName("report_sprt_id")
-    private Long reportSprtId;
+    @SerializedName("report_sprt_uid")
+    private Long reportSprtUid;
 
     @SerializedName("morb_physician_id")
     private Long morbPhysicianId;
@@ -220,4 +220,22 @@ public class NrtObservationDto {
 
     @SerializedName("max_datetime")
     private String maxDatetime;
+
+    @SerializedName("transcriptionist_auth_type")
+    private String transcriptionistAuthType;
+
+    @SerializedName("transcriptionist_id_assign_auth")
+    private String transcriptionistIdAssignAuth;
+
+    @SerializedName("assistant_interpreter_auth_type")
+    private String assistantInterpreterAuthType;
+
+    @SerializedName("assistant_interpreter_id_assign_auth")
+    private String assistantInterpreterIdAssignAuth;
+
+    @SerializedName("accession_number")
+    private String accessionNumber;
+
+    @SerializedName("morb_hosp_id")
+    private Long morbHospId;
 }
