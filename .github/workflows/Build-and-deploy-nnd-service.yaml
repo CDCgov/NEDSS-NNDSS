@@ -54,14 +54,14 @@ jobs:
         java-version: '21'
         cache: 'gradle'
 
-    - name: create-nnd-data-poll-jar
+    - name: create-data-sync-service-jar
       working-directory: ./nnd-data-poll-service
       run: ./gradlew build --no-daemon
-    - name: upload-nnd-data-poll-jar
+    - name: upload-data-sync-service-jar
       uses: actions/upload-artifact@v4
       with:
-        name: NND-data-poll-service-jar
-        path: nnd-data-poll-service/build/libs/nnd-data-poll-service.jar
+        name: NND-data-sync-service-jar
+        path: nnd-data-poll-service/build/libs/data-sync-service.jar
 
     - name: create-netss-message-processor-jar
       working-directory: ./netss-message-processor
