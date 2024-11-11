@@ -200,7 +200,10 @@ public class DataExchangeController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @Hidden
+    @Operation(
+            summary = "Decoding data that return from data sync endpoint",
+            description = "Data Sync return zipped and encoded data, this endpoint can be used to decode the data for inspection and integration"
+    )
     @PostMapping(path = "/api/datasync/decode")
     public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) throws DataExchangeException {
         var val = dataExchangeGenericService.decodeAndDecompress(tableName);
