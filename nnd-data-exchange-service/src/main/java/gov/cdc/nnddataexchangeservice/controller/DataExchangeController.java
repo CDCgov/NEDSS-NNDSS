@@ -4,7 +4,6 @@ package gov.cdc.nnddataexchangeservice.controller;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -200,8 +199,11 @@ public class DataExchangeController {
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
-    @Hidden
-    @PostMapping(path = "/api/data-exchange-generic")
+    @Operation(
+            summary = "Decoding data that return from data sync endpoint",
+            description = "Data Sync return zipped and encoded data, this endpoint can be used to decode the data for inspection and integration"
+    )
+    @PostMapping(path = "/api/datasync/decode")
     public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) throws DataExchangeException {
         var val = dataExchangeGenericService.decodeAndDecompress(tableName);
         return new ResponseEntity<>(val, HttpStatus.OK);
