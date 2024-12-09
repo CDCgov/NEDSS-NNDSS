@@ -20,8 +20,8 @@ import java.util.HashMap;
 
 @Configuration
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "rdbEntityManagerFactory",
-        transactionManagerRef = "rdbTransactionManager",
+        entityManagerFactoryRef = "nbsOdseEntityManagerFactory",
+        transactionManagerRef = "nbsOdseTransactionManager",
         basePackages = {
                 "gov.cdc.nnddatapollservice.repository.nbs_odse",
         }
@@ -71,7 +71,7 @@ public class NbsOdseDataSourceConfig {
         return builder
                 .dataSource(dataSource)
                 .packages("gov.cdc.nnddatapollservice.repository.nbs_odse") // Adjust package for your entities
-                .persistenceUnit("nbsOdse")
+                .persistenceUnit("nbsodse")
                 .build();
     }
 

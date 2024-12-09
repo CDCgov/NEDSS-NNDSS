@@ -77,7 +77,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR EDX ACTIVITY");
             logger.info(cron);
             logger.info(zone);
-            //edxActivitySyncService.handlingExchangedData();
+            edxActivitySyncService.handlingExchangedData();
             closePoller();
         }
     }

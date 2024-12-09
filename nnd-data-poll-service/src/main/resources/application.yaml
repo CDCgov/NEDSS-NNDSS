@@ -87,15 +87,15 @@ spring:
     username: ${OP_DBUSER}
     password: ${OP_DBPASSWORD}
     ingest:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${OP_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${OP_DBNAME:};encrypt=true;trustServerCertificate=true;
     rdb:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${RDB_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_DBNAME:};encrypt=true;trustServerCertificate=true;
     rdb_modern:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${RDB_MODERN_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_MODERN_DBNAME:};encrypt=true;trustServerCertificate=true;
     srte:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${SRTE_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${SRTE_DBNAME:};encrypt=true;trustServerCertificate=true;
     odse:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${ODSE_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${ODSE_DBNAME:};encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:

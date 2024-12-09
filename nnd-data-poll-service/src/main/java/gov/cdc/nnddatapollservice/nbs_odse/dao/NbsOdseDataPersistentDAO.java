@@ -4,6 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.configuration.TimestampAdapter;
 import gov.cdc.nnddatapollservice.nbs_odse.dto.EDXActivityDetailLogDto;
 import gov.cdc.nnddatapollservice.nbs_odse.dto.EDXActivityLogDto;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationCodedDto;
@@ -13,6 +14,7 @@ import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityLogRepository;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityDetailLog;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityLog;
 import gov.cdc.nnddatapollservice.share.HandleError;
+import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,6 +23,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Type;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,6 +46,8 @@ public class NbsOdseDataPersistentDAO {
     protected Integer batchSize = 1000;
     private final Gson gsonNorm = new Gson();
     private final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
+            .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
 
@@ -72,12 +77,15 @@ public class NbsOdseDataPersistentDAO {
         }
 
         return logBuilder.toString();
+
     }
+
 
 
     protected void persistingEdxActivity(List<EDXActivityLogDto> list, String tableName) {
         for (EDXActivityLogDto data : list) {
             try {
+                jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " ON");
                 var domainModel = new EDXActivityLog(data);
                 edxActivityLogRepository.save(domainModel);
             } catch (Exception e) {
@@ -90,6 +98,7 @@ public class NbsOdseDataPersistentDAO {
     protected void persistingEdxActivityDetail(List<EDXActivityDetailLogDto> list, String tableName) {
         for (EDXActivityDetailLogDto data : list) {
             try {
+                //jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " ON");
                 var domainModel = new EDXActivityDetailLog(data);
                 edxActivityDetailLogRepository.save(domainModel);
             } catch (Exception e) {
