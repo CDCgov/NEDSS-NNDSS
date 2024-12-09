@@ -4,6 +4,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
+import gov.cdc.nnddatapollservice.nbs_odse.service.interfaces.INbsOdseDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
@@ -33,21 +34,26 @@ public class DataPullService implements IDataPullService {
     @Value("${poll.srte.enabled}")
     private boolean srtePollEnabled;
 
+    @Value("${poll.edx_activity.enabled}")
+    private boolean edxActivityEnabled;
+
     @Value("${poll.single_time_poll_enabled}")
     private boolean singlePoll;
 
     @Value("${datasync.sql_reprocessing_data}")
     private boolean reprocessFailedSQL = false;
 
+    private final INbsOdseDataHandlingService edxActivitySyncService;
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
     private final IRdbModernDataHandlingService rdbModernDataHandlingService;
     private final ISrteDataHandlingService srteDataHandlingService;
 
-    public DataPullService(INNDDataHandlingService dataHandlingService,
+    public DataPullService(INbsOdseDataHandlingService edxActivitySyncService, INNDDataHandlingService dataHandlingService,
                            IRdbDataHandlingService rdbDataHandlingService,
                            IRdbModernDataHandlingService rdbModernDataHandlingService,
                            ISrteDataHandlingService srteDataHandlingService) {
+        this.edxActivitySyncService = edxActivitySyncService;
         this.dataHandlingService = dataHandlingService;
         this.rdbDataHandlingService = rdbDataHandlingService;
         this.rdbModernDataHandlingService = rdbModernDataHandlingService;
@@ -56,14 +62,25 @@ public class DataPullService implements IDataPullService {
 
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleNNDDataFetch() throws DataPollException {
-    if (nndPollEnabled) {
-        logger.info("CRON STARTED FOR NND");
-        logger.info(cron);
-        logger.info(zone);
-        dataHandlingService.handlingExchangedData();
-        closePoller();
+        if (nndPollEnabled) {
+            logger.info("CRON STARTED FOR NND");
+            logger.info(cron);
+            logger.info(zone);
+            dataHandlingService.handlingExchangedData();
+            closePoller();
+        }
     }
-}
+
+    @Scheduled(cron = "${scheduler.cron_edx_activity}", zone = "${scheduler.zone}")
+    public void scheduleEdxActivityDataFetch() throws DataPollException {
+        if (edxActivityEnabled) {
+            logger.info("CRON STARTED FOR EDX ACTIVITY");
+            logger.info(cron);
+            logger.info(zone);
+            //edxActivitySyncService.handlingExchangedData();
+            closePoller();
+        }
+    }
 
     @Scheduled(cron = "${scheduler.cron_rdb}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
