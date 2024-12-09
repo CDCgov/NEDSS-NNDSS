@@ -165,3 +165,9 @@ VALUES('NRT_OBSERVATION', 'RDB_MODERN',1);
 INSERT INTO RDB.dbo.poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('NRT_OBSERVATION_CODED', 'RDB_MODERN',2);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('EDX_ACTIVITY_LOG', 'NBS_ODSE',1);
+INSERT INTO RDB.dbo.poll_data_sync_config
+(table_name, source_db,table_order)
+VALUES('EDX_ACTIVITY_DETAIL_LOG', 'NBS_ODSE',2);

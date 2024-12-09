@@ -27,6 +27,8 @@ poll:
     enabled: ${RDB_MODERN_POLL_ENABLED:false}
   srte:
     enabled: ${SRTE_POLL_ENABLED:false}
+  edx_activity:
+    enabled: ${EDX_ACTIVITY_ENABLED:false}
 
 datasync:
   store_in_sql: ${DATASYNC_STORE_SQL:false}
@@ -65,6 +67,7 @@ scheduler:
   cron_rdb: ${NBS_RDB_CRON:0 */1 * * * * }
   cron_srte: ${NBS_SRTE_CRON:0 */1 * * * * }
   cron_rdb_modern: ${NBS_RDB_MODERN_CRON:0 */1 * * * * }
+  cron_edx_activity: ${NBS_EDX_ACTIVITY_CRON:0 */1 * * * * }
   # "0 */5 0-2 * * *"
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *
@@ -84,13 +87,15 @@ spring:
     username: ${OP_DBUSER}
     password: ${OP_DBPASSWORD}
     ingest:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${OP_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${OP_DBNAME:};encrypt=true;trustServerCertificate=true;
     rdb:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${RDB_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_DBNAME:};encrypt=true;trustServerCertificate=true;
     rdb_modern:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${RDB_MODERN_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_MODERN_DBNAME:};encrypt=true;trustServerCertificate=true;
     srte:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=${SRTE_DBNAME};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${SRTE_DBNAME:};encrypt=true;trustServerCertificate=true;
+    odse:
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${ODSE_DBNAME:};encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:

@@ -29,16 +29,19 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final JdbcTemplate jdbcTemplate;
     private final JdbcTemplate srteJdbcTemplate;
     private final JdbcTemplate rdbModernJdbcTemplate;
+    private final JdbcTemplate odseJdbcTemplate;
     private final Gson gson;
 
     public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository,
                                       @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
                                       @Qualifier("srteJdbcTemplate")  JdbcTemplate srteJdbcTemplate,
-                                      @Qualifier("rdbModernJdbcTemplate")  JdbcTemplate rdbModernJdbcTemplate) {
+                                      @Qualifier("rdbModernJdbcTemplate")  JdbcTemplate rdbModernJdbcTemplate,
+                                      @Qualifier("odseJdbcTemplate") JdbcTemplate odseJdbcTemplate) {
         this.dataSyncConfigRepository = dataSyncConfigRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.srteJdbcTemplate = srteJdbcTemplate;
         this.rdbModernJdbcTemplate = rdbModernJdbcTemplate;
+        this.odseJdbcTemplate = odseJdbcTemplate;
 
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
@@ -74,7 +77,11 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 return srteJdbcTemplate.queryForObject(query, Integer.class);
             } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
                 return rdbModernJdbcTemplate.queryForObject(query, Integer.class);
-            } else {
+            }
+            else if (sourceDb.equalsIgnoreCase("NBS_ODSE")) {
+                return odseJdbcTemplate.queryForObject(query, Integer.class);
+            }
+            else {
                 throw new DataExchangeException("Database Not Supported: " + sourceDb);
             }
         } catch (Exception e) {
@@ -131,7 +138,11 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             return jdbcTemplate.queryForList(query);
         } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
             return rdbModernJdbcTemplate.queryForList(query);
-        } else {
+        } else if (sourceDb.equalsIgnoreCase("NBS_ODSE")) {
+            return odseJdbcTemplate.queryForList(query);
+        }
+
+        else {
             throw new DataExchangeException("DB IS NOT SUPPORTED: " + sourceDb);
         }
     }
