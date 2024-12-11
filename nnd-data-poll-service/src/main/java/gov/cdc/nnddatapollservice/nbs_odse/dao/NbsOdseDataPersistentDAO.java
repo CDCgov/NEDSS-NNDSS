@@ -93,18 +93,21 @@ public class NbsOdseDataPersistentDAO {
                 handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
             }
         }
+        jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " OFF");
+
     }
 
     protected void persistingEdxActivityDetail(List<EDXActivityDetailLogDto> list, String tableName) {
         for (EDXActivityDetailLogDto data : list) {
             try {
-                //jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " ON");
+                jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " ON");
                 var domainModel = new EDXActivityDetailLog(data);
                 edxActivityDetailLogRepository.save(domainModel);
             } catch (Exception e) {
                 logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage()); // NOSONAR
                 handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
             }
+            jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " OFF");
         }
     }
 
