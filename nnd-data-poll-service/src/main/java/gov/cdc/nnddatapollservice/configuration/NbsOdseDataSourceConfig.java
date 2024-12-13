@@ -20,18 +20,17 @@ import java.util.HashMap;
 
 @Configuration
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "rdbEntityManagerFactory",
-        transactionManagerRef = "rdbTransactionManager",
+        entityManagerFactoryRef = "nbsOdseEntityManagerFactory",
+        transactionManagerRef = "nbsOdseTransactionManager",
         basePackages = {
-                "gov.cdc.nnddatapollservice.repository.rdb_modern",
-                "gov.cdc.nnddatapollservice.repository.srte"
+                "gov.cdc.nnddatapollservice.repository.nbs_odse",
         }
 )
-public class RdbDataSourceConfig {
+public class NbsOdseDataSourceConfig {
     @Value("${spring.datasource.driverClassName}")
     private String driverClassName;
 
-    @Value("${spring.datasource.rdb.url}")
+    @Value("${spring.datasource.odse.url}")
     private String dbUrl;
 
     @Value("${spring.datasource.username}")
@@ -40,9 +39,9 @@ public class RdbDataSourceConfig {
     @Value("${spring.datasource.password}")
     private String dbUserPassword;
 
-    @Bean(name = "rdbDataSource")
+    @Bean(name = "nbsOdseDataSource")
     @Lazy
-    public DataSource rdbDataSource() {
+    public DataSource nbsOdseDataSource() {
         DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
 
         dataSourceBuilder.driverClassName(driverClassName);
@@ -52,34 +51,33 @@ public class RdbDataSourceConfig {
 
         return dataSourceBuilder.build();
     }
-    @Bean(name = "rdbJdbcTemplate")
-    public JdbcTemplate rdbJdbcTemplate(@Qualifier("rdbDataSource") DataSource dataSource) {
+    @Bean(name = "nbsOdseJdbcTemplate")
+    public JdbcTemplate nbsOdseJdbcTemplate(@Qualifier("nbsOdseDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
 
     // JPA Configurations
 
-    @Bean(name = "rdbEntityManagerFactoryBuilder")
-    public EntityManagerFactoryBuilder rdbEntityManagerFactoryBuilder() {
+    @Bean(name = "nbsOdseEntityManagerFactoryBuilder")
+    public EntityManagerFactoryBuilder nbsOdseEntityManagerFactoryBuilder() {
         return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), new HashMap<>(), null);
     }
 
-    @Bean(name = "rdbEntityManagerFactory")
-    public LocalContainerEntityManagerFactoryBean rdbEntityManagerFactory(
-            @Qualifier("rdbEntityManagerFactoryBuilder") EntityManagerFactoryBuilder builder,
-            @Qualifier("rdbDataSource") DataSource dataSource) {
+    @Bean(name = "nbsOdseEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean nbsOdseEntityManagerFactory(
+            @Qualifier("nbsOdseEntityManagerFactoryBuilder") EntityManagerFactoryBuilder builder,
+            @Qualifier("nbsOdseDataSource") DataSource dataSource) {
         return builder
                 .dataSource(dataSource)
-                .packages("gov.cdc.nnddatapollservice.repository.rdb_modern",
-                        "gov.cdc.nnddatapollservice.repository.srte") // Adjust package for your entities
-                .persistenceUnit("rdb")
+                .packages("gov.cdc.nnddatapollservice.repository.nbs_odse") // Adjust package for your entities
+                .persistenceUnit("nbsodse")
                 .build();
     }
 
-    @Bean(name = "rdbTransactionManager")
-    public PlatformTransactionManager rdbTransactionManager(
-            @Qualifier("rdbEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+    @Bean(name = "nbsOdseTransactionManager")
+    public PlatformTransactionManager nbsOdseTransactionManager(
+            @Qualifier("nbsOdseEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 }
