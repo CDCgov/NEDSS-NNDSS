@@ -6,6 +6,7 @@ import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
+import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.List;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
@@ -83,7 +83,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             logger.info("isInitialLoad {}", isInitialLoad);
 
             logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
-            var timestampWithNull = Timestamp.from(Instant.now());
+            var timestampWithNull = TimestampUtil.getCurrentTimestamp();
 
             try {
                 totalRecordCounts = pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
@@ -127,7 +127,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
 
                     rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
-                    timestamp = Timestamp.from(Instant.now());
+                    timestamp = TimestampUtil.getCurrentTimestamp();
                 } catch (Exception e) {
                     log = e.getMessage();
                     exceptionAtApiLevel = true;

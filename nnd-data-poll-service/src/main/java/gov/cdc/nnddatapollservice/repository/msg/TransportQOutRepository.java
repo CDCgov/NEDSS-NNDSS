@@ -9,14 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-//@Repository
-//public interface TransportQOutRepository extends JpaRepository<TransportQOut, Long> {
-//    @Query("SELECT MAX(a.recordStatusTime) FROM CNTransportQOut a ")
-//    Optional<Timestamp> findMaxTimeStamp ();
-//
-//}
-//
-
 @Repository
 
 public interface TransportQOutRepository extends JpaRepository<TransportQOut, Long> {

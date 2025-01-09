@@ -5,6 +5,7 @@ import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
+import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -12,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,7 +69,7 @@ class RdbDataHandlingServiceTest {
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("D_ORGANIZATION");
-        config.setLastUpdateTime(Timestamp.from(Instant.now()));
+        config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(1);
         config.setQuery("");
         config.setSourceDb("RDB");
