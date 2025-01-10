@@ -2,43 +2,80 @@ server:
   port: 8082
 
 io:
-  finalLocation: ${NND_FILE_LOCATION}
+  fileLocation: ${NND_FILE_LOCATION:NA}
 
 data_exchange:
   clientId: ${NND_DE_CLIENT_ID}
   secret: ${NND_DE_SECRET}
   url: ${NND_DE_URL}
-  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN}
-  endpoint_de: ${NND_DE_URL}${NND_DE_DE}
+  endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN:/extraction/api/auth/token}
+  endpoint_de: ${NND_DE_URL}${NND_DE_DE:/extraction/api/nnd}
+  endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/extraction/api/datasync}
+  endpoint_generic_total_record: ${NND_DE_URL}${NND_DE_GENERIC_TOTAL_RECORD:/extraction/api/datasync/count}
+nnd:
+  fullLoad: ${NND_FULL_LOAD:false}
+  pullLimit: ${NND_PULL_LIMIT:0}
+  insertLimit: ${NND_INSERT_LIMIT:1000}
 
-management:
-  endpoint:
-    prometheus:
-      enabled: true
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-  prometheus:
-    metrics:
-      export:
-        enabled: true
+poll:
+  single_time_poll_enabled: ${SINGLE_TIME_POLL:false}
+  nnd:
+    enabled: ${NND_POLL_ENABLED:false}
+  rdb:
+    enabled: ${RDB_POLL_ENABLED:false}
+  rdb_modern:
+    enabled: ${RDB_MODERN_POLL_ENABLED:false}
+  srte:
+    enabled: ${SRTE_POLL_ENABLED:false}
+  edx_activity:
+    enabled: ${EDX_ACTIVITY_ENABLED:false}
+
+datasync:
+  store_in_sql: ${DATASYNC_STORE_SQL:false}
+  store_in_local: ${DATASYNC_STORE_LOCAL:false}
+  store_in_S3: ${DATASYNC_STORE_S3:false}
+  local_file_path: ${DATASYNC_LOCAL_FILE_PATH:NA}
+  sql_error_handle_log: ${DATASYNC_SQL_ERROR_PATH:NA}
+  sql_reprocessing_data: ${DATASYNC_STORE_SQL_REPOCESSING_DATA:false}
+  data_sync_batch_limit: ${DATASYNC_BATCH_LIMIT:1000}
+  data_sync_delete_on_initial: ${DATASYNC_DELETE:false}
+
+aws:
+  auth:
+    static:
+      key_id: ${AWS_KEY_ID:NA}
+      access_key: ${AWS_ACCESS_KEY:NA}
+      token: ${AWS_TOKEN:NA}
+    profile:
+      profile_name: ${AWS_PROFILE:NA}
+  s3:
+    bucket-name: ${S3_BUCKET_NAME:NA}
+    region: ${S3_REGION:NA}
 
 spring:
   application:
     name: nnd-data-poll-service
-
+  task:
+    scheduling:
+      pool:
+        size: 4
 scheduler:
   zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
   # America/New_York
   # UTC
-  cron: ${NBS_NND_CRON}
+  cron: ${NBS_NND_CRON:0 */1 * * * * }
+  cron_rdb: ${NBS_RDB_CRON:0 */1 * * * * }
+  cron_srte: ${NBS_SRTE_CRON:0 */1 * * * * }
+  cron_rdb_modern: ${NBS_RDB_MODERN_CRON:0 */1 * * * * }
+  cron_edx_activity: ${NBS_EDX_ACTIVITY_CRON:0 */1 * * * * }
   # "0 */5 0-2 * * *"
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *
   # 0 (start at zero sec), * (run every min),  0-2 (run during 12 am to 3 am), * (run every day), * (run every month), * (run every year)
 ---
 spring:
+  main:
+    web-application-type: none
   config:
     activate:
       on-profile: default
@@ -49,14 +86,16 @@ spring:
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${OP_DBUSER}
     password: ${OP_DBPASSWORD}
-    msg:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_MSGOUTE;encrypt=true;trustServerCertificate=true;
-    odse:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_ODSE;encrypt=true;trustServerCertificate=true;
-    srte:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=NBS_SRTE;encrypt=true;trustServerCertificate=true;
     ingest:
-      url: jdbc:sqlserver://${OP_DBSERVER};databaseName=MSGOUTE;encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${OP_DBNAME:};encrypt=true;trustServerCertificate=true;
+    rdb:
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_DBNAME:};encrypt=true;trustServerCertificate=true;
+    rdb_modern:
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_MODERN_DBNAME:};encrypt=true;trustServerCertificate=true;
+    srte:
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${SRTE_DBNAME:};encrypt=true;trustServerCertificate=true;
+    odse:
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${ODSE_DBNAME:};encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:

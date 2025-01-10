@@ -3,6 +3,10 @@ package gov.cdc.nnddataexchangeservice.controller;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -27,6 +31,26 @@ public class TokenController {
         return builder.build();
     }
 
+    @Operation(
+            summary = "Get Access Token",
+            description = "Generates an access token using client credentials. The client ID and client secret must be provided in the request headers.",
+            parameters = {
+                    @Parameter(
+                            in = ParameterIn.HEADER,
+                            name = "clientid",
+                            description = "The Client ID for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")
+                    ),
+                    @Parameter(
+                            in = ParameterIn.HEADER,
+                            name = "clientsecret",
+                            description = "The Client Secret for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")
+                    )
+            }
+    )
     @PostMapping("/api/auth/token")
     public ResponseEntity<String> token(@RequestHeader("clientid") String clientId, @RequestHeader("clientsecret") String clientSecret) {
         String accessToken = null;

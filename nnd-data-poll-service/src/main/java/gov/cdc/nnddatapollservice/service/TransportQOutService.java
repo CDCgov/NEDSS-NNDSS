@@ -17,40 +17,44 @@ public class TransportQOutService implements ITransportQOutService {
     private final TransportQOutRepository transportQOutRepository;
     private final IErrorHandlingService errorHandlingService;
 
-    @Value("${io.finalLocation}")
+    @Value("${io.fileLocation}")
     private String fileLocation;
+
+    @Value("${nnd.insertLimit}")
+    private Integer insertLimit = 1000;
+
 
     public TransportQOutService(TransportQOutRepository transportQOutRepository, IErrorHandlingService errorHandlingService) {
         this.transportQOutRepository = transportQOutRepository;
         this.errorHandlingService = errorHandlingService;
     }
 
+    public void truncatingData() {
+        transportQOutRepository.truncateTable();
+    }
+
     public String getMaxTimestamp() throws DataPollException {
         try {
-            var time = transportQOutRepository.findMaxTimeStamp();
-            if (time.isPresent()) {
-                return time.get().toString();
-            }
-            else {
-                return "";
-            }
+            var time = transportQOutRepository.findMaxTimeStampInvolvingWithNotification();
+            return time.orElse("");
         } catch (Exception e) {
             throw new DataPollException(e.getMessage());
         }
 
     }
 
+    @SuppressWarnings("java:S1141")
     public void saveDataExchange(List<TransportQOutDto> transportQOutDtoList) throws DataPollException {
         try {
             List<TransportQOut> cnTransportQOutList = new ArrayList<>();
             for (var item : transportQOutDtoList) {
                 TransportQOut transportQOut = new TransportQOut(item);
+                transportQOut.setRecordId(null);
                 cnTransportQOutList.add(transportQOut);
             }
 
-            int batchSize = 10;
-            for (int i = 0; i < cnTransportQOutList.size(); i += batchSize) {
-                int end = Math.min(i + batchSize, cnTransportQOutList.size());
+            for (int i = 0; i < cnTransportQOutList.size(); i += insertLimit) {
+                int end = Math.min(i + insertLimit, cnTransportQOutList.size());
                 List<TransportQOut> batch = cnTransportQOutList.subList(i, end);
 
                 try {

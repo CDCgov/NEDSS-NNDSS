@@ -20,6 +20,9 @@ public class OpenAPIConfig {
     @Value("${diserver.host}")
     private String serverhost;
 
+    @Value("${server.servlet.context-path}")
+    private String contextPath;
+
     @Bean
     public OpenAPI myOpenAPI() throws Exception{
         String serverUrl = "";
@@ -32,6 +35,7 @@ public class OpenAPIConfig {
         URI uriBuilder = new URIBuilder()
                 .setScheme(scheme)
                 .setHost(serverhost)
+                .setPath(contextPath)
                 .build();
         serverUrl=uriBuilder.toString();
 
@@ -40,14 +44,14 @@ public class OpenAPIConfig {
         server.setDescription("Server URL");
 
         Contact contact = new Contact();
-        contact.setEmail("dataingestionservice@cdc.com");
-        contact.setName("Data Ingestion Service");
+        contact.setEmail("nndservice@cdc.com");
+        contact.setName("NND Service");
 
         Info info = new Info()
-                .title("Data Ingestion API")
+                .title("NND Service API")
                 .version("1.0")
                 .contact(contact)
-                .description("This API exposes endpoints to manage Data Ingestion Service.");
+                .description("This API exposes endpoints to manage NND Service.");
 
         Components components=new Components().
                 addSecuritySchemes("bearer-key",

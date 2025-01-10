@@ -41,6 +41,9 @@ public class TransportQOutDto {
     private String responseMessageSignature;
     private Integer priority;
 
+    public TransportQOutDto() {
+
+    }
     // Constructor to convert domain model to DTO
     public TransportQOutDto(TransportQOut transportQOut) {
         this.recordId = transportQOut.getRecordId();

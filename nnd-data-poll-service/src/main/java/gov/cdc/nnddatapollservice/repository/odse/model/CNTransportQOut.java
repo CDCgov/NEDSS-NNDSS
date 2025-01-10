@@ -4,9 +4,6 @@ package gov.cdc.nnddatapollservice.repository.odse.model;
 import gov.cdc.nnddatapollservice.service.model.dto.CNTransportQOutDto;
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 
 import java.sql.Timestamp;
 
@@ -17,6 +14,7 @@ import java.sql.Timestamp;
 public class CNTransportQOut {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cn_transportq_out_uid", nullable = false)
     private Long cnTransportqOutUid;
 
@@ -38,9 +36,10 @@ public class CNTransportQOut {
     @Column(name = "last_chg_user_id")
     private Long lastChgUserId;
 
-    @Lob
+   // @Lob
     @Column(name = "message_payload")
-    private byte[] messagePayload;
+//    private byte[] messagePayload;
+    private String messagePayload;
 
     @Column(name = "notification_uid", nullable = false)
     private Long notificationUid;

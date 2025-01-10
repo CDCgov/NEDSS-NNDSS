@@ -9,6 +9,8 @@ import gov.cdc.nnddatapollservice.service.model.dto.CNTransportQOutDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +18,13 @@ import java.util.List;
 public class CNTransportQOutService implements ICNTransportQOutService {
     private final CNTransportQOutRepository cnTransportQOutRepository;
     private final IErrorHandlingService errorHandlingService;
+    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
-    @Value("${io.finalLocation}")
-    private String fileLocation;
+    @Value("${io.fileLocation}")
+    protected String fileLocation;
+
+    @Value("${nnd.insertLimit}")
+    protected Integer insertLimit = 1000;
 
 
     public CNTransportQOutService(CNTransportQOutRepository cnTransportQOutRepository,
@@ -27,10 +33,16 @@ public class CNTransportQOutService implements ICNTransportQOutService {
         this.errorHandlingService = errorHandlingService;
     }
 
+    public void truncatingData() {
+        cnTransportQOutRepository.truncateTable();
+    }
+
     public String getMaxTimestamp() {
         var time = cnTransportQOutRepository.findMaxTimeStamp();
         if (time.isPresent()) {
-            return time.get().toString();
+            Timestamp maxTimestamp = time.get();
+            SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
+            return formatter.format(maxTimestamp);
         }
         else {
             return "";
@@ -42,12 +54,12 @@ public class CNTransportQOutService implements ICNTransportQOutService {
             List<CNTransportQOut> cnTransportQOutList = new ArrayList<>();
             for (var item : transportQOutDtoList) {
                 CNTransportQOut transportQOut = new CNTransportQOut(item);
+                transportQOut.setCnTransportqOutUid(null);
                 cnTransportQOutList.add(transportQOut);
             }
 
-            int batchSize = 10;
-            for (int i = 0; i < cnTransportQOutList.size(); i += batchSize) {
-                int end = Math.min(i + batchSize, cnTransportQOutList.size());
+            for (int i = 0; i < cnTransportQOutList.size(); i += insertLimit) {
+                int end = Math.min(i + insertLimit, cnTransportQOutList.size());
                 List<CNTransportQOut> batch = cnTransportQOutList.subList(i, end);
 
                 try {

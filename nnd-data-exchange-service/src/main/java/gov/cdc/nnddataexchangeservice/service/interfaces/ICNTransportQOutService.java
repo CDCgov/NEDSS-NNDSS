@@ -6,5 +6,5 @@ import gov.cdc.nnddataexchangeservice.service.model.dto.CNTransportQOutDto;
 import java.util.List;
 
 public interface ICNTransportQOutService {
-    List<CNTransportQOutDto> getTransportData(String statusCd, String statusTime) throws DataExchangeException;
+    List<CNTransportQOutDto> getTransportData(String statusCd, String statusTime, Integer limit) throws DataExchangeException;
 }

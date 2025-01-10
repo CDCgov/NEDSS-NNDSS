@@ -17,7 +17,8 @@ public class CNTransportQOutDto {
     private String lastChgReasonCd;
     private Timestamp lastChgTime;
     private Long lastChgUserId;
-    private byte[] messagePayload;
+//    private byte[] messagePayload;
+    private String messagePayload;
     private Long notificationUid;
     private String notificationLocalId;
     private String publicHealthCaseLocalId;
@@ -26,6 +27,9 @@ public class CNTransportQOutDto {
     private Timestamp recordStatusTime;
     private Integer versionCtrlNbr;
 
+    public CNTransportQOutDto() {
+
+    }
     // Constructor to convert domain model to DTO
     public CNTransportQOutDto(CNTransportQOut cnTransportQOut) {
         this.cnTransportqOutUid = cnTransportQOut.getCnTransportqOutUid();

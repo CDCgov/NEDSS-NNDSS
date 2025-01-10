@@ -1,5 +1,7 @@
 package gov.cdc.nnddatapollservice.service.model.dto;
 
+import com.google.gson.annotations.JsonAdapter;
+import gov.cdc.nnddatapollservice.json_config.Base64Adapter;
 import gov.cdc.nnddatapollservice.repository.msg.model.TransportQOut;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +12,7 @@ public class TransportQOutDto {
     private Long recordId;
     private String messageId;
     private String payloadFile;
+    @JsonAdapter(Base64Adapter.class)
     private byte[] payloadContent;
     private String destinationFilename;
     private String routeInfo;
@@ -40,6 +43,10 @@ public class TransportQOutDto {
     private String responseMessageOrigin;
     private String responseMessageSignature;
     private Integer priority;
+
+    public TransportQOutDto(){
+
+    }
 
     // Constructor to convert domain model to DTO
     public TransportQOutDto(TransportQOut transportQOut) {
