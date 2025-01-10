@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.repository.rdb_modern.model;
 
-import com.google.gson.annotations.SerializedName;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

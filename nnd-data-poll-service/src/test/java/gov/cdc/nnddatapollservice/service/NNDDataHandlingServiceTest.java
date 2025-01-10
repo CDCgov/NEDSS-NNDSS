@@ -6,27 +6,19 @@ import gov.cdc.nnddatapollservice.service.interfaces.ICNTransportQOutService;
 import gov.cdc.nnddatapollservice.service.interfaces.INetsstTransportService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITransportQOutService;
-import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
-import gov.cdc.nnddatapollservice.service.model.dto.CNTransportQOutDto;
-import gov.cdc.nnddatapollservice.service.model.dto.NETSSTransportQOutDto;
-import gov.cdc.nnddatapollservice.service.model.dto.TransportQOutDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 class NNDDataHandlingServiceTest {
 
