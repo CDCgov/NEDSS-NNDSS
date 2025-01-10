@@ -3,7 +3,7 @@ package gov.cdc.nnddataexchangeservice.shared;
 import gov.cdc.nnddataexchangeservice.shared.model.ExecutionResult;
 
 import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.concurrent.Callable;
 
 public class MetricCollector {
@@ -11,12 +11,12 @@ public class MetricCollector {
 
     }
     public static <V> ExecutionResult<V> measureExecutionTime(Callable<V> function) throws Exception {
-        Instant start = Instant.now();
+        LocalDateTime start = LocalDateTime.now();
 
         // Execute the passed function and capture the result
         V result = function.call();
 
-        Instant end = Instant.now();
+        LocalDateTime  end = LocalDateTime.now();
         Duration duration = Duration.between(start, end);
 
         // Convert the duration to a human-readable format

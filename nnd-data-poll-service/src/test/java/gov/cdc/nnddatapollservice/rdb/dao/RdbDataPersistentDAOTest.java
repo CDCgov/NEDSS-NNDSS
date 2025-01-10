@@ -5,6 +5,7 @@ import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
+import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -20,7 +21,6 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -192,7 +192,7 @@ class RdbDataPersistentDAOTest {
 
     @Test
     void updateLastUpdatedTime() {
-        Timestamp timestamp = Timestamp.from(Instant.now());
+        Timestamp timestamp = TimestampUtil.getCurrentTimestamp();
 
         when(jdbcTemplate.update(anyString(), any(), anyString())).thenReturn(1);
         rdbDataPersistentDAO.updateLastUpdatedTime("TEST_TABLE", timestamp);
@@ -205,7 +205,7 @@ class RdbDataPersistentDAOTest {
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("D_PROVIDER");
-        config.setLastUpdateTime(Timestamp.from(Instant.now()));
+        config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(2);
         config.setQuery("");
         configTableList.add(config);

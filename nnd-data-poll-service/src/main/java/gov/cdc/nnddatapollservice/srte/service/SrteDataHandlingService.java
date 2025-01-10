@@ -4,6 +4,7 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
+import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import gov.cdc.nnddatapollservice.srte.dao.SrteDataPersistentDAO;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.List;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
@@ -76,7 +76,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
             Integer totalRecordCounts = 0;
 
             logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
-            var timestampWithNull = Timestamp.from(Instant.now());
+            var timestampWithNull = TimestampUtil.getCurrentTimestamp();
 
             //call data exchange service api
             try {
@@ -121,7 +121,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
                     String encodedData = "";
                     encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
                     rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
-                    timestamp = Timestamp.from(Instant.now());
+                    timestamp = TimestampUtil.getCurrentTimestamp();
                 } catch (Exception e) {
                     log = e.getMessage();
                     exceptionAtApiLevel = true;

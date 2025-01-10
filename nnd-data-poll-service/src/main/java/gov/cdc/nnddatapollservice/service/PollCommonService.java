@@ -7,6 +7,7 @@ import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
+import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -125,7 +125,7 @@ public class PollCommonService implements IPollCommonService {
     }
 
     public String getCurrentTimestamp() {
-        Timestamp timestamp = Timestamp.from(Instant.now());
+        Timestamp timestamp = TimestampUtil.getCurrentTimestamp();
         SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
         return formatter.format(timestamp);
     }
