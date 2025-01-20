@@ -45,13 +45,13 @@ public class OpenAPIConfig {
 
         Contact contact = new Contact();
         contact.setEmail("nndservice@cdc.com");
-        contact.setName("NND Service");
+        contact.setName("Data Sync Service");
 
         Info info = new Info()
-                .title("NND Service API")
+                .title("Data Sync Service API")
                 .version("1.0")
                 .contact(contact)
-                .description("This API exposes endpoints to manage NND Service.");
+                .description("This API exposes endpoints to manage Data Sync Service.");
 
         Components components=new Components().
                 addSecuritySchemes("bearer-key",

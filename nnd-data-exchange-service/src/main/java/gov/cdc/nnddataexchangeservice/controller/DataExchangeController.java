@@ -201,7 +201,19 @@ public class DataExchangeController {
 
     @Operation(
             summary = "Decoding data that return from data sync endpoint",
-            description = "Data Sync return zipped and encoded data, this endpoint can be used to decode the data for inspection and integration"
+            description = "Data Sync return zipped and encoded data, this endpoint can be used to decode the data for inspection and integration",
+            parameters = {
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientid",
+                            description = "The Client Id for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientsecret",
+                            description = "The Client Secret for authentication",
+                            required = true,
+                            schema = @Schema(type = "string"))
+            }
     )
     @PostMapping(path = "/api/datasync/decode")
     public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) throws DataExchangeException {
