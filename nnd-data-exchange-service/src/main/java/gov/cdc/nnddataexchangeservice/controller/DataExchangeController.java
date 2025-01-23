@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,7 @@ public class DataExchangeController {
 
     private final IDataExchangeService dataExchangeService;
     private final IDataExchangeGenericService dataExchangeGenericService;
+    private static Logger logger = LoggerFactory.getLogger(DataExchangeController.class);
 
     public DataExchangeController(IDataExchangeService dataExchangeService,
                                   IDataExchangeGenericService dataExchangeGenericService) {
@@ -152,7 +155,7 @@ public class DataExchangeController {
                                                  @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
                                                  @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
                                                  @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull) throws DataExchangeException {
-
+        logger.info("Fetching Data for Data Availability, Table {}", tableName);
         var ts = convertTimestampFromString(timestamp);
         var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, ts, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
                 Boolean.parseBoolean(allowNull));
@@ -194,6 +197,7 @@ public class DataExchangeController {
     public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
                                                        @RequestParam String timestamp,
                                            @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
+        logger.info("Fetching Data Count for Data Availability, Table {}", tableName);
         var ts = convertTimestampFromString(timestamp);
         var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), ts);
         return new ResponseEntity<>(res, HttpStatus.OK);
