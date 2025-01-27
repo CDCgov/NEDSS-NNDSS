@@ -38,7 +38,7 @@ public class TokenService implements ITokenService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = restTemplate.postForEntity(tokenEndpoint, entity, String.class);
-        if (response.getStatusCode() != HttpStatus.UNAUTHORIZED) {
+        if (response.getStatusCode() != HttpStatus.OK) {
             System.exit(0);
         }
         return response.getBody();    }
