@@ -4,6 +4,7 @@ import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -37,5 +38,8 @@ public class TokenService implements ITokenService {
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         ResponseEntity<String> response = restTemplate.postForEntity(tokenEndpoint, entity, String.class);
+        if (response.getStatusCode() != HttpStatus.OK) {
+            System.exit(0);
+        }
         return response.getBody();    }
 }
