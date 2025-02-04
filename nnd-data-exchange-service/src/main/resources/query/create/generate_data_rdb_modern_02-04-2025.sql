@@ -290,8 +290,7 @@ WITH PaginatedResults AS (
 SELECT * FROM PaginatedResults
 WHERE RowNum BETWEEN :startRow AND :endRow;
 
-SELECT rdb_modern.dbo.nrt_patient_key.*,
-       ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
+SELECT rdb_modern.dbo.nrt_patient_key.*
 FROM rdb_modern.dbo.nrt_patient_key
          JOIN rdb_modern.dbo.nrt_patient
               ON rdb_modern.dbo.nrt_patient_key.nrt_patient_key = rdb_modern.dbo.nrt_patient.patient_uid
@@ -324,8 +323,7 @@ WITH PaginatedResults AS (
 SELECT * FROM PaginatedResults
 WHERE RowNum BETWEEN :startRow AND :endRow;
 
-SELECT rdb_modern.dbo.nrt_provider_key.*,
-       ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
+SELECT rdb_modern.dbo.nrt_provider_key.*
 FROM rdb_modern.dbo.nrt_provider_key
          JOIN rdb_modern.dbo.nrt_provider
               ON rdb_modern.dbo.nrt_provider_key.d_provider_key = rdb_modern.dbo.nrt_provider.provider_uid
