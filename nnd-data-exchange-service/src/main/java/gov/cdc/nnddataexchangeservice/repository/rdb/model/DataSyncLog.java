@@ -30,4 +30,21 @@ public class DataSyncLog {
 
     @Column(name = "end_time")
     private Timestamp endTime;
+
+
+
+    @Column(name = "log_start_row")
+    private String startRow;
+
+    @Column(name = "log_end_row")
+    private String endRow;
+
+    @Column(name = "last_executed_run_time")
+    private String lastExecutedRunTime;
+
+    @Column(name = "last_executed_result_count")
+    private Integer lastExecutedResultCount;
+
+    @Column(name = "last_executed_timestamp")
+    private Timestamp lastExecutedTimestamp;
 }

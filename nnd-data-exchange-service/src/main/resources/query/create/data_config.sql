@@ -50,6 +50,11 @@ CREATE TABLE data_sync_log
     error_desc  NVARCHAR(MAX) NULL,
     start_time  DATETIME NOT NULL DEFAULT GETDATE(),
     end_time    DATETIME NULL,
+    last_executed_timestamp    DATETIME2 NULL DEFAULT NULL,
+    last_executed_run_time     NVARCHAR(255) NULL DEFAULT NULL,
+    last_executed_result_count INTEGER NULL DEFAULT NULL,
+    log_start_row              NVARCHAR(255) NULL,
+    log_end_row                NVARCHAR(255) NULL
 
     CONSTRAINT FK_data_sync_log_table
         FOREIGN KEY (table_name)

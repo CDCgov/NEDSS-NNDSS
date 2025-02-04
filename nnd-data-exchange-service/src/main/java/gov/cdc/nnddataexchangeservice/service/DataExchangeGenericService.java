@@ -5,7 +5,9 @@ import com.google.gson.GsonBuilder;
 import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
+import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncLogRepository;
 import gov.cdc.nnddataexchangeservice.repository.rdb.model.DataSyncConfig;
+import gov.cdc.nnddataexchangeservice.repository.rdb.model.DataSyncLog;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.shared.DataSimplification;
 import gov.cdc.nnddataexchangeservice.shared.MetricCollector;
@@ -27,6 +29,7 @@ import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.getCurrentT
 public class DataExchangeGenericService implements IDataExchangeGenericService {
 
     private final DataSyncConfigRepository dataSyncConfigRepository;
+    private final DataSyncLogRepository dataSyncLogRepository;
     private final JdbcTemplate jdbcTemplate;
     private final JdbcTemplate srteJdbcTemplate;
     private final JdbcTemplate rdbModernJdbcTemplate;
@@ -34,12 +37,13 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final Gson gson;
     @Value("${service.timezone}")
     private String tz = "UTC";
-    public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository,
+    public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository, DataSyncLogRepository dataSyncLogRepository,
                                       @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
                                       @Qualifier("srteJdbcTemplate")  JdbcTemplate srteJdbcTemplate,
                                       @Qualifier("rdbModernJdbcTemplate")  JdbcTemplate rdbModernJdbcTemplate,
                                       @Qualifier("odseJdbcTemplate") JdbcTemplate odseJdbcTemplate) {
         this.dataSyncConfigRepository = dataSyncConfigRepository;
+        this.dataSyncLogRepository = dataSyncLogRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.srteJdbcTemplate = srteJdbcTemplate;
         this.rdbModernJdbcTemplate = rdbModernJdbcTemplate;
@@ -96,19 +100,35 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
+        DataSyncLog dataLog = new DataSyncLog();
+        dataLog.setTableName(tableName);
+        dataLog.setStatusSync("INPROGRESS");
+        dataLog.setStartTime(getCurrentTimeStamp(tz));
+
+        var log = dataSyncLogRepository.save(dataLog);
         AtomicInteger dataCountHolder = new AtomicInteger();
 
-        Callable<String> callable = () -> {
-            String baseQuery = preparePaginationQuery(dataConfig, timeStamp, startRow, endRow, initialLoad, allowNull);
+        try {
+            Callable<String> callable = () -> {
+                String baseQuery = preparePaginationQuery(dataConfig, timeStamp, startRow, endRow, initialLoad, allowNull);
 
-            List<Map<String, Object>> data = executeQueryForData(baseQuery, dataConfig.getSourceDb());
+                List<Map<String, Object>> data = executeQueryForData(baseQuery, dataConfig.getSourceDb());
 
-            dataCountHolder.set(data.size());
+                dataCountHolder.set(data.size());
 
-            return DataSimplification.dataCompressionAndEncodeV2(gson, data);
-        };
 
-        return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder);
+                return DataSimplification.dataCompressionAndEncodeV2(gson, data);
+            };
+
+            return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
+        } catch (Exception exception) {
+            log.setStatusSync("ERROR");
+            log.setEndTime(getCurrentTimeStamp(tz));
+            log.setErrorDesc(exception.getMessage());
+            dataSyncLogRepository.save(log);
+            throw new DataExchangeException(exception.getMessage());
+        }
+
     }
 
     private String preparePaginationQuery(DataSyncConfig dataConfig, String timeStamp, String startRow,
@@ -150,13 +170,18 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     private String executeDataSyncQuery(Callable<String> callable, String tableName, String startRow, String endRow,
-                                        AtomicInteger dataCountHolder) throws DataExchangeException {
+                                        AtomicInteger dataCountHolder, DataSyncLog log) throws DataExchangeException {
         try {
             var metricData = MetricCollector.measureExecutionTime(callable);
             var currentTime = getCurrentTimeStamp(tz);
 
-            dataSyncConfigRepository.updateDataSyncConfig(dataCountHolder.get(), metricData.getExecutionTime(), currentTime,
-                    tableName.toUpperCase(), startRow, endRow);
+            log.setLastExecutedResultCount(dataCountHolder.get());
+            log.setLastExecutedRunTime(metricData.getExecutionTime());
+            log.setLastExecutedTimestamp(currentTime);
+            log.setStartRow(startRow);
+            log.setEndRow(endRow);
+            log.setEndTime(getCurrentTimeStamp(tz));
+            dataSyncLogRepository.save(log);
 
             return metricData.getResult();
         } catch (Exception e) {
