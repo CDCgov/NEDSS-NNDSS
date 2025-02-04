@@ -10,6 +10,7 @@ import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericSer
 import gov.cdc.nnddataexchangeservice.shared.DataSimplification;
 import gov.cdc.nnddataexchangeservice.shared.MetricCollector;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,8 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private final JdbcTemplate rdbModernJdbcTemplate;
     private final JdbcTemplate odseJdbcTemplate;
     private final Gson gson;
-
+    @Value("${service.timezone}")
+    private String tz = "UTC";
     public DataExchangeGenericService(DataSyncConfigRepository dataSyncConfigRepository,
                                       @Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
                                       @Qualifier("srteJdbcTemplate")  JdbcTemplate srteJdbcTemplate,
@@ -151,7 +153,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                                         AtomicInteger dataCountHolder) throws DataExchangeException {
         try {
             var metricData = MetricCollector.measureExecutionTime(callable);
-            var currentTime = getCurrentTimeStamp();
+            var currentTime = getCurrentTimeStamp(tz);
 
             dataSyncConfigRepository.updateDataSyncConfig(dataCountHolder.get(), metricData.getExecutionTime(), currentTime,
                     tableName.toUpperCase(), startRow, endRow);

@@ -89,3 +89,6 @@ spring:
 
 diserver:
   host: ${NND_SERVER_HOST:localhost:8081}
+
+service:
+  timezone: ${SERVICE_TZ:UTC}
