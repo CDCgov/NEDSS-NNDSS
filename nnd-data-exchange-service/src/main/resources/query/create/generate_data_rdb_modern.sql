@@ -260,14 +260,14 @@ VALUES
 FROM rdb_modern.dbo.nrt_investigation_key
          JOIN rdb_modern.dbo.nrt_investigation
               ON rdb_modern.dbo.nrt_investigation_key.d_investigation_key = rdb_modern.dbo.nrt_investigation.public_health_case_uid
-WHERE rdb_modern.dbo.nrt_investigation.addtime :operator :timestamp
+WHERE rdb_modern.dbo.nrt_investigation.add_time :operator :timestamp
     OR rdb_modern.dbo.nrt_investigation.last_chg_time :operator :timestamp
     OR rdb_modern.dbo.nrt_investigation.refresh_datetime :operator :timestamp;
 ', NULL, 'SELECT COUNT(*)
 FROM rdb_modern.dbo.nrt_investigation_key
          JOIN rdb_modern.dbo.nrt_investigation
               ON rdb_modern.dbo.nrt_investigation_key.d_investigation_key = rdb_modern.dbo.nrt_investigation.public_health_case_uid
-WHERE rdb_modern.dbo.nrt_investigation.addtime :operator :timestamp
+WHERE rdb_modern.dbo.nrt_investigation.add_time :operator :timestamp
    OR rdb_modern.dbo.nrt_investigation.last_chg_time :operator :timestamp
    OR rdb_modern.dbo.nrt_investigation.refresh_datetime :operator :timestamp;
 ', 'WITH PaginatedResults AS (
@@ -276,7 +276,7 @@ WHERE rdb_modern.dbo.nrt_investigation.addtime :operator :timestamp
     FROM rdb_modern.dbo.nrt_investigation_key
              JOIN rdb_modern.dbo.nrt_investigation
                   ON rdb_modern.dbo.nrt_investigation_key.d_investigation_key = rdb_modern.dbo.nrt_investigation.public_health_case_uid
-    WHERE rdb_modern.dbo.nrt_investigation.addtime :operator :timestamp
+    WHERE rdb_modern.dbo.nrt_investigation.add_time :operator :timestamp
     OR rdb_modern.dbo.nrt_investigation.last_chg_time :operator :timestamp
     OR rdb_modern.dbo.nrt_investigation.refresh_datetime :operator :timestamp
     )
@@ -321,14 +321,14 @@ VALUES
     ('nrt_patient_key', 'RDB_MODERN', 'SELECT rdb_modern.dbo.nrt_patient_key.*
 FROM rdb_modern.dbo.nrt_patient_key
          JOIN rdb_modern.dbo.nrt_patient
-              ON rdb_modern.dbo.nrt_patient_key.nrt_patient_key = rdb_modern.dbo.nrt_patient.patient_uid
+              ON rdb_modern.dbo.nrt_patient_key.d_patient_key = rdb_modern.dbo.nrt_patient.patient_uid
 WHERE rdb_modern.dbo.nrt_patient.add_time :operator :timestamp
     OR rdb_modern.dbo.nrt_patient.last_chg_time :operator :timestamp
     OR rdb_modern.dbo.nrt_patient.refresh_datetime :operator :timestamp;
 ', NULL, 'SELECT COUNT(*)
 FROM rdb_modern.dbo.nrt_patient_key
          JOIN rdb_modern.dbo.nrt_patient
-              ON rdb_modern.dbo.nrt_patient_key.nrt_patient_key = rdb_modern.dbo.nrt_patient.patient_uid
+              ON rdb_modern.dbo.nrt_patient_key.d_patient_key = rdb_modern.dbo.nrt_patient.patient_uid
 WHERE rdb_modern.dbo.nrt_patient.add_time :operator :timestamp
    OR rdb_modern.dbo.nrt_patient.last_chg_time :operator :timestamp
    OR rdb_modern.dbo.nrt_patient.refresh_datetime :operator :timestamp;', 'WITH PaginatedResults AS (
@@ -336,7 +336,7 @@ WHERE rdb_modern.dbo.nrt_patient.add_time :operator :timestamp
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
     FROM rdb_modern.dbo.nrt_patient_key
              JOIN rdb_modern.dbo.nrt_patient
-                  ON rdb_modern.dbo.nrt_patient_key.nrt_patient_key = rdb_modern.dbo.nrt_patient.patient_uid
+                  ON rdb_modern.dbo.nrt_patient_key.d_patient_key = rdb_modern.dbo.nrt_patient.patient_uid
     WHERE rdb_modern.dbo.nrt_patient.add_time :operator :timestamp
     OR rdb_modern.dbo.nrt_patient.last_chg_time :operator :timestamp
     OR rdb_modern.dbo.nrt_patient.refresh_datetime :operator :timestamp

@@ -346,18 +346,19 @@ WHERE RowNum BETWEEN :startRow AND :endRow;
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
-    ('COVID_LAB', 'RDB', 'SELECT rdb_modern.dbo.COVID_LAB.*,
+    ('COVID_CASE_DATAMART', 'RDB', 'SELECT COVID_CASE_DATAMART.*,
        ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
-FROM rdb_modern.dbo.COVID_LAB
-WHERE rdb_modern.dbo.COVID_LAB.Lab_Added_Dt :operator :timestamp;
-', NULL, 'SELECT COUNT(*)
-FROM rdb_modern.dbo.COVID_LAB
-WHERE rdb_modern.dbo.COVID_LAB.Lab_Added_Dt :operator :timestamp;
-', 'WITH PaginatedResults AS (
-    SELECT rdb_modern.dbo.COVID_LAB.*,
+FROM COVID_CASE_DATAMART
+WHERE COVID_CASE_DATAMART.ADD_TIME :operator :timestamp
+    OR COVID_CASE_DATAMART.LAST_CHG_TIME :operator :timestamp;', NULL, 'SELECT COUNT(*)
+FROM COVID_CASE_DATAMART
+WHERE COVID_CASE_DATAMART.ADD_TIME :operator :timestamp
+   OR COVID_CASE_DATAMART.LAST_CHG_TIME :operator :timestamp;', 'WITH PaginatedResults AS (
+    SELECT COVID_CASE_DATAMART.*,
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
-    FROM rdb_modern.dbo.COVID_LAB
-    WHERE rdb_modern.dbo.COVID_LAB.Lab_Added_Dt :operator :timestamp
+    FROM COVID_CASE_DATAMART
+    WHERE COVID_CASE_DATAMART.ADD_TIME :operator :timestamp
+    OR COVID_CASE_DATAMART.LAST_CHG_TIME :operator :timestamp
     )
 SELECT * FROM PaginatedResults
 WHERE RowNum BETWEEN :startRow AND :endRow;')
@@ -367,18 +368,37 @@ WHERE RowNum BETWEEN :startRow AND :endRow;')
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
-    ('COVID_LAB_CELR', 'RDB', 'SELECT rdb_modern.dbo.COVID_LAB_CELR.*,
+    ('COVID_LAB_DATAMART', 'RDB', 'SELECT COVID_LAB_DATAMART.*,
        ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
-FROM rdb_modern.dbo.COVID_LAB_CELR
-WHERE rdb_modern.dbo.COVID_LAB_CELR.lab_update_dt :operator :timestamp;
+FROM COVID_LAB_DATAMART
+WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp;
 ', NULL, 'SELECT COUNT(*)
-FROM rdb_modern.dbo.COVID_LAB_CELR
-WHERE rdb_modern.dbo.COVID_LAB_CELR.lab_update_dt :operator :timestamp;
-', 'WITH PaginatedResults AS (
-    SELECT rdb_modern.dbo.COVID_LAB_CELR.*,
+FROM COVID_LAB_DATAMART
+WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp;', 'WITH PaginatedResults AS (
+    SELECT COVID_LAB_DATAMART.*,
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
-    FROM rdb_modern.dbo.COVID_LAB_CELR
-    WHERE rdb_modern.dbo.COVID_LAB_CELR.lab_update_dt :operator :timestamp
+    FROM COVID_LAB_DATAMART
+    WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp
+    )
+SELECT * FROM PaginatedResults
+WHERE RowNum BETWEEN :startRow AND :endRow;')
+;
+
+
+
+INSERT INTO [RDB].[dbo].[data_sync_config]
+(table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
+VALUES
+    ('COVID_LAB_CELR_DATAMART', 'RDB', 'SELECT COVID_LAB_CELR_DATAMART.*,
+       ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
+FROM COVID_LAB_CELR_DATAMART
+WHERE COVID_LAB_CELR_DATAMART.lab_update_dt :operator :timestamp;', NULL, 'SELECT COUNT(*)
+FROM COVID_LAB_CELR_DATAMART
+WHERE COVID_LAB_CELR_DATAMART.lab_update_dt :operator :timestamp;', 'WITH PaginatedResults AS (
+    SELECT COVID_LAB_CELR_DATAMART.*,
+           ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
+    FROM COVID_LAB_CELR_DATAMART
+    WHERE COVID_LAB_CELR_DATAMART.lab_update_dt :operator :timestamp
     )
 SELECT * FROM PaginatedResults
 WHERE RowNum BETWEEN :startRow AND :endRow;')
