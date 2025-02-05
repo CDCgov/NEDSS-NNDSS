@@ -7,10 +7,8 @@ import org.springframework.stereotype.Component;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class JdbcTemplateUtil {
@@ -51,6 +49,59 @@ public class JdbcTemplateUtil {
 
         rdbJdbcTemplate.update(sql, data.values().toArray());
     }
+
+    public void upsertBatch(String tableName, List<Map<String, Object>> dataList) throws SQLException {
+        if (dataList == null || dataList.isEmpty()) {
+            return;
+        }
+
+        // Extract all possible columns from the first record
+        Set<String> columnNames = getColumnNames(tableName);
+        Set<String> validColumns = new HashSet<>(columnNames);
+
+        // Retain only valid columns in each data entry
+        List<Map<String, Object>> validDataList = new ArrayList<>();
+        for (Map<String, Object> data : dataList) {
+            Map<String, Object> validData = new LinkedHashMap<>(data);
+            validData.keySet().retainAll(validColumns);
+            if (!validData.isEmpty()) {
+                validDataList.add(validData);
+            }
+        }
+
+        if (validDataList.isEmpty()) {
+            throw new IllegalArgumentException("No valid columns found for table: " + tableName);
+        }
+
+        // Extract column names and generate query parts
+        List<String> columnList = new ArrayList<>(validDataList.get(0).keySet());
+        String columns = String.join(", ", columnList);
+        String placeholders = String.join(", ", Collections.nCopies(columnList.size(), "?"));
+        String updates = columnList.stream()
+                .map(col -> "target." + col + " = source." + col)
+                .collect(Collectors.joining(", "));
+
+        // Construct the dynamic MERGE statement
+        String sql = "MERGE INTO " + tableName + " AS target " +
+                "USING (VALUES " +
+                validDataList.stream()
+                        .map(d -> "(" + placeholders + ")")
+                        .collect(Collectors.joining(", ")) +
+                ") AS source(" + columns + ") " +
+                "ON target.id = source.id " +
+                "WHEN MATCHED THEN UPDATE SET " + updates + " " +
+                "WHEN NOT MATCHED THEN INSERT (" + columns + ") VALUES (" + placeholders + ");";
+
+        // Flatten values for batch execution
+        List<Object> batchValues = new ArrayList<>();
+        for (Map<String, Object> data : validDataList) {
+            batchValues.addAll(data.values());
+        }
+
+        // Execute batch update
+        rdbJdbcTemplate.update(sql, batchValues.toArray());
+    }
+
 
     private Set<String> getColumnNames(String tableName) throws SQLException {
         Set<String> columnNames = new HashSet<>();
