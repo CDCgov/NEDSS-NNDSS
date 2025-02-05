@@ -80,7 +80,10 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
         String data = callDataExchangeEndpoint(token, param);
 
         var deCompressedData = DataSimplification.decodeAndDecompress(data);
-        logger.info("Decompress Data: {}", deCompressedData);
+
+        int index = deCompressedData.lastIndexOf("],") + 2;
+        String countLoggingString = "{" + deCompressedData.substring(index).trim();
+        logger.info("Decompressed Data count is: {}", countLoggingString);
 
         persistingExchangeData(deCompressedData);
     }
