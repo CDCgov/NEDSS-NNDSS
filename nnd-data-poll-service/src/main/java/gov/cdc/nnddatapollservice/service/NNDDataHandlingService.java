@@ -22,6 +22,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class NNDDataHandlingService implements INNDDataHandlingService {
@@ -80,7 +82,10 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
         String data = callDataExchangeEndpoint(token, param);
 
         var deCompressedData = DataSimplification.decodeAndDecompress(data);
-        logger.info("Decompress Data: {}", deCompressedData);
+
+        int index = deCompressedData.lastIndexOf("],") + 2;
+        String countLoggingString = "{" + deCompressedData.substring(index).trim();
+        logger.info("Decompressed Data count is: {}", countLoggingString);
 
         persistingExchangeData(deCompressedData);
     }
