@@ -34,7 +34,43 @@ CREATE TABLE data_sync_config
 END
 GO
 
+IF EXISTS (
+    SELECT 1
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 'data_sync_config'
+    AND COLUMN_NAME IN (
+        'last_executed_timestamp',
+        'last_executed_run_time',
+        'last_executed_result_count',
+        'log_start_row',
+        'log_end_row'
+    )
+)
+BEGIN
+UPDATE data_sync_config
+set last_executed_timestamp = null,
+    last_executed_run_time = null,
+    last_executed_result_count = null,
+    log_start_row = null,
+    log_end_row = null;
+END
+GO
 
+IF EXISTS (
+    SELECT 1
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_NAME = 'data_sync_config'
+)
+BEGIN
+ALTER TABLE data_sync_config
+DROP COLUMN
+        last_executed_timestamp,
+        last_executed_run_time,
+        last_executed_result_count,
+        log_start_row,
+        log_end_row;
+END
+GO
 
 IF NOT EXISTS (
     SELECT 1

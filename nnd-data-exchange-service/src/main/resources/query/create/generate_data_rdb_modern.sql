@@ -46,19 +46,19 @@ VALUES
     ('nrt_investigation', 'RDB_MODERN', 'SELECT rdb_modern.dbo.nrt_investigation.*,
        ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
 FROM rdb_modern.dbo.nrt_investigation
-WHERE rdb_modern.dbo.nrt_investigation.addtime :operator :timestamp
+WHERE rdb_modern.dbo.nrt_investigation.add_time :operator :timestamp
     OR rdb_modern.dbo.nrt_investigation.last_chg_time :operator :timestamp
     OR rdb_modern.dbo.nrt_investigation.refresh_datetime :operator :timestamp
     );', NULL, 'SELECT COUNT(*)
 FROM rdb_modern.dbo.nrt_investigation
-WHERE rdb_modern.dbo.nrt_investigation.addtime :operator :timestamp
+WHERE rdb_modern.dbo.nrt_investigation.add_time :operator :timestamp
    OR rdb_modern.dbo.nrt_investigation.last_chg_time :operator :timestamp
    OR rdb_modern.dbo.nrt_investigation.refresh_datetime :operator :timestamp;
 ', 'WITH PaginatedResults AS (
     SELECT rdb_modern.dbo.nrt_investigation.*,
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
     FROM rdb_modern.dbo.nrt_investigation
-    WHERE rdb_modern.dbo.nrt_investigation.addtime :operator :timestamp
+    WHERE rdb_modern.dbo.nrt_investigation.add_time :operator :timestamp
     OR rdb_modern.dbo.nrt_investigation.last_chg_time :operator :timestamp
     OR rdb_modern.dbo.nrt_investigation.refresh_datetime :operator :timestamp
     )
