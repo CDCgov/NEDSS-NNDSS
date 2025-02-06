@@ -2,11 +2,11 @@ server:
   port: 8083
 
 functional:
-  date: ${NND_DATE}
-  prior: ${NND_PRIOR}
+  date: ${NETSS_DATE}
+  prior: ${NETSS_PRIOR}
 
 io:
-  fileLocation: ${NND_FILE_LOCATION}
+  fileLocation: ${NETSS_FILE_LOCATION}
 
 spring:
   application:

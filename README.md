@@ -31,9 +31,9 @@ This architecture ensure the STLT can make a secure connection to CDC database w
     - NBS_NND_CRON_TIME_ZONE: Cron timezone (ex: UTC)
 - NETSS Message Processor ENV:
     - NBS_NND_CRON: Cron Scheduler (ex: * * * * * *)
-    - NND_FILE_LOCATION: Path to output directory on the setup machine (ex: /Users/UserName/Desktop/LOG)
-    - NND_PRIOR: prior date indicator (ex: either T or F)
-    - NND_DATE: date value (format: 12/30/2023)
+    - NETSS_FILE_LOCATION: Path to output directory on the setup machine (ex: /Users/UserName/Desktop/LOG)
+    - NETSS_PRIOR: prior date indicator (ex: either T or F)
+    - NETSS_DATE: date value (format: 12/30/2023)
     - OP_DBPASSWORD: On Prem DB info
     - OP_DBSERVER: On Prem DB info
     - OP_DBUSER: On Prem DB info
