@@ -174,44 +174,6 @@ VALUES ('NRT_OBSERVATION', 'RDB_MODERN', 1);
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
 VALUES ('NRT_OBSERVATION_CODED', 'RDB_MODERN', 2);
 
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_observation_date', 'RDB_MODERN', 3);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_observation_numeric', 'RDB_MODERN', 3);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_observation_txt', 'RDB_MODERN', 4);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_investigation', 'RDB_MODERN', 5);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_investigation_key', 'RDB_MODERN', 6);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_investigation_notification', 'RDB_MODERN', 7);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_investigation_observation', 'RDB_MODERN', 8);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_organization', 'RDB_MODERN', 9);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_organization_key', 'RDB_MODERN', 10);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_patient', 'RDB_MODERN', 11);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_patient_key', 'RDB_MODERN', 12);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_provider', 'RDB_MODERN', 13);
-
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
-VALUES ('nrt_provider_key', 'RDB_MODERN', 14);
 
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
 VALUES ('COVID_CASE_DATAMART', 'COVID_DATAMART', 1);
