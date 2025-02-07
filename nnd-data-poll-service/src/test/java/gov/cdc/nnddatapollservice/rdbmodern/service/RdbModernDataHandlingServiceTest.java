@@ -57,7 +57,7 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
         when(pollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
 
-        rdbModernDataHandlingService.handlingExchangedData();
+        rdbModernDataHandlingService.handlingExchangedData("RDB");
         verify(rdbModernDataPersistentDAO, times(1)).deleteTable(anyString());
         verify(rdbModernDataPersistentDAO, times(1)).saveRdbModernData(any(), any());
     }
@@ -78,7 +78,7 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
         when(pollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(false);
 
-        rdbModernDataHandlingService.handlingExchangedData();
+        rdbModernDataHandlingService.handlingExchangedData("RDB");
         verify(rdbModernDataPersistentDAO, times(0)).deleteTable(anyString());
         verify(rdbModernDataPersistentDAO, times(1)).saveRdbModernData(any(), any());
     }
@@ -91,7 +91,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInS3= true;
         when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true);
 
         // Assert
         verify(is3DataService, times(2)).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
@@ -106,7 +106,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInLocalFolder= true;
         when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true);
 
         // Assert
         verify(pollCommonService, times(2)).writeJsonDataToFile(anyString(), anyString(), any(),anyString());
@@ -134,7 +134,7 @@ class RdbModernDataHandlingServiceTest {
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true);
         // Assert
         verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
     }
@@ -151,7 +151,7 @@ class RdbModernDataHandlingServiceTest {
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true);
 
         // Assert
         verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
@@ -175,7 +175,7 @@ class RdbModernDataHandlingServiceTest {
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, true);
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true);
 
         // Assert
         verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
@@ -201,7 +201,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInLocalFolder = false;
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, isInitialLoad);
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad);
 
         // Assert
         verify(pollCommonService, times(1)).getLastUpdatedTime(tableName);
@@ -228,7 +228,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInLocalFolder = false;
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, isInitialLoad);
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad);
 
         // Assert
         verify(pollCommonService, times(1)).getLastUpdatedTimeS3(tableName);
@@ -255,7 +255,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInLocalFolder = true;
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData(tableName, isInitialLoad);
+        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad);
 
         // Assert
         verify(pollCommonService, times(1)).getLastUpdatedTimeLocalDir(tableName);
@@ -278,7 +278,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInS3 = false;
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
+        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log, "RDB");
 
         // Assert
         verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
@@ -299,7 +299,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInS3 = true;
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
+        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log, "RDB");
 
         // Assert
         verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
@@ -320,7 +320,7 @@ class RdbModernDataHandlingServiceTest {
         rdbModernDataHandlingService.storeJsonInS3 = false;
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
+        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log, "RDB");
 
         // Assert
         verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
@@ -344,7 +344,7 @@ class RdbModernDataHandlingServiceTest {
         when(rdbModernDataPersistentDAO.saveRdbModernData(anyString(), anyString())).thenReturn("Data Saved");
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
+        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log, "RDB");
 
         // Assert
         verify(rdbModernDataPersistentDAO, times(1)).saveRdbModernData(tableName, rawJsonData);
@@ -369,7 +369,7 @@ class RdbModernDataHandlingServiceTest {
                 .thenReturn("S3 Save Success");
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
+        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log, "RDB");
 
         // Assert
         verify(is3DataService, times(1)).persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
@@ -393,7 +393,7 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.writeJsonDataToFile(anyString(), anyString(), any(Timestamp.class), anyString())).thenReturn("Local File Save Success");
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
+        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log, "RDB");
 
         // Assert
         verify(pollCommonService, times(1)).writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
@@ -418,7 +418,7 @@ class RdbModernDataHandlingServiceTest {
                 .thenThrow(new RuntimeException("S3 Error"));
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
+        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log, "RDB");
 
         // Assert
         verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LOG + "S3 Error");

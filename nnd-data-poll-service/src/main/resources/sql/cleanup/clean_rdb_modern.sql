@@ -1,2 +1,16 @@
-DELETE FROM  nrt_observation_coded;
-DELETE FROM  nrt_observation;
+use RDB_Modern;
+DELETE FROM nrt_investigation;
+DELETE FROM nrt_investigation_key;
+DELETE FROM nrt_investigation_notification;
+DELETE FROM nrt_investigation_observation;
+DELETE FROM nrt_observation;
+DELETE FROM nrt_observation_coded;
+DELETE FROM nrt_observation_date;
+DELETE FROM nrt_observation_numeric;
+DELETE FROM nrt_observation_txt;
+DELETE FROM nrt_organization;
+DELETE FROM nrt_organization_key;
+DELETE FROM nrt_patient;
+DELETE FROM nrt_patient_key;
+DELETE FROM nrt_provider;
+DELETE FROM nrt_provider_key;
