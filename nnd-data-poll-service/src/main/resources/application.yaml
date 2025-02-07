@@ -25,6 +25,8 @@ poll:
     enabled: ${RDB_POLL_ENABLED:false}
   rdb_modern:
     enabled: ${RDB_MODERN_POLL_ENABLED:false}
+  odse:
+    enabled: ${ODSE_POLL_ENABLED:false}
   covid_datamart:
     enabled: ${COVID_DATA_MART_ENABLED:false}
   srte:
@@ -71,6 +73,7 @@ scheduler:
   cron_rdb_modern: ${NBS_RDB_MODERN_CRON:0 */1 * * * * }
   cron_edx_activity: ${NBS_EDX_ACTIVITY_CRON:0 */1 * * * * }
   cron_covid_datamart: ${NBS_COVID_DATA_MART_CRON:0 */1 * * * * }
+  cron_odse: ${NBS_RDB_ODSE_CRON:0 */1 * * * * }
   # "0 */5 0-2 * * *"
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *

@@ -60,13 +60,17 @@ public class JdbcTemplateUtil {
         rdbJdbcTemplate.update(sql, values);
     }
 
-    public void upsertBatch(String tableName, List<Map<String, Object>> dataList) throws SQLException {
+    public void upsertBatch(String tableName, List<Map<String, Object>> dataList, String keyList) throws SQLException {
 
         if (dataList == null || dataList.isEmpty()) {
             return;
         }
-        dataList.forEach(data -> data.remove("RowNum")); // Remove "RowNum"
 
+        if (keyList == null || keyList.trim().isEmpty()) {
+            throw new IllegalArgumentException("Key list cannot be null or empty");
+        }
+
+        dataList.forEach(data -> data.remove("RowNum"));
         // Extract valid column names from the data list directly
         Set<String> validColumns = dataList.stream()
                 .flatMap(map -> map.keySet().stream())
@@ -76,7 +80,7 @@ public class JdbcTemplateUtil {
         List<Map<String, Object>> validDataList = dataList.stream()
                 .map(data -> {
                     Map<String, Object> filteredData = new LinkedHashMap<>(data);
-                    filteredData.keySet().retainAll(validColumns); // Retain only valid columns
+                    filteredData.keySet().retainAll(validColumns);
                     return filteredData.isEmpty() ? null : filteredData;
                 })
                 .filter(Objects::nonNull)
@@ -86,7 +90,6 @@ public class JdbcTemplateUtil {
             throw new IllegalArgumentException("No valid columns found for table: " + tableName);
         }
 
-        // Extract column names (AFTER filtering)
         List<String> columnList = new ArrayList<>(validDataList.get(0).keySet());
         String columns = String.join(", ", columnList);
 
@@ -99,7 +102,15 @@ public class JdbcTemplateUtil {
                 .map(col -> "source." + col)
                 .collect(Collectors.joining(", "));
 
-        // **Calculate Maximum Rows Per Batch**
+        String[] keys = keyList.split("\\s*,\\s*");
+        StringBuilder condition = new StringBuilder("ON ");
+        for (int k = 0; k < keys.length; k++) {
+            if (k > 0) {
+                condition.append(" AND ");
+            }
+            condition.append("target.").append(keys[k].trim()).append(" = source.").append(keys[k].trim());
+        }
+
         int maxParamsPerRow = columnList.size();
         int maxRows = 2100 / maxParamsPerRow; // Ensure within SQL Server limit
         int totalRows = validDataList.size();
@@ -119,10 +130,13 @@ public class JdbcTemplateUtil {
                 // Generate row placeholders dynamically
                 String rowPlaceholders = String.join(", ", Collections.nCopies(batch.size(), placeholdersPerRow));
 
+
+
+
                 // Build the MERGE SQL query
                 String sql = "MERGE INTO " + tableName + " AS target " +
                         "USING (VALUES " + rowPlaceholders + ") AS source(" + columns + ") " +
-                        "ON target.observation_uid = source.observation_uid " +
+                         condition +
                         "WHEN MATCHED THEN UPDATE SET " + updates + " " +
                         "WHEN NOT MATCHED BY TARGET THEN INSERT (" + columns + ") VALUES (" + valuesForQuery + ");";
 

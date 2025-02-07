@@ -15,8 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.COVID_DATAMART;
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.RDB_MODERN;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 
 @Service
 @Slf4j
@@ -33,8 +32,13 @@ public class DataPullService implements IDataPullService {
     private boolean nndPollEnabled;
     @Value("${poll.rdb.enabled}")
     private boolean rdbPollEnabled;
+
     @Value("${poll.rdb_modern.enabled}")
     private boolean rdbModernPollEnabled;
+
+    @Value("${poll.odse.enabled}")
+    private boolean odsePollEnabled;
+
     @Value("${poll.covid_datamart.enabled}")
     private boolean covidDataMartEnabled;
     @Value("${poll.srte.enabled}")
@@ -126,6 +130,15 @@ public class DataPullService implements IDataPullService {
         }
     }
 
+
+    @Scheduled(cron = "${scheduler.cron_odse}", zone = "${scheduler.zone}")
+    public void scheduleOdseDataFetch() throws DataPollException {
+        if (odsePollEnabled) {
+            logger.info("CRON STARTED");
+            rdbModernDataHandlingService.handlingExchangedData(ODSE_OBS);
+            closePoller();
+        }
+    }
 
     @Scheduled(cron = "${scheduler.cron_srte}", zone = "${scheduler.zone}")
     public void scheduleSRTEDataFetch() throws DataPollException {

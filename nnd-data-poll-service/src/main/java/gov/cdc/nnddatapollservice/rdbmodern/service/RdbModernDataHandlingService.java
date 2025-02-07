@@ -63,14 +63,14 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
 
         for (PollDataSyncConfig pollDataSyncConfig : filteredTablesList) {
             logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
-            pollAndPersistRDBMOdernData(source, pollDataSyncConfig.getTableName(), isInitialLoad);
+            pollAndPersistRDBMOdernData(source, pollDataSyncConfig.getTableName(), isInitialLoad, pollDataSyncConfig.getKeyList());
         }
 
         logger.info("---END POLLING---");
     }
 
     @SuppressWarnings("java:S1141")
-    protected void pollAndPersistRDBMOdernData(String source, String tableName, boolean isInitialLoad) {
+    protected void pollAndPersistRDBMOdernData(String source, String tableName, boolean isInitialLoad, String keyList) {
         try {
             logger.info("--START--pollAndPersistRDBData for table {}", tableName);
             String log = "";
@@ -100,7 +100,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                     iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
                 }
                 else if (storeInSql) {
-                    log =  rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonDataWithNull);
+                    log =  rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonDataWithNull, keyList, isInitialLoad);
                     iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
                 }
                 else  {
@@ -137,7 +137,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                 }
 
                 updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
-                        rawJsonData, isInitialLoad, log, source);
+                        rawJsonData, isInitialLoad, log, source, keyList);
 
             }
         } catch (Exception e) {
@@ -166,7 +166,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     }
 
     protected void updateDataHelper(boolean exceptionAtApiLevel, String tableName, Timestamp timestamp,
-                                    String rawJsonData, boolean isInitialLoad, String log, String source) {
+                                    String rawJsonData, boolean isInitialLoad, String log, String source, String keyList) {
         try {
             if (exceptionAtApiLevel) {
                 if (storeInSql) {
@@ -187,7 +187,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                 }
                 else if (storeInSql)
                 {
-                    log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData);
+                    log = rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonData, keyList, isInitialLoad);
                     iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + log);
                 }
                 else
