@@ -13,6 +13,7 @@ import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservationCode
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,8 +97,8 @@ public class RdbModernDataPersistentDAO {
             SimpleJdbcInsert jdbcInsert =
                     new SimpleJdbcInsert(jdbcTemplate);
             if (tableName != null && !tableName.isEmpty()) {
-                deleteTable(tableName);//Delete first
-                jdbcInsert = jdbcInsert.withTableName(tableName);
+//                deleteTable(tableName);//Delete first
+//                jdbcInsert = jdbcInsert.withTableName(tableName);
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
                     logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
@@ -109,7 +110,6 @@ public class RdbModernDataPersistentDAO {
                                 int end = Math.min(i + sublistSize, records.size());
                                 List<Map<String, Object>> sublist = records.subList(i, end);
 //                                jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
-
                                 jdbcTemplateUtil.upsertBatch(tableName, sublist);
                             }
                         } else {
@@ -118,6 +118,7 @@ public class RdbModernDataPersistentDAO {
 //                            jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
                         }
                     } catch (Exception e) {
+                        e.printStackTrace();
                         for (Map<String, Object> res : records) {
                             try {
                                 jdbcInsert.execute(new MapSqlParameterSource(res));
@@ -147,7 +148,7 @@ public class RdbModernDataPersistentDAO {
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
 
 
-
+//
 //        if ("NRT_OBSERVATION".equalsIgnoreCase(tableName)) {
 //            logBuilder = new StringBuilder(LOG_SUCCESS);
 //            Type resultType = new TypeToken<List<NrtObservationDto>>() {

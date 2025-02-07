@@ -7,11 +7,13 @@ import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHan
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -45,30 +47,30 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         this.is3DataService = is3DataService;
     }
 
-    public void handlingExchangedData() throws DataPollException {
-        logger.info("---START RDB_MODERN POLLING---");
+    public void handlingExchangedData(String source) throws DataPollException {
+        logger.info("---START POLLING---");
         List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
-        List<PollDataSyncConfig> rdbModernTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB_MODERN);
-        logger.info(" RDB_MODERN TableList to be polled: {}", rdbModernTablesList.size());
+        List<PollDataSyncConfig> filteredTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, source);
+        logger.info("TableList to be polled: {}", filteredTablesList.size());
 
-        boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
+        boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(filteredTablesList);
         logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad && storeInSql && deleteOnInit) {
-            logger.info("For INITIAL LOAD - CLEANING UP THE RDB_MODERN TABLES ");
-            cleanupTables(rdbModernTablesList);
+            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
+            cleanupTables(filteredTablesList);
         }
 
-        for (PollDataSyncConfig pollDataSyncConfig : rdbModernTablesList) {
+        for (PollDataSyncConfig pollDataSyncConfig : filteredTablesList) {
             logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
-            pollAndPersistRDBMOdernData(pollDataSyncConfig.getTableName(), isInitialLoad);
+            pollAndPersistRDBMOdernData(source, pollDataSyncConfig.getTableName(), isInitialLoad);
         }
 
-        logger.info("---END RDB_MODERN POLLING---");
+        logger.info("---END POLLING---");
     }
 
     @SuppressWarnings("java:S1141")
-    protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) {
+    protected void pollAndPersistRDBMOdernData(String source, String tableName, boolean isInitialLoad) {
         try {
             logger.info("--START--pollAndPersistRDBData for table {}", tableName);
             String log = "";
@@ -94,7 +96,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                 var encodedDataWithNull = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
                 var rawJsonDataWithNull = iPollCommonService.decodeAndDecompress(encodedDataWithNull);
                 if (storeJsonInS3) {
-                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
+                    log = is3DataService.persistToS3MultiPart(source, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
                     iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
                 }
                 else if (storeInSql) {
@@ -102,7 +104,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                     iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
                 }
                 else  {
-                    log = iPollCommonService.writeJsonDataToFile(RDB, tableName, timestampWithNull, rawJsonDataWithNull);
+                    log = iPollCommonService.writeJsonDataToFile(source, tableName, timestampWithNull, rawJsonDataWithNull);
                     iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
                 }
             } catch (Exception e) {
@@ -123,7 +125,8 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                         // First batch pull record will null time stamp
                         encodedData = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, String.valueOf(startRow), String.valueOf(endRow));
                     } else {
-                        encodedData = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
+                        encodedData = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad,
+                                timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
                     }
 
                     rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
@@ -134,7 +137,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                 }
 
                 updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
-                        rawJsonData, isInitialLoad, log);
+                        rawJsonData, isInitialLoad, log, source);
 
             }
         } catch (Exception e) {
@@ -163,7 +166,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     }
 
     protected void updateDataHelper(boolean exceptionAtApiLevel, String tableName, Timestamp timestamp,
-                                    String rawJsonData, boolean isInitialLoad, String log) {
+                                    String rawJsonData, boolean isInitialLoad, String log, String source) {
         try {
             if (exceptionAtApiLevel) {
                 if (storeInSql) {
@@ -179,7 +182,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                 }
             } else {
                 if (storeJsonInS3) {
-                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+                    log = is3DataService.persistToS3MultiPart(source, rawJsonData, tableName, timestamp, isInitialLoad);
                     iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + log);
                 }
                 else if (storeInSql)
@@ -189,7 +192,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                 }
                 else
                 {
-                    log = iPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                    log = iPollCommonService.writeJsonDataToFile(source, tableName, timestamp, rawJsonData);
                     iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + log);
                 }
             }

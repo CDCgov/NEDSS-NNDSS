@@ -212,3 +212,12 @@ VALUES ('nrt_provider', 'RDB_MODERN', 13);
 
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
 VALUES ('nrt_provider_key', 'RDB_MODERN', 14);
+
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
+VALUES ('COVID_CASE_DATAMART', 'COVID_DATAMART', 1);
+
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
+VALUES ('COVID_LAB_DATAMART', 'COVID_DATAMART', 2);
+
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
+VALUES ('COVID_LAB_CELR_DATAMART', 'COVID_DATAMART', 3);

@@ -13,6 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.COVID_DATAMART;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.RDB_MODERN;
 
 @Service
 @Slf4j
@@ -31,6 +35,8 @@ public class DataPullService implements IDataPullService {
     private boolean rdbPollEnabled;
     @Value("${poll.rdb_modern.enabled}")
     private boolean rdbModernPollEnabled;
+    @Value("${poll.covid_datamart.enabled}")
+    private boolean covidDataMartEnabled;
     @Value("${poll.srte.enabled}")
     private boolean srtePollEnabled;
 
@@ -90,19 +96,32 @@ public class DataPullService implements IDataPullService {
             rdbDataHandlingService.handlingExchangedData();
 
             // RDB MODERN and SRTE are now part of RDB
-            rdbModernDataHandlingService.handlingExchangedData();
-            srteDataHandlingService.handlingExchangedData();
+//            rdbModernDataHandlingService.handlingExchangedData(RDB_MODERN);
+//            srteDataHandlingService.handlingExchangedData();
             logger.info("CRON ENDED FOR POLLING RDB");
             closePoller();
         }
     }
+
 
     @Scheduled(cron = "${scheduler.cron_rdb_modern}", zone = "${scheduler.zone}")
     public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB_MODERN");
             logger.info("{}, {} FOR RDB_MODERN", cron, zone);
-            rdbModernDataHandlingService.handlingExchangedData();
+            // RDB MODERN will be converted to more generic -- use this for any new db sync
+            rdbModernDataHandlingService.handlingExchangedData(RDB_MODERN);
+            closePoller();
+        }
+    }
+
+    @Scheduled(cron = "${scheduler.cron_covid_datamart}", zone = "${scheduler.zone}")
+    public void scheduleCovidDataMartDataFetch() throws DataPollException {
+        if (covidDataMartEnabled) {
+            logger.info("CRON STARTED FOR POLLING COVID DATAMART");
+            logger.info("{}, {} FOR COVID DATAMART", cron, zone);
+            // RDB MODERN will be converted to more generic -- use this for any new db sync
+            rdbModernDataHandlingService.handlingExchangedData(COVID_DATAMART);
             closePoller();
         }
     }

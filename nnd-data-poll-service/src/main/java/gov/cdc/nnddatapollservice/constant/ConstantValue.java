@@ -3,6 +3,7 @@ package gov.cdc.nnddatapollservice.constant;
 public class ConstantValue {
     public static final String LOG_SUCCESS = "SUCCESS";
     public static final String RDB_MODERN = "RDB_MODERN";
+    public static final String COVID_DATAMART = "COVID_DATAMART";
     public static final String NBS_ODSE = "NBS_ODSE";
     public static final String RDB = "RDB";
     public static final String SRTE = "SRTE";

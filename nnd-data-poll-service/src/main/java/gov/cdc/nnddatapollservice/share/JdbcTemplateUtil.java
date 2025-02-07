@@ -1,12 +1,12 @@
 package gov.cdc.nnddatapollservice.share;
 
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import javax.sql.DataSource;
+import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,88 +18,120 @@ public class JdbcTemplateUtil {
         this.rdbJdbcTemplate = rdbJdbcTemplate;
     }
 
-    public void upsert(String tableName, Map<String, Object> data) throws SQLException {
-        if (data.isEmpty()) {
-            return;
+    public void upsertSingle(String tableName, Map<String, Object> data) throws SQLException {
+        if (data == null || data.isEmpty()) {
+            throw new IllegalArgumentException("No data provided for table: " + tableName);
         }
-        Set<String> columnNames = getColumnNames(tableName);
-        data.keySet().retainAll(columnNames);
-        if (data.isEmpty()) {
+
+        data.entrySet().removeIf(entry -> entry.getKey().equalsIgnoreCase("RowNum"));
+
+
+        // Extract valid column names from the database
+        Set<String> columnNames = getColumnNames(tableName); // Assume this retrieves the column list
+        Map<String, Object> validData = new LinkedHashMap<>(data);
+        validData.keySet().retainAll(columnNames); // Keep only valid columns
+
+        if (validData.isEmpty()) {
             throw new IllegalArgumentException("No valid columns found for table: " + tableName);
         }
 
-        String columns = String.join(", ", data.keySet());
-        String values = String.join(", ", Collections.nCopies(data.size(), "?"));
-        String updates = String.join(", ", data.keySet().stream().map(col -> col + " = EXCLUDED." + col).toList());
+        // Extract column names and generate query parts
+        List<String> columnList = new ArrayList<>(validData.keySet());
+        String columns = String.join(", ", columnList);
+        String placeholders = "(" + String.join(", ", Collections.nCopies(columnList.size(), "?")) + ")";
+        String updates = columnList.stream()
+                .map(col -> "target." + col + " = source." + col)
+                .collect(Collectors.joining(", "));
 
-        // Construct the dynamic MERGE statement
-        String sql = " MERGE INTO "
-                + tableName
-                + " AS target USING (SELECT "
-                + values
-                + " ) AS source("
-                + columns
-                + ") ON (target.id = source.id) WHEN MATCHED THEN UPDATE SET "
-                + updates
-                + " WHEN NOT MATCHED THEN INSERT ("
-                + columns
-                + ") VALUES ("
-                + values
-                + "); ";
+//        var valuesForQuery = String.join(", ", Collections.nCopies(columnList.size(), "source." + columns));
+        var valuesForQuery = columnList.stream()
+                .map(col -> "source." + col)
+                .collect(Collectors.joining(", "));
+        // Construct the dynamic MERGE statement for a single record
+        String sql = "MERGE INTO " + tableName + " AS target " +
+                "USING (VALUES " + placeholders + ") AS source(" + columns + ") " +
+                "ON target. "+ "observation_uid" + " = source."+ "observation_uid" + " " +
+                "WHEN MATCHED THEN UPDATE SET " + updates + " " +
+                "WHEN NOT MATCHED THEN INSERT (" + columns + ") VALUES (" +
+                valuesForQuery + ");";
 
-        rdbJdbcTemplate.update(sql, data.values().toArray());
+        var values = validData.values().toArray();
+        // Execute the statement
+        rdbJdbcTemplate.update(sql, values);
     }
 
     public void upsertBatch(String tableName, List<Map<String, Object>> dataList) throws SQLException {
+
         if (dataList == null || dataList.isEmpty()) {
             return;
         }
+        dataList.forEach(data -> data.remove("RowNum")); // Remove "RowNum"
 
-        // Extract all possible columns from the first record
-        Set<String> columnNames = getColumnNames(tableName);
-        Set<String> validColumns = new HashSet<>(columnNames);
+        // Extract valid column names from the data list directly
+        Set<String> validColumns = dataList.stream()
+                .flatMap(map -> map.keySet().stream())
+                .collect(Collectors.toSet());
 
-        // Retain only valid columns in each data entry
-        List<Map<String, Object>> validDataList = new ArrayList<>();
-        for (Map<String, Object> data : dataList) {
-            Map<String, Object> validData = new LinkedHashMap<>(data);
-            validData.keySet().retainAll(validColumns);
-            if (!validData.isEmpty()) {
-                validDataList.add(validData);
-            }
-        }
+        // Filter data and retain only valid columns
+        List<Map<String, Object>> validDataList = dataList.stream()
+                .map(data -> {
+                    Map<String, Object> filteredData = new LinkedHashMap<>(data);
+                    filteredData.keySet().retainAll(validColumns); // Retain only valid columns
+                    return filteredData.isEmpty() ? null : filteredData;
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
         if (validDataList.isEmpty()) {
             throw new IllegalArgumentException("No valid columns found for table: " + tableName);
         }
 
-        // Extract column names and generate query parts
+        // Extract column names (AFTER filtering)
         List<String> columnList = new ArrayList<>(validDataList.get(0).keySet());
         String columns = String.join(", ", columnList);
-        String placeholders = String.join(", ", Collections.nCopies(columnList.size(), "?"));
+
+        // Prepare query parts
+        String placeholdersPerRow = "(" + String.join(", ", Collections.nCopies(columnList.size(), "?")) + ")";
         String updates = columnList.stream()
                 .map(col -> "target." + col + " = source." + col)
                 .collect(Collectors.joining(", "));
+        String valuesForQuery = columnList.stream()
+                .map(col -> "source." + col)
+                .collect(Collectors.joining(", "));
 
-        // Construct the dynamic MERGE statement
-        String sql = "MERGE INTO " + tableName + " AS target " +
-                "USING (VALUES " +
-                validDataList.stream()
-                        .map(d -> "(" + placeholders + ")")
-                        .collect(Collectors.joining(", ")) +
-                ") AS source(" + columns + ") " +
-                "ON target.id = source.id " +
-                "WHEN MATCHED THEN UPDATE SET " + updates + " " +
-                "WHEN NOT MATCHED THEN INSERT (" + columns + ") VALUES (" + placeholders + ");";
+        // **Calculate Maximum Rows Per Batch**
+        int maxParamsPerRow = columnList.size();
+        int maxRows = 2100 / maxParamsPerRow; // Ensure within SQL Server limit
+        int totalRows = validDataList.size();
 
-        // Flatten values for batch execution
-        List<Object> batchValues = new ArrayList<>();
-        for (Map<String, Object> data : validDataList) {
-            batchValues.addAll(data.values());
+        try {
+            for (int i = 0; i < totalRows; i += maxRows) {
+                List<Map<String, Object>> batch = validDataList.subList(i, Math.min(i + maxRows, totalRows));
+
+                // Combine all batch values into a single list
+                List<Object> combinedValues = new ArrayList<>();
+                for (Map<String, Object> data : batch) {
+                    for (String column : columnList) {
+                        combinedValues.add(data.getOrDefault(column, null)); // Add each column value
+                    }
+                }
+
+                // Generate row placeholders dynamically
+                String rowPlaceholders = String.join(", ", Collections.nCopies(batch.size(), placeholdersPerRow));
+
+                // Build the MERGE SQL query
+                String sql = "MERGE INTO " + tableName + " AS target " +
+                        "USING (VALUES " + rowPlaceholders + ") AS source(" + columns + ") " +
+                        "ON target.observation_uid = source.observation_uid " +
+                        "WHEN MATCHED THEN UPDATE SET " + updates + " " +
+                        "WHEN NOT MATCHED BY TARGET THEN INSERT (" + columns + ") VALUES (" + valuesForQuery + ");";
+
+                // Execute batch update using JdbcTemplate
+                rdbJdbcTemplate.update(sql, combinedValues.toArray());
+            }
+        } catch (Exception e) {
+            throw new SQLException("Batch update failed", e);
         }
-
-        // Execute batch update
-        rdbJdbcTemplate.update(sql, batchValues.toArray());
     }
 
 
@@ -112,5 +144,23 @@ public class JdbcTemplateUtil {
             }
         }
         return columnNames;
+    }
+
+    private String formatQueryWithValues(String sql, List<Object> values) {
+        Iterator<Object> iterator = values.iterator();
+        StringBuilder formattedQuery = new StringBuilder();
+        int paramIndex = 0;
+
+        for (char c : sql.toCharArray()) {
+            if (c == '?' && iterator.hasNext()) {
+                Object value = iterator.next();
+                formattedQuery.append(value == null ? "NULL" : "'" + value.toString().replace("'", "''") + "'");
+                paramIndex++;
+            } else {
+                formattedQuery.append(c);
+            }
+        }
+
+        return formattedQuery.toString();
     }
 }
