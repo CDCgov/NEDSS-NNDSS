@@ -63,14 +63,16 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
 
         for (PollDataSyncConfig pollDataSyncConfig : filteredTablesList) {
             logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
-            pollAndPersistRDBMOdernData(source, pollDataSyncConfig.getTableName(), isInitialLoad, pollDataSyncConfig.getKeyList());
+            pollAndPersistRDBMOdernData(source, pollDataSyncConfig.getTableName(), isInitialLoad,
+                    pollDataSyncConfig.getKeyList(), pollDataSyncConfig.isEtlRecreateApplied());
         }
 
         logger.info("---END POLLING---");
     }
 
     @SuppressWarnings("java:S1141")
-    protected void pollAndPersistRDBMOdernData(String source, String tableName, boolean isInitialLoad, String keyList) {
+    protected void pollAndPersistRDBMOdernData(String source, String tableName, boolean isInitialLoad, String keyList,
+                                               boolean eltRecreatedApplied) {
         try {
             logger.info("--START--pollAndPersistRDBData for table {}", tableName);
             String log = "";
@@ -100,7 +102,8 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
                     iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
                 }
                 else if (storeInSql) {
-                    log =  rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonDataWithNull, keyList, isInitialLoad);
+                    log =  rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonDataWithNull, keyList,
+                            isInitialLoad);
                     iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
                 }
                 else  {

@@ -97,9 +97,7 @@ public class RdbModernDataPersistentDAO {
                                                     String keyList,
                                                     boolean initialLoad) {
         try {
-            SimpleJdbcInsert jdbcInsert =
-                    new SimpleJdbcInsert(jdbcTemplate);
-
+            SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
             if (tableName != null && !tableName.isEmpty()) {
                 jdbcInsert = jdbcInsert.withTableName(tableName);
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
@@ -115,6 +113,7 @@ public class RdbModernDataPersistentDAO {
                                 if (initialLoad) {
                                     sublist.forEach(data -> data.remove("RowNum"));
                                     jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+
                                 } else {
                                     jdbcTemplateUtil.upsertBatch(tableName, sublist, keyList);
                                 }
@@ -123,6 +122,7 @@ public class RdbModernDataPersistentDAO {
                             if (initialLoad) {
                                 records.forEach(data -> data.remove("RowNum"));
                                 jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+
                             } else {
                                 jdbcTemplateUtil.upsertBatch(tableName, records, keyList);
                             }
@@ -180,7 +180,8 @@ public class RdbModernDataPersistentDAO {
             persistingNrtObsCoded(list, tableName);
         }
         else {
-            logBuilder = persistingGenericTable (logBuilder, tableName, jsonData, keyList, initialLoad);
+            logBuilder = persistingGenericTable (logBuilder, tableName, jsonData,
+                    keyList, initialLoad);
         }
 
         return logBuilder.toString();

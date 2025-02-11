@@ -349,14 +349,14 @@ VALUES
     ('COVID_LAB_DATAMART', 'RDB', 'SELECT COVID_LAB_DATAMART.*,
        ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
 FROM COVID_LAB_DATAMART
-WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp;
+WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp OR COVID_LAB_DATAMART.Lab_Update_Dt :operator :timestamp;
 ', NULL, 'SELECT COUNT(*)
 FROM COVID_LAB_DATAMART
-WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp;', 'WITH PaginatedResults AS (
+WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp OR COVID_LAB_DATAMART.Lab_Update_Dt :operator :timestamp;', 'WITH PaginatedResults AS (
     SELECT COVID_LAB_DATAMART.*,
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
     FROM COVID_LAB_DATAMART
-    WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp
+    WHERE COVID_LAB_DATAMART.Lab_Added_Dt :operator :timestamp OR COVID_LAB_DATAMART.Lab_Update_Dt :operator :timestamp
     )
 SELECT * FROM PaginatedResults
 WHERE RowNum BETWEEN :startRow AND :endRow;')
@@ -370,13 +370,13 @@ VALUES
     ('COVID_LAB_CELR_DATAMART', 'RDB', 'SELECT COVID_LAB_CELR_DATAMART.*,
        ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
 FROM COVID_LAB_CELR_DATAMART
-WHERE COVID_LAB_CELR_DATAMART.lab_update_dt :operator :timestamp;', NULL, 'SELECT COUNT(*)
+WHERE COVID_LAB_CELR_DATAMART.File_created_date :operator :timestamp;', NULL, 'SELECT COUNT(*)
 FROM COVID_LAB_CELR_DATAMART
-WHERE COVID_LAB_CELR_DATAMART.lab_update_dt :operator :timestamp;', 'WITH PaginatedResults AS (
+WHERE COVID_LAB_CELR_DATAMART.File_created_date :operator :timestamp;', 'WITH PaginatedResults AS (
     SELECT COVID_LAB_CELR_DATAMART.*,
            ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum
     FROM COVID_LAB_CELR_DATAMART
-    WHERE COVID_LAB_CELR_DATAMART.lab_update_dt :operator :timestamp
+    WHERE COVID_LAB_CELR_DATAMART.File_created_date :operator :timestamp
     )
 SELECT * FROM PaginatedResults
 WHERE RowNum BETWEEN :startRow AND :endRow;')
