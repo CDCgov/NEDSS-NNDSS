@@ -72,7 +72,7 @@ class DataPullServiceTest {
     @Test
     void testScheduleRDBModernDataFetch_Success() throws DataPollException {
         dataPullService.scheduleRdbModernDataFetch();
-        verify(rdbModernDataHandlingService, times(1)).handlingExchangedData();
+        verify(rdbModernDataHandlingService, times(1)).handlingExchangedData(any());
     }
     @Test
     void testScheduleSrteDataFetch_Success() throws DataPollException {
