@@ -3,17 +3,15 @@ package gov.cdc.nnddatapollservice.rdbmodern.service;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdbmodern.dao.RdbModernDataPersistentDAO;
-import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
+import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
-import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -22,8 +20,8 @@ import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 
 @Service
 @Slf4j
-public class RdbModernDataHandlingService implements IRdbModernDataHandlingService {
-    private static Logger logger = LoggerFactory.getLogger(RdbModernDataHandlingService.class);
+public class UniversalDataHandlingService implements IUniversalDataHandlingService {
+    private static Logger logger = LoggerFactory.getLogger(UniversalDataHandlingService.class);
     @Value("${datasync.store_in_local}")
     protected boolean storeJsonInLocalFolder = false;
     @Value("${datasync.store_in_S3}")
@@ -39,7 +37,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
     private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
 
-    public RdbModernDataHandlingService(RdbModernDataPersistentDAO rdbModernDataPersistentDAO,
+    public UniversalDataHandlingService(RdbModernDataPersistentDAO rdbModernDataPersistentDAO,
                                         IPollCommonService iPollCommonService,
                                         IS3DataService is3DataService) {
         this.rdbModernDataPersistentDAO = rdbModernDataPersistentDAO;
@@ -64,7 +62,7 @@ public class RdbModernDataHandlingService implements IRdbModernDataHandlingServi
         for (PollDataSyncConfig pollDataSyncConfig : filteredTablesList) {
             logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
             pollAndPersistRDBMOdernData(source, pollDataSyncConfig.getTableName(), isInitialLoad,
-                    pollDataSyncConfig.getKeyList(), pollDataSyncConfig.isEtlRecreateApplied());
+                    pollDataSyncConfig.getKeyList(), pollDataSyncConfig.isRecreateApplied());
         }
 
         logger.info("---END POLLING---");

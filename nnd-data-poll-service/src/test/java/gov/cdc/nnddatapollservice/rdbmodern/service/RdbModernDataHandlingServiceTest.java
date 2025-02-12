@@ -29,21 +29,21 @@ class RdbModernDataHandlingServiceTest {
     @Mock
     IS3DataService is3DataService;
     @InjectMocks
-    private RdbModernDataHandlingService rdbModernDataHandlingService;
+    private UniversalDataHandlingService universalDataHandlingService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        rdbModernDataHandlingService.storeInSql = false;
-        rdbModernDataHandlingService.storeJsonInS3 = false;
-        rdbModernDataHandlingService.pullLimit = 1000;
-        rdbModernDataHandlingService.storeJsonInLocalFolder = false;
-        rdbModernDataHandlingService.deleteOnInit = true;
+        universalDataHandlingService.storeInSql = false;
+        universalDataHandlingService.storeJsonInS3 = false;
+        universalDataHandlingService.pullLimit = 1000;
+        universalDataHandlingService.storeJsonInLocalFolder = false;
+        universalDataHandlingService.deleteOnInit = true;
     }
 
     @Test
     void handlingExchangedData_initialLoad() throws DataPollException {
-        rdbModernDataHandlingService.storeInSql = true;
+        universalDataHandlingService.storeInSql = true;
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("TEST");
@@ -57,14 +57,14 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
         when(pollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
 
-        rdbModernDataHandlingService.handlingExchangedData("RDB");
+        universalDataHandlingService.handlingExchangedData("RDB");
         verify(rdbModernDataPersistentDAO, times(1)).deleteTable(anyString());
         verify(rdbModernDataPersistentDAO, times(1)).saveRdbModernData(any(), any(), any(), any());
     }
 
     @Test
     void handlingExchangedData_withTimestamp() throws DataPollException {
-        rdbModernDataHandlingService.storeInSql = true;
+        universalDataHandlingService.storeInSql = true;
         List<PollDataSyncConfig> configTableList = new ArrayList<>();
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName("TEST");
@@ -78,7 +78,7 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
         when(pollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(false);
 
-        rdbModernDataHandlingService.handlingExchangedData("RDB");
+        universalDataHandlingService.handlingExchangedData("RDB");
         verify(rdbModernDataPersistentDAO, times(0)).deleteTable(anyString());
         verify(rdbModernDataPersistentDAO, times(1)).saveRdbModernData(any(), any(), any(), any());
     }
@@ -88,10 +88,10 @@ class RdbModernDataHandlingServiceTest {
         // Arrange
         setupServiceWithMockedDependencies();
         String tableName = "exampleTable";
-        rdbModernDataHandlingService.storeJsonInS3= true;
+        universalDataHandlingService.storeJsonInS3= true;
         when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
+        universalDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
 
         // Assert
         verify(is3DataService, times(2)).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
@@ -103,10 +103,10 @@ class RdbModernDataHandlingServiceTest {
         // Arrange
         setupServiceWithMockedDependencies();
         String tableName = "exampleTable";
-        rdbModernDataHandlingService.storeJsonInLocalFolder= true;
+        universalDataHandlingService.storeJsonInLocalFolder= true;
         when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
+        universalDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
 
         // Assert
         verify(pollCommonService, times(2)).writeJsonDataToFile(anyString(), anyString(), any(),anyString());
@@ -134,7 +134,7 @@ class RdbModernDataHandlingServiceTest {
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
+        universalDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
         // Assert
         verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
     }
@@ -151,7 +151,7 @@ class RdbModernDataHandlingServiceTest {
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
+        universalDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
 
         // Assert
         verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
@@ -175,7 +175,7 @@ class RdbModernDataHandlingServiceTest {
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
+        universalDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, true, "key", true);
 
         // Assert
         verify(pollCommonService, never()).updateLastUpdatedTimeAndLog(eq(tableName), any(), any());
@@ -195,13 +195,13 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
         when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
 
-        // Setup rdbModernDataHandlingService flags
-        rdbModernDataHandlingService.storeInSql = true;
-        rdbModernDataHandlingService.storeJsonInS3 = false;
-        rdbModernDataHandlingService.storeJsonInLocalFolder = false;
+        // Setup universalDataHandlingService flags
+        universalDataHandlingService.storeInSql = true;
+        universalDataHandlingService.storeJsonInS3 = false;
+        universalDataHandlingService.storeJsonInLocalFolder = false;
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad, "key", true);
+        universalDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad, "key", true);
 
         // Assert
         verify(pollCommonService, times(1)).getLastUpdatedTime(tableName);
@@ -222,13 +222,13 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
         when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
 
-        // Setup rdbModernDataHandlingService flags
-        rdbModernDataHandlingService.storeInSql = false;
-        rdbModernDataHandlingService.storeJsonInS3 = true;
-        rdbModernDataHandlingService.storeJsonInLocalFolder = false;
+        // Setup universalDataHandlingService flags
+        universalDataHandlingService.storeInSql = false;
+        universalDataHandlingService.storeJsonInS3 = true;
+        universalDataHandlingService.storeJsonInLocalFolder = false;
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad, "key", true);
+        universalDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad, "key", true);
 
         // Assert
         verify(pollCommonService, times(1)).getLastUpdatedTimeS3(tableName);
@@ -249,13 +249,13 @@ class RdbModernDataHandlingServiceTest {
         when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
         when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
 
-        // Setup rdbModernDataHandlingService flags
-        rdbModernDataHandlingService.storeInSql = false;
-        rdbModernDataHandlingService.storeJsonInS3 = false;
-        rdbModernDataHandlingService.storeJsonInLocalFolder = true;
+        // Setup universalDataHandlingService flags
+        universalDataHandlingService.storeInSql = false;
+        universalDataHandlingService.storeJsonInS3 = false;
+        universalDataHandlingService.storeJsonInLocalFolder = true;
 
         // Act
-        rdbModernDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad, "key", true);
+        universalDataHandlingService.pollAndPersistRDBMOdernData("RDB", tableName, isInitialLoad, "key", true);
 
         // Assert
         verify(pollCommonService, times(1)).getLastUpdatedTimeLocalDir(tableName);
@@ -274,11 +274,11 @@ class RdbModernDataHandlingServiceTest {
         boolean isInitialLoad = false;
         String log = "Test Log";
 
-        rdbModernDataHandlingService.storeInSql = true;
-        rdbModernDataHandlingService.storeJsonInS3 = false;
+        universalDataHandlingService.storeInSql = true;
+        universalDataHandlingService.storeJsonInS3 = false;
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
                 rawJsonData, isInitialLoad, log, "RDB", "key");
 
         // Assert
@@ -296,11 +296,11 @@ class RdbModernDataHandlingServiceTest {
         boolean isInitialLoad = false;
         String log = "Test Log";
 
-        rdbModernDataHandlingService.storeInSql = false;
-        rdbModernDataHandlingService.storeJsonInS3 = true;
+        universalDataHandlingService.storeInSql = false;
+        universalDataHandlingService.storeJsonInS3 = true;
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
                 rawJsonData, isInitialLoad, log, "RDB", "key");
 
         // Assert
@@ -318,11 +318,11 @@ class RdbModernDataHandlingServiceTest {
         boolean isInitialLoad = false;
         String log = "Test Log";
 
-        rdbModernDataHandlingService.storeInSql = false;
-        rdbModernDataHandlingService.storeJsonInS3 = false;
+        universalDataHandlingService.storeInSql = false;
+        universalDataHandlingService.storeJsonInS3 = false;
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
                 rawJsonData, isInitialLoad, log, "RDB", "key");
 
         // Assert
@@ -341,13 +341,13 @@ class RdbModernDataHandlingServiceTest {
         boolean isInitialLoad = false;
         String log = "Test Log";
 
-        rdbModernDataHandlingService.storeInSql = true;
-        rdbModernDataHandlingService.storeJsonInS3 = false;
+        universalDataHandlingService.storeInSql = true;
+        universalDataHandlingService.storeJsonInS3 = false;
 
         when(rdbModernDataPersistentDAO.saveRdbModernData(anyString(), anyString(), any(), any())).thenReturn("Data Saved");
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
                 rawJsonData, isInitialLoad, log, "RDB", "key");
 
         // Assert
@@ -366,14 +366,14 @@ class RdbModernDataHandlingServiceTest {
         boolean isInitialLoad = false;
         String log = "Test Log";
 
-        rdbModernDataHandlingService.storeInSql = false;
-        rdbModernDataHandlingService.storeJsonInS3 = true;
+        universalDataHandlingService.storeInSql = false;
+        universalDataHandlingService.storeJsonInS3 = true;
 
         when(is3DataService.persistToS3MultiPart(anyString(), anyString(), anyString(), any(Timestamp.class), anyBoolean()))
                 .thenReturn("S3 Save Success");
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName,
+        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName,
                 timestamp, rawJsonData, isInitialLoad, log, "RDB", "key");
 
         // Assert
@@ -392,13 +392,13 @@ class RdbModernDataHandlingServiceTest {
         boolean isInitialLoad = false;
         String log = "Test Log";
 
-        rdbModernDataHandlingService.storeInSql = false;
-        rdbModernDataHandlingService.storeJsonInS3 = false;
+        universalDataHandlingService.storeInSql = false;
+        universalDataHandlingService.storeJsonInS3 = false;
 
         when(pollCommonService.writeJsonDataToFile(anyString(), anyString(), any(Timestamp.class), anyString())).thenReturn("Local File Save Success");
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
                 rawJsonData, isInitialLoad, log, "RDB", "key");
 
         // Assert
@@ -417,14 +417,14 @@ class RdbModernDataHandlingServiceTest {
         boolean isInitialLoad = false;
         String log = "Test Log";
 
-        rdbModernDataHandlingService.storeInSql = false;
-        rdbModernDataHandlingService.storeJsonInS3 = true;
+        universalDataHandlingService.storeInSql = false;
+        universalDataHandlingService.storeJsonInS3 = true;
 
         when(is3DataService.persistToS3MultiPart(anyString(), anyString(), anyString(), any(Timestamp.class), anyBoolean()))
                 .thenThrow(new RuntimeException("S3 Error"));
 
         // Act
-        rdbModernDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
                 rawJsonData, isInitialLoad, log, "RDB", "key");
 
         // Assert

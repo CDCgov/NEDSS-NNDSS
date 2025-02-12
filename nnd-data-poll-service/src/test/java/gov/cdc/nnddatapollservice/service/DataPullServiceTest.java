@@ -2,7 +2,7 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
+import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +22,7 @@ class DataPullServiceTest {
     @Mock
     private IRdbDataHandlingService rdbDataHandlingService;
     @Mock
-    private IRdbModernDataHandlingService rdbModernDataHandlingService;
+    private IUniversalDataHandlingService universalDataHandlingService;
     @Mock
     private ISrteDataHandlingService srteDataHandlingService;
     @InjectMocks
@@ -72,7 +72,7 @@ class DataPullServiceTest {
     @Test
     void testScheduleRDBModernDataFetch_Success() throws DataPollException {
         dataPullService.scheduleRdbModernDataFetch();
-        verify(rdbModernDataHandlingService, times(1)).handlingExchangedData(any());
+        verify(universalDataHandlingService, times(1)).handlingExchangedData(any());
     }
     @Test
     void testScheduleSrteDataFetch_Success() throws DataPollException {

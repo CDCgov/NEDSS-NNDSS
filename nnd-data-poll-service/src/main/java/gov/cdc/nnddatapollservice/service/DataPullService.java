@@ -3,7 +3,7 @@ package gov.cdc.nnddatapollservice.service;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.nbs_odse.service.interfaces.INbsOdseDataHandlingService;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
+import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 
@@ -56,17 +55,17 @@ public class DataPullService implements IDataPullService {
     private final INbsOdseDataHandlingService edxActivitySyncService;
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
-    private final IRdbModernDataHandlingService rdbModernDataHandlingService;
+    private final IUniversalDataHandlingService universalDataHandlingService;
     private final ISrteDataHandlingService srteDataHandlingService;
 
     public DataPullService(INbsOdseDataHandlingService edxActivitySyncService, INNDDataHandlingService dataHandlingService,
                            IRdbDataHandlingService rdbDataHandlingService,
-                           IRdbModernDataHandlingService rdbModernDataHandlingService,
+                           IUniversalDataHandlingService universalDataHandlingService,
                            ISrteDataHandlingService srteDataHandlingService) {
         this.edxActivitySyncService = edxActivitySyncService;
         this.dataHandlingService = dataHandlingService;
         this.rdbDataHandlingService = rdbDataHandlingService;
-        this.rdbModernDataHandlingService = rdbModernDataHandlingService;
+        this.universalDataHandlingService = universalDataHandlingService;
         this.srteDataHandlingService = srteDataHandlingService;
     }
 
@@ -100,7 +99,7 @@ public class DataPullService implements IDataPullService {
             rdbDataHandlingService.handlingExchangedData();
 
             // RDB MODERN and SRTE are now part of RDB
-//            rdbModernDataHandlingService.handlingExchangedData(RDB_MODERN);
+//            universalDataHandlingService.handlingExchangedData(RDB_MODERN);
 //            srteDataHandlingService.handlingExchangedData();
             logger.info("CRON ENDED FOR POLLING RDB");
             closePoller();
@@ -114,7 +113,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING RDB_MODERN");
             logger.info("{}, {} FOR RDB_MODERN", cron, zone);
             // RDB MODERN will be converted to more generic -- use this for any new db sync
-            rdbModernDataHandlingService.handlingExchangedData(RDB_MODERN);
+            universalDataHandlingService.handlingExchangedData(RDB_MODERN);
             closePoller();
         }
     }
@@ -125,7 +124,7 @@ public class DataPullService implements IDataPullService {
             logger.info("CRON STARTED FOR POLLING COVID DATAMART");
             logger.info("{}, {} FOR COVID DATAMART", cron, zone);
             // RDB MODERN will be converted to more generic -- use this for any new db sync
-            rdbModernDataHandlingService.handlingExchangedData(COVID_DATAMART);
+            universalDataHandlingService.handlingExchangedData(COVID_DATAMART);
             closePoller();
         }
     }
@@ -135,7 +134,7 @@ public class DataPullService implements IDataPullService {
     public void scheduleOdseDataFetch() throws DataPollException {
         if (odsePollEnabled) {
             logger.info("CRON STARTED");
-            rdbModernDataHandlingService.handlingExchangedData(ODSE_OBS);
+            universalDataHandlingService.handlingExchangedData(ODSE_OBS);
             closePoller();
         }
     }

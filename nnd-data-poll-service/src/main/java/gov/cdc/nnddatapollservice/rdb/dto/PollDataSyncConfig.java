@@ -15,5 +15,5 @@ public class PollDataSyncConfig {
     private int tableOrder;
     private String query;
     private String keyList;
-    private boolean etlRecreateApplied;
+    private boolean recreateApplied;
 }

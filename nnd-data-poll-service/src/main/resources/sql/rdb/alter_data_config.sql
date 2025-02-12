@@ -3,6 +3,6 @@ ALTER TABLE poll_data_sync_config
 
 
 ALTER TABLE poll_data_sync_config
-    ADD etl_recreate_applied bit DEFAULT 0;
+    ADD recreate_applied bit DEFAULT 0;
 
 
