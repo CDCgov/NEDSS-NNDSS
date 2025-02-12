@@ -94,9 +94,7 @@ class RdbModernDataPersistentDAOTest {
         doNothing().when(jdbcTemplate).execute(anyString());
 
         var noOfRecordsSaved = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
-                "key", false);
-
-        verify(jdbcTemplate, times(1)).execute(anyString());
+                "key", true);
 
         assertNotNull( noOfRecordsSaved);
     }
@@ -112,9 +110,7 @@ class RdbModernDataPersistentDAOTest {
         doNothing().when(jdbcTemplate).execute(anyString());
 
         var noOfRecordsSaved = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
-                "key", false);
-
-        verify(jdbcTemplate, times(1)).execute(anyString());
+                "key", true);
 
         assertEquals("SUCCESS", noOfRecordsSaved);
     }

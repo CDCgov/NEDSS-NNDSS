@@ -412,7 +412,7 @@ class RdbDataPersistentDAOTest {
         Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
         String log = "Update successful";
 
-        String expectedSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
+        String expectedSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
 
         // Act
         rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);

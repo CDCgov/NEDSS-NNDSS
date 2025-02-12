@@ -70,18 +70,17 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     @SuppressWarnings("java:S1141")
     protected void pollAndPersistRDBMOdernData(String source, String tableName, boolean isInitialLoad, String keyList,
-                                               boolean eltRecreatedApplied) {
+                                               boolean recreatedApplied) {
         try {
-            logger.info("--START--pollAndPersistRDBData for table {}", tableName);
+            if (recreatedApplied && storeInSql) {
+                rdbModernDataPersistentDAO.deleteTable(tableName);
+            }
             String log = "";
             boolean exceptionAtApiLevel = false;
             Integer totalRecordCounts = 0;
             String timeStampForPoll = getPollTimestamp(isInitialLoad, tableName);
-            logger.info("isInitialLoad {}", isInitialLoad);
 
-            logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
             var timestampWithNull = TimestampUtil.getCurrentTimestamp();
-            //call data exchange service api
             try {
                 totalRecordCounts = iPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
@@ -89,30 +88,34 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
-            int batchSize = pullLimit;
-            int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
 
-            try {
-                var encodedDataWithNull = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
-                var rawJsonDataWithNull = iPollCommonService.decodeAndDecompress(encodedDataWithNull);
-                if (storeJsonInS3) {
-                    log = is3DataService.persistToS3MultiPart(source, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
-                    iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
+            if (!recreatedApplied) {
+                try {
+                    var encodedDataWithNull = iPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
+                    var rawJsonDataWithNull = iPollCommonService.decodeAndDecompress(encodedDataWithNull);
+                    if (storeJsonInS3) {
+                        log = is3DataService.persistToS3MultiPart(source, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
+                        iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, S3_LOG + log);
+                    }
+                    else if (storeInSql) {
+                        log =  rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonDataWithNull, keyList,
+                                isInitialLoad);
+                        iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
+                    }
+                    else  {
+                        log = iPollCommonService.writeJsonDataToFile(source, tableName, timestampWithNull, rawJsonDataWithNull);
+                        iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
+                    }
                 }
-                else if (storeInSql) {
-                    log =  rdbModernDataPersistentDAO.saveRdbModernData(tableName, rawJsonDataWithNull, keyList,
-                            isInitialLoad);
-                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, SQL_LOG + log);
+                catch (Exception e) {
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LOG + e.getMessage());
+                    throw new DataPollException("TASK FAILED: " + e.getMessage());
                 }
-                else  {
-                    log = iPollCommonService.writeJsonDataToFile(source, tableName, timestampWithNull, rawJsonDataWithNull);
-                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, LOCAL_DIR_LOG + log);
-                }
-            } catch (Exception e) {
-                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, CRITICAL_NULL_LOG + e.getMessage());
-                throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
 
+
+            int batchSize = pullLimit;
+            int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
 
             for (int i = 0; i < totalPages; i++) {
                 String rawJsonData = "";
