@@ -120,7 +120,11 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 return DataSimplification.dataCompressionAndEncodeV2(gson, data);
             };
 
-            return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
+            var res = executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
+            log.setStatusSync("SUCCESS");
+            log.setStartTime(getCurrentTimeStamp(tz));
+            dataSyncLogRepository.save(dataLog);
+            return res;
         } catch (Exception exception) {
             log.setStatusSync("ERROR");
             log.setEndTime(getCurrentTimeStamp(tz));
