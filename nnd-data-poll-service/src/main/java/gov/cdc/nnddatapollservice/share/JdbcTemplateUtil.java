@@ -84,7 +84,7 @@ public class JdbcTemplateUtil {
                     return filteredData.isEmpty() ? null : filteredData;
                 })
                 .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()); //NOSONAR
 
         if (validDataList.isEmpty()) {
             throw new IllegalArgumentException("No valid columns found for table: " + tableName);
@@ -151,7 +151,7 @@ public class JdbcTemplateUtil {
 
     private Set<String> getColumnNames(String tableName) throws SQLException {
         Set<String> columnNames = new HashSet<>();
-        DatabaseMetaData metaData = rdbJdbcTemplate.getDataSource().getConnection().getMetaData();
+        DatabaseMetaData metaData = Objects.requireNonNull(rdbJdbcTemplate.getDataSource()).getConnection().getMetaData();
         try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
             while (columns.next()) {
                 columnNames.add(columns.getString("COLUMN_NAME"));
@@ -160,21 +160,4 @@ public class JdbcTemplateUtil {
         return columnNames;
     }
 
-    private String formatQueryWithValues(String sql, List<Object> values) {
-        Iterator<Object> iterator = values.iterator();
-        StringBuilder formattedQuery = new StringBuilder();
-        int paramIndex = 0;
-
-        for (char c : sql.toCharArray()) {
-            if (c == '?' && iterator.hasNext()) {
-                Object value = iterator.next();
-                formattedQuery.append(value == null ? "NULL" : "'" + value.toString().replace("'", "''") + "'");
-                paramIndex++;
-            } else {
-                formattedQuery.append(c);
-            }
-        }
-
-        return formattedQuery.toString();
-    }
 }

@@ -120,11 +120,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 return DataSimplification.dataCompressionAndEncodeV2(gson, data);
             };
 
-            var res = executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
-            log.setStatusSync("SUCCESS");
-            log.setStartTime(getCurrentTimeStamp(tz));
-            dataSyncLogRepository.save(dataLog);
-            return res;
+            return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
         } catch (Exception exception) {
             log.setStatusSync("ERROR");
             log.setEndTime(getCurrentTimeStamp(tz));
@@ -179,12 +175,14 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             var metricData = MetricCollector.measureExecutionTime(callable);
             var currentTime = getCurrentTimeStamp(tz);
 
+            log.setTableName(tableName);
             log.setLastExecutedResultCount(dataCountHolder.get());
             log.setLastExecutedRunTime(metricData.getExecutionTime());
             log.setLastExecutedTimestamp(currentTime);
             log.setStartRow(startRow);
             log.setEndRow(endRow);
             log.setEndTime(getCurrentTimeStamp(tz));
+            log.setStatusSync("SUCCESS");
             dataSyncLogRepository.save(log);
 
             return metricData.getResult();
