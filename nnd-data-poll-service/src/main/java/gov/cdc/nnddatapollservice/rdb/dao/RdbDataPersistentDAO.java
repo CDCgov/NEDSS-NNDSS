@@ -399,17 +399,17 @@ public class RdbDataPersistentDAO {
 
 
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
-        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;";
+        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, log, tableName);
     }
 
     public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log) {
-        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
+        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, log, tableName);
     }
 
     public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log) {
-        String updateSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
+        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
         jdbcTemplate.update(updateSql, timestamp, log, tableName);
     }
 
