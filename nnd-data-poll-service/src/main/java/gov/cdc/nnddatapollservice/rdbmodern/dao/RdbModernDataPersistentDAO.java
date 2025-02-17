@@ -133,7 +133,8 @@ public class RdbModernDataPersistentDAO {
                             try {
                                 jdbcInsert.execute(new MapSqlParameterSource(res));
                             } catch (Exception ei) {
-                                if (ei instanceof DuplicateKeyException) {
+                                if (ei instanceof DuplicateKeyException) // NOSONAR
+                                {
                                     logger.debug("Duplicated Key Exception Resolved");
                                 } else {
                                     logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage()); // NOSONAR
