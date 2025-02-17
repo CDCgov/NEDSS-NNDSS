@@ -157,8 +157,12 @@ public class DataExchangeController {
                                            @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
                                            @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull,
                                            HttpServletRequest request) throws DataExchangeException {
-        String clientIp = getClientIp(request); // Retrieve client IP
-        logger.info("Fetching Data for Data Availability, Table: {}, Client IP: {}", tableName, clientIp);
+        if (request != null) {
+            String clientIp = getClientIp(request); // Retrieve client IP
+            logger.info("Fetching Data for Data Availability, Table: {}, Client IP: {}", tableName, clientIp);
+        } else {
+            logger.info("Fetching Data for Data Availability, Table: {}", tableName);
+        }
 
         var ts = convertTimestampFromString(timestamp);
         var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, ts, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),

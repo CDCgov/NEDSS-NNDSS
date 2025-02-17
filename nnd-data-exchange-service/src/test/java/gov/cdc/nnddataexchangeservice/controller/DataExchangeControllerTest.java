@@ -5,6 +5,7 @@ import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
 import gov.cdc.nnddataexchangeservice.service.model.DataExchangeModel;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -16,8 +17,7 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.when;
 
@@ -107,7 +107,8 @@ class DataExchangeControllerTest {
                 "0",
                 "1",
                 limit,
-                load);
+                load,
+                null);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
