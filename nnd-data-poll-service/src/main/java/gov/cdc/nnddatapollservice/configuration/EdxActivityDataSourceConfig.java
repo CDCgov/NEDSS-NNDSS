@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.configuration;
 
-
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,30 +9,28 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
 
 @Configuration
-@EnableTransactionManagement
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "ingestEntityManagerFactory",
-        transactionManagerRef = "ingestTransactionManager",
+        entityManagerFactoryRef = "nbsOdseEntityManagerFactory",
+        transactionManagerRef = "nbsOdseTransactionManager",
         basePackages = {
-                "gov.cdc.nnddatapollservice.repository.msg",
-                "gov.cdc.nnddatapollservice.repository.odse"
+                "gov.cdc.nnddatapollservice.repository.nbs_odse",
         }
 )
-public class DataIngestDataSourceConfig {
+public class EdxActivityDataSourceConfig {
     @Value("${spring.datasource.driverClassName}")
     private String driverClassName;
 
-    @Value("${spring.datasource.ingest.url}")
+    @Value("${spring.datasource.odse.url}")
     private String dbUrl;
 
     @Value("${spring.datasource.username}")
@@ -42,9 +39,9 @@ public class DataIngestDataSourceConfig {
     @Value("${spring.datasource.password}")
     private String dbUserPassword;
 
-    @Bean(name = "ingestDataSource")
+    @Bean(name = "nbsOdseDataSource")
     @Lazy
-    public DataSource ingestDataSource() {
+    public DataSource nbsOdseDataSource() {
         DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
 
         dataSourceBuilder.driverClassName(driverClassName);
@@ -54,27 +51,33 @@ public class DataIngestDataSourceConfig {
 
         return dataSourceBuilder.build();
     }
+    @Bean(name = "nbsOdseJdbcTemplate")
+    public JdbcTemplate nbsOdseJdbcTemplate(@Qualifier("nbsOdseDataSource") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
 
-    @Bean(name = "ingestEntityManagerFactoryBuilder")
-    public EntityManagerFactoryBuilder ingestEntityManagerFactoryBuilder() {
+
+    // JPA Configurations
+
+    @Bean(name = "nbsOdseEntityManagerFactoryBuilder")
+    public EntityManagerFactoryBuilder nbsOdseEntityManagerFactoryBuilder() {
         return new EntityManagerFactoryBuilder(new HibernateJpaVendorAdapter(), new HashMap<>(), null);
     }
 
-    @Bean(name = "ingestEntityManagerFactory")
-    public LocalContainerEntityManagerFactoryBean ingestEntityManagerFactory(
-            EntityManagerFactoryBuilder ingestEntityManagerFactoryBuilder,
-            @Qualifier("ingestDataSource") DataSource ingestDataSource ) {
-        return ingestEntityManagerFactoryBuilder
-                .dataSource(ingestDataSource)
-                .packages("gov.cdc.nnddatapollservice.repository.msg", "gov.cdc.nnddatapollservice.repository.msg",
-                        "gov.cdc.nnddatapollservice.repository.msg", "gov.cdc.nnddatapollservice.repository.odse")
-                .persistenceUnit("ingest")
+    @Bean(name = "nbsOdseEntityManagerFactory")
+    public LocalContainerEntityManagerFactoryBean nbsOdseEntityManagerFactory(
+            @Qualifier("nbsOdseEntityManagerFactoryBuilder") EntityManagerFactoryBuilder builder,
+            @Qualifier("nbsOdseDataSource") DataSource dataSource) {
+        return builder
+                .dataSource(dataSource)
+                .packages("gov.cdc.nnddatapollservice.repository.nbs_odse") // Adjust package for your entities
+                .persistenceUnit("nbsodse")
                 .build();
     }
 
-    @Bean(name = "ingestTransactionManager")
-    public PlatformTransactionManager ingestTransactionManager(
-            @Qualifier("ingestEntityManagerFactory") EntityManagerFactory ingestEntityManagerFactory ) {
-        return new JpaTransactionManager(ingestEntityManagerFactory);
+    @Bean(name = "nbsOdseTransactionManager")
+    public PlatformTransactionManager nbsOdseTransactionManager(
+            @Qualifier("nbsOdseEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
+        return new JpaTransactionManager(entityManagerFactory);
     }
 }

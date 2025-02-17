@@ -1,19 +1,23 @@
 package gov.cdc.nnddataexchangeservice.shared;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 
 public class TimestampHandler {
     private TimestampHandler() {
     }
-    public static Timestamp getCurrentTimeStamp() {
-        long currentTimeMillis = System.currentTimeMillis();
-        Date currentDate = new Date(currentTimeMillis);
-        return new Timestamp(currentDate.getTime());
+    public static Timestamp getCurrentTimeStamp(String timeZone) {
+        ZoneId zoneId = ZoneId.of(timeZone);
+        LocalDateTime ldt = LocalDateTime.now();
+        ZonedDateTime zdt = ZonedDateTime.of(ldt, ZoneId.systemDefault());
+        ZonedDateTime gmt = zdt.withZoneSameInstant(zoneId);
+        return Timestamp.valueOf(gmt.toLocalDateTime());
     }
+
 
     public static String convertTimestampFromString(String timestamp) {
         if (timestamp.length() > 19) {

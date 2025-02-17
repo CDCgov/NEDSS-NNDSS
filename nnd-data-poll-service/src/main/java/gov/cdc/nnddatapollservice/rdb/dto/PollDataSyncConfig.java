@@ -14,4 +14,6 @@ public class PollDataSyncConfig {
     private String lastExecutedLog;
     private int tableOrder;
     private String query;
+    private String keyList;
+    private boolean recreateApplied;
 }

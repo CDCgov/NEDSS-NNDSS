@@ -65,7 +65,8 @@ class RdbModernDataPersistentDAOTest {
 
         StringBuilder logBuilder = new StringBuilder();
 
-        StringBuilder resultLog = rdbModernDataPersistentDAO.persistingGenericTable(logBuilder, tableName, jsonData);
+        StringBuilder resultLog = rdbModernDataPersistentDAO.persistingGenericTable(logBuilder, tableName, jsonData,
+                "key", true);
         assertNotNull(resultLog.toString());
     }
 
@@ -73,7 +74,8 @@ class RdbModernDataPersistentDAOTest {
     void saveRdbModernData(){
         String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
                 "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
-        var recordsSaved = rdbModernDataPersistentDAO.saveRdbModernData("TEST_TABLE", jsondata);
+        var recordsSaved = rdbModernDataPersistentDAO.saveRdbModernData("TEST_TABLE", jsondata,
+                "key", true);
         assertNotNull(recordsSaved);
     }
 
@@ -91,9 +93,8 @@ class RdbModernDataPersistentDAOTest {
 
         doNothing().when(jdbcTemplate).execute(anyString());
 
-        var noOfRecordsSaved = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData);
-
-        verify(jdbcTemplate, times(1)).execute(anyString());
+        var noOfRecordsSaved = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+                "key", true);
 
         assertNotNull( noOfRecordsSaved);
     }
@@ -108,9 +109,8 @@ class RdbModernDataPersistentDAOTest {
 
         doNothing().when(jdbcTemplate).execute(anyString());
 
-        var noOfRecordsSaved = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData);
-
-        verify(jdbcTemplate, times(1)).execute(anyString());
+        var noOfRecordsSaved = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+                "key", true);
 
         assertEquals("SUCCESS", noOfRecordsSaved);
     }
@@ -146,7 +146,8 @@ class RdbModernDataPersistentDAOTest {
         when(gson.fromJson(jsonData, resultType)).thenReturn(observationDtos);
 
         // Act
-        rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData);
+        rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+                "key", true);
 
         // Assert
         verify(nrtObservationRepository, times(1)).save(any(NrtObservation.class));
@@ -165,7 +166,8 @@ class RdbModernDataPersistentDAOTest {
         when(gson.fromJson(jsonData, resultType)).thenReturn(observationDtos);
 
         // Act
-        rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData);
+        rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+                "key", true);
 
         // Assert
         verify(nrtObservationCodedRepository, times(1)).save(any(NrtObservationCoded.class));
@@ -188,7 +190,8 @@ class RdbModernDataPersistentDAOTest {
         doNothing().when(jdbcTemplate).execute(anyString());
 
         // Act
-        String result = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData);
+        String result = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+                "key", true);
 
         // Assert
         assertNotNull(result);
@@ -211,7 +214,8 @@ class RdbModernDataPersistentDAOTest {
         doNothing().when(jdbcTemplate).execute(anyString());
 
         // Act
-        String result = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData);
+        String result = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+                "key", true);
 
         // Assert
         assertNotNull(result);

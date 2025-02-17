@@ -246,7 +246,7 @@ class RdbDataPersistentDAOTest {
 
         verify(jdbcTemplate).update(sqlCaptor.capture(), paramsCaptor.capture());
 
-        assertEquals("update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;", sqlCaptor.getValue());
+        assertEquals("update POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;", sqlCaptor.getValue());
 
         Object[] capturedParams = paramsCaptor.getValue();
         assertEquals(3, capturedParams.length);
@@ -412,7 +412,7 @@ class RdbDataPersistentDAOTest {
         Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
         String log = "Update successful";
 
-        String expectedSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
+        String expectedSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
 
         // Act
         rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
@@ -428,7 +428,7 @@ class RdbDataPersistentDAOTest {
         Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:34:56");
         String log = "Local dir update successful";
 
-        String expectedSql = "update RDB.dbo.POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
+        String expectedSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
 
         // Act
         rdbDataPersistentDAO.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);

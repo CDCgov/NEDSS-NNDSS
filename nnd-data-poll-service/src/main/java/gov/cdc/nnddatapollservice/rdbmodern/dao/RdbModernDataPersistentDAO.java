@@ -11,6 +11,7 @@ import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservationCoded;
 import gov.cdc.nnddatapollservice.share.HandleError;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
@@ -40,6 +42,8 @@ public class RdbModernDataPersistentDAO {
     private final NrtObservationRepository nrtObservationRepository;
     private final NrtObservationCodedRepository nrtObservationCodedRepository;
 
+    private final JdbcTemplateUtil jdbcTemplateUtil;
+
     private final HandleError handleError;
 
     @Value("${datasync.sql_error_handle_log}")
@@ -53,10 +57,11 @@ public class RdbModernDataPersistentDAO {
             .create();
     @Autowired
     public RdbModernDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
-                                      NrtObservationRepository nrtObservationRepository, NrtObservationCodedRepository nrtObservationCodedRepository, HandleError handleError) {
+                                      NrtObservationRepository nrtObservationRepository, NrtObservationCodedRepository nrtObservationCodedRepository, JdbcTemplateUtil jdbcTemplateUtil, HandleError handleError) {
         this.jdbcTemplate = jdbcTemplate;
         this.nrtObservationRepository = nrtObservationRepository;
         this.nrtObservationCodedRepository = nrtObservationCodedRepository;
+        this.jdbcTemplateUtil = jdbcTemplateUtil;
         this.handleError = handleError;
     }
 
@@ -87,12 +92,14 @@ public class RdbModernDataPersistentDAO {
     }
 
     @SuppressWarnings({"java:S3776","java:S1141"})
-    protected StringBuilder persistingGenericTable (StringBuilder logBuilder, String tableName, String jsonData) {
+    protected StringBuilder persistingGenericTable (StringBuilder logBuilder,
+                                                    String tableName,
+                                                    String jsonData,
+                                                    String keyList,
+                                                    boolean initialLoad) {
         try {
-            SimpleJdbcInsert jdbcInsert =
-                    new SimpleJdbcInsert(jdbcTemplate);
+            SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
             if (tableName != null && !tableName.isEmpty()) {
-                deleteTable(tableName);//Delete first
                 jdbcInsert = jdbcInsert.withTableName(tableName);
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
@@ -104,18 +111,36 @@ public class RdbModernDataPersistentDAO {
                             for (int i = 0; i < records.size(); i += sublistSize) {
                                 int end = Math.min(i + sublistSize, records.size());
                                 List<Map<String, Object>> sublist = records.subList(i, end);
-                                jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                                if (initialLoad) {
+                                    sublist.forEach(data -> data.remove("RowNum"));
+                                    jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+
+                                } else {
+                                    jdbcTemplateUtil.upsertBatch(tableName, sublist, keyList);
+                                }
                             }
                         } else {
-                            jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                            if (initialLoad) {
+                                records.forEach(data -> data.remove("RowNum"));
+                                jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+
+                            } else {
+                                jdbcTemplateUtil.upsertBatch(tableName, records, keyList);
+                            }
                         }
                     } catch (Exception e) {
                         for (Map<String, Object> res : records) {
                             try {
                                 jdbcInsert.execute(new MapSqlParameterSource(res));
                             } catch (Exception ei) {
-                                logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage()); // NOSONAR
-                                handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
+                                if (ei instanceof DuplicateKeyException) // NOSONAR
+                                {
+                                    logger.debug("Duplicated Key Exception Resolved");
+                                } else {
+                                    logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage()); // NOSONAR
+                                    handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
+                                }
+
                             }
                         }
                     }
@@ -134,9 +159,14 @@ public class RdbModernDataPersistentDAO {
         return logBuilder;
     }
 
-    public String saveRdbModernData(String tableName, String jsonData) {
+
+
+    public String saveRdbModernData(String tableName, String jsonData, String keyList, boolean initialLoad) {
         logger.info("saveRdbModernData tableName: {}", tableName);
         StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
+
+
+
         if ("NRT_OBSERVATION".equalsIgnoreCase(tableName)) {
             logBuilder = new StringBuilder(LOG_SUCCESS);
             Type resultType = new TypeToken<List<NrtObservationDto>>() {
@@ -152,7 +182,8 @@ public class RdbModernDataPersistentDAO {
             persistingNrtObsCoded(list, tableName);
         }
         else {
-            logBuilder = persistingGenericTable (logBuilder, tableName, jsonData);
+            logBuilder = persistingGenericTable (logBuilder, tableName, jsonData,
+                    keyList, initialLoad);
         }
 
         return logBuilder.toString();

@@ -3,7 +3,7 @@ package gov.cdc.nnddatapollservice.service;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.nbs_odse.service.interfaces.INbsOdseDataHandlingService;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IRdbModernDataHandlingService;
+import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 
 @Service
 @Slf4j
@@ -29,8 +31,15 @@ public class DataPullService implements IDataPullService {
     private boolean nndPollEnabled;
     @Value("${poll.rdb.enabled}")
     private boolean rdbPollEnabled;
+
     @Value("${poll.rdb_modern.enabled}")
     private boolean rdbModernPollEnabled;
+
+    @Value("${poll.odse.enabled}")
+    private boolean odsePollEnabled;
+
+    @Value("${poll.covid_datamart.enabled}")
+    private boolean covidDataMartEnabled;
     @Value("${poll.srte.enabled}")
     private boolean srtePollEnabled;
 
@@ -46,17 +55,17 @@ public class DataPullService implements IDataPullService {
     private final INbsOdseDataHandlingService edxActivitySyncService;
     private final INNDDataHandlingService dataHandlingService;
     private final IRdbDataHandlingService rdbDataHandlingService;
-    private final IRdbModernDataHandlingService rdbModernDataHandlingService;
+    private final IUniversalDataHandlingService universalDataHandlingService;
     private final ISrteDataHandlingService srteDataHandlingService;
 
     public DataPullService(INbsOdseDataHandlingService edxActivitySyncService, INNDDataHandlingService dataHandlingService,
                            IRdbDataHandlingService rdbDataHandlingService,
-                           IRdbModernDataHandlingService rdbModernDataHandlingService,
+                           IUniversalDataHandlingService universalDataHandlingService,
                            ISrteDataHandlingService srteDataHandlingService) {
         this.edxActivitySyncService = edxActivitySyncService;
         this.dataHandlingService = dataHandlingService;
         this.rdbDataHandlingService = rdbDataHandlingService;
-        this.rdbModernDataHandlingService = rdbModernDataHandlingService;
+        this.universalDataHandlingService = universalDataHandlingService;
         this.srteDataHandlingService = srteDataHandlingService;
     }
 
@@ -82,6 +91,7 @@ public class DataPullService implements IDataPullService {
         }
     }
 
+    @SuppressWarnings("java:S125")
     @Scheduled(cron = "${scheduler.cron_rdb}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
@@ -90,23 +100,45 @@ public class DataPullService implements IDataPullService {
             rdbDataHandlingService.handlingExchangedData();
 
             // RDB MODERN and SRTE are now part of RDB
-            rdbModernDataHandlingService.handlingExchangedData();
-            srteDataHandlingService.handlingExchangedData();
+//            universalDataHandlingService.handlingExchangedData(RDB_MODERN);
+//            srteDataHandlingService.handlingExchangedData();
             logger.info("CRON ENDED FOR POLLING RDB");
             closePoller();
         }
     }
+
 
     @Scheduled(cron = "${scheduler.cron_rdb_modern}", zone = "${scheduler.zone}")
     public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
             logger.info("CRON STARTED FOR POLLING RDB_MODERN");
             logger.info("{}, {} FOR RDB_MODERN", cron, zone);
-            rdbModernDataHandlingService.handlingExchangedData();
+            // RDB MODERN will be converted to more generic -- use this for any new db sync
+            universalDataHandlingService.handlingExchangedData(RDB_MODERN);
             closePoller();
         }
     }
 
+    @Scheduled(cron = "${scheduler.cron_covid_datamart}", zone = "${scheduler.zone}")
+    public void scheduleCovidDataMartDataFetch() throws DataPollException {
+        if (covidDataMartEnabled) {
+            logger.info("CRON STARTED FOR POLLING COVID DATAMART");
+            logger.info("{}, {} FOR COVID DATAMART", cron, zone);
+            // RDB MODERN will be converted to more generic -- use this for any new db sync
+            universalDataHandlingService.handlingExchangedData(COVID_DATAMART);
+            closePoller();
+        }
+    }
+
+
+    @Scheduled(cron = "${scheduler.cron_odse}", zone = "${scheduler.zone}")
+    public void scheduleOdseDataFetch() throws DataPollException {
+        if (odsePollEnabled) {
+            logger.info("CRON STARTED");
+            universalDataHandlingService.handlingExchangedData(ODSE_OBS);
+            closePoller();
+        }
+    }
 
     @Scheduled(cron = "${scheduler.cron_srte}", zone = "${scheduler.zone}")
     public void scheduleSRTEDataFetch() throws DataPollException {
