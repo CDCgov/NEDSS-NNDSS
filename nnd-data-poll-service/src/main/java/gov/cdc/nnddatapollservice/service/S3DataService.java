@@ -54,6 +54,7 @@ public class S3DataService implements IS3DataService {
             this.s3Client = S3Client.builder()
                     .credentialsProvider(StaticCredentialsProvider.create(
                             AwsBasicCredentials.create(keyId, accessKey)))
+                    .region(Region.of(region))
                     .build();
         }
         else if (!profile.isEmpty()) {
