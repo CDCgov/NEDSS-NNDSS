@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -48,7 +49,14 @@ public class S3DataService implements IS3DataService {
                     .credentialsProvider(StaticCredentialsProvider.create(
                             AwsSessionCredentials.create(keyId, accessKey, token)))
                     .build();
-        } else if (!profile.isEmpty()) {
+        }
+        else if (!accessKey.isEmpty() && !keyId.isEmpty()) {
+            this.s3Client = S3Client.builder()
+                    .credentialsProvider(StaticCredentialsProvider.create(
+                            AwsBasicCredentials.create(keyId, accessKey)))
+                    .build();
+        }
+        else if (!profile.isEmpty()) {
             // Use profile credentials from ~/.aws/credentials
             this.s3Client = S3Client.builder()
                     .region(Region.of(region))
