@@ -32,7 +32,7 @@ poll:
   srte:
     enabled: ${SRTE_POLL_ENABLED:false}
   edx_activity:
-    enabled: ${EDX_SYNC_ENABLED:false}
+    enabled: ${EDX_ACTIVITY_ENABLED:false}
 
 datasync:
   store_in_sql: ${DATASYNC_STORE_SQL:false}

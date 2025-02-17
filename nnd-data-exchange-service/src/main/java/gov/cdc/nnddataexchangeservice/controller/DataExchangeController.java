@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -151,11 +152,14 @@ public class DataExchangeController {
     )
     @GetMapping(path = "/api/datasync/{tableName}")
     public ResponseEntity<String> dataSync(@PathVariable String tableName, @RequestParam String timestamp,
-                                                 @RequestHeader(name = "startRow", defaultValue = "0", required = false) String startRow,
-                                                 @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
-                                                 @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
-                                                 @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull) throws DataExchangeException {
-        logger.info("Fetching Data for Data Availability, Table {}", tableName);
+                                           @RequestHeader(name = "startRow", defaultValue = "0", required = false) String startRow,
+                                           @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
+                                           @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
+                                           @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull,
+                                           HttpServletRequest request) throws DataExchangeException {
+        String clientIp = getClientIp(request); // Retrieve client IP
+        logger.info("Fetching Data for Data Availability, Table: {}, Client IP: {}", tableName, clientIp);
+
         var ts = convertTimestampFromString(timestamp);
         var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, ts, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
                 Boolean.parseBoolean(allowNull));
@@ -225,4 +229,24 @@ public class DataExchangeController {
         return new ResponseEntity<>(val, HttpStatus.OK);
     }
 
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For"); // Check if behind proxy
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP"); // For WebLogic
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr(); // Fallback to direct IP
+        }
+
+        // If multiple IPs exist (e.g., proxies), take the first one
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+
+        return ip;
+    }
 }
