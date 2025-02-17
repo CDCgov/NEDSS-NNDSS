@@ -47,14 +47,14 @@ datasync:
 aws:
   auth:
     static:
-      key_id: ${AWS_KEY_ID:NA}
-      access_key: ${AWS_ACCESS_KEY:NA}
-      token: ${AWS_TOKEN:NA}
+      key_id: ${AWS_KEY_ID:}
+      access_key: ${AWS_ACCESS_KEY:}
+      token: ${AWS_TOKEN:}
     profile:
-      profile_name: ${AWS_PROFILE:NA}
+      profile_name: ${AWS_PROFILE:}
   s3:
-    bucket-name: ${S3_BUCKET_NAME:NA}
-    region: ${S3_REGION:NA}
+    bucket-name: ${S3_BUCKET_NAME:}
+    region: ${S3_REGION:}
 
 spring:
   application:
