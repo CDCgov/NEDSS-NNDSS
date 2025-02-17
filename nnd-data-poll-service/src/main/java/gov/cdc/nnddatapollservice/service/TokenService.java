@@ -1,7 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
-import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,12 +1,12 @@
 package gov.cdc.nnddatapollservice.share;
 
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,6 +18,7 @@ public class JdbcTemplateUtil {
         this.rdbJdbcTemplate = rdbJdbcTemplate;
     }
 
+    @SuppressWarnings("java:S1192")
     public void upsertSingle(String tableName, Map<String, Object> data) throws SQLException {
         if (data == null || data.isEmpty()) {
             throw new IllegalArgumentException("No data provided for table: " + tableName);
@@ -43,7 +44,6 @@ public class JdbcTemplateUtil {
                 .map(col -> "target." + col + " = source." + col)
                 .collect(Collectors.joining(", "));
 
-//        var valuesForQuery = String.join(", ", Collections.nCopies(columnList.size(), "source." + columns));
         var valuesForQuery = columnList.stream()
                 .map(col -> "source." + col)
                 .collect(Collectors.joining(", "));
@@ -60,6 +60,7 @@ public class JdbcTemplateUtil {
         rdbJdbcTemplate.update(sql, values);
     }
 
+    @SuppressWarnings("java:S3776")
     public void upsertBatch(String tableName, List<Map<String, Object>> dataList, String keyList) throws SQLException {
 
         if (dataList == null || dataList.isEmpty()) {
@@ -151,8 +152,10 @@ public class JdbcTemplateUtil {
 
     private Set<String> getColumnNames(String tableName) throws SQLException {
         Set<String> columnNames = new HashSet<>();
-        DatabaseMetaData metaData = Objects.requireNonNull(rdbJdbcTemplate.getDataSource()).getConnection().getMetaData();
-        try (ResultSet columns = metaData.getColumns(null, null, tableName, null)) {
+
+        try (Connection connection = Objects.requireNonNull(rdbJdbcTemplate.getDataSource()).getConnection();
+             ResultSet columns = connection.getMetaData().getColumns(null, null, tableName, null)) {
+
             while (columns.next()) {
                 columnNames.add(columns.getString("COLUMN_NAME"));
             }

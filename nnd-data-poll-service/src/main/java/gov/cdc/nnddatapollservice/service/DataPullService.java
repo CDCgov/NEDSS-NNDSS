@@ -91,6 +91,7 @@ public class DataPullService implements IDataPullService {
         }
     }
 
+    @SuppressWarnings("java:S125")
     @Scheduled(cron = "${scheduler.cron_rdb}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {

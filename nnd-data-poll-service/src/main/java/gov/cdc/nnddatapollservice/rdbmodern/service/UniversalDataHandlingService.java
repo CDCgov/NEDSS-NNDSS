@@ -68,7 +68,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         logger.info("---END POLLING---");
     }
 
-    @SuppressWarnings("java:S1141")
+    @SuppressWarnings({"java:S1141","java:S3776"})
     protected void pollAndPersistRDBMOdernData(String source, String tableName, boolean isInitialLoad, String keyList,
                                                boolean recreatedApplied) {
         try {
@@ -169,6 +169,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         return timeStampForPoll;
     }
 
+    @SuppressWarnings("java:S107")
     protected void updateDataHelper(boolean exceptionAtApiLevel, String tableName, Timestamp timestamp,
                                     String rawJsonData, boolean isInitialLoad, String log, String source, String keyList) {
         try {
