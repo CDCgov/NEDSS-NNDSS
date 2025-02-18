@@ -27,7 +27,8 @@ import java.util.HashMap;
         transactionManagerRef = "rdbTransactionManager",
         basePackages = {
                 "gov.cdc.nnddatapollservice.repository.rdb_modern",
-                "gov.cdc.nnddatapollservice.repository.srte"
+                "gov.cdc.nnddatapollservice.repository.srte",
+                "gov.cdc.nnddatapollservice.repository.config"
         }
 )
 @EnableTransactionManagement
@@ -103,7 +104,8 @@ public class DaMainDataSourceConfig {
         return builder
                 .dataSource(dataSource)
                 .packages("gov.cdc.nnddatapollservice.repository.rdb_modern",
-                        "gov.cdc.nnddatapollservice.repository.srte") // Adjust package for your entities
+                        "gov.cdc.nnddatapollservice.repository.srte",
+                        "gov.cdc.nnddatapollservice.repository.config") // Adjust package for your entities
                 .persistenceUnit("rdb")
                 .build();
     }

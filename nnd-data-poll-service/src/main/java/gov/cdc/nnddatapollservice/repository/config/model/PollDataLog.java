@@ -1,4 +1,4 @@
-package gov.cdc.nnddatapollservice.rdb.dto;
+package gov.cdc.nnddatapollservice.repository.config.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
