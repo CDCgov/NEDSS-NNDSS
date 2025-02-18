@@ -23,7 +23,29 @@ CREATE TABLE poll_data_sync_config
     last_update_time_s3 DATETIME2,
     last_update_time_local_dir DATETIME2,
     query nvarchar(MAX) NULL,
-    last_executed_log NVARCHAR(MAX) NULL,
 );
 END
 GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM INFORMATION_SCHEMA.TABLES
+    WHERE TABLE_NAME = 'poll_data_log'
+)
+BEGIN
+CREATE TABLE poll_data_log
+(
+    log_id      INT IDENTITY(1,1) PRIMARY KEY,
+    table_name  NVARCHAR(255) NOT NULL,
+    status_sync NVARCHAR(20) NOT NULL,
+    start_time  DATETIME NOT NULL DEFAULT GETDATE(),
+    end_time    DATETIME NULL,
+    executed_log NVARCHAR(MAX) NULL,
+    stack_trace NVARCHAR(MAX) NULL,
+
+    CONSTRAINT FK_poll_data_log_table
+        FOREIGN KEY (table_name)
+            REFERENCES poll_data_sync_config (table_name)
+            ON DELETE CASCADE
+);
+END
