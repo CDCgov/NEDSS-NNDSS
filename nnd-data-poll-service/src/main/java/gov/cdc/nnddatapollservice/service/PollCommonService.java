@@ -47,6 +47,16 @@ public class PollCommonService implements IPollCommonService {
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
 
+    @Value("${datasync.store_in_sql}")
+    private boolean sqlSync;
+
+    @Value("${datasync.store_in_local}")
+    private boolean dirSync;
+
+    @Value("${datasync.store_in_S3}")
+    private boolean s3Sync;
+
+
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
@@ -115,12 +125,34 @@ public class PollCommonService implements IPollCommonService {
     }
 
     public boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
-        for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-            logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
-            if (pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
-                return false;
+        if(dirSync) {
+            for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
+                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(),
+                        pollDataSyncConfig.getLastUpdateTimeLocalDir());
+                if (pollDataSyncConfig.getLastUpdateTimeLocalDir() != null
+                        && !pollDataSyncConfig.getLastUpdateTimeLocalDir().toString().isBlank()) {
+                    return false;
+                }
+            }
+        } else if (s3Sync) {
+            for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
+                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(),
+                        pollDataSyncConfig.getLastUpdateTimeS3());
+                if (pollDataSyncConfig.getLastUpdateTimeS3() != null
+                        && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
+                    return false;
+                }
+            }
+        } else {
+            for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
+                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
+                if (pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
+                    return false;
+                }
             }
         }
+
+
         return true;
     }
 
