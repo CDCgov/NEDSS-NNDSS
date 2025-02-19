@@ -25,7 +25,8 @@ CREATE TABLE poll_data_sync_config
     query nvarchar(MAX) NULL,
     key_list NVARCHAR(250),
     recreate_applied bit DEFAULT 0,
-    use_key_list bit DEFAULT 0
+    use_key_list bit DEFAULT 0,
+    no_pagination bit DEFAULT 0
 );
 END
 GO

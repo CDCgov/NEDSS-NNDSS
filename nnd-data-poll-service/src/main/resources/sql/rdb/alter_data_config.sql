@@ -5,6 +5,9 @@ ALTER TABLE poll_data_sync_config
 ALTER TABLE poll_data_sync_config
     ADD recreate_applied bit DEFAULT 0;
 
+ALTER TABLE poll_data_sync_config
+    ADD no_pagination bit DEFAULT 0;
+
 
 
 IF EXISTS (

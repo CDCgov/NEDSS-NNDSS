@@ -173,8 +173,8 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('CONDITION_CODE', 'SRTE',2, 'condition_cd');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('CODE_TO_CONDITION', 'SRTE',3);
+(table_name, source_db,table_order, no_pagination)
+VALUES('CODE_TO_CONDITION', 'SRTE',3, 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('JURISDICTION_CODE', 'SRTE',4, 'code');
@@ -199,8 +199,8 @@ VALUES ('COVID_CASE_DATAMART', 'COVID_DATAMART', 1, 'COVID_CASE_DATAMART_KEY', 1
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
 VALUES ('COVID_LAB_DATAMART', 'COVID_DATAMART', 2, 'COVID_LAB_DATAMART_KEY', 1);
 
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, recreate_applied)
-VALUES ('COVID_LAB_CELR_DATAMART', 'COVID_DATAMART', 3, 1);
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, recreate_applied, no_pagination)
+VALUES ('COVID_LAB_CELR_DATAMART', 'COVID_DATAMART', 3, 1, 1);
 
 
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
