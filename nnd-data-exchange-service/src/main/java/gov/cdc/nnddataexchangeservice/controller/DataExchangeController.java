@@ -156,7 +156,12 @@ public class DataExchangeController {
                                            @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
                                            @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
                                            @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull,
+                                           @RequestHeader(name = "version", defaultValue = "false") String version,
                                            HttpServletRequest request) throws DataExchangeException {
+        if (version == null || version.isEmpty()) {
+            throw new DataExchangeException("Version is Missing");
+        }
+
         if (request != null) {
             String clientIp = getClientIp(request); // Retrieve client IP
             logger.info("Fetching Data for Data Availability, Table: {}, Client IP: {}", tableName, clientIp);
@@ -204,7 +209,13 @@ public class DataExchangeController {
     @GetMapping(path = "/api/datasync/count/{tableName}")
     public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
                                                        @RequestParam String timestamp,
-                                           @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied) throws DataExchangeException {
+                                                        @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
+                                                        @RequestHeader(name = "version", defaultValue = "false") String version
+                                                        ) throws DataExchangeException {
+        if (version == null || version.isEmpty()) {
+            throw new DataExchangeException("Version is Missing");
+        }
+
         logger.info("Fetching Data Count for Data Availability, Table {}", tableName);
         var ts = convertTimestampFromString(timestamp);
         var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), ts);

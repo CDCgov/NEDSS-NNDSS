@@ -58,6 +58,9 @@ public class PollCommonService implements IPollCommonService {
     private boolean s3Sync;
 
 
+    @Value("${data_exchange.version}")
+    private String version;
+
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
@@ -78,6 +81,7 @@ public class PollCommonService implements IPollCommonService {
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
             headers.add("initialLoad", String.valueOf(isInitialLoad));
+            headers.add("version", version);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
             URI uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
@@ -94,7 +98,7 @@ public class PollCommonService implements IPollCommonService {
     }
 
     public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                                           String startRow, String endRow) throws DataPollException {
+                                           String startRow, String endRow, boolean noPagination) throws DataPollException {
         try {
             //Get token
             var token = tokenService.getToken();
@@ -105,6 +109,8 @@ public class PollCommonService implements IPollCommonService {
             headers.add("endRow",  endRow);
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
+            headers.add("version", version);
+            headers.add("noPagination", String.valueOf(noPagination));
             headers.setBearerAuth(token);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 

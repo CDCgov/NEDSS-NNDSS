@@ -4,10 +4,12 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.repository.srte.CodeToConditionRepository;
 import gov.cdc.nnddatapollservice.repository.srte.model.CodeToCondition;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import gov.cdc.nnddatapollservice.srte.dto.CodeToConditionDto;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ public class SrteDataPersistentDAO {
     protected String sqlErrorPath = "";
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
+    private final JdbcTemplateUtil jdbcTemplateUtil;
     private final HandleError handleError;
     private final CodeToConditionRepository codeToConditionRepository;
     private final Gson gsonNorm = new Gson();
@@ -46,24 +49,25 @@ public class SrteDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
     @Autowired
-    public SrteDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, CodeToConditionRepository codeToConditionRepository) {
+    public SrteDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, JdbcTemplateUtil jdbcTemplateUtil, HandleError handleError, CodeToConditionRepository codeToConditionRepository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.jdbcTemplateUtil = jdbcTemplateUtil;
         this.handleError = handleError;
         this.codeToConditionRepository = codeToConditionRepository;
     }
 
-    protected LogResponseModel handlingSrteTable(String tableName, String jsonData) {
+    protected LogResponseModel handlingSrteTable(PollDataSyncConfig pollConfig, String jsonData, boolean initialLoad) {
         LogResponseModel log = new LogResponseModel();
         log.setLog(LOG_SUCCESS);
         log.setStatus(SUCCESS);
-        if ("CODE_TO_CONDITION".equalsIgnoreCase(tableName)) {
-            Type resultType = new TypeToken<List<CodeToConditionDto>>() {
-            }.getType();
-            List<CodeToConditionDto> list = gson.fromJson(jsonData, resultType);
-            persistingCodeToCondition(list, tableName);
-        } else {
-            log = persistingGenericTable(tableName, jsonData);
-        }
+//        if ("CODE_TO_CONDITION".equalsIgnoreCase(pollConfig.getTableName())) {
+//            Type resultType = new TypeToken<List<CodeToConditionDto>>() {
+//            }.getType();
+//            List<CodeToConditionDto> list = gson.fromJson(jsonData, resultType);
+//            persistingCodeToCondition(list, pollConfig.getTableName());
+//        } else {
+            log = persistingGenericTable(pollConfig, jsonData, initialLoad);
+//        }
 
         return log;
     }
@@ -82,11 +86,11 @@ public class SrteDataPersistentDAO {
 
 
     @SuppressWarnings("java:S3776")
-    protected LogResponseModel persistingGenericTable (String tableName, String jsonData) {
+    protected LogResponseModel persistingGenericTable (PollDataSyncConfig pollConfig, String jsonData, boolean initialLoad) {
         LogResponseModel log = new LogResponseModel();
         log.setLog(LOG_SUCCESS);
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
-        jdbcInsert = jdbcInsert.withTableName(tableName);
+        jdbcInsert = jdbcInsert.withTableName(pollConfig.getTableName());
         List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
         if (records != null && !records.isEmpty()) {
             try {
@@ -95,7 +99,14 @@ public class SrteDataPersistentDAO {
                     for (int i = 0; i < records.size(); i += sublistSize) {
                         int end = Math.min(i + sublistSize, records.size());
                         List<Map<String, Object>> sublist = records.subList(i, end);
-                        jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+//                        jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                        if (initialLoad || pollConfig.getKeyList().isEmpty()) {
+                            sublist.forEach(data -> data.remove("RowNum"));
+                            jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+
+                        } else {
+                            jdbcTemplateUtil.upsertBatch(pollConfig.getTableName(), sublist, pollConfig.getKeyList());
+                        }
                     }
                 } else {
                     jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
@@ -103,34 +114,41 @@ public class SrteDataPersistentDAO {
             } catch (Exception e) {
                 for (Map<String, Object> res : records) {
                     try {
-                        jdbcInsert.execute(new MapSqlParameterSource(res));
+//                        jdbcInsert.execute(new MapSqlParameterSource(res));
+                        if (initialLoad || pollConfig.getKeyList().isEmpty()) {
+                            records.forEach(data -> data.remove("RowNum"));
+                            jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+
+                        } else {
+                            jdbcTemplateUtil.upsertBatch(pollConfig.getTableName(), records, pollConfig.getKeyList());
+                        }
                     } catch (Exception ei) {
                         logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
-                        handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + tableName + "/");
+                        handleError.writeRecordToFile(gsonNorm, res, pollConfig.getTableName() + UUID.randomUUID(), sqlErrorPath + "/SRTE/" + ei.getClass().getSimpleName() + "/" + pollConfig.getTableName() + "/");
                     }
                 }
             }
 
         } else {
             log.setLog("No Data");
-            logger.info("saveSRTEData tableName: {} Records size:0", tableName);
+            logger.info("saveSRTEData tableName: {} Records size:0", pollConfig.getTableName());
         }
         return log;
     }
-    public LogResponseModel saveSRTEData(String tableName, String jsonData) {
-        logger.info("saveSRTEData tableName: {}", tableName);
+    public LogResponseModel saveSRTEData(PollDataSyncConfig pollConfig, String jsonData, boolean initialLoad) {
+        logger.info("saveSRTEData tableName: {}", pollConfig.getTableName());
         LogResponseModel log = new LogResponseModel();
         log.setLog(LOG_SUCCESS);
         log.setStatus(SUCCESS);
         try {
-            if (tableName != null && !tableName.isEmpty()) {
-              log = handlingSrteTable ( tableName,  jsonData);
+            if (pollConfig.getTableName() != null && !pollConfig.getTableName().isEmpty()) {
+              log = handlingSrteTable ( pollConfig,  jsonData, initialLoad);
             }
         } catch (Exception e) {
             log.setStatus(ERROR);
             log.setLog(e.getMessage());
             log.setStackTrace(getStackTraceAsString(e));
-            logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
+            logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,pollConfig.getTableName(), e.getMessage());
 
         }
 

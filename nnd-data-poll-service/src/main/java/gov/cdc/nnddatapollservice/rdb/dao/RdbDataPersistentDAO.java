@@ -12,6 +12,7 @@ import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 import gov.cdc.nnddatapollservice.repository.config.model.PollDataLog;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -46,25 +47,27 @@ public class RdbDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
     private final PollDataLogRepository pollDataLogRepository;
-
+    private final JdbcTemplateUtil jdbcTemplateUtil;
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
     private final Gson gsonNorm = new Gson();
     @Autowired
-    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, PollDataLogRepository pollDataLogRepository) {
+    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, PollDataLogRepository pollDataLogRepository, JdbcTemplateUtil jdbcTemplateUtil) {
         this.jdbcTemplate = jdbcTemplate;
         this.handleError = handleError;
         this.pollDataLogRepository = pollDataLogRepository;
+        this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
 
     @SuppressWarnings("java:S3776")
-    protected void persistingGenericTable(String tableName, String jsonData) {
-        if (tableName != null && !tableName.isEmpty()) {
+    protected void persistingGenericTable(String jsonData, boolean initialLoad,
+                                          PollDataSyncConfig config) {
+        if (config.getTableName() != null && !config.getTableName().isEmpty()) {
             SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
-            simpleJdbcInsert = simpleJdbcInsert.withTableName(tableName);
+            simpleJdbcInsert = simpleJdbcInsert.withTableName(config.getTableName());
             List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
 
             if (records != null && !records.isEmpty()) {
@@ -80,9 +83,9 @@ public class RdbDataPersistentDAO {
                         "D_INV_VACCINATION"
                 ));
 
-                if (specialTables.contains(tableName.toUpperCase()))
+                if (specialTables.contains(config.getTableName().toUpperCase()))
                 {
-                    handleSpecialTableFiltering(tableName, records, simpleJdbcInsert);
+                    handleSpecialTableFiltering(config, records, simpleJdbcInsert, initialLoad);
                 }
                 else
                 {
@@ -93,13 +96,26 @@ public class RdbDataPersistentDAO {
                             for (int i = 0; i < records.size(); i += sublistSize) {
                                 int end = Math.min(i + sublistSize, records.size());
                                 List<Map<String, Object>> sublist = records.subList(i, end);
-                                simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                                if (initialLoad || config.getKeyList().isEmpty()) {
+                                    sublist.forEach(data -> data.remove("RowNum"));
+                                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+
+                                } else {
+                                    jdbcTemplateUtil.upsertBatch(config.getTableName(), sublist, config.getKeyList());
+                                }
                             }
                         } else {
-                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+//                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                            if (initialLoad || config.getKeyList().isEmpty()) {
+                                records.forEach(data -> data.remove("RowNum"));
+                                simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+
+                            } else {
+                                jdbcTemplateUtil.upsertBatch(config.getTableName(), records, config.getKeyList());
+                            }
                         }
                     } catch (Exception e) {
-                        handleBatchInsertionFailure(records, tableName, simpleJdbcInsert);
+                        handleBatchInsertionFailure(records, config.getTableName(), simpleJdbcInsert);
                     }
                 }
             }
@@ -108,13 +124,13 @@ public class RdbDataPersistentDAO {
 
     // Helper method to handle filtering for special tables
     @SuppressWarnings("java:S3776")
-    protected void handleSpecialTableFiltering(String tableName, List<Map<String, Object>> records, SimpleJdbcInsert simpleJdbcInsert) {
-        String keyColumn = tableName + "_KEY"; // Assuming each table has a key column with the pattern [table]_KEY
+    protected void handleSpecialTableFiltering(PollDataSyncConfig config, List<Map<String, Object>> records, SimpleJdbcInsert simpleJdbcInsert, boolean initialLoad) {
+        String keyColumn = config.getTableName() + "_KEY"; // Assuming each table has a key column with the pattern [table]_KEY
 
         // Query only the existing keys where the key is 1
-        String query = "SELECT " + keyColumn + " FROM " + tableName + " WHERE " + keyColumn + " = 1";
+        String query = "SELECT " + keyColumn + " FROM " + config.getTableName() + " WHERE " + keyColumn + " = 1";
         List<Double> existingKeys = new ArrayList<>(jdbcTemplate.queryForList(query, Double.class));
-        logger.info("Found {} existing keys in {} with {} = 1", existingKeys.size(), tableName, keyColumn);
+        logger.info("Found {} existing keys in {} with {} = 1", existingKeys.size(), config.getTableName(), keyColumn);
 
         Double foundKey = existingKeys.isEmpty()? null : existingKeys.get(0);
         // Filter out records that have a matching key of 1
@@ -155,16 +171,30 @@ public class RdbDataPersistentDAO {
                     for (int i = 0; i < deduplicatedRecords.size(); i += sublistSize) {
                         int end = Math.min(i + sublistSize, deduplicatedRecords.size());
                         List<Map<String, Object>> sublist = deduplicatedRecords.subList(i, end);
-                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+//                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                        if (initialLoad || config.getKeyList().isEmpty()) {
+                            sublist.forEach(data -> data.remove("RowNum"));
+                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+
+                        } else {
+                            jdbcTemplateUtil.upsertBatch(config.getTableName(), sublist, config.getKeyList());
+                        }
                     }
                 } else {
-                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(deduplicatedRecords));
+//                    simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(deduplicatedRecords));
+                    if (initialLoad || config.getKeyList().isEmpty()) {
+                        records.forEach(data -> data.remove("RowNum"));
+                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+
+                    } else {
+                        jdbcTemplateUtil.upsertBatch(config.getTableName(), records, config.getKeyList());
+                    }
                 }
             } catch (Exception e) {
-                handleBatchInsertionFailure(records, tableName, simpleJdbcInsert);
+                handleBatchInsertionFailure(records, config.getTableName(), simpleJdbcInsert);
             }
         } else {
-            logger.info("No new records to insert for {}.", tableName);
+            logger.info("No new records to insert for {}.", config.getTableName());
         }
     }
 
@@ -182,48 +212,49 @@ public class RdbDataPersistentDAO {
     }
 
     @SuppressWarnings({"java:S3776", "java:S125"})
-    public LogResponseModel saveRDBData(String tableName, String jsonData) {
+    public LogResponseModel saveRDBData(PollDataSyncConfig config, String jsonData, boolean initialLoad) {
         LogResponseModel logBuilder = new LogResponseModel();
         StringBuilder builder = new StringBuilder();
-        if ("CONFIRMATION_METHOD".equalsIgnoreCase(tableName)) {
-            logBuilder.setLog(LOG_SUCCESS);
-            logBuilder.setStatus(SUCCESS);
-            Type resultType = new TypeToken<List<ConfirmationMethod>>() {
-            }.getType();
-            List<ConfirmationMethod> list = gson.fromJson(jsonData, resultType);
-            for (ConfirmationMethod confirmationMethod : list) {
-                builder.append(", ").append(upsertConfirmationMethod(confirmationMethod));
-            }
-        } else if ("CONDITION".equalsIgnoreCase(tableName)) {
-            logBuilder.setLog(LOG_SUCCESS);
-            logBuilder.setStatus(SUCCESS);
-            Type resultType = new TypeToken<List<Condition>>() {
-            }.getType();
-            List<Condition> list = gson.fromJson(jsonData, resultType);
-            for (Condition condition : list) {
-                builder.append(", ").append(upsertCondition(condition));
-            }
-        } else if ("RDB_DATE".equalsIgnoreCase(tableName)) {
-            logBuilder.setLog(LOG_SUCCESS);
-            logBuilder.setStatus(SUCCESS);
-            Type resultType = new TypeToken<List<RdbDate>>() {
-            }.getType();
-            List<RdbDate> list = gson.fromJson(jsonData, resultType);
-            for (RdbDate rdbDate : list) {
-                builder.append(", ").append(upsertRdbDate(rdbDate));
-            }
-        } else {
+//        if ("CONFIRMATION_METHOD".equalsIgnoreCase(config.getTableName())) {
+//            logBuilder.setLog(LOG_SUCCESS);
+//            logBuilder.setStatus(SUCCESS);
+//            Type resultType = new TypeToken<List<ConfirmationMethod>>() {}.getType();
+//            List<ConfirmationMethod> list = gson.fromJson(jsonData, resultType);
+//
+//
+//            for (ConfirmationMethod confirmationMethod : list) {
+//                builder.append(", ").append(upsertConfirmationMethod(confirmationMethod));
+//            }
+//        } else if ("CONDITION".equalsIgnoreCase(config.getTableName())) {
+//            logBuilder.setLog(LOG_SUCCESS);
+//            logBuilder.setStatus(SUCCESS);
+//            Type resultType = new TypeToken<List<Condition>>() {
+//            }.getType();
+//            List<Condition> list = gson.fromJson(jsonData, resultType);
+//            for (Condition condition : list) {
+//                builder.append(", ").append(upsertCondition(condition));
+//            }
+//        } else if ("RDB_DATE".equalsIgnoreCase(config.getTableName())) {
+//            logBuilder.setLog(LOG_SUCCESS);
+//            logBuilder.setStatus(SUCCESS);
+//            Type resultType = new TypeToken<List<RdbDate>>() {
+//            }.getType();
+//            List<RdbDate> list = gson.fromJson(jsonData, resultType);
+//            for (RdbDate rdbDate : list) {
+//                builder.append(", ").append(upsertRdbDate(rdbDate));
+//            }
+//        } else {
             try {
-                persistingGenericTable (tableName, jsonData);
+                persistingGenericTable(jsonData, initialLoad, config);
             }
             catch (Exception e) {
                 logBuilder =  new LogResponseModel();
                 logBuilder.setLog(e.getMessage());
                 logBuilder.setStatus(ERROR);
                 logBuilder.setStackTrace(getStackTraceAsString(e));
-                logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
+                logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,config.getTableName(), e.getMessage());
             }
-        }
+//        }
 
         logBuilder.setLog(builder.toString());
         return logBuilder;

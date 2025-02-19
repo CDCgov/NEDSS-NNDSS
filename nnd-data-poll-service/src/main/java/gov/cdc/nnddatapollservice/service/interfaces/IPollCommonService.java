@@ -9,8 +9,10 @@ import java.util.List;
 
 public interface IPollCommonService {
     Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
+
     String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                             String startRow, String endRow) throws DataPollException;
+                             String startRow, String endRow, boolean noPagination) throws DataPollException;
+
     List<PollDataSyncConfig> getTableListFromConfig();
     boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList);
     String getCurrentTimestamp();

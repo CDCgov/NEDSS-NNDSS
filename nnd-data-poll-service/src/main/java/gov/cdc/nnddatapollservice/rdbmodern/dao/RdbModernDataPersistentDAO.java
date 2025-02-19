@@ -4,6 +4,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationCodedDto;
 import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;
@@ -95,15 +96,14 @@ public class RdbModernDataPersistentDAO {
 
     @SuppressWarnings({"java:S3776","java:S1141"})
     protected LogResponseModel persistingGenericTable (
-                                                    String tableName,
                                                     String jsonData,
-                                                    String keyList,
+                                                    PollDataSyncConfig config,
                                                     boolean initialLoad) {
         LogResponseModel log = new LogResponseModel();
         try {
             SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
-            if (tableName != null && !tableName.isEmpty()) {
-                jdbcInsert = jdbcInsert.withTableName(tableName);
+            if (config.getTableName() != null && !config.getTableName().isEmpty()) {
+                jdbcInsert = jdbcInsert.withTableName(config.getTableName());
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
                     try {
@@ -112,21 +112,21 @@ public class RdbModernDataPersistentDAO {
                             for (int i = 0; i < records.size(); i += sublistSize) {
                                 int end = Math.min(i + sublistSize, records.size());
                                 List<Map<String, Object>> sublist = records.subList(i, end);
-                                if (initialLoad) {
+                                if (initialLoad || config.getKeyList().isEmpty()) {
                                     sublist.forEach(data -> data.remove("RowNum"));
                                     jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
 
                                 } else {
-                                    jdbcTemplateUtil.upsertBatch(tableName, sublist, keyList);
+                                    jdbcTemplateUtil.upsertBatch(config.getTableName(), sublist, config.getKeyList());
                                 }
                             }
                         } else {
-                            if (initialLoad) {
+                            if (initialLoad || config.getKeyList().isEmpty()) {
                                 records.forEach(data -> data.remove("RowNum"));
                                 jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
 
                             } else {
-                                jdbcTemplateUtil.upsertBatch(tableName, records, keyList);
+                                jdbcTemplateUtil.upsertBatch(config.getTableName(), records, config.getKeyList());
                             }
                         }
                     }
@@ -141,7 +141,7 @@ public class RdbModernDataPersistentDAO {
                                     logger.debug("Duplicated Key Exception Resolved");
                                 } else {
                                     logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage()); // NOSONAR
-                                    handleError.writeRecordToFile(gsonNorm, res, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
+                                    handleError.writeRecordToFile(gsonNorm, res, config.getTableName() + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + ei.getClass().getSimpleName() + "/" + config.getTableName() + "/"); // NOSONAR
                                 }
 
                             }
@@ -154,7 +154,7 @@ public class RdbModernDataPersistentDAO {
             log.setLog(e.getMessage());
             log.setStackTrace(getStackTraceAsString(e));
             log.setStatus(ERROR);
-            logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
+            logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,config.getTableName(), e.getMessage());
         }
 
         log.setStatus(SUCCESS);
@@ -163,28 +163,28 @@ public class RdbModernDataPersistentDAO {
 
 
 
-    public LogResponseModel saveRdbModernData(String tableName, String jsonData, String keyList, boolean initialLoad) {
-        logger.info("saveRdbModernData tableName: {}", tableName);
+    public LogResponseModel saveRdbModernData(PollDataSyncConfig config, String jsonData , boolean initialLoad) {
+        logger.info("saveRdbModernData tableName: {}", config.getTableName());
         LogResponseModel logBuilder = null;
 
-        if ("NRT_OBSERVATION".equalsIgnoreCase(tableName)) {
-            logBuilder = new LogResponseModel(LOG_SUCCESS);
-            Type resultType = new TypeToken<List<NrtObservationDto>>() {
-            }.getType();
-            List<NrtObservationDto> list = gson.fromJson(jsonData, resultType);
-            persistingNrtObs(list, tableName);
-        }
-        else if ("nrt_observation_coded".equalsIgnoreCase(tableName)) {
-            logBuilder = new LogResponseModel(LOG_SUCCESS);
-            Type resultType = new TypeToken<List<NrtObservationCodedDto>>() {
-            }.getType();
-            List<NrtObservationCodedDto> list = gson.fromJson(jsonData, resultType);
-            persistingNrtObsCoded(list, tableName);
-        }
-        else {
-            logBuilder = persistingGenericTable (tableName, jsonData,
-                    keyList, initialLoad);
-        }
+//        if ("NRT_OBSERVATION".equalsIgnoreCase(config.getTableName())) {
+//            logBuilder = new LogResponseModel(LOG_SUCCESS);
+//            Type resultType = new TypeToken<List<NrtObservationDto>>() {
+//            }.getType();
+//            List<NrtObservationDto> list = gson.fromJson(jsonData, resultType);
+//            persistingNrtObs(list, config.getTableName());
+//        }
+//        else if ("nrt_observation_coded".equalsIgnoreCase(config.getTableName())) {
+//            logBuilder = new LogResponseModel(LOG_SUCCESS);
+//            Type resultType = new TypeToken<List<NrtObservationCodedDto>>() {
+//            }.getType();
+//            List<NrtObservationCodedDto> list = gson.fromJson(jsonData, resultType);
+//            persistingNrtObsCoded(list, config.getTableName());
+//        }
+//        else {
+//        }
+        logBuilder = persistingGenericTable ( jsonData,config, initialLoad);
+
 
         return logBuilder;
     }

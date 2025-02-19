@@ -62,7 +62,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
         for (PollDataSyncConfig pollDataSyncConfig : rdbTablesList) {
             try {
-                pollAndPersistRDBData(pollDataSyncConfig.getTableName(), isInitialLoad);
+                pollAndPersistRDBData(pollDataSyncConfig, isInitialLoad);
             } catch (Exception e){
                 logger.error("Task error");
             }
@@ -70,62 +70,101 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     }
 
     @SuppressWarnings("java:S1141")
-    protected void pollAndPersistRDBData(String tableName, boolean isInitialLoad) {
+    protected void pollAndPersistRDBData(PollDataSyncConfig pollConfig, boolean isInitialLoad) {
         try {
             LogResponseModel log = null;
             boolean exceptionAtApiLevel = false;
             Integer totalRecordCounts;
-            String timeStampForPoll = getPollTimestamp(isInitialLoad,  tableName);
+
+            if(pollConfig.isRecreateApplied() ) {
+                // CLEAN UP LOGIC THERE
+                if (storeInSql) {
+                    rdbDataPersistentDAO.deleteTable(pollConfig.getTableName());
+                }
+                // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
+                isInitialLoad = true;
+            }
+
+            String timeStampForPoll = getPollTimestamp(isInitialLoad,  pollConfig.getTableName());
 
             var timestampWithNull = getCurrentTimestamp();
             Timestamp startTime = getCurrentTimestamp();
+
+            String logStr = "";
+
             try {
-                totalRecordCounts = pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
+                totalRecordCounts = pollCommonService.callDataCountEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
-                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, log);
+                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
             int batchSize = pullLimit;
             int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
-            try {
-                var encodedDataWithNull = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
-                var rawJsonDataWithNull = pollCommonService.decodeAndDecompress(encodedDataWithNull);
-                if (storeJsonInS3) {
-                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
-                    log.setStartTime(startTime);
-                    log.setLog(S3_LOG + log.getLog());
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, log);
-                }
-                else if (storeInSql) {
-                    log =  rdbDataPersistentDAO.saveRDBData(tableName, rawJsonDataWithNull);
-                    log.setStartTime(startTime);
-                    log.setLog(SQL_LOG + log.getLog());
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, log);
-                }
-                else  {
-                    log = pollCommonService.writeJsonDataToFile(RDB, tableName, timestampWithNull, rawJsonDataWithNull);
-                    log.setStartTime(startTime);
-                    log.setLog(LOCAL_DIR_LOG + log.getLog());
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, log);
-                }
-            } catch (Exception e) {
-                log = new LogResponseModel(CRITICAL_NULL_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
-                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, log);
-                throw new DataPollException("TASK FAILED: " + e.getMessage());
-            }
 
-            String logStr = "";
-            for (int i = 0; i < totalPages; i++) {
+            if (!pollConfig.isNoPagination()) {
+                try {
+                    var encodedDataWithNull = pollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll,
+                            true, "0", "0", false);
+                    var rawJsonDataWithNull = pollCommonService.decodeAndDecompress(encodedDataWithNull);
+                    if (storeJsonInS3) {
+                        log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, pollConfig.getTableName(), timestampWithNull, isInitialLoad);
+                        log.setStartTime(startTime);
+                        log.setLog(S3_LOG + log.getLog());
+                        pollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestampWithNull, log);
+                    }
+                    else if (storeInSql) {
+                        log =  rdbDataPersistentDAO.saveRDBData(pollConfig, rawJsonDataWithNull, isInitialLoad);
+                        log.setStartTime(startTime);
+                        log.setLog(SQL_LOG + log.getLog());
+                        pollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestampWithNull, log);
+                    }
+                    else  {
+                        log = pollCommonService.writeJsonDataToFile(RDB, pollConfig.getTableName(), timestampWithNull, rawJsonDataWithNull);
+                        log.setStartTime(startTime);
+                        log.setLog(LOCAL_DIR_LOG + log.getLog());
+                        pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
+                    }
+                }
+                catch (Exception e) {
+                    log = new LogResponseModel(CRITICAL_NULL_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
+                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
+                    throw new DataPollException("TASK FAILED: " + e.getMessage());
+                }
+                for (int i = 0; i < totalPages; i++) {
+                    String rawJsonData = "";
+                    Timestamp timestamp = null;
+
+                    try {
+                        int startRow = i * batchSize + 1;
+                        int endRow = (i + 1) * batchSize;
+
+                        String encodedData = "";
+                        encodedData = pollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad,
+                                timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow),
+                                false);
+
+
+                        rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
+                        timestamp = getCurrentTimestamp();
+                    } catch (Exception e) {
+                        logStr = e.getMessage();
+                        exceptionAtApiLevel = true;
+                    }
+
+                    updateDataHelper(exceptionAtApiLevel, pollConfig, timestamp,
+                            rawJsonData, isInitialLoad, logStr, startTime);
+
+                }
+            }
+            else {
                 String rawJsonData = "";
                 Timestamp timestamp = null;
 
                 try {
-                    int startRow = i * batchSize + 1;
-                    int endRow = (i + 1) * batchSize;
-
                     String encodedData = "";
-                    encodedData = pollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
+                    encodedData = pollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll, false,
+                            "0", "0", true);
 
 
                     rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
@@ -135,12 +174,16 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                     exceptionAtApiLevel = true;
                 }
 
-                updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
+                updateDataHelper(exceptionAtApiLevel, pollConfig, timestamp,
                         rawJsonData, isInitialLoad, logStr, startTime);
-
             }
+
+
+
+
+
         }catch (Exception e) {
-            logger.error("TASK failed. tableName: {}, message: {}", tableName, e.getMessage());
+            logger.error("TASK failed. tableName: {}, message: {}", pollConfig.getTableName(), e.getMessage());
         }
 
     }
@@ -161,7 +204,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         return timeStampForPoll;
     }
 
-    protected void updateDataHelper(boolean exceptionAtApiLevel, String tableName, Timestamp timestamp,
+    protected void updateDataHelper(boolean exceptionAtApiLevel, PollDataSyncConfig pollConfig, Timestamp timestamp,
                                String rawJsonData, boolean isInitialLoad, String log, Timestamp startTime) {
 
         LogResponseModel logResponseModel = new LogResponseModel();
@@ -175,36 +218,36 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
 
                 if (storeInSql) {
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
+                    pollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeJsonInS3)
                 {
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
+                    pollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else
                 {
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
             }
             else
             {
                 if (storeJsonInS3) {
-                    logResponseModel = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+                    logResponseModel = is3DataService.persistToS3MultiPart(RDB, rawJsonData, pollConfig.getTableName(), timestamp, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + log);
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
+                    pollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeInSql) {
-                    logResponseModel =  rdbDataPersistentDAO.saveRDBData(tableName, rawJsonData);
+                    logResponseModel =  rdbDataPersistentDAO.saveRDBData(pollConfig, rawJsonData, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
+                    pollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else  {
-                    logResponseModel = pollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                    logResponseModel = pollCommonService.writeJsonDataToFile(RDB, pollConfig.getTableName(), timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + log);
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
             }
         } catch (Exception e) {
@@ -213,7 +256,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             logResponseModel.setStartTime(startTime);
             logResponseModel.setLog(CRITICAL_NON_NULL_LOG + e.getMessage());
             logResponseModel.setStackTrace(getStackTraceAsString(e));
-            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
         }
     }
 

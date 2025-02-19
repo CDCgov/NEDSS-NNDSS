@@ -108,6 +108,7 @@ class DataExchangeControllerTest {
                 "1",
                 limit,
                 load,
+                "1",
                 null);
 
         assertNotNull(response);
@@ -144,7 +145,8 @@ class DataExchangeControllerTest {
         ResponseEntity<Integer> response = dataExchangeController.dataSyncTotalRecords(
                 tableName,
                 timestamp,
-                "true");
+                "true",
+                "1");
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());

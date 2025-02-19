@@ -60,89 +60,133 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : srteTablesList) {
-            pollAndPersistSRTEData(pollDataSyncConfig.getTableName(), isInitialLoad);
+            pollAndPersistSRTEData(isInitialLoad, pollDataSyncConfig);
         }
 
     }
 
     @SuppressWarnings("java:S1141")
-    protected void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) {
+    protected void pollAndPersistSRTEData(boolean isInitialLoad, PollDataSyncConfig config) {
         try {
             LogResponseModel log = null;
             boolean exceptionAtApiLevel = false;
-            String timeStampForPoll = getPollTimestamp( isInitialLoad, tableName);
             Integer totalRecordCounts = 0;
+
+            if(config.isRecreateApplied() ) {
+                // CLEAN UP LOGIC THERE
+                if (storeInSql) {
+                    srteDataPersistentDAO.deleteTable(config.getTableName());
+                }
+                // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
+                isInitialLoad = true;
+            }
+
+            String timeStampForPoll = getPollTimestamp( isInitialLoad, config.getTableName());
+
 
             var timestampWithNull = TimestampUtil.getCurrentTimestamp();
             var startTime = getCurrentTimestamp();
 
             //call data exchange service api
             try {
-                totalRecordCounts = outboundPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, timeStampForPoll);
+                totalRecordCounts = outboundPollCommonService.callDataCountEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
-                outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, log);
+                outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
                 throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
+
+            String logStr = null;
+
             int batchSize = pullLimit;
             int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
 
-            try {
-                var encodedDataWithNull = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, true, "0", "0");
-                var rawJsonDataWithNull = outboundPollCommonService.decodeAndDecompress(encodedDataWithNull);
-                if (storeJsonInS3) {
-                    log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, tableName, timestampWithNull, isInitialLoad);
-                    log.setStartTime(startTime);
-                    log.setLog(S3_LOG + log.getLog());
-                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestampWithNull, log);
+            if (!config.isNoPagination())
+            {
+                try {
+                    var encodedDataWithNull = outboundPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true,
+                            "0", "0", false);
+                    var rawJsonDataWithNull = outboundPollCommonService.decodeAndDecompress(encodedDataWithNull);
+                    if (storeJsonInS3) {
+                        log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
+                        log.setStartTime(startTime);
+                        log.setLog(S3_LOG + log.getLog());
+                        outboundPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestampWithNull, log);
+                    }
+                    else if (storeInSql) {
+                        log = srteDataPersistentDAO.saveSRTEData(config, rawJsonDataWithNull, isInitialLoad);
+                        log.setStartTime(startTime);
+                        log.setLog(SQL_LOG + log.getLog());
+                        outboundPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestampWithNull, log);
+                    }
+                    else  {
+                        log = outboundPollCommonService.writeJsonDataToFile(RDB, config.getTableName(), timestampWithNull, rawJsonDataWithNull);
+                        log.setStartTime(startTime);
+                        log.setLog(LOCAL_DIR_LOG + log.getLog());
+                        outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
+                    }
                 }
-                else if (storeInSql) {
-                    log = srteDataPersistentDAO.saveSRTEData(tableName, rawJsonDataWithNull);
+                catch (Exception e)
+                {
+                    log =  new LogResponseModel();
+                    log.setStatus(ERROR);
+                    log.setLog(CRITICAL_NULL_LOG + e.getMessage());
+                    log.setStackTrace(getStackTraceAsString(e));
                     log.setStartTime(startTime);
-                    log.setLog(SQL_LOG + log.getLog());
-                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestampWithNull, log);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
+                    throw new DataPollException("TASK FAILED: " + e.getMessage());
                 }
-                else  {
-                    log = outboundPollCommonService.writeJsonDataToFile(RDB, tableName, timestampWithNull, rawJsonDataWithNull);
-                    log.setStartTime(startTime);
-                    log.setLog(LOCAL_DIR_LOG + log.getLog());
-                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, log);
+
+                for (int i = 0; i < totalPages; i++) {
+                    String rawJsonData = "";
+                    Timestamp timestamp = null;
+
+                    try {
+                        int startRow = i * batchSize + 1;
+                        int endRow = (i + 1) * batchSize;
+
+                        String encodedData = "";
+                        encodedData = outboundPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
+                                String.valueOf(startRow), String.valueOf(endRow), false);
+                        rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
+                        timestamp = TimestampUtil.getCurrentTimestamp();
+                    } catch (Exception e) {
+                        logStr = e.getMessage();
+                        exceptionAtApiLevel = true;
+                    }
+
+                    updateDataHelper(exceptionAtApiLevel, timestamp,
+                            rawJsonData, isInitialLoad, logStr, startTime, config);
+
                 }
-            } catch (Exception e) {
-                log =  new LogResponseModel();
-                log.setStatus(ERROR);
-                log.setLog(CRITICAL_NULL_LOG + e.getMessage());
-                log.setStackTrace(getStackTraceAsString(e));
-                log.setStartTime(startTime);
-                outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestampWithNull, log);
-                throw new DataPollException("TASK FAILED: " + e.getMessage());
             }
-
-
-            String logStr = null;
-            for (int i = 0; i < totalPages; i++) {
+            else
+            {
                 String rawJsonData = "";
                 Timestamp timestamp = null;
 
                 try {
-                    int startRow = i * batchSize + 1;
-                    int endRow = (i + 1) * batchSize;
-
                     String encodedData = "";
-                    encodedData = outboundPollCommonService.callDataExchangeEndpoint(tableName, isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow));
+                    encodedData = outboundPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
+                            "0", "0", true);
+
+
                     rawJsonData = outboundPollCommonService.decodeAndDecompress(encodedData);
-                    timestamp = TimestampUtil.getCurrentTimestamp();
+                    timestamp = getCurrentTimestamp();
                 } catch (Exception e) {
                     logStr = e.getMessage();
                     exceptionAtApiLevel = true;
                 }
 
-                updateDataHelper(exceptionAtApiLevel, tableName, timestamp,
-                        rawJsonData, isInitialLoad, logStr, startTime);
-
+                updateDataHelper(exceptionAtApiLevel, timestamp,
+                        rawJsonData, isInitialLoad, logStr, startTime, config);
             }
+
+
+
+
         } catch (Exception e) {
-            logger.error("TASK failed. tableName: {}, message: {}", tableName, e.getMessage());
+            logger.error("TASK failed. tableName: {}, message: {}", config.getTableName(), e.getMessage());
         }
 
     }
@@ -165,8 +209,9 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
         return timeStampForPoll;
     }
 
-    protected void updateDataHelper(boolean exceptionAtApiLevel, String tableName, Timestamp timestamp,
-                                    String rawJsonData, boolean isInitialLoad, String log, Timestamp startTime) {
+    protected void updateDataHelper(boolean exceptionAtApiLevel, Timestamp timestamp,
+                                    String rawJsonData, boolean isInitialLoad, String log, Timestamp startTime,
+                                    PollDataSyncConfig config) {
         LogResponseModel logResponseModel = new LogResponseModel();
 
         try {
@@ -177,34 +222,34 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
                 logResponseModel.setLog(API_LEVEL + log);
 
                 if (storeInSql) {
-                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeJsonInS3) {
-                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp,  logResponseModel);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestamp,  logResponseModel);
                 }
                 else {
-                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestamp, logResponseModel);
                 }
             }
             else
             {
                 if (storeJsonInS3) {
-                    logResponseModel = is3DataService.persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+                    logResponseModel = is3DataService.persistToS3MultiPart(RDB, rawJsonData, config.getTableName(), timestamp, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + log);
-                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeInSql) {
-                    logResponseModel =  srteDataPersistentDAO.saveSRTEData(tableName, rawJsonData);
+                    logResponseModel =  srteDataPersistentDAO.saveSRTEData(config, rawJsonData, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
-                    outboundPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestamp, logResponseModel);
                 }
                 else {
-                    logResponseModel = outboundPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                    logResponseModel = outboundPollCommonService.writeJsonDataToFile(RDB, config.getTableName(), timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + log);
-                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+                    outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestamp, logResponseModel);
                 }
             }
         } catch (Exception e) {
@@ -213,7 +258,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
             logResponseModel.setStartTime(startTime);
             logResponseModel.setLog(CRITICAL_NON_NULL_LOG + e.getMessage());
             logResponseModel.setStackTrace(getStackTraceAsString(e));
-            outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+            outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestamp, logResponseModel);
         }
     }
 
