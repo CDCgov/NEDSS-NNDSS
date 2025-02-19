@@ -23,6 +23,8 @@ CREATE TABLE poll_data_sync_config
     last_update_time_s3 DATETIME2,
     last_update_time_local_dir DATETIME2,
     query nvarchar(MAX) NULL,
+    key_list NVARCHAR(250),
+    recreate_applied bit DEFAULT 0
 );
 END
 GO
