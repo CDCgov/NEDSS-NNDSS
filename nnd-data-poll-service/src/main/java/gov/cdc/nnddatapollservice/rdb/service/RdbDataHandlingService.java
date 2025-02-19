@@ -61,7 +61,6 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : rdbTablesList) {
-            logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
             try {
                 pollAndPersistRDBData(pollDataSyncConfig.getTableName(), isInitialLoad);
             } catch (Exception e){

@@ -128,8 +128,6 @@ public class PollCommonService implements IPollCommonService {
     public boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
         if(dirSync) {
             for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(),
-                        pollDataSyncConfig.getLastUpdateTimeLocalDir());
                 if (pollDataSyncConfig.getLastUpdateTimeLocalDir() != null
                         && !pollDataSyncConfig.getLastUpdateTimeLocalDir().toString().isBlank()) {
                     return false;
@@ -137,8 +135,6 @@ public class PollCommonService implements IPollCommonService {
             }
         } else if (s3Sync) {
             for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(),
-                        pollDataSyncConfig.getLastUpdateTimeS3());
                 if (pollDataSyncConfig.getLastUpdateTimeS3() != null
                         && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
                     return false;
@@ -146,7 +142,6 @@ public class PollCommonService implements IPollCommonService {
             }
         } else {
             for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
                 if (pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
                     return false;
                 }
