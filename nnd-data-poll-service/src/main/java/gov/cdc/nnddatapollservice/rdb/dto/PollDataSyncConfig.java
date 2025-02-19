@@ -18,4 +18,5 @@ public class PollDataSyncConfig {
     private String query;
     private String keyList;
     private boolean recreateApplied;
+    private boolean useKeyList;
 }
