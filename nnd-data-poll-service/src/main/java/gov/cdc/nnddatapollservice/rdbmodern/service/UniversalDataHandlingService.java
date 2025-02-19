@@ -49,16 +49,14 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     }
 
     public void handlingExchangedData(String source) throws DataPollException {
-        logger.info("---START POLLING---");
         var startTime = getCurrentTimestamp();
         List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> filteredTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, source);
 
         boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(filteredTablesList);
-        logger.info("-----INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad && storeInSql && deleteOnInit) {
-            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
+            logger.info("CLEANING UP THE TABLES ");
             cleanupTables(filteredTablesList);
         }
 
@@ -67,7 +65,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     pollDataSyncConfig.getKeyList(), pollDataSyncConfig.isRecreateApplied(), startTime);
         }
 
-        logger.info("---END POLLING---");
     }
 
     @SuppressWarnings({"java:S1141","java:S3776"})

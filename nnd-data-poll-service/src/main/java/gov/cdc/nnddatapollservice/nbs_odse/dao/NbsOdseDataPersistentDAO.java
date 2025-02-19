@@ -58,7 +58,6 @@ public class NbsOdseDataPersistentDAO {
     }
 
     public LogResponseModel saveNbsOdseData(String tableName, String jsonData) {
-        logger.info("saveNbsOdseData tableName: {}", tableName);
         LogResponseModel logBuilder = new LogResponseModel();
         if ("EDX_ACTIVITY_LOG".equalsIgnoreCase(tableName)) {
             logBuilder.setLog(LOG_SUCCESS);

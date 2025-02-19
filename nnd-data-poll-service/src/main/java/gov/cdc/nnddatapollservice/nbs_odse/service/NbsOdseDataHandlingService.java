@@ -48,33 +48,26 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
 
 
     public void handlingExchangedData() throws DataPollException {
-        logger.info("---START RDB_MODERN POLLING---");
         List<PollDataSyncConfig> configTableList = pollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> rdbModernTablesList = pollCommonService.getTablesConfigListBySOurceDB(configTableList, NBS_ODSE);
-        logger.info(" RDB_MODERN TableList to be polled: {}", rdbModernTablesList.size());
 
         boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
-        logger.info("-----INITIAL LOAD: {}", isInitialLoad);
+        logger.info("INITIAL LOAD: {}", isInitialLoad);
 
 
         for (PollDataSyncConfig pollDataSyncConfig : rdbModernTablesList) {
-            logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
             pollAndPersistRDBMOdernData(pollDataSyncConfig.getTableName(), isInitialLoad);
         }
 
-        logger.info("---END RDB_MODERN POLLING---");
     }
 
     protected void pollAndPersistRDBMOdernData(String tableName, boolean isInitialLoad) {
         try {
-            logger.info("--START--pollAndPersistRDBData for table {}", tableName);
             LogResponseModel log = null;
             boolean exceptionAtApiLevel = false;
             Integer totalRecordCounts = 0;
             String timeStampForPoll = getPollTimestamp(isInitialLoad, tableName);
-            logger.info("isInitialLoad {}", isInitialLoad);
 
-            logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
             var timestampWithNull = TimestampUtil.getCurrentTimestamp();
 
             var startTime = getCurrentTimestamp();

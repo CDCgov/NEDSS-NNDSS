@@ -106,8 +106,6 @@ public class RdbModernDataPersistentDAO {
                 jdbcInsert = jdbcInsert.withTableName(tableName);
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
                 if (records != null && !records.isEmpty()) {
-                    logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-
                     try {
                         if (records.size() >  batchSize) {
                             int sublistSize = batchSize;
@@ -149,10 +147,6 @@ public class RdbModernDataPersistentDAO {
                             }
                         }
                     }
-
-
-                } else {
-                    logger.info("saveRdbModernData tableName: {} Records size:0", tableName);
                 }
             }
 
@@ -172,8 +166,6 @@ public class RdbModernDataPersistentDAO {
     public LogResponseModel saveRdbModernData(String tableName, String jsonData, String keyList, boolean initialLoad) {
         logger.info("saveRdbModernData tableName: {}", tableName);
         LogResponseModel logBuilder = null;
-
-
 
         if ("NRT_OBSERVATION".equalsIgnoreCase(tableName)) {
             logBuilder = new LogResponseModel(LOG_SUCCESS);

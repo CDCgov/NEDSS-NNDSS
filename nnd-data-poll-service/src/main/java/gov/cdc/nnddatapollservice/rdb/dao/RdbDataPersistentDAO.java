@@ -68,8 +68,6 @@ public class RdbDataPersistentDAO {
             List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
 
             if (records != null && !records.isEmpty()) {
-                logger.info("Inside generic code before executeBatch tableName: {} Records size:{}", tableName, records.size());
-
                 // Handle special filtering for specified tables
                 Set<String> specialTables = new HashSet<>(Arrays.asList(
                         "D_INV_HIV",
@@ -104,8 +102,6 @@ public class RdbDataPersistentDAO {
                         handleBatchInsertionFailure(records, tableName, simpleJdbcInsert);
                     }
                 }
-            } else {
-                logger.info("Inside generic code tableName: {} Records size: 0", tableName);
             }
         }
     }
@@ -374,7 +370,6 @@ public class RdbDataPersistentDAO {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
             updatedTime = formatter.format(lastTime); // NOSONAR
         }
-        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
         return updatedTime;
     }
 
@@ -388,7 +383,6 @@ public class RdbDataPersistentDAO {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
             updatedTime = formatter.format(lastTime); // NOSONAR
         }
-        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
         return updatedTime;
     }
 
@@ -402,7 +396,6 @@ public class RdbDataPersistentDAO {
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
             updatedTime = formatter.format(lastTime); // NOSONAR
         }
-        logger.info("getLastUpdatedTime from config. tableName: {} lastUpdatedTime:{}", tableName, lastTime); // NOSONAR
         return updatedTime;
     }
 
@@ -443,7 +436,6 @@ public class RdbDataPersistentDAO {
         List<PollDataSyncConfig> tableList = jdbcTemplate.query(
                 sql,
                 new BeanPropertyRowMapper<>(PollDataSyncConfig.class));
-        logger.info("getTableListFromConfig size:{}", tableList.size());
         return tableList;
     }
 

@@ -49,16 +49,14 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     }
 
     public void handlingExchangedData() throws DataPollException {
-        logger.info("---START RDB POLLING---");
         List<PollDataSyncConfig> configTableList = pollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> rdbTablesList = pollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB);
-        logger.info(" RDB TableList to be polled: {}", rdbTablesList.size());
 
         boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(rdbTablesList);
-        logger.info("-----INITIAL LOAD: {}", isInitialLoad);
+        logger.info("INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad && storeInSql && deleteOnInit) {
-            logger.info("For INITIAL LOAD - CLEANING UP THE TABLES ");
+            logger.info("CLEANING UP THE TABLES");
             cleanupRDBTables(rdbTablesList);
         }
 
@@ -67,11 +65,9 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             try {
                 pollAndPersistRDBData(pollDataSyncConfig.getTableName(), isInitialLoad);
             } catch (Exception e){
-                logger.info("Task error");
+                logger.error("Task error");
             }
         }
-
-        logger.info("---END RDB POLLING---");
     }
 
     @SuppressWarnings("java:S1141")
@@ -80,12 +76,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             LogResponseModel log = null;
             boolean exceptionAtApiLevel = false;
             Integer totalRecordCounts;
-            logger.info("--START--pollAndPeristsRDBData for table {}", tableName);
             String timeStampForPoll = getPollTimestamp(isInitialLoad,  tableName);
 
-            logger.info("isInitialLoad {}", isInitialLoad);
-
-            logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
             var timestampWithNull = getCurrentTimestamp();
             Timestamp startTime = getCurrentTimestamp();
             try {

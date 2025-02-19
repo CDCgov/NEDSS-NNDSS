@@ -49,36 +49,30 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
     }
 
     public void handlingExchangedData() throws DataPollException {
-        logger.info("---START SRTE POLLING---");
         List<PollDataSyncConfig> configTableList = outboundPollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> srteTablesList = outboundPollCommonService.getTablesConfigListBySOurceDB(configTableList, SRTE);
-        logger.info("SRTE TableList to be polled: {}", srteTablesList.size());
 
         boolean isInitialLoad = outboundPollCommonService.checkPollingIsInitailLoad(srteTablesList);
-        logger.info("-----SRTE INITIAL LOAD: {}", isInitialLoad);
+        logger.info("SRTE INITIAL LOAD: {}", isInitialLoad);
         //Delete the existing records
         if (isInitialLoad && storeInSql && deleteOnInit) {
             cleanupTables(srteTablesList);
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : srteTablesList) {
-            logger.info("Start polling: Table:{} order:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getTableOrder());
             pollAndPersistSRTEData(pollDataSyncConfig.getTableName(), isInitialLoad);
         }
 
-        logger.info("---END SRTE POLLING---");
     }
 
     @SuppressWarnings("java:S1141")
     protected void pollAndPersistSRTEData(String tableName, boolean isInitialLoad) {
         try {
-            logger.info("--START--pollAndPersistSRTEData for table {}", tableName);
             LogResponseModel log = null;
             boolean exceptionAtApiLevel = false;
             String timeStampForPoll = getPollTimestamp( isInitialLoad, tableName);
             Integer totalRecordCounts = 0;
 
-            logger.info("------lastUpdatedTime to send to exchange api {}", timeStampForPoll);
             var timestampWithNull = TimestampUtil.getCurrentTimestamp();
             var startTime = getCurrentTimestamp();
 

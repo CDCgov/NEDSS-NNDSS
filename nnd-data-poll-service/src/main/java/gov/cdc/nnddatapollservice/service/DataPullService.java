@@ -72,10 +72,10 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleNNDDataFetch() throws DataPollException {
         if (nndPollEnabled) {
-            logger.info("CRON STARTED FOR NND");
-            logger.info(cron);
-            logger.info(zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             dataHandlingService.handlingExchangedData();
+            logger.info("END POLLING");
             closePoller();
         }
     }
@@ -83,10 +83,10 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron_edx_activity}", zone = "${scheduler.zone}")
     public void scheduleEdxActivityDataFetch() throws DataPollException {
         if (edxActivityEnabled) {
-            logger.info("CRON STARTED FOR EDX ACTIVITY");
-            logger.info(cron);
-            logger.info(zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             edxActivitySyncService.handlingExchangedData();
+            logger.info("END POLLING");
             closePoller();
         }
     }
@@ -95,14 +95,10 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron_rdb}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
-            logger.info("CRON STARTED FOR POLLING RDB");
-            logger.info("{}, {} FOR RDB", cron, zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             rdbDataHandlingService.handlingExchangedData();
-
-            // RDB MODERN and SRTE are now part of RDB
-//            universalDataHandlingService.handlingExchangedData(RDB_MODERN);
-//            srteDataHandlingService.handlingExchangedData();
-            logger.info("CRON ENDED FOR POLLING RDB");
+            logger.info("END POLLING");
             closePoller();
         }
     }
@@ -111,10 +107,11 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron_rdb_modern}", zone = "${scheduler.zone}")
     public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
-            logger.info("CRON STARTED FOR POLLING RDB_MODERN");
-            logger.info("{}, {} FOR RDB_MODERN", cron, zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             // RDB MODERN will be converted to more generic -- use this for any new db sync
             universalDataHandlingService.handlingExchangedData(RDB_MODERN);
+            logger.info("END POLLING");
             closePoller();
         }
     }
@@ -122,10 +119,11 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron_covid_datamart}", zone = "${scheduler.zone}")
     public void scheduleCovidDataMartDataFetch() throws DataPollException {
         if (covidDataMartEnabled) {
-            logger.info("CRON STARTED FOR POLLING COVID DATAMART");
-            logger.info("{}, {} FOR COVID DATAMART", cron, zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             // RDB MODERN will be converted to more generic -- use this for any new db sync
             universalDataHandlingService.handlingExchangedData(COVID_DATAMART);
+            logger.info("END POLLING");
             closePoller();
         }
     }
@@ -134,8 +132,10 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron_odse}", zone = "${scheduler.zone}")
     public void scheduleOdseDataFetch() throws DataPollException {
         if (odsePollEnabled) {
-            logger.info("CRON STARTED");
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             universalDataHandlingService.handlingExchangedData(ODSE_OBS);
+            logger.info("END POLLING");
             closePoller();
         }
     }
@@ -143,9 +143,10 @@ public class DataPullService implements IDataPullService {
     @Scheduled(cron = "${scheduler.cron_srte}", zone = "${scheduler.zone}")
     public void scheduleSRTEDataFetch() throws DataPollException {
         if (srtePollEnabled) {
-            logger.info("CRON STARTED FOR POLLING SRTE");
-            logger.info("{}, {} FOR SRTE", cron, zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             srteDataHandlingService.handlingExchangedData();
+            logger.info("END POLLING");
             closePoller();
         }
 
