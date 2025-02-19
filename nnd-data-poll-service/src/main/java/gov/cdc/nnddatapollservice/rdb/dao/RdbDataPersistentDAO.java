@@ -8,6 +8,9 @@ import gov.cdc.nnddatapollservice.rdb.dto.Condition;
 import gov.cdc.nnddatapollservice.rdb.dto.ConfirmationMethod;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.rdb.dto.RdbDate;
+import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
+import gov.cdc.nnddatapollservice.repository.config.model.PollDataLog;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +32,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
+import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 @Service
 @Slf4j
@@ -41,6 +45,7 @@ public class RdbDataPersistentDAO {
     private final Gson gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
+    private final PollDataLogRepository pollDataLogRepository;
 
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
@@ -48,9 +53,10 @@ public class RdbDataPersistentDAO {
     protected Integer batchSize = 1000;
     private final Gson gsonNorm = new Gson();
     @Autowired
-    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError) {
+    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, PollDataLogRepository pollDataLogRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.handleError = handleError;
+        this.pollDataLogRepository = pollDataLogRepository;
     }
 
 
@@ -180,43 +186,51 @@ public class RdbDataPersistentDAO {
     }
 
     @SuppressWarnings({"java:S3776", "java:S125"})
-    public String saveRDBData(String tableName, String jsonData) {
-        logger.info("saveRDBData tableName: {}", tableName);
-        StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
+    public LogResponseModel saveRDBData(String tableName, String jsonData) {
+        LogResponseModel logBuilder = new LogResponseModel();
+        StringBuilder builder = new StringBuilder();
         if ("CONFIRMATION_METHOD".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder(LOG_SUCCESS);
+            logBuilder.setLog(LOG_SUCCESS);
+            logBuilder.setStatus(SUCCESS);
             Type resultType = new TypeToken<List<ConfirmationMethod>>() {
             }.getType();
             List<ConfirmationMethod> list = gson.fromJson(jsonData, resultType);
             for (ConfirmationMethod confirmationMethod : list) {
-                logBuilder.append(", ").append(upsertConfirmationMethod(confirmationMethod));
+                builder.append(", ").append(upsertConfirmationMethod(confirmationMethod));
             }
         } else if ("CONDITION".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder(LOG_SUCCESS);
+            logBuilder.setLog(LOG_SUCCESS);
+            logBuilder.setStatus(SUCCESS);
             Type resultType = new TypeToken<List<Condition>>() {
             }.getType();
             List<Condition> list = gson.fromJson(jsonData, resultType);
             for (Condition condition : list) {
-                logBuilder.append(", ").append(upsertCondition(condition));
+                builder.append(", ").append(upsertCondition(condition));
             }
         } else if ("RDB_DATE".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder(LOG_SUCCESS);
+            logBuilder.setLog(LOG_SUCCESS);
+            logBuilder.setStatus(SUCCESS);
             Type resultType = new TypeToken<List<RdbDate>>() {
             }.getType();
             List<RdbDate> list = gson.fromJson(jsonData, resultType);
             for (RdbDate rdbDate : list) {
-                logBuilder.append(", ").append(upsertRdbDate(rdbDate));
+                builder.append(", ").append(upsertRdbDate(rdbDate));
             }
         } else {
             try {
                 persistingGenericTable (tableName, jsonData);
             }
             catch (Exception e) {
-                logBuilder = new StringBuilder(e.getMessage());
+                logBuilder =  new LogResponseModel();
+                logBuilder.setLog(e.getMessage());
+                logBuilder.setStatus(ERROR);
+                logBuilder.setStackTrace(getStackTraceAsString(e));
                 logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
             }
         }
-        return logBuilder.toString();
+
+        logBuilder.setLog(builder.toString());
+        return logBuilder;
     }
 
     private String upsertConfirmationMethod(ConfirmationMethod confirmationMethod) {
@@ -398,19 +412,28 @@ public class RdbDataPersistentDAO {
     }
 
 
-    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
-        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time =?, last_executed_log=? where table_name=?;";
-        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time =? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, tableName);
+
+        PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
+        pollDataLogRepository.save(pollDataLog);
     }
 
-    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log) {
-        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
-        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp,  LogResponseModel logResponseModel) {
+        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_s3 =? where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, tableName);
+
+        PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
+        pollDataLogRepository.save(pollDataLog);
     }
 
-    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log) {
-        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
-        jdbcTemplate.update(updateSql, timestamp, log, tableName);
+    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        String updateSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, where table_name=?;";
+        jdbcTemplate.update(updateSql, timestamp, tableName);
+
+        PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
+        pollDataLogRepository.save(pollDataLog);
     }
 
 

@@ -5,6 +5,7 @@ import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
@@ -174,16 +175,16 @@ public class PollCommonService implements IPollCommonService {
         return rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName);
     }
 
-    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
     }
 
-    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
     }
 
-    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
     }
 
     public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
@@ -197,7 +198,7 @@ public class PollCommonService implements IPollCommonService {
         return configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).toList();
     }
 
-    public String writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
+    public LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
         return PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData);
     }
 

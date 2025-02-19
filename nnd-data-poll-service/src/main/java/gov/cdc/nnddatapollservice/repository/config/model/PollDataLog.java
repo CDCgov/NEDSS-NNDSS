@@ -1,10 +1,13 @@
 package gov.cdc.nnddatapollservice.repository.config.model;
 
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+
+import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp;
 
 @Getter
 @Setter
@@ -33,4 +36,14 @@ public class PollDataLog {
     @Column(name = "stack_trace")
     private String stackTrace;
 
+    public PollDataLog() {}
+
+    public PollDataLog(LogResponseModel logResponseModel, String tableName) {
+        this.tableName = tableName;
+        this.statusSync = logResponseModel.getStatus();
+        this.startTime = logResponseModel.getStartTime();
+        this.executedLog = logResponseModel.getLog();
+        this.stackTrace = logResponseModel.getStackTrace();
+        this.endTime = getCurrentTimestamp();
+    }
 }

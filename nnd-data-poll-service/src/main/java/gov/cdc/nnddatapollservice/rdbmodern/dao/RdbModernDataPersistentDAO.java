@@ -10,6 +10,7 @@ import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepos
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservationCoded;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
@@ -31,7 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
+import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 @Service
 @Slf4j
@@ -92,11 +94,12 @@ public class RdbModernDataPersistentDAO {
     }
 
     @SuppressWarnings({"java:S3776","java:S1141"})
-    protected StringBuilder persistingGenericTable (StringBuilder logBuilder,
+    protected LogResponseModel persistingGenericTable (
                                                     String tableName,
                                                     String jsonData,
                                                     String keyList,
                                                     boolean initialLoad) {
+        LogResponseModel log = new LogResponseModel();
         try {
             SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
             if (tableName != null && !tableName.isEmpty()) {
@@ -128,7 +131,9 @@ public class RdbModernDataPersistentDAO {
                                 jdbcTemplateUtil.upsertBatch(tableName, records, keyList);
                             }
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         for (Map<String, Object> res : records) {
                             try {
                                 jdbcInsert.execute(new MapSqlParameterSource(res));
@@ -152,41 +157,44 @@ public class RdbModernDataPersistentDAO {
             }
 
         } catch (Exception e) {
+            log.setLog(e.getMessage());
+            log.setStackTrace(getStackTraceAsString(e));
+            log.setStatus(ERROR);
             logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
-            logBuilder = new StringBuilder(e.getMessage());
         }
 
-        return logBuilder;
+        log.setStatus(SUCCESS);
+        return log;
     }
 
 
 
-    public String saveRdbModernData(String tableName, String jsonData, String keyList, boolean initialLoad) {
+    public LogResponseModel saveRdbModernData(String tableName, String jsonData, String keyList, boolean initialLoad) {
         logger.info("saveRdbModernData tableName: {}", tableName);
-        StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
+        LogResponseModel logBuilder = null;
 
 
 
         if ("NRT_OBSERVATION".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder(LOG_SUCCESS);
+            logBuilder = new LogResponseModel(LOG_SUCCESS);
             Type resultType = new TypeToken<List<NrtObservationDto>>() {
             }.getType();
             List<NrtObservationDto> list = gson.fromJson(jsonData, resultType);
             persistingNrtObs(list, tableName);
         }
         else if ("nrt_observation_coded".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder(LOG_SUCCESS);
+            logBuilder = new LogResponseModel(LOG_SUCCESS);
             Type resultType = new TypeToken<List<NrtObservationCodedDto>>() {
             }.getType();
             List<NrtObservationCodedDto> list = gson.fromJson(jsonData, resultType);
             persistingNrtObsCoded(list, tableName);
         }
         else {
-            logBuilder = persistingGenericTable (logBuilder, tableName, jsonData,
+            logBuilder = persistingGenericTable (tableName, jsonData,
                     keyList, initialLoad);
         }
 
-        return logBuilder.toString();
+        return logBuilder;
     }
 
 

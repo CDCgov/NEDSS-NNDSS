@@ -11,6 +11,7 @@ import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityDetailLogReposi
 import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityLogRepository;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityDetailLog;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityLog;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.SUCCESS;
 
 @Service
 public class NbsOdseDataPersistentDAO {
@@ -55,25 +57,27 @@ public class NbsOdseDataPersistentDAO {
         this.edxActivityDetailLogRepository = edxActivityDetailLogRepository;
     }
 
-    public String saveNbsOdseData(String tableName, String jsonData) {
+    public LogResponseModel saveNbsOdseData(String tableName, String jsonData) {
         logger.info("saveNbsOdseData tableName: {}", tableName);
-        StringBuilder logBuilder = new StringBuilder(LOG_SUCCESS);
+        LogResponseModel logBuilder = new LogResponseModel();
         if ("EDX_ACTIVITY_LOG".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder(LOG_SUCCESS);
+            logBuilder.setLog(LOG_SUCCESS);
+            logBuilder.setStatus(SUCCESS);
             Type resultType = new TypeToken<List<EDXActivityLogDto>>() {
             }.getType();
             List<EDXActivityLogDto> list = gson.fromJson(jsonData, resultType);
             persistingEdxActivity(list, tableName);
         }
         else if ("EDX_ACTIVITY_DETAIL_LOG".equalsIgnoreCase(tableName)) {
-            logBuilder = new StringBuilder(LOG_SUCCESS);
+            logBuilder.setLog(LOG_SUCCESS);
+            logBuilder.setStatus(SUCCESS);
             Type resultType = new TypeToken<List<EDXActivityDetailLogDto>>() {
             }.getType();
             List<EDXActivityDetailLogDto> list = gson.fromJson(jsonData, resultType);
             persistingEdxActivityDetail(list, tableName);
         }
 
-        return logBuilder.toString();
+        return logBuilder;
 
     }
 

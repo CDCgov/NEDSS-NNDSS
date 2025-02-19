@@ -3,6 +3,7 @@ package gov.cdc.nnddatapollservice.share;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
+import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 public class PollServiceUtil {
     private static Logger logger = LoggerFactory.getLogger(PollServiceUtil.class);
@@ -26,8 +28,8 @@ public class PollServiceUtil {
         throw new IllegalStateException("PollServiceUtil cannot be instantiated");
     }
 
-    public static String writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
-        String log = LOG_SUCCESS;
+    public static LogResponseModel writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
+        LogResponseModel logResponseModel = new LogResponseModel();
         try {
             if (jsonData != null && !jsonData.equalsIgnoreCase("[]") && !jsonData.isEmpty()) {
                 SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);
@@ -41,10 +43,13 @@ public class PollServiceUtil {
             }
         } catch (Exception e) {
             logger.error("Error writing to file", e);
-            log = e.getMessage();
+            logResponseModel.setLog(e.getMessage());
+            logResponseModel.setStackTrace(getStackTraceAsString(e));
+            logResponseModel.setStatus(ERROR);
         }
 
-        return log;
+        logResponseModel.setStatus(SUCCESS);
+        return logResponseModel;
     }
 
     public static List<Map<String, Object>> jsonToListOfMap(String jsonData) {

@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import gov.cdc.nnddatapollservice.repository.srte.CodeToConditionRepository;
 import gov.cdc.nnddatapollservice.repository.srte.model.CodeToCondition;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import gov.cdc.nnddatapollservice.srte.dto.CodeToConditionDto;
@@ -26,7 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
+import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 @Service
 @Slf4j
@@ -50,8 +52,10 @@ public class SrteDataPersistentDAO {
         this.codeToConditionRepository = codeToConditionRepository;
     }
 
-    protected String handlingSrteTable(String tableName, String jsonData) {
-        String log = LOG_SUCCESS;
+    protected LogResponseModel handlingSrteTable(String tableName, String jsonData) {
+        LogResponseModel log = new LogResponseModel();
+        log.setLog(LOG_SUCCESS);
+        log.setStatus(SUCCESS);
         if ("CODE_TO_CONDITION".equalsIgnoreCase(tableName)) {
             Type resultType = new TypeToken<List<CodeToConditionDto>>() {
             }.getType();
@@ -78,8 +82,9 @@ public class SrteDataPersistentDAO {
 
 
     @SuppressWarnings("java:S3776")
-    protected String persistingGenericTable (String tableName, String jsonData) {
-        String log = LOG_SUCCESS;
+    protected LogResponseModel persistingGenericTable (String tableName, String jsonData) {
+        LogResponseModel log = new LogResponseModel();
+        log.setLog(LOG_SUCCESS);
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(jdbcTemplate);
         jdbcInsert = jdbcInsert.withTableName(tableName);
         List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
@@ -109,20 +114,24 @@ public class SrteDataPersistentDAO {
             }
 
         } else {
-            log = "No Data";
+            log.setLog("No Data");
             logger.info("saveSRTEData tableName: {} Records size:0", tableName);
         }
         return log;
     }
-    public String saveSRTEData(String tableName, String jsonData) {
+    public LogResponseModel saveSRTEData(String tableName, String jsonData) {
         logger.info("saveSRTEData tableName: {}", tableName);
-        String log = LOG_SUCCESS;
+        LogResponseModel log = new LogResponseModel();
+        log.setLog(LOG_SUCCESS);
+        log.setStatus(SUCCESS);
         try {
             if (tableName != null && !tableName.isEmpty()) {
               log = handlingSrteTable ( tableName,  jsonData);
             }
         } catch (Exception e) {
-            log = e.getMessage();
+            log.setStatus(ERROR);
+            log.setLog(e.getMessage());
+            log.setStackTrace(getStackTraceAsString(e));
             logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,tableName, e.getMessage());
 
         }

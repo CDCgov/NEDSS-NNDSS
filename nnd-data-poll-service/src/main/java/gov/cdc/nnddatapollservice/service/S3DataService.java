@@ -2,6 +2,7 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 @Service
 public class S3DataService implements IS3DataService {
@@ -74,8 +76,9 @@ public class S3DataService implements IS3DataService {
     }
 
 
-    public String persistToS3MultiPart(String domain, String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) {
+    public LogResponseModel persistToS3MultiPart(String domain, String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) {
         String log = LOG_SUCCESS;
+        LogResponseModel logResponseModel = new LogResponseModel();
         try {
             if (records.equalsIgnoreCase("[]") || records.isEmpty()) {
                 throw new DataPollException("No data to persist for table " + fileName);
@@ -121,10 +124,13 @@ public class S3DataService implements IS3DataService {
         }
         catch (Exception e)
         {
+            logResponseModel.setLog(e.getMessage());
+            logResponseModel.setStackTrace(getStackTraceAsString(e));
             logger.info(e.getMessage());
-            log = e.getMessage();
         }
-        return log;
+
+        logResponseModel.setLog(log);
+        return logResponseModel;
     }
 
     private String initiateMultipartUpload(String fileName) {

@@ -16,4 +16,6 @@ public class ConstantValue {
     public static final String CRITICAL_COUNT_LOG = "Critical Count Log: ";
 
     public static final String CRITICAL_NON_NULL_LOG = "Critical Non Null Log: ";
+    public static final String SUCCESS = "SUCCESS";
+    public static final String ERROR = "ERROR";
 }
