@@ -133,8 +133,8 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('LDF_DATA', 'RDB',41, 'LDF_DATA_KEY', 1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, recreate_applied)
-VALUES('LDF_FOODBORNE', 'RDB',42, 1);
+(table_name, source_db,table_order, recreate_applied, key_list)
+VALUES('LDF_FOODBORNE', 'RDB',42, 1, 'INVESTIGATION_KEY');
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('MEASLES_CASE', 'RDB',43,
@@ -164,8 +164,35 @@ VALUES('TREATMENT_EVENT', 'RDB',48,
        'CONDITION_KEY, INVESTIGATION_KEY, LDF_GROUP_KEY, MORB_RPT_KEY, PATIENT_KEY, TREATMENT_DT_KEY, TREATMENT_KEY, TREATMENT_PHYSICIAN_KEY, TREATMENT_PROVIDING_ORG_KEY',
        1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, recreate_applied)
-VALUES('VAR_PAM_LDF', 'RDB',49, 1);
+(table_name, source_db,table_order, recreate_applied, key_lit)
+VALUES('VAR_PAM_LDF', 'RDB',49, 1, 'INVESTIGATION_KEY');
+
+INSERT INTO poll_data_sync_config
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('ANTIMICROBIAL_GROUP', 'RDB',50, 'ANTIMICROBIAL_GRP_KEY', 1);
+
+INSERT INTO poll_data_sync_config
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('ANTIMICROBIAL', 'RDB',51, 'ANTIMICROBIAL_GRP_KEY, ANTIMICROBIAL_KEY', 1);
+
+INSERT INTO poll_data_sync_config
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('D_PCR_SOURCE', 'RDB',52, 'D_PCR_SOURCE_KEY, VAR_PAM_UID', 1);
+
+INSERT INTO poll_data_sync_config
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('D_RASH_LOC_GEN', 'RDB',53, 'D_RASH_LOC_GEN_KEY, VAR_PAM_UID', 1);
+
+INSERT INTO poll_data_sync_config
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('BMIRD_MULTI_VALUE_FIELD', 'RDB',54, 'BMIRD_MULTI_VAL_FIELD_KEY, BMIRD_MULTI_VAL_GRP_KEY', 1);
+
+INSERT INTO poll_data_sync_config
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('STD_HIV_DATAMART', 'RDB',55, 'INVESTIGATION_KEY', 1);
+
+
+
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('PROGRAM_AREA_CODE', 'SRTE',1, 'prog_area_cd');

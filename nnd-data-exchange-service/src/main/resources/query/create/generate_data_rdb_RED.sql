@@ -47,10 +47,7 @@ VALUES
         FROM ANTIMICROBIAL
      )
      SELECT * FROM PaginatedResults
-     WHERE RowNum BETWEEN :startRow AND :endRow')
-    ;
-
-
+     WHERE RowNum BETWEEN :startRow AND :endRow');
 
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
@@ -79,8 +76,6 @@ VALUES
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
 
-
-
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -107,7 +102,6 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
-
 
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
@@ -136,7 +130,6 @@ VALUES
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
 
-
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -151,8 +144,6 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
-
-
 
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
@@ -180,7 +171,6 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
-
 
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
@@ -221,7 +211,6 @@ VALUES
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
 
-
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -236,7 +225,6 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
-
 
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
@@ -263,7 +251,6 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
-
 
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
