@@ -64,7 +64,7 @@ public class S3DataService implements IS3DataService {
                     .credentialsProvider(ProfileCredentialsProvider.create(profile))
                     .build();
         } else {
-            throw new DataPollException("No Valid AWS Profile or Credentials found");
+            this.s3Client = null;
         }
     }
 
