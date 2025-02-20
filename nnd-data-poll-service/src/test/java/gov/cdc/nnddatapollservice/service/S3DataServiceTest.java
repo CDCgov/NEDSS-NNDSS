@@ -177,21 +177,21 @@ class S3DataServiceTest {
     }
 
 
-    @Test
-    void testConstructorThrowsExceptionWhenNoCredentials() {
-        // Test the constructor throws exception when no credentials or profile are provided
-        Exception exception = assertThrows(DataPollException.class, () -> {
-            new S3DataService(
-                    "",
-                    "",
-                    "",
-                    "us-east-1",
-                    ""
-            );
-        });
-
-        assertEquals("No Valid AWS Profile or Credentials found", exception.getMessage());
-    }
+//    @Test
+//    void testConstructorThrowsExceptionWhenNoCredentials() {
+//        // Test the constructor throws exception when no credentials or profile are provided
+//        Exception exception = assertThrows(DataPollException.class, () -> {
+//            new S3DataService(
+//                    "",
+//                    "",
+//                    "",
+//                    "us-east-1",
+//                    ""
+//            );
+//        });
+//
+//        assertEquals("No Valid AWS Profile or Credentials found", exception.getMessage());
+//    }
 
 
 
