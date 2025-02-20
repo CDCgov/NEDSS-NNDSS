@@ -337,28 +337,24 @@ VALUES
      'SELECT STD_HIV_DATAMART.*
       FROM STD_HIV_DATAMART
       JOIN INVESTIGATION ON STD_HIV_DATAMART.INVESTIGATION_KEY = INVESTIGATION.INVESTIGATION_KEY
-      WHERE STD_HIV_DATAMART.add_time :operator :timestamp
+      WHERE INVESTIGATION.add_time :operator :timestamp
          OR INVESTIGATION.LAST_CHG_TIME :operator :timestamp;',
      NULL,
      'SELECT COUNT(*)
       FROM STD_HIV_DATAMART
       JOIN INVESTIGATION ON STD_HIV_DATAMART.INVESTIGATION_KEY = INVESTIGATION.INVESTIGATION_KEY
-      WHERE STD_HIV_DATAMART.add_time :operator :timestamp
+      WHERE INVESTIGATION.add_time :operator :timestamp
          OR INVESTIGATION.LAST_CHG_TIME :operator :timestamp;',
      'WITH PaginatedResults AS (
         SELECT STD_HIV_DATAMART.*,
                ROW_NUMBER() OVER (
                    ORDER BY
-                       CASE
-                           WHEN STD_HIV_DATAMART.add_time :operator :timestamp
-                           THEN STD_HIV_DATAMART.add_time
-                           ELSE INVESTIGATION.LAST_CHG_TIME
-                       END DESC,
+                       INVESTIGATION.LAST_CHG_TIME,
                        STD_HIV_DATAMART.INVESTIGATION_KEY
                ) AS RowNum
         FROM STD_HIV_DATAMART
         JOIN INVESTIGATION ON STD_HIV_DATAMART.INVESTIGATION_KEY = INVESTIGATION.INVESTIGATION_KEY
-        WHERE STD_HIV_DATAMART.add_time :operator :timestamp
+        WHERE INVESTIGATION.add_time :operator :timestamp
            OR INVESTIGATION.LAST_CHG_TIME :operator :timestamp
     )
     SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');

@@ -392,7 +392,8 @@ IF
         INSERT INTO [dbo].[data_sync_config]
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
-            ('CONFIRMATION_METHOD', 'RDB', 'SELECT * FROM CONFIRMATION_METHOD;', NULL, 'SELECT COUNT(*) FROM CONFIRMATION_METHOD;', 'WITH PaginatedResults AS (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum FROM CONFIRMATION_METHOD) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+            ('CONFIRMATION_METHOD', 'RDB', 'SELECT * FROM CONFIRMATION_METHOD;', NULL, 'SELECT COUNT(*) FROM CONFIRMATION_METHOD;',
+             'WITH PaginatedResults AS (SELECT *, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum FROM CONFIRMATION_METHOD) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
     END;
 
 

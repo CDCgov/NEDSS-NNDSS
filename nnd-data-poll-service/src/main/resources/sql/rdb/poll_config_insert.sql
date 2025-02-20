@@ -63,14 +63,14 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, recreate_applied)
 VALUES('F_VAR_PAM', 'RDB',21, 1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, key_list)
-VALUES('CONDITION', 'RDB',22, 'CONDITION_KEY');
+(table_name, source_db,table_order, key_list, recreated_applied)
+VALUES('CONDITION', 'RDB',22, 'CONDITION_KEY', 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('INVESTIGATION', 'RDB',23, 'INVESTIGATION_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, key_list)
-VALUES('RDB_DATE', 'RDB',24, 'DATE_KEY');
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('RDB_DATE', 'RDB',24, 'DATE_KEY', 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('CONFIRMATION_METHOD', 'RDB',25, 'CONFIRMATION_METHOD_KEY');
