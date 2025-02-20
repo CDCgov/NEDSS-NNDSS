@@ -164,7 +164,7 @@ VALUES('TREATMENT_EVENT', 'RDB',48,
        'CONDITION_KEY, INVESTIGATION_KEY, LDF_GROUP_KEY, MORB_RPT_KEY, PATIENT_KEY, TREATMENT_DT_KEY, TREATMENT_KEY, TREATMENT_PHYSICIAN_KEY, TREATMENT_PROVIDING_ORG_KEY',
        1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, recreate_applied, key_lit)
+(table_name, source_db,table_order, recreate_applied, key_list)
 VALUES('VAR_PAM_LDF', 'RDB',49, 1, 'INVESTIGATION_KEY');
 
 INSERT INTO poll_data_sync_config
@@ -220,27 +220,27 @@ INSERT INTO poll_data_sync_config (table_name, source_db, table_order)
 VALUES ('NRT_OBSERVATION_CODED', 'RDB_MODERN', 2);
 
 
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('COVID_CASE_DATAMART', 'COVID_DATAMART', 1, 'COVID_CASE_DATAMART_KEY', 1);
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('COVID_CASE_DATAMART', 'COVID_DATAMART', 1, 'COVID_CASE_DATAMART_KEY');
 
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('COVID_LAB_DATAMART', 'COVID_DATAMART', 2, 'COVID_LAB_DATAMART_KEY', 1);
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('COVID_LAB_DATAMART', 'COVID_DATAMART', 2, 'COVID_LAB_DATAMART_KEY');
 
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order, recreate_applied, no_pagination)
 VALUES ('COVID_LAB_CELR_DATAMART', 'COVID_DATAMART', 3, 1, 1);
 
 
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('ENTITY', 'ODSE_OBS', 1, 'entity_uid', 1);
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('ROLE', 'ODSE_OBS', 2, 'subject_entity_uid, role_seq, cd', 1);
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('PERSON', 'ODSE_OBS', 3, 'person_uid', 1);
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('ACT', 'ODSE_OBS', 4, 'act_uid', use_key_list);
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('OBSERVATION', 'ODSE_OBS', 5, 'observation_uid', 1);
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('PARTICIPATION', 'ODSE_OBS', 6, 'subject_entity_uid, act_uid, type_cd', 1);
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_list)
-VALUES ('ACT_RELATIONSHIP', 'ODSE_OBS', 7, 'source_act_uid,target_act_uid,type_cd', 1);
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('ENTITY', 'ODSE_OBS', 1, 'entity_uid');
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('ROLE', 'ODSE_OBS', 2, 'subject_entity_uid, role_seq, cd');
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('PERSON', 'ODSE_OBS', 3, 'person_uid');
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('ACT', 'ODSE_OBS', 4, 'act_uid');
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('OBSERVATION', 'ODSE_OBS', 5, 'observation_uid');
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('PARTICIPATION', 'ODSE_OBS', 6, 'subject_entity_uid, act_uid, type_cd');
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
+VALUES ('ACT_RELATIONSHIP', 'ODSE_OBS', 7, 'source_act_uid,target_act_uid,type_cd');
