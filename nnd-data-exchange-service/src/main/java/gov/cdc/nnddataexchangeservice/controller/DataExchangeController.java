@@ -157,6 +157,7 @@ public class DataExchangeController {
                                            @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
                                            @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull,
                                            @RequestHeader(name = "version", defaultValue = "false") String version,
+                                           @RequestHeader(name = "noPagination", defaultValue = "false") String noPagination,
                                            HttpServletRequest request) throws DataExchangeException {
         if (version == null || version.isEmpty()) {
             throw new DataExchangeException("Version is Missing");
@@ -171,7 +172,7 @@ public class DataExchangeController {
 
         var ts = convertTimestampFromString(timestamp);
         var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, ts, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
-                Boolean.parseBoolean(allowNull));
+                Boolean.parseBoolean(allowNull), Boolean.parseBoolean(noPagination));
         return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
     }
 

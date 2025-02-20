@@ -1,26 +1,30 @@
-DELETE FROM [RDB].[dbo].BMIRD_MULTI_VALUE_FIELD;
-DELETE FROM [RDB].[dbo].BMIRD_MULTI_VALUE_FIELD_GROUP;
-DELETE FROM [RDB].[dbo].ANTIMICROBIAL;
-DELETE FROM [RDB].[dbo].ANTIMICROBIAL_GROUP;
-DELETE FROM [RDB].[dbo].D_PCR_SOURCE_GROUP;
-DELETE FROM [RDB].[dbo].D_PCR_SOURCE;
-DELETE FROM [RDB].[dbo].D_RASH_LOC_GEN_GROUP;
-DELETE FROM [RDB].[dbo].D_RASH_LOC_GEN;
-DELETE FROM [RDB].[dbo].D_VAR_PAM;
-DELETE FROM [RDB].[dbo].HEP_MULTI_VALUE_FIELD;
-DELETE FROM [RDB].[dbo].HEP_MULTI_VALUE_FIELD_GROUP;
-DELETE FROM [RDB].[dbo].LDF_DATA;
-DELETE FROM [RDB].[dbo].LDF_FOODBORNE;
-DELETE FROM [RDB].[dbo].LDF_GROUP;
-DELETE FROM [RDB].[dbo].NOTIFICATION;
-DELETE FROM [RDB].[dbo].PERTUSSIS_SUSPECTED_SOURCE_FLD;
-DELETE FROM [RDB].[dbo].PERTUSSIS_SUSPECTED_SOURCE_GRP;
-DELETE FROM [RDB].[dbo].PERTUSSIS_TREATMENT_FIELD;
-DELETE FROM [RDB].[dbo].PERTUSSIS_TREATMENT_GROUP;
-DELETE FROM [RDB].[dbo].TREATMENT;
-DELETE FROM [RDB].[dbo].TREATMENT_EVENT;
-DELETE FROM [RDB].[dbo].VAR_PAM_LDF;
-DELETE FROM [RDB].[dbo].STD_HIV_DATAMART;
+DELETE FROM [dbo].[data_sync_config]
+WHERE table_name IN (
+                     'BMIRD_MULTI_VALUE_FIELD',
+                     'BMIRD_MULTI_VALUE_FIELD_GROUP',
+                     'ANTIMICROBIAL',
+                     'ANTIMICROBIAL_GROUP',
+                     'D_PCR_SOURCE_GROUP',
+                    'D_PCR_SOURCE',
+                    'D_RASH_LOC_GEN_GROUP',
+                    'D_RASH_LOC_GEN',
+                    'D_VAR_PAM',
+                    'HEP_MULTI_VALUE_FIELD',
+                    'HEP_MULTI_VALUE_FIELD_GROUP',
+                    'LDF_DATA',
+                    'LDF_FOODBORNE',
+                    'LDF_GROUP',
+                    'NOTIFICATION',
+                    'PERTUSSIS_SUSPECTED_SOURCE_FLD',
+                    'PERTUSSIS_SUSPECTED_SOURCE_GRP',
+                    'PERTUSSIS_TREATMENT_FIELD',
+                    'PERTUSSIS_TREATMENT_GROUP',
+                    'TREATMENT',
+                    'TREATMENT_EVENT',
+                    'VAR_PAM_LDF',
+                    'STD_HIV_DATAMART'
+
+    );
 
 
 INSERT INTO [RDB].[dbo].[data_sync_config]

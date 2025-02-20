@@ -1,14 +1,3 @@
-IF NOT EXISTS(SELECT *
-              FROM sys.databases
-              WHERE name = 'RDB')
-BEGIN
-    CREATE DATABASE RDB;
-END
-GO
-
-USE RDB;
-GO
-
 IF NOT EXISTS(
     SELECT 'X'
     FROM INFORMATION_SCHEMA.TABLES
@@ -29,7 +18,6 @@ CREATE TABLE poll_data_sync_config
     no_pagination bit DEFAULT 0
 );
 END
-GO
 
 IF NOT EXISTS (
     SELECT 1
