@@ -3583,3 +3583,9 @@ CREATE TABLE RUBELLA_CASE (
                               CONSTRAINT FK__RUBELLA_C__RPT_S__78D0C1C4 FOREIGN KEY (RPT_SRC_ORG_KEY) REFERENCES D_ORGANIZATION(ORGANIZATION_KEY)
 );
 
+
+CREATE TABLE VAR_PAM_LDF (
+                             INVESTIGATION_KEY numeric(20,0) NULL,
+                             VAR_PAM_UID numeric(20,0) NULL,
+                             add_time datetime2(3) NULL
+);

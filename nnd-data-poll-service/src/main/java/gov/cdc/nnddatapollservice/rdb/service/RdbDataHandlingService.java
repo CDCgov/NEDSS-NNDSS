@@ -111,18 +111,21 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                         log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, pollConfig.getTableName(), timestampWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(S3_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         pollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestampWithNull, log);
                     }
                     else if (storeInSql) {
                         log =  rdbDataPersistentDAO.saveRDBData(pollConfig, rawJsonDataWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         pollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestampWithNull, log);
                     }
                     else  {
                         log = pollCommonService.writeJsonDataToFile(RDB, pollConfig.getTableName(), timestampWithNull, rawJsonDataWithNull);
                         log.setStartTime(startTime);
                         log.setLog(LOCAL_DIR_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
                     }
                 }
@@ -235,18 +238,21 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                     logResponseModel = is3DataService.persistToS3MultiPart(RDB, rawJsonData, pollConfig.getTableName(), timestamp, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + log);
+                    logResponseModel.setStatus(SUCCESS);
                     pollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeInSql) {
                     logResponseModel =  rdbDataPersistentDAO.saveRDBData(pollConfig, rawJsonData, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
+                    logResponseModel.setStatus(SUCCESS);
                     pollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else  {
                     logResponseModel = pollCommonService.writeJsonDataToFile(RDB, pollConfig.getTableName(), timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + log);
+                    logResponseModel.setStatus(SUCCESS);
                     pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
             }

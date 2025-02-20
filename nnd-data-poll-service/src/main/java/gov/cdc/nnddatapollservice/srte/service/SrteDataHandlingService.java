@@ -111,18 +111,21 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
                         log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(S3_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         outboundPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestampWithNull, log);
                     }
                     else if (storeInSql) {
                         log = srteDataPersistentDAO.saveSRTEData(config, rawJsonDataWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         outboundPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestampWithNull, log);
                     }
                     else  {
                         log = outboundPollCommonService.writeJsonDataToFile(RDB, config.getTableName(), timestampWithNull, rawJsonDataWithNull);
                         log.setStartTime(startTime);
                         log.setLog(LOCAL_DIR_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
                     }
                 }
@@ -237,18 +240,21 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
                     logResponseModel = is3DataService.persistToS3MultiPart(RDB, rawJsonData, config.getTableName(), timestamp, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + log);
+                    logResponseModel.setStatus(SUCCESS);
                     outboundPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeInSql) {
                     logResponseModel =  srteDataPersistentDAO.saveSRTEData(config, rawJsonData, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
+                    logResponseModel.setStatus(SUCCESS);
                     outboundPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestamp, logResponseModel);
                 }
                 else {
                     logResponseModel = outboundPollCommonService.writeJsonDataToFile(RDB, config.getTableName(), timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + log);
+                    logResponseModel.setStatus(SUCCESS);
                     outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestamp, logResponseModel);
                 }
             }

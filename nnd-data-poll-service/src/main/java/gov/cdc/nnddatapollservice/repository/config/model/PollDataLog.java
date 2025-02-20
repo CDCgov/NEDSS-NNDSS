@@ -9,6 +9,7 @@ import java.sql.Timestamp;
 
 import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp;
 
+@Table(name = "poll_data_log")
 @Getter
 @Setter
 @Entity

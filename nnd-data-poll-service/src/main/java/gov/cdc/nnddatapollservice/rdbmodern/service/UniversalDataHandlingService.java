@@ -108,6 +108,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         log = is3DataService.persistToS3MultiPart(source, rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(S3_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         iPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestampWithNull, log);
                     }
                     else if (storeInSql) {
@@ -115,12 +116,14 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                                 isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestampWithNull, log);
                     }
                     else  {
                         log = iPollCommonService.writeJsonDataToFile(source, config.getTableName(), timestampWithNull, rawJsonDataWithNull);
                         log.setStartTime(startTime);
                         log.setLog(LOCAL_DIR_LOG + log.getLog());
+                        log.setStatus(SUCCESS);
                         iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
                     }
                 }
@@ -243,7 +246,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     logResponseModel = is3DataService.persistToS3MultiPart(source, rawJsonData, config.getTableName(), timestamp, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + log);
-
+                    logResponseModel.setStatus(SUCCESS);
                     iPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeInSql)
@@ -251,6 +254,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     logResponseModel = rdbModernDataPersistentDAO.saveRdbModernData(config, rawJsonData, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
+                    logResponseModel.setStatus(SUCCESS);
 
                     iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestamp, logResponseModel);
                 }
@@ -259,6 +263,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     logResponseModel = iPollCommonService.writeJsonDataToFile(source, config.getTableName(), timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + log);
+                    logResponseModel.setStatus(SUCCESS);
 
                     iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestamp, logResponseModel);
                 }
