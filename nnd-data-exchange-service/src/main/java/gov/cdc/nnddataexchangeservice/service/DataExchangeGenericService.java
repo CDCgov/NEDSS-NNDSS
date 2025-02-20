@@ -139,7 +139,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         if (allowNull && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
             baseQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", "") ; //NOSONAR
         }
-        else if (noPagination) {
+        else if (noPagination || dataConfig.getQueryWithPagination().isEmpty()) {
             baseQuery = dataConfig.getQuery().replaceAll(";", "") ; //NOSONAR
         }
         else
