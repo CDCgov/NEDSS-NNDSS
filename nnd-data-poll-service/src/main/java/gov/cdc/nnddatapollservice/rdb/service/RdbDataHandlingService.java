@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
@@ -59,6 +60,14 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             logger.info("CLEANING UP THE TABLES");
             cleanupRDBTables(rdbTablesList);
         }
+
+        List<PollDataSyncConfig> filteredList = rdbTablesList.stream()
+                .filter(config -> RDB.equalsIgnoreCase(config.getSourceDb()))
+                .sorted((a, b) -> Integer.compare(b.getTableOrder(), a.getTableOrder())) // Sorting in descending order
+                .toList();
+
+
+
 
         for (PollDataSyncConfig pollDataSyncConfig : rdbTablesList) {
             try {
