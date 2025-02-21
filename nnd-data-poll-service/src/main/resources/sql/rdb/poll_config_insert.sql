@@ -16,7 +16,7 @@ INSERT INTO poll_data_sync_config
 VALUES('D_VAR_PAM', 'RDB',5, 'D_VAR_PAM_KEY', 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
-VALUES('D_PROVIDER', 'RDB',6, 'D_PROVIDER');
+VALUES('D_PROVIDER', 'RDB',6, 'PROVIDER_KEY');
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('D_CASE_MANAGEMENT', 'RDB',7);

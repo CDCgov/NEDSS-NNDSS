@@ -199,7 +199,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
 
         }catch (Exception e) {
-            logger.error("TASK failed. tableName: {}, message: {}", pollConfig.getTableName(), e.getMessage());
+            logger.error("TASK failed. tableName: {}, message: {}", pollConfig.getTableName(), getStackTraceAsString(e));
         }
 
     }

@@ -201,7 +201,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
 
 
         } catch (Exception e) {
-            logger.error("TASK failed. tableName: {}, message: {}", config.getTableName(), e.getMessage());
+            logger.error("TASK failed. tableName: {}, message: {}", config.getTableName(), getStackTraceAsString(e));
         }
 
     }

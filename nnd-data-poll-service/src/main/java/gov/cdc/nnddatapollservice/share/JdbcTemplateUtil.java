@@ -136,10 +136,10 @@ public class JdbcTemplateUtil {
 
                 // Build the MERGE SQL query
                 String sql = "MERGE INTO " + tableName + " AS target " +
-                        "USING (VALUES " + rowPlaceholders + ") AS source(" + columns + ") " +
+                        " USING (VALUES " + rowPlaceholders + ") AS source(" + columns + ") " +
                          condition +
-                        "WHEN MATCHED THEN UPDATE SET " + updates + " " +
-                        "WHEN NOT MATCHED BY TARGET THEN INSERT (" + columns + ") VALUES (" + valuesForQuery + ");";
+                        " WHEN MATCHED THEN UPDATE SET " + updates + " " +
+                        " WHEN NOT MATCHED BY TARGET THEN INSERT (" + columns + ") VALUES (" + valuesForQuery + ");";
 
                 // Execute batch update using JdbcTemplate
                 rdbJdbcTemplate.update(sql, combinedValues.toArray());
