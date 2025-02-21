@@ -68,7 +68,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
         for(PollDataSyncConfig pollDataSyncConfig : descList) {
             if (pollDataSyncConfig.isRecreateApplied() && storeInSql) {
-                rdbDataPersistentDAO.deleteTable(pollDataSyncConfig.getTableName());
+                iPollCommonService.deleteTable(pollDataSyncConfig.getTableName());
             }
         }
 
@@ -281,7 +281,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
     private void cleanupRDBTables(List<PollDataSyncConfig> configTableList) {
         for (int j = configTableList.size() - 1; j >= 0; j = j - 1) {
-            rdbDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
+            iPollCommonService.deleteTable(configTableList.get(j).getTableName());
         }
     }
 }

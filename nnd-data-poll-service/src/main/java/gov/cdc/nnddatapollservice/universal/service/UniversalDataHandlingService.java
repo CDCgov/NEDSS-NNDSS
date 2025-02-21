@@ -64,7 +64,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
         for(PollDataSyncConfig pollDataSyncConfig : descList) {
             if (pollDataSyncConfig.isRecreateApplied() && storeInSql) {
-                universalDataPersistentDAO.deleteTable(pollDataSyncConfig.getTableName());
+                iPollCommonService.deleteTable(pollDataSyncConfig.getTableName());
             }
         }
 
@@ -290,7 +290,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     private void cleanupTables(List<PollDataSyncConfig> configTableList) {
         for (int j = configTableList.size() - 1; j >= 0; j = j - 1) {
-            universalDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
+            iPollCommonService.deleteTable(configTableList.get(j).getTableName());
         }
     }
 }

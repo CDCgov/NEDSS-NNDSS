@@ -64,7 +64,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
 
         for(PollDataSyncConfig pollDataSyncConfig : descList) {
             if (pollDataSyncConfig.isRecreateApplied() && storeInSql) {
-                srteDataPersistentDAO.deleteTable(pollDataSyncConfig.getTableName());
+                iPollCommonService.deleteTable(pollDataSyncConfig.getTableName());
             }
         }
 
@@ -282,7 +282,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
 
     private void cleanupTables(List<PollDataSyncConfig> configTableList) {
         for (int j = configTableList.size() - 1; j >= 0; j = j - 1) {
-            srteDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
+            iPollCommonService.deleteTable(configTableList.get(j).getTableName());
         }
     }
 }

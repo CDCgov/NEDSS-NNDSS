@@ -31,4 +31,6 @@ public interface IPollCommonService {
     void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, LogResponseModel logResponseModel);
 
     void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel);
+
+    void deleteTable(String tableName);
 }

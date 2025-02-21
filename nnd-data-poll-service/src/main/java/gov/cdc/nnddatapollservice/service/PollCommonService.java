@@ -7,6 +7,7 @@ import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,8 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class PollCommonService implements IPollCommonService {
+    private final JdbcTemplateUtil jdbcTemplateUtil;
+
     private static Logger logger = LoggerFactory.getLogger(PollCommonService.class);
     @Value("${data_exchange.clientId}")
     private String clientId;
@@ -66,8 +69,9 @@ public class PollCommonService implements IPollCommonService {
     private final ITokenService tokenService;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
 
-    public PollCommonService(ITokenService tokenService,
+    public PollCommonService(JdbcTemplateUtil jdbcTemplateUtil, ITokenService tokenService,
                              RdbDataPersistentDAO rdbDataPersistentDAO) {
+        this.jdbcTemplateUtil = jdbcTemplateUtil;
         this.tokenService = tokenService;
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
     }
@@ -128,7 +132,7 @@ public class PollCommonService implements IPollCommonService {
     }
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
-        return rdbDataPersistentDAO.getTableListFromConfig();
+        return jdbcTemplateUtil.getTableListFromConfig();
     }
 
     public boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
@@ -165,31 +169,35 @@ public class PollCommonService implements IPollCommonService {
     }
 
     public String getLastUpdatedTime(String tableName) {
-        return rdbDataPersistentDAO.getLastUpdatedTime(tableName);
+        return jdbcTemplateUtil.getLastUpdatedTime(tableName);
     }
 
     public String getLastUpdatedTimeS3(String tableName) {
-        return rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName);
+        return jdbcTemplateUtil.getLastUpdatedTimeS3(tableName);
     }
 
     public String getLastUpdatedTimeLocalDir(String tableName) {
-        return rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName);
+        return jdbcTemplateUtil.getLastUpdatedTimeLocalDir(tableName);
     }
 
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
+        jdbcTemplateUtil.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
     }
 
     public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
+        jdbcTemplateUtil.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
     }
 
     public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+        jdbcTemplateUtil.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
     }
 
     public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
-        rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
+        jdbcTemplateUtil.updateLastUpdatedTime(tableName, timestamp);
+    }
+
+    public void deleteTable(String tableName) {
+        jdbcTemplateUtil.deleteTable(tableName);
     }
 
 

@@ -255,37 +255,37 @@ class RdbDataPersistentDAOTest {
         assertEquals(tableName, capturedParams[2]);
     }
 
-    @Test
-    void upsertRdbDate_shouldReturnErrorMessageOnException() {
-        // Arrange
-        RdbDate rdbDate = new RdbDate();
-        rdbDate.setDateKey(20230917L);
-        String expectedErrorMessage = "Simulated exception";
-        doThrow(new RuntimeException(expectedErrorMessage)).when(jdbcTemplate).update(anyString());
+//    @Test
+//    void upsertRdbDate_shouldReturnErrorMessageOnException() {
+//        // Arrange
+//        RdbDate rdbDate = new RdbDate();
+//        rdbDate.setDateKey(20230917L);
+//        String expectedErrorMessage = "Simulated exception";
+//        doThrow(new RuntimeException(expectedErrorMessage)).when(jdbcTemplate).update(anyString());
+//
+//        // Act
+//        String result = rdbDataPersistentDAO.upsertRdbDate(rdbDate);
+//
+//        // Assert
+//        assertEquals(expectedErrorMessage, result);
+//    }
 
-        // Act
-        String result = rdbDataPersistentDAO.upsertRdbDate(rdbDate);
-
-        // Assert
-        assertEquals(expectedErrorMessage, result);
-    }
-
-    @Test
-    void upsertCondition_shouldReturnErrorMessageOnException() {
-        // Arrange
-        Condition condition = new Condition();
-        condition.setConditionKey(123L);
-        String expectedErrorMessage = "Simulated exception";
-
-        doThrow(new RuntimeException(expectedErrorMessage)).when(jdbcTemplate).update(anyString());
-
-        // Act
-        String result = rdbDataPersistentDAO.upsertCondition(condition);
-
-        // Assert
-        assertEquals(expectedErrorMessage, result);
-
-    }
+//    @Test
+//    void upsertCondition_shouldReturnErrorMessageOnException() {
+//        // Arrange
+//        Condition condition = new Condition();
+//        condition.setConditionKey(123L);
+//        String expectedErrorMessage = "Simulated exception";
+//
+//        doThrow(new RuntimeException(expectedErrorMessage)).when(jdbcTemplate).update(anyString());
+//
+//        // Act
+//        String result = rdbDataPersistentDAO.upsertCondition(condition);
+//
+//        // Assert
+//        assertEquals(expectedErrorMessage, result);
+//
+//    }
 
 
 

@@ -13,6 +13,7 @@ import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityDetailLog
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityLog;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -37,6 +38,7 @@ public class NbsOdseDataPersistentDAO {
 
     private final EDXActivityLogRepository edxActivityLogRepository;
     private final EDXActivityDetailLogRepository edxActivityDetailLogRepository;
+    private final JdbcTemplateUtil jdbcTemplateUtil;
 
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
@@ -50,11 +52,12 @@ public class NbsOdseDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
 
-    public NbsOdseDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, EDXActivityLogRepository edxActivityLogRepository, EDXActivityDetailLogRepository edxActivityDetailLogRepository) {
+    public NbsOdseDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, EDXActivityLogRepository edxActivityLogRepository, EDXActivityDetailLogRepository edxActivityDetailLogRepository, JdbcTemplateUtil jdbcTemplateUtil) {
         this.jdbcTemplate = jdbcTemplate;
         this.handleError = handleError;
         this.edxActivityLogRepository = edxActivityLogRepository;
         this.edxActivityDetailLogRepository = edxActivityDetailLogRepository;
+        this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
     public LogResponseModel saveNbsOdseData(String tableName, String jsonData) {
@@ -112,12 +115,7 @@ public class NbsOdseDataPersistentDAO {
     }
 
     public void deleteTable(String tableName) {
-        try {
-            String deleteSql = "delete FROM " + tableName;
-            jdbcTemplate.execute(deleteSql);
-        } catch (Exception e) {
-            logger.error("RDB_MODERN:Error in deleting table:{}", e.getMessage());
-        }
+        jdbcTemplateUtil.deleteTable(tableName);
     }
 
 }
