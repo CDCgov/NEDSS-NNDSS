@@ -56,7 +56,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(filteredTablesList);
 
         if (isInitialLoad && storeInSql && deleteOnInit) {
-            logger.info("CLEANING UP THE TABLES ");
             cleanupTables(filteredTablesList);
         }
 

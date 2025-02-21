@@ -35,7 +35,7 @@ class PollCommonServiceTest {
     @Mock
     private RestTemplate restTemplate;
     @InjectMocks
-    private PollCommonService pollCommonService;
+    private PollCommonService iPollCommonService;
 
     @BeforeEach
     void setUp() {
@@ -45,7 +45,7 @@ class PollCommonServiceTest {
     @Test
     void testCallDataCountEndpoint_Success() {
         // Arrange
-        pollCommonService.exchangeTotalRecordEndpoint = "http://ip.jsontest.com/";
+        iPollCommonService.exchangeTotalRecordEndpoint = "http://ip.jsontest.com/";
         String tableName = "NRT_OBSERVATION";
         boolean isInitialLoad = true;
         String lastUpdatedTime = "2024-10-01";
@@ -67,7 +67,7 @@ class PollCommonServiceTest {
         // Act
         assertThrows(DataPollException.class,
                 () ->
-                        pollCommonService.callDataCountEndpoint(tableName, isInitialLoad, lastUpdatedTime));
+                        iPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, lastUpdatedTime));
 
     }
 
@@ -75,7 +75,7 @@ class PollCommonServiceTest {
     @Test
     void testPersistingExchangeData_Exception() {
         String timestamp = "2024-09-15 10:15:20.123";
-        assertThrows(DataPollException.class, () -> pollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp, true, "0", "1"));
+        assertThrows(DataPollException.class, () -> iPollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp, true, "0", "1"));
 
         verify(tokenService, times(1)).getToken();
     }
@@ -90,7 +90,7 @@ class PollCommonServiceTest {
         config.setQuery("");
         configTableList.add(config);
 
-        boolean isInitailLoad = pollCommonService.checkPollingIsInitailLoad(configTableList);
+        boolean isInitailLoad = iPollCommonService.checkPollingIsInitailLoad(configTableList);
         assertTrue(isInitailLoad);
     }
 
@@ -104,13 +104,13 @@ class PollCommonServiceTest {
         config.setQuery("");
         configTableList.add(config);
 
-        boolean isInitailLoad = pollCommonService.checkPollingIsInitailLoad(configTableList);
+        boolean isInitailLoad = iPollCommonService.checkPollingIsInitailLoad(configTableList);
         assertFalse(isInitailLoad);
     }
 
     @Test
     void getCurrentTimestamp() {
-        String timestamp = pollCommonService.getCurrentTimestamp();
+        String timestamp = iPollCommonService.getCurrentTimestamp();
         assertNotNull(timestamp);
     }
 
@@ -124,9 +124,9 @@ class PollCommonServiceTest {
         config.setQuery("");
         configTableList.add(config);
 
-        when(pollCommonService.getTableListFromConfig()).thenReturn(configTableList);
+        when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
 
-        List<PollDataSyncConfig> tablesListActual = pollCommonService.getTableListFromConfig();
+        List<PollDataSyncConfig> tablesListActual = iPollCommonService.getTableListFromConfig();
         assertEquals(1, tablesListActual.size());
     }
 
@@ -134,13 +134,13 @@ class PollCommonServiceTest {
     void getLastUpdatedTime() {
         String timestamp = "2024-09-15 10:15:20.123";
         when(rdbDataPersistentDAO.getLastUpdatedTime(anyString())).thenReturn(timestamp);
-        String lastupdatedTime = pollCommonService.getLastUpdatedTime("TEST_TABLE");
+        String lastupdatedTime = iPollCommonService.getLastUpdatedTime("TEST_TABLE");
         assertEquals(timestamp, lastupdatedTime);
     }
 
     @Test
     void updateLastUpdatedTime() {
-        pollCommonService.updateLastUpdatedTime("TEST_TABLE", TimestampUtil.getCurrentTimestamp());
+        iPollCommonService.updateLastUpdatedTime("TEST_TABLE", TimestampUtil.getCurrentTimestamp());
         verify(rdbDataPersistentDAO).updateLastUpdatedTime(anyString(), any(Timestamp.class));
     }
 
@@ -155,23 +155,23 @@ class PollCommonServiceTest {
         config.setSourceDb("RDB");
         configTableList.add(config);
 
-        List<PollDataSyncConfig> configTableListActual = pollCommonService.getTablesConfigListBySOurceDB(configTableList, "RDB");
+        List<PollDataSyncConfig> configTableListActual = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, "RDB");
         assertEquals(1, configTableListActual.size());
     }
 
     @Test
     void decodeAndDecompress() {
-        String rawdata = pollCommonService.decodeAndDecompress("testdata123");
+        String rawdata = iPollCommonService.decodeAndDecompress("testdata123");
         assertEquals("testdata123", rawdata);
     }
 
     @Test
     void writeJsonDataToFile() {
-        ReflectionTestUtils.setField(pollCommonService, "datasyncLocalFilePath", System.getProperty("java.io.tmpdir"));
+        ReflectionTestUtils.setField(iPollCommonService, "datasyncLocalFilePath", System.getProperty("java.io.tmpdir"));
         try (MockedStatic<PollServiceUtil> mocked = Mockito.mockStatic(PollServiceUtil.class)) {
             mocked.when(() -> PollServiceUtil.writeJsonToFile(any(), any(), anyString(), any(), anyString()))
                     .thenAnswer((Answer<Void>) invocation -> null);
-            pollCommonService.writeJsonDataToFile("RDB", "TEST_TABLE",
+            iPollCommonService.writeJsonDataToFile("RDB", "TEST_TABLE",
                     TimestampUtil.getCurrentTimestamp(), "TEST DATA");
             mocked.verify(() -> PollServiceUtil.writeJsonToFile(any(), any(), any(), any(), any()));
         }
@@ -185,7 +185,7 @@ class PollCommonServiceTest {
         when(rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName)).thenReturn(expectedTime);
 
         // Act
-        String result = pollCommonService.getLastUpdatedTimeS3(tableName);
+        String result = iPollCommonService.getLastUpdatedTimeS3(tableName);
 
         // Assert
         assertEquals(expectedTime, result);
@@ -200,7 +200,7 @@ class PollCommonServiceTest {
         when(rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName)).thenReturn(expectedTime);
 
         // Act
-        String result = pollCommonService.getLastUpdatedTimeLocalDir(tableName);
+        String result = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
 
         // Assert
         assertEquals(expectedTime, result);
@@ -215,7 +215,7 @@ class PollCommonServiceTest {
         String log = "Update successful";
 
         // Act
-        pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+        iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
 
         // Assert
         verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, log);
@@ -229,7 +229,7 @@ class PollCommonServiceTest {
         String log = "S3 Update successful";
 
         // Act
-        pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+        iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
 
         // Assert
         verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
@@ -243,7 +243,7 @@ class PollCommonServiceTest {
         String log = "Local Dir Update successful";
 
         // Act
-        pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+        iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
 
         // Assert
         verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);

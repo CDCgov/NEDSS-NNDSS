@@ -37,23 +37,23 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
-    private final IPollCommonService pollCommonService;
+    private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
 
     public RdbDataHandlingService(
             RdbDataPersistentDAO rdbDataPersistentDAO,
-            IPollCommonService pollCommonService,
+            IPollCommonService iPollCommonService,
             IS3DataService is3DataService) {
         this.rdbDataPersistentDAO = rdbDataPersistentDAO;
-        this.pollCommonService = pollCommonService;
+        this.iPollCommonService = iPollCommonService;
         this.is3DataService = is3DataService;
     }
 
     public void handlingExchangedData() throws DataPollException {
-        List<PollDataSyncConfig> configTableList = pollCommonService.getTableListFromConfig();
-        List<PollDataSyncConfig> rdbTablesList = pollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB);
+        List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
+        List<PollDataSyncConfig> rdbTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB);
 
-        boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(rdbTablesList);
+        boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(rdbTablesList);
         logger.info("INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad && storeInSql && deleteOnInit) {
@@ -106,10 +106,10 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             String logStr = "";
 
             try {
-                totalRecordCounts = pollCommonService.callDataCountEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll);
+                totalRecordCounts = iPollCommonService.callDataCountEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
-                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
+                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
                 throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
             }
             int batchSize = pullLimit;
@@ -117,34 +117,34 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
             if (!pollConfig.isNoPagination()) {
                 try {
-                    var encodedDataWithNull = pollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll,
+                    var encodedDataWithNull = iPollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll,
                             true, "0", "0", false);
-                    var rawJsonDataWithNull = pollCommonService.decodeAndDecompress(encodedDataWithNull);
+                    var rawJsonDataWithNull = iPollCommonService.decodeAndDecompress(encodedDataWithNull);
                     if (storeJsonInS3) {
                         log = is3DataService.persistToS3MultiPart(RDB, rawJsonDataWithNull, pollConfig.getTableName(), timestampWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(S3_LOG + log.getLog());
                         log.setStatus(SUCCESS);
-                        pollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestampWithNull, log);
+                        iPollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestampWithNull, log);
                     }
                     else if (storeInSql) {
                         log =  rdbDataPersistentDAO.saveRDBData(pollConfig, rawJsonDataWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + log.getLog());
                         log.setStatus(SUCCESS);
-                        pollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestampWithNull, log);
+                        iPollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestampWithNull, log);
                     }
                     else  {
-                        log = pollCommonService.writeJsonDataToFile(RDB, pollConfig.getTableName(), timestampWithNull, rawJsonDataWithNull);
+                        log = iPollCommonService.writeJsonDataToFile(RDB, pollConfig.getTableName(), timestampWithNull, rawJsonDataWithNull);
                         log.setStartTime(startTime);
                         log.setLog(LOCAL_DIR_LOG + log.getLog());
                         log.setStatus(SUCCESS);
-                        pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
+                        iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
                     }
                 }
                 catch (Exception e) {
                     log = new LogResponseModel(CRITICAL_NULL_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
                     throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
                 for (int i = 0; i < totalPages; i++) {
@@ -156,12 +156,12 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                         int endRow = (i + 1) * batchSize;
 
                         String encodedData = "";
-                        encodedData = pollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad,
+                        encodedData = iPollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad,
                                 timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow),
                                 false);
 
 
-                        rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
+                        rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
                         timestamp = getCurrentTimestamp();
                     } catch (Exception e) {
                         logStr = e.getMessage();
@@ -179,11 +179,11 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
                 try {
                     String encodedData = "";
-                    encodedData = pollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll, false,
+                    encodedData = iPollCommonService.callDataExchangeEndpoint(pollConfig.getTableName(), isInitialLoad, timeStampForPoll, false,
                             "0", "0", true);
 
 
-                    rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
+                    rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
                     timestamp = getCurrentTimestamp();
                 } catch (Exception e) {
                     logStr = e.getMessage();
@@ -207,14 +207,14 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     protected String getPollTimestamp(boolean isInitialLoad, String tableName) {
         String timeStampForPoll;
         if (isInitialLoad) {
-            timeStampForPoll = pollCommonService.getCurrentTimestamp();
+            timeStampForPoll = iPollCommonService.getCurrentTimestamp();
         } else {
             if (storeInSql) {
-                timeStampForPoll = pollCommonService.getLastUpdatedTime(tableName);
+                timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
             } else if (storeJsonInS3) {
-                timeStampForPoll = pollCommonService.getLastUpdatedTimeS3(tableName);
+                timeStampForPoll = iPollCommonService.getLastUpdatedTimeS3(tableName);
             } else {
-                timeStampForPoll = pollCommonService.getLastUpdatedTimeLocalDir(tableName);
+                timeStampForPoll = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
             }
         }
         return timeStampForPoll;
@@ -234,15 +234,15 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
 
                 if (storeInSql) {
-                    pollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeJsonInS3)
                 {
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else
                 {
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
             }
             else
@@ -252,21 +252,21 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLogS3(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeInSql) {
                     logResponseModel =  rdbDataPersistentDAO.saveRDBData(pollConfig, rawJsonData, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
-                    pollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLog(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
                 else  {
-                    logResponseModel = pollCommonService.writeJsonDataToFile(RDB, pollConfig.getTableName(), timestamp, rawJsonData);
+                    logResponseModel = iPollCommonService.writeJsonDataToFile(RDB, pollConfig.getTableName(), timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
                 }
             }
         } catch (Exception e) {
@@ -275,7 +275,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             logResponseModel.setStartTime(startTime);
             logResponseModel.setLog(CRITICAL_NON_NULL_LOG + e.getMessage());
             logResponseModel.setStackTrace(getStackTraceAsString(e));
-            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
+            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestamp, logResponseModel);
         }
     }
 

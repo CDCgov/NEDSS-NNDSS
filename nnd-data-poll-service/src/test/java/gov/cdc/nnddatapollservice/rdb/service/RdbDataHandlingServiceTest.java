@@ -26,7 +26,7 @@ class RdbDataHandlingServiceTest {
     @Mock
     private RdbDataPersistentDAO rdbDataPersistentDAO;
     @Mock
-    IPollCommonService pollCommonService;
+    IPollCommonService iPollCommonService;
     @Mock
     IS3DataService is3DataService;
     @InjectMocks
@@ -54,9 +54,9 @@ class RdbDataHandlingServiceTest {
         config.setSourceDb("RDB");
         configTableList.add(config);
 
-        when(pollCommonService.getTableListFromConfig()).thenReturn(configTableList);
-        when(pollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
-        when(pollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
+        when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
+        when(iPollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
+        when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
 
         dataHandlingService.handlingExchangedData();
         verify(rdbDataPersistentDAO, times(1)).deleteTable(anyString());
@@ -75,9 +75,9 @@ class RdbDataHandlingServiceTest {
         config.setSourceDb("RDB");
         configTableList.add(config);
 
-        when(pollCommonService.getTableListFromConfig()).thenReturn(configTableList);
-        when(pollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
-        when(pollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(false);
+        when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
+        when(iPollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
+        when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(false);
 
         dataHandlingService.handlingExchangedData();
         verify(rdbDataPersistentDAO, times(0)).deleteTable(anyString());
@@ -92,14 +92,14 @@ class RdbDataHandlingServiceTest {
         String tableName = "exampleTable";
         dataHandlingService.storeJsonInS3= true;
 
-        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
+        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
 
         // Act
         dataHandlingService.pollAndPersistRDBData(tableName, true);
 
         // Assert
         verify(is3DataService, times(2)).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
-        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogS3(anyString(), any(), anyString());
+        verify(iPollCommonService, times(2)).updateLastUpdatedTimeAndLogS3(anyString(), any(), anyString());
 
 
     }
@@ -111,21 +111,21 @@ class RdbDataHandlingServiceTest {
         String tableName = "exampleTable";
         dataHandlingService.storeJsonInLocalFolder= true;
 
-        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
+        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
         // Act
         dataHandlingService.pollAndPersistRDBData(tableName, true);
 
         // Assert
-        verify(pollCommonService, times(2)).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
-        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(anyString(), any(), anyString());
+        verify(iPollCommonService, times(2)).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
+        verify(iPollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(anyString(), any(), anyString());
     }
 
     private void setupServiceWithMockedDependencies() throws DataPollException {
 
-        when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
-        when(pollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
-        when(pollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("encodedData");
+        when(iPollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
+        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
+        when(iPollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
+        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("encodedData");
 
 
 
@@ -136,8 +136,8 @@ class RdbDataHandlingServiceTest {
         String tableName = "testTable";
         // Arrange
         String expectedErrorMessage = "Simulated API Exception";
-        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
@@ -146,7 +146,7 @@ class RdbDataHandlingServiceTest {
         // Assert
         verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
         verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
-        verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
+        verify(iPollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
     }
 
     @Test
@@ -154,10 +154,10 @@ class RdbDataHandlingServiceTest {
         String tableName = "testTable";
         // Arrange
         String expectedErrorMessage = "Simulated API Exception";
-        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
                 .thenReturn(1000);
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString()))
+        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString()))
                 .thenThrow(new RuntimeException(expectedErrorMessage));
 
         // Act
@@ -166,7 +166,7 @@ class RdbDataHandlingServiceTest {
         // Assert
         verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
         verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
-        verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
+        verify(iPollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
     }
 
     @Test
@@ -174,10 +174,10 @@ class RdbDataHandlingServiceTest {
         String tableName = "testTable";
         // Arrange
         String expectedErrorMessage = "Simulated API Exception";
-        when(pollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
+        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
                 .thenReturn(1000);
-        when(pollCommonService.callDataExchangeEndpoint(
+        when(iPollCommonService.callDataExchangeEndpoint(
                 eq("testTable"),
                 eq(true),
                 anyString(),
@@ -190,10 +190,10 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.pollAndPersistRDBData(tableName, true);
 
         // Assert
-        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName), any(), any());
+        verify(iPollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName), any(), any());
         verify(is3DataService, never()).persistToS3MultiPart(anyString(), anyString(), anyString(), any(), anyBoolean());
         verify(rdbDataPersistentDAO, never()).saveRDBData(anyString(), anyString());
-        verify(pollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
+        verify(iPollCommonService, never()).writeJsonDataToFile(anyString(), anyString(), any(), anyString());
     }
 
 
@@ -204,10 +204,10 @@ class RdbDataHandlingServiceTest {
         boolean isInitialLoad = false;
 
         // Mocking common service methods
-        when(pollCommonService.getLastUpdatedTime(anyString())).thenReturn("2024-10-01 12:00:00");
-        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(100);
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
-        when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
+        when(iPollCommonService.getLastUpdatedTime(anyString())).thenReturn("2024-10-01 12:00:00");
+        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(100);
+        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
+        when(iPollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
 
         // Setup dataHandlingService flags
         dataHandlingService.storeInSql = true;
@@ -218,9 +218,9 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.pollAndPersistRDBData(tableName, isInitialLoad);
 
         // Assert
-        verify(pollCommonService, times(1)).getLastUpdatedTime(tableName);
+        verify(iPollCommonService, times(1)).getLastUpdatedTime(tableName);
         verify(rdbDataPersistentDAO, times(2)).saveRDBData(eq(tableName), anyString());
-        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLog(eq(tableName), any(Timestamp.class), anyString());
+        verify(iPollCommonService, times(2)).updateLastUpdatedTimeAndLog(eq(tableName), any(Timestamp.class), anyString());
     }
 
 
@@ -231,10 +231,10 @@ class RdbDataHandlingServiceTest {
         boolean isInitialLoad = false;
 
         // Mocking common service methods
-        when(pollCommonService.getLastUpdatedTimeS3(anyString())).thenReturn("2024-10-01 12:00:00");
-        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(100);
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
-        when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
+        when(iPollCommonService.getLastUpdatedTimeS3(anyString())).thenReturn("2024-10-01 12:00:00");
+        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(100);
+        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
+        when(iPollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
 
         // Setup dataHandlingService flags
         dataHandlingService.storeInSql = false;
@@ -245,9 +245,9 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.pollAndPersistRDBData(tableName, isInitialLoad);
 
         // Assert
-        verify(pollCommonService, times(1)).getLastUpdatedTimeS3(tableName);
+        verify(iPollCommonService, times(1)).getLastUpdatedTimeS3(tableName);
         verify(is3DataService, times(2)).persistToS3MultiPart(eq(RDB), anyString(), eq(tableName), any(Timestamp.class), eq(isInitialLoad));
-        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogS3(eq(tableName), any(Timestamp.class), anyString());
+        verify(iPollCommonService, times(2)).updateLastUpdatedTimeAndLogS3(eq(tableName), any(Timestamp.class), anyString());
     }
 
 
@@ -258,10 +258,10 @@ class RdbDataHandlingServiceTest {
         boolean isInitialLoad = false;
 
         // Mocking common service methods
-        when(pollCommonService.getLastUpdatedTimeLocalDir(anyString())).thenReturn("2024-10-01 12:00:00");
-        when(pollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(100);
-        when(pollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
-        when(pollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
+        when(iPollCommonService.getLastUpdatedTimeLocalDir(anyString())).thenReturn("2024-10-01 12:00:00");
+        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(100);
+        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString())).thenReturn("mockEncodedData");
+        when(iPollCommonService.decodeAndDecompress(anyString())).thenReturn("mockRawJsonData");
 
         // Setup dataHandlingService flags
         dataHandlingService.storeInSql = false;
@@ -272,9 +272,9 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.pollAndPersistRDBData(tableName, isInitialLoad);
 
         // Assert
-        verify(pollCommonService, times(1)).getLastUpdatedTimeLocalDir(tableName);
-        verify(pollCommonService, times(2)).writeJsonDataToFile(eq(RDB), eq(tableName), any(Timestamp.class), anyString());
-        verify(pollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName), any(Timestamp.class), anyString());
+        verify(iPollCommonService, times(1)).getLastUpdatedTimeLocalDir(tableName);
+        verify(iPollCommonService, times(2)).writeJsonDataToFile(eq(RDB), eq(tableName), any(Timestamp.class), anyString());
+        verify(iPollCommonService, times(2)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName), any(Timestamp.class), anyString());
     }
 
 
@@ -295,8 +295,8 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
 
         // Assert
-        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
-        verifyNoMoreInteractions(pollCommonService);
+        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, API_LEVEL + log);
+        verifyNoMoreInteractions(iPollCommonService);
     }
 
     @Test
@@ -316,8 +316,8 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
 
         // Assert
-        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
-        verifyNoMoreInteractions(pollCommonService);
+        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, API_LEVEL + log);
+        verifyNoMoreInteractions(iPollCommonService);
     }
 
     @Test
@@ -337,8 +337,8 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
 
         // Assert
-        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
-        verifyNoMoreInteractions(pollCommonService);
+        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, API_LEVEL + log);
+        verifyNoMoreInteractions(iPollCommonService);
     }
 
 
@@ -362,7 +362,7 @@ class RdbDataHandlingServiceTest {
 
         // Assert
         verify(rdbDataPersistentDAO, times(1)).saveRDBData(tableName, rawJsonData);
-        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + "Data Saved");
+        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, SQL_LOG + "Data Saved");
     }
 
 
@@ -387,7 +387,7 @@ class RdbDataHandlingServiceTest {
 
         // Assert
         verify(is3DataService, times(1)).persistToS3MultiPart(RDB, rawJsonData, tableName, timestamp, isInitialLoad);
-        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + "S3 Save Success");
+        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, S3_LOG + "S3 Save Success");
     }
 
 
@@ -404,14 +404,14 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.storeInSql = false;
         dataHandlingService.storeJsonInS3 = false;
 
-        when(pollCommonService.writeJsonDataToFile(anyString(), anyString(), any(Timestamp.class), anyString())).thenReturn("Local File Save Success");
+        when(iPollCommonService.writeJsonDataToFile(anyString(), anyString(), any(Timestamp.class), anyString())).thenReturn("Local File Save Success");
 
         // Act
         dataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
 
         // Assert
-        verify(pollCommonService, times(1)).writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
-        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + "Local File Save Success");
+        verify(iPollCommonService, times(1)).writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, LOCAL_DIR_LOG + "Local File Save Success");
     }
 
 
@@ -435,7 +435,7 @@ class RdbDataHandlingServiceTest {
         dataHandlingService.updateDataHelper(exceptionAtApiLevel, tableName, timestamp, rawJsonData, isInitialLoad, log);
 
         // Assert
-        verify(pollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LOG + "S3 Error");
+        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, CRITICAL_NON_NULL_LOG + "S3 Error");
     }
 
 

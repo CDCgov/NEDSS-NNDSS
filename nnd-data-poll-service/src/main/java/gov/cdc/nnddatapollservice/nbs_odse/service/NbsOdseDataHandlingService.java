@@ -24,7 +24,7 @@ import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp
 @Service
 public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
     private static Logger logger = LoggerFactory.getLogger(NbsOdseDataHandlingService.class);
-    private final IPollCommonService pollCommonService;
+    private final IPollCommonService iPollCommonService;
     private final NbsOdseDataPersistentDAO nbsOdseDataPersistentDAO;
 
     private final IS3DataService is3DataService;
@@ -40,18 +40,18 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
 
     private final Gson gson = new Gson();
 
-    public NbsOdseDataHandlingService(IPollCommonService pollCommonService, NbsOdseDataPersistentDAO nbsOdseDataPersistentDAO, IS3DataService is3DataService) {
-        this.pollCommonService = pollCommonService;
+    public NbsOdseDataHandlingService(IPollCommonService iPollCommonService, NbsOdseDataPersistentDAO nbsOdseDataPersistentDAO, IS3DataService is3DataService) {
+        this.iPollCommonService = iPollCommonService;
         this.nbsOdseDataPersistentDAO = nbsOdseDataPersistentDAO;
         this.is3DataService = is3DataService;
     }
 
 
     public void handlingExchangedData() throws DataPollException {
-        List<PollDataSyncConfig> configTableList = pollCommonService.getTableListFromConfig();
-        List<PollDataSyncConfig> rdbModernTablesList = pollCommonService.getTablesConfigListBySOurceDB(configTableList, NBS_ODSE);
+        List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
+        List<PollDataSyncConfig> rdbModernTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, NBS_ODSE);
 
-        boolean isInitialLoad = pollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
+        boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(rdbModernTablesList);
         logger.info("INITIAL LOAD: {}", isInitialLoad);
 
 
@@ -78,10 +78,10 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
             var startTime = getCurrentTimestamp();
             //call data exchange service api
             try {
-                totalRecordCounts = pollCommonService.callDataCountEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll);
+                totalRecordCounts = iPollCommonService.callDataCountEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
-                pollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
+                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
                 throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
             }
             String strLog = "";
@@ -90,28 +90,28 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
 
             if (!config.isNoPagination()) {
                 try {
-                    var encodedDataWithNull = pollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true, "0", "0", false);
-                    var rawJsonDataWithNull = pollCommonService.decodeAndDecompress(encodedDataWithNull);
+                    var encodedDataWithNull = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true, "0", "0", false);
+                    var rawJsonDataWithNull = iPollCommonService.decodeAndDecompress(encodedDataWithNull);
                     if (storeJsonInS3) {
                         log = is3DataService.persistToS3MultiPart(NBS_ODSE, rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(S3_LOG + log.getLog());
                         log.setStatus(SUCCESS);
-                        pollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestampWithNull, log);
+                        iPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestampWithNull, log);
                     }
                     else if (storeInSql) {
                         log =  nbsOdseDataPersistentDAO.saveNbsOdseData(config.getTableName(), rawJsonDataWithNull);
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + log.getLog());
                         log.setStatus(SUCCESS);
-                        pollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestampWithNull, log);
+                        iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestampWithNull, log);
                     }
                     else  {
-                        log = pollCommonService.writeJsonDataToFile(NBS_ODSE, config.getTableName(), timestampWithNull, rawJsonDataWithNull);
+                        log = iPollCommonService.writeJsonDataToFile(NBS_ODSE, config.getTableName(), timestampWithNull, rawJsonDataWithNull);
                         log.setStartTime(startTime);
                         log.setLog(LOCAL_DIR_LOG + log.getLog());
                         log.setStatus(SUCCESS);
-                        pollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
+                        iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
                     }
                 }
                 catch (Exception e)
@@ -121,7 +121,7 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
                     log.setLog(CRITICAL_NULL_LOG + e.getMessage());
                     log.setStackTrace(getStackTraceAsString(e));
                     log.setStartTime(startTime);
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
                     throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
 
@@ -136,12 +136,12 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
                         String encodedData = "";
                         if (i == 0) {
                             // First batch pull record will null time stamp
-                            encodedData = pollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true, String.valueOf(startRow), String.valueOf(endRow), false);
+                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true, String.valueOf(startRow), String.valueOf(endRow), false);
                         } else {
-                            encodedData = pollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow), false);
+                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow), false);
                         }
 
-                        rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
+                        rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
                         timestamp = TimestampUtil.getCurrentTimestamp();
                     } catch (Exception e) {
                         strLog = e.getMessage();
@@ -160,11 +160,11 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
 
                 try {
                     String encodedData = "";
-                    encodedData = pollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
+                    encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
                             "0", "0", true);
 
 
-                    rawJsonData = pollCommonService.decodeAndDecompress(encodedData);
+                    rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
                     timestamp = getCurrentTimestamp();
                 } catch (Exception e) {
                     strLog = e.getMessage();
@@ -185,18 +185,18 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
     protected String getPollTimestamp(boolean isInitialLoad, String tableName) {
         String timeStampForPoll;
         if (isInitialLoad) {
-            timeStampForPoll = pollCommonService.getCurrentTimestamp();
+            timeStampForPoll = iPollCommonService.getCurrentTimestamp();
         } else {
             if(storeJsonInS3) {
-                timeStampForPoll = pollCommonService.getLastUpdatedTimeS3(tableName);
+                timeStampForPoll = iPollCommonService.getLastUpdatedTimeS3(tableName);
             }
             else if (storeInSql)
             {
-                timeStampForPoll = pollCommonService.getLastUpdatedTime(tableName);
+                timeStampForPoll = iPollCommonService.getLastUpdatedTime(tableName);
             }
             else
             {
-                timeStampForPoll = pollCommonService.getLastUpdatedTimeLocalDir(tableName);
+                timeStampForPoll = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
             }
         }
         return timeStampForPoll;
@@ -212,15 +212,15 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
                 logResponseModel.setLog(API_LEVEL + log);
 
                 if (storeInSql) {
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
                 }
                 else if (storeJsonInS3)
                 {
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
                 }
                 else
                 {
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
                 }
             } else {
                 if (storeJsonInS3) {
@@ -228,7 +228,7 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
-                    pollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
                 }
                 else if (storeInSql)
                 {
@@ -236,15 +236,15 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
-                    pollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
                 }
                 else
                 {
-                    logResponseModel = pollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+                    logResponseModel = iPollCommonService.writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
-                    pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
                 }
             }
         } catch (Exception e) {
@@ -253,7 +253,7 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
             logResponseModel.setStartTime(startTime);
             logResponseModel.setLog(CRITICAL_NON_NULL_LOG + e.getMessage());
             logResponseModel.setStackTrace(getStackTraceAsString(e));
-            pollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
+            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
         }
     }
 
