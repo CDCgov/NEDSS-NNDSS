@@ -1,13 +1,12 @@
-package gov.cdc.nnddatapollservice.rdbmodern.service;
+package gov.cdc.nnddatapollservice.universal.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
-import gov.cdc.nnddatapollservice.rdbmodern.dao.RdbModernDataPersistentDAO;
-import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IUniversalDataHandlingService;
+import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
+import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
-import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,14 +35,14 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
-    private final RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
+    private final UniversalDataPersistentDAO universalDataPersistentDAO;
     private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
 
-    public UniversalDataHandlingService(RdbModernDataPersistentDAO rdbModernDataPersistentDAO,
+    public UniversalDataHandlingService(UniversalDataPersistentDAO universalDataPersistentDAO,
                                         IPollCommonService iPollCommonService,
                                         IS3DataService is3DataService) {
-        this.rdbModernDataPersistentDAO = rdbModernDataPersistentDAO;
+        this.universalDataPersistentDAO = universalDataPersistentDAO;
         this.iPollCommonService = iPollCommonService;
         this.is3DataService = is3DataService;
     }
@@ -65,7 +64,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
         for(PollDataSyncConfig pollDataSyncConfig : descList) {
             if (pollDataSyncConfig.isRecreateApplied() && storeInSql) {
-                rdbModernDataPersistentDAO.deleteTable(pollDataSyncConfig.getTableName());
+                universalDataPersistentDAO.deleteTable(pollDataSyncConfig.getTableName());
             }
         }
 
@@ -122,7 +121,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         iPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestampWithNull, log);
                     }
                     else if (storeInSql) {
-                        log =  rdbModernDataPersistentDAO.saveRdbModernData(config, rawJsonDataWithNull,
+                        log =  universalDataPersistentDAO.saveRdbModernData(config, rawJsonDataWithNull,
                                 isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + log.getLog());
@@ -261,7 +260,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
                 else if (storeInSql)
                 {
-                    logResponseModel = rdbModernDataPersistentDAO.saveRdbModernData(config, rawJsonData, isInitialLoad);
+                    logResponseModel = universalDataPersistentDAO.saveRdbModernData(config, rawJsonData, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
@@ -291,7 +290,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     private void cleanupTables(List<PollDataSyncConfig> configTableList) {
         for (int j = configTableList.size() - 1; j >= 0; j = j - 1) {
-            rdbModernDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
+            universalDataPersistentDAO.deleteTable(configTableList.get(j).getTableName());
         }
     }
 }

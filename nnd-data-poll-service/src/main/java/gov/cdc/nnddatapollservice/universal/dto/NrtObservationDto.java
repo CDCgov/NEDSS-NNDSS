@@ -1,4 +1,4 @@
-package gov.cdc.nnddatapollservice.rdbmodern.dto;
+package gov.cdc.nnddatapollservice.universal.dto;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;

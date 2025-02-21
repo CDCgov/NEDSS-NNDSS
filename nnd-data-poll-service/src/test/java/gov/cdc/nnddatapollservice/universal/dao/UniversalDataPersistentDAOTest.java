@@ -1,9 +1,9 @@
-package gov.cdc.nnddatapollservice.rdbmodern.dao;
+package gov.cdc.nnddatapollservice.universal.dao;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationCodedDto;
-import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
+import gov.cdc.nnddatapollservice.universal.dto.NrtObservationCodedDto;
+import gov.cdc.nnddatapollservice.universal.dto.NrtObservationDto;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
@@ -31,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-class RdbModernDataPersistentDAOTest {
+class UniversalDataPersistentDAOTest {
     @Mock
     private JdbcTemplate jdbcTemplate;
     @Mock
@@ -43,7 +43,7 @@ class RdbModernDataPersistentDAOTest {
     @Mock
     private Gson gson;
     @InjectMocks
-    private RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
+    private UniversalDataPersistentDAO universalDataPersistentDAO;
 
     @Mock
     private HandleError handleError;
@@ -51,7 +51,7 @@ class RdbModernDataPersistentDAOTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         when(jdbcTemplate.getDataSource()).thenReturn(dataSource);
-        rdbModernDataPersistentDAO.batchSize = 10000;
+        universalDataPersistentDAO.batchSize = 10000;
     }
 
     @Test
@@ -65,7 +65,7 @@ class RdbModernDataPersistentDAOTest {
 
         StringBuilder logBuilder = new StringBuilder();
 
-        StringBuilder resultLog = rdbModernDataPersistentDAO.persistingGenericTable(logBuilder, tableName, jsonData,
+        StringBuilder resultLog = universalDataPersistentDAO.persistingGenericTable(logBuilder, tableName, jsonData,
                 "key", true);
         assertNotNull(resultLog.toString());
     }
@@ -74,7 +74,7 @@ class RdbModernDataPersistentDAOTest {
     void saveRdbModernData(){
         String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
                 "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
-        var recordsSaved = rdbModernDataPersistentDAO.saveRdbModernData("TEST_TABLE", jsondata,
+        var recordsSaved = universalDataPersistentDAO.saveRdbModernData("TEST_TABLE", jsondata,
                 "key", true);
         assertNotNull(recordsSaved);
     }
@@ -93,7 +93,7 @@ class RdbModernDataPersistentDAOTest {
 
         doNothing().when(jdbcTemplate).execute(anyString());
 
-        var noOfRecordsSaved = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+        var noOfRecordsSaved = universalDataPersistentDAO.saveRdbModernData(tableName, jsonData,
                 "key", true);
 
         assertNotNull( noOfRecordsSaved);
@@ -109,7 +109,7 @@ class RdbModernDataPersistentDAOTest {
 
         doNothing().when(jdbcTemplate).execute(anyString());
 
-        var noOfRecordsSaved = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+        var noOfRecordsSaved = universalDataPersistentDAO.saveRdbModernData(tableName, jsonData,
                 "key", true);
 
         assertEquals("SUCCESS", noOfRecordsSaved);
@@ -121,7 +121,7 @@ class RdbModernDataPersistentDAOTest {
 
         doNothing().when(jdbcTemplate).execute(anyString());
 
-        rdbModernDataPersistentDAO.deleteTable(tableName);
+        universalDataPersistentDAO.deleteTable(tableName);
 
         verify(jdbcTemplate, times(1)).execute("delete FROM " + tableName);
     }
@@ -129,7 +129,7 @@ class RdbModernDataPersistentDAOTest {
     void deleteTable_shouldLogErrorOnException() {
         String tableName = "non_existing_table";
         doThrow(new RuntimeException("Simulated exception")).when(jdbcTemplate).execute(anyString());
-        rdbModernDataPersistentDAO.deleteTable(tableName);
+        universalDataPersistentDAO.deleteTable(tableName);
         verify(jdbcTemplate).execute("delete FROM " + tableName);
     }
 
@@ -146,7 +146,7 @@ class RdbModernDataPersistentDAOTest {
         when(gson.fromJson(jsonData, resultType)).thenReturn(observationDtos);
 
         // Act
-        rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+        universalDataPersistentDAO.saveRdbModernData(tableName, jsonData,
                 "key", true);
 
         // Assert
@@ -166,7 +166,7 @@ class RdbModernDataPersistentDAOTest {
         when(gson.fromJson(jsonData, resultType)).thenReturn(observationDtos);
 
         // Act
-        rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+        universalDataPersistentDAO.saveRdbModernData(tableName, jsonData,
                 "key", true);
 
         // Assert
@@ -190,7 +190,7 @@ class RdbModernDataPersistentDAOTest {
         doNothing().when(jdbcTemplate).execute(anyString());
 
         // Act
-        String result = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+        String result = universalDataPersistentDAO.saveRdbModernData(tableName, jsonData,
                 "key", true);
 
         // Assert
@@ -200,7 +200,7 @@ class RdbModernDataPersistentDAOTest {
     @Test
     void testSaveRdbModernData_Else_Success_2() {
         // Arrange
-        rdbModernDataPersistentDAO.batchSize = 0;
+        universalDataPersistentDAO.batchSize = 0;
         String tableName = "SOME_TABLE";
         String jsonData = "[{\"key1\": \"value1\", \"key2\": \"value2\"}]";
 
@@ -214,7 +214,7 @@ class RdbModernDataPersistentDAOTest {
         doNothing().when(jdbcTemplate).execute(anyString());
 
         // Act
-        String result = rdbModernDataPersistentDAO.saveRdbModernData(tableName, jsonData,
+        String result = universalDataPersistentDAO.saveRdbModernData(tableName, jsonData,
                 "key", true);
 
         // Assert

@@ -1,12 +1,11 @@
-package gov.cdc.nnddatapollservice.rdbmodern.dao;
+package gov.cdc.nnddatapollservice.universal.dao;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
-import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationCodedDto;
-import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
+import gov.cdc.nnddatapollservice.universal.dto.NrtObservationCodedDto;
+import gov.cdc.nnddatapollservice.universal.dto.NrtObservationDto;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
@@ -28,7 +27,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,8 +36,8 @@ import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 @Service
 @Slf4j
-public class RdbModernDataPersistentDAO {
-    private static Logger logger = LoggerFactory.getLogger(RdbModernDataPersistentDAO.class);
+public class UniversalDataPersistentDAO {
+    private static Logger logger = LoggerFactory.getLogger(UniversalDataPersistentDAO.class);
     private JdbcTemplate jdbcTemplate;
 
     private final NrtObservationRepository nrtObservationRepository;
@@ -59,7 +57,7 @@ public class RdbModernDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
     @Autowired
-    public RdbModernDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
+    public UniversalDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate,
                                       NrtObservationRepository nrtObservationRepository, NrtObservationCodedRepository nrtObservationCodedRepository, JdbcTemplateUtil jdbcTemplateUtil, HandleError handleError) {
         this.jdbcTemplate = jdbcTemplate;
         this.nrtObservationRepository = nrtObservationRepository;

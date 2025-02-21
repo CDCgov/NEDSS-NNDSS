@@ -1,4 +1,4 @@
-package gov.cdc.nnddatapollservice.rdbmodern.service.interfaces;
+package gov.cdc.nnddatapollservice.universal.service.interfaces;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 

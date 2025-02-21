@@ -2,7 +2,7 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IUniversalDataHandlingService;
+import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import org.junit.jupiter.api.BeforeEach;

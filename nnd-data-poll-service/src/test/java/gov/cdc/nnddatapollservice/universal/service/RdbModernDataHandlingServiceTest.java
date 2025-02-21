@@ -1,8 +1,8 @@
-package gov.cdc.nnddatapollservice.rdbmodern.service;
+package gov.cdc.nnddatapollservice.universal.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
-import gov.cdc.nnddatapollservice.rdbmodern.dao.RdbModernDataPersistentDAO;
+import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 class RdbModernDataHandlingServiceTest {
 
     @Mock
-    private RdbModernDataPersistentDAO rdbModernDataPersistentDAO;
+    private UniversalDataPersistentDAO universalDataPersistentDAO;
     @Mock
     IPollCommonService iPollCommonService;
     @Mock
@@ -58,7 +58,7 @@ class RdbModernDataHandlingServiceTest {
         when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
 
         universalDataHandlingService.handlingExchangedData("RDB");
-        verify(rdbModernDataPersistentDAO, times(1)).deleteTable(anyString());
+        verify(universalDataPersistentDAO, times(1)).deleteTable(anyString());
     }
 
     @Test
@@ -78,7 +78,7 @@ class RdbModernDataHandlingServiceTest {
         when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(false);
 
         universalDataHandlingService.handlingExchangedData("RDB");
-        verify(rdbModernDataPersistentDAO, times(0)).deleteTable(anyString());
+        verify(universalDataPersistentDAO, times(0)).deleteTable(anyString());
     }
 
     @Test

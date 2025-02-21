@@ -1,6 +1,6 @@
 package gov.cdc.nnddatapollservice.repository.rdb_modern.model;
 
-import gov.cdc.nnddatapollservice.rdbmodern.dto.NrtObservationDto;
+import gov.cdc.nnddatapollservice.universal.dto.NrtObservationDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
