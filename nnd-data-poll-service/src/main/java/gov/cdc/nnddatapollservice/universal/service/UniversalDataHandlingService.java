@@ -160,15 +160,18 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         int startRow = i * batchSize + 1;
                         int endRow = (i + 1) * batchSize;
 
+
                         String encodedData = "";
-                        if (i == 0) {
-                            // First batch pull record will null time stamp
-                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true,
-                                    String.valueOf(startRow), String.valueOf(endRow), false);
-                        } else {
-                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
-                                    String.valueOf(startRow), String.valueOf(endRow), false);
-                        }
+//                        if (i == 0) {
+//                            // First batch pull record will null time stamp
+//                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true,
+//                                    String.valueOf(startRow), String.valueOf(endRow), false);
+//                        } else {
+//
+//                        }
+
+                        encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
+                                String.valueOf(startRow), String.valueOf(endRow), false);
 
                         rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
                         timestamp = getCurrentTimestamp();
