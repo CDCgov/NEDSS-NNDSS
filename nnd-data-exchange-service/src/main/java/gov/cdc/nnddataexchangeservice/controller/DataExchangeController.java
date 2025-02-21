@@ -211,7 +211,7 @@ public class DataExchangeController {
     public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
                                                        @RequestParam String timestamp,
                                                         @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
-                                                        @RequestHeader(name = "version", defaultValue = "false") String version
+                                                        @RequestHeader(name = "version", defaultValue = "") String version
                                                         ) throws DataExchangeException {
         if (version == null || version.isEmpty()) {
             throw new DataExchangeException("Version is Missing");
