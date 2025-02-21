@@ -107,7 +107,7 @@ public class DaMainDataSourceConfig {
                 .packages("gov.cdc.nnddatapollservice.repository.rdb_modern",
                         "gov.cdc.nnddatapollservice.repository.srte",
                         "gov.cdc.nnddatapollservice.repository.config",
-                        "gov.cdc.nnddatapollservice.repository.edx_nbs_odse") // Adjust package for your entities
+                        "gov.cdc.nnddatapollservice.repository.nbs_odse") // Adjust package for your entities
                 .persistenceUnit("rdb")
                 .build();
     }

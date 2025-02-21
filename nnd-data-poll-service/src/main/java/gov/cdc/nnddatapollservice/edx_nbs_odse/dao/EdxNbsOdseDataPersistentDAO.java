@@ -33,7 +33,7 @@ import static gov.cdc.nnddatapollservice.constant.ConstantValue.SUCCESS;
 public class EdxNbsOdseDataPersistentDAO {
     private static Logger logger = LoggerFactory.getLogger(EdxNbsOdseDataPersistentDAO.class);
 
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
     private final HandleError handleError;
 
     private final EDXActivityLogRepository edxActivityLogRepository;
