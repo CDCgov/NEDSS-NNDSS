@@ -38,7 +38,6 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer pullLimit = 0;
 
-    private final Gson gson = new Gson();
 
     public NbsOdseDataHandlingService(IPollCommonService iPollCommonService, NbsOdseDataPersistentDAO nbsOdseDataPersistentDAO, IS3DataService is3DataService) {
         this.iPollCommonService = iPollCommonService;

@@ -67,13 +67,10 @@ public class PollCommonService implements IPollCommonService {
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
-    private final RdbDataPersistentDAO rdbDataPersistentDAO;
 
-    public PollCommonService(JdbcTemplateUtil jdbcTemplateUtil, ITokenService tokenService,
-                             RdbDataPersistentDAO rdbDataPersistentDAO) {
+    public PollCommonService(JdbcTemplateUtil jdbcTemplateUtil, ITokenService tokenService) {
         this.jdbcTemplateUtil = jdbcTemplateUtil;
         this.tokenService = tokenService;
-        this.rdbDataPersistentDAO = rdbDataPersistentDAO;
     }
 
     public Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
