@@ -59,7 +59,23 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
             cleanupTables(srteTablesList);
         }
 
-        for (PollDataSyncConfig pollDataSyncConfig : srteTablesList) {
+        List<PollDataSyncConfig> descList = srteTablesList.stream()
+                .sorted((a, b) -> Integer.compare(b.getTableOrder(), a.getTableOrder())) // Sorting in descending order
+                .toList();
+
+        for(PollDataSyncConfig pollDataSyncConfig : descList) {
+            if (pollDataSyncConfig.isRecreateApplied() && storeInSql) {
+                srteDataPersistentDAO.deleteTable(pollDataSyncConfig.getTableName());
+            }
+        }
+
+        List<PollDataSyncConfig> ascList = srteTablesList.stream()
+                .sorted((a, b) -> Integer.compare(a.getTableOrder(), b.getTableOrder())) // Sort by tableOrder ASC
+                .toList();
+
+
+
+        for (PollDataSyncConfig pollDataSyncConfig : ascList) {
             pollAndPersistSRTEData(isInitialLoad, pollDataSyncConfig);
         }
 
@@ -73,10 +89,6 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
             Integer totalRecordCounts = 0;
 
             if(config.isRecreateApplied() ) {
-                // CLEAN UP LOGIC THERE
-                if (storeInSql) {
-                    srteDataPersistentDAO.deleteTable(config.getTableName());
-                }
                 // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
                 isInitialLoad = true;
             }
@@ -93,7 +105,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
                 outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
-                throw new DataPollException("TASK FAILED: " + e.getMessage());
+                throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
             }
 
             String logStr = null;
@@ -137,7 +149,7 @@ public class SrteDataHandlingService implements ISrteDataHandlingService {
                     log.setStackTrace(getStackTraceAsString(e));
                     log.setStartTime(startTime);
                     outboundPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
-                    throw new DataPollException("TASK FAILED: " + e.getMessage());
+                    throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
 
                 for (int i = 0; i < totalPages; i++) {

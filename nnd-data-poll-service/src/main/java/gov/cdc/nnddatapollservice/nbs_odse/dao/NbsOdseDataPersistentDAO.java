@@ -50,7 +50,7 @@ public class NbsOdseDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
 
-    public NbsOdseDataPersistentDAO(@Qualifier("nbsOdseJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, EDXActivityLogRepository edxActivityLogRepository, EDXActivityDetailLogRepository edxActivityDetailLogRepository) {
+    public NbsOdseDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, EDXActivityLogRepository edxActivityLogRepository, EDXActivityDetailLogRepository edxActivityDetailLogRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.handleError = handleError;
         this.edxActivityLogRepository = edxActivityLogRepository;

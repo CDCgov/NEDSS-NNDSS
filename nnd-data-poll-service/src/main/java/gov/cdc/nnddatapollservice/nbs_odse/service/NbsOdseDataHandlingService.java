@@ -68,10 +68,6 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
             Integer totalRecordCounts = 0;
 
             if(config.isRecreateApplied() ) {
-                // CLEAN UP LOGIC THERE
-                if (storeInSql) {
-                    nbsOdseDataPersistentDAO.deleteTable(config.getTableName());
-                }
                 // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
                 isInitialLoad = true;
             }
@@ -86,7 +82,7 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
                 pollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
-                throw new DataPollException("TASK FAILED: " + e.getMessage());
+                throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
             }
             String strLog = "";
             int batchSize = pullLimit;
@@ -126,7 +122,7 @@ public class NbsOdseDataHandlingService implements INbsOdseDataHandlingService {
                     log.setStackTrace(getStackTraceAsString(e));
                     log.setStartTime(startTime);
                     pollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
-                    throw new DataPollException("TASK FAILED: " + e.getMessage());
+                    throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
 
 

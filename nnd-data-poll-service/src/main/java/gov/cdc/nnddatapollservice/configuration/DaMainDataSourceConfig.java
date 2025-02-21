@@ -28,7 +28,8 @@ import java.util.HashMap;
         basePackages = {
                 "gov.cdc.nnddatapollservice.repository.rdb_modern",
                 "gov.cdc.nnddatapollservice.repository.srte",
-                "gov.cdc.nnddatapollservice.repository.config"
+                "gov.cdc.nnddatapollservice.repository.config",
+                "gov.cdc.nnddatapollservice.repository.nbs_odse",
         }
 )
 @EnableTransactionManagement
@@ -105,7 +106,8 @@ public class DaMainDataSourceConfig {
                 .dataSource(dataSource)
                 .packages("gov.cdc.nnddatapollservice.repository.rdb_modern",
                         "gov.cdc.nnddatapollservice.repository.srte",
-                        "gov.cdc.nnddatapollservice.repository.config") // Adjust package for your entities
+                        "gov.cdc.nnddatapollservice.repository.config",
+                        "gov.cdc.nnddatapollservice.repository.nbs_odse") // Adjust package for your entities
                 .persistenceUnit("rdb")
                 .build();
     }

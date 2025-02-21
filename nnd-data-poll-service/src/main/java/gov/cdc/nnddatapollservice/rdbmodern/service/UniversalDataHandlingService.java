@@ -60,7 +60,22 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             cleanupTables(filteredTablesList);
         }
 
-        for (PollDataSyncConfig pollDataSyncConfig : filteredTablesList) {
+        List<PollDataSyncConfig> descList = filteredTablesList.stream()
+                .sorted((a, b) -> Integer.compare(b.getTableOrder(), a.getTableOrder())) // Sorting in descending order
+                .toList();
+
+        for(PollDataSyncConfig pollDataSyncConfig : descList) {
+            if (pollDataSyncConfig.isRecreateApplied() && storeInSql) {
+                rdbModernDataPersistentDAO.deleteTable(pollDataSyncConfig.getTableName());
+            }
+        }
+
+        List<PollDataSyncConfig> ascList = filteredTablesList.stream()
+                .sorted((a, b) -> Integer.compare(a.getTableOrder(), b.getTableOrder())) // Sort by tableOrder ASC
+                .toList();
+
+
+        for (PollDataSyncConfig pollDataSyncConfig : ascList) {
             pollAndPersistRDBMOdernData(source, isInitialLoad, startTime, pollDataSyncConfig);
         }
 
@@ -74,10 +89,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             Integer totalRecordCounts = 0;
 
             if(config.isRecreateApplied() ) {
-                // CLEAN UP LOGIC THERE
-                if (storeInSql) {
-                    rdbModernDataPersistentDAO.deleteTable(config.getTableName());
-                }
                 // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
                 isInitialLoad = true;
             }
@@ -90,7 +101,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
                 iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
-                throw new DataPollException("TASK FAILED: " + e.getMessage());
+                throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
             }
 
             String logStr = null;
@@ -134,7 +145,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     log.setStackTrace(getStackTraceAsString(e));
                     log.setStartTime(startTime);
                     iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
-                    throw new DataPollException("TASK FAILED: " + e.getMessage());
+                    throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
 
 

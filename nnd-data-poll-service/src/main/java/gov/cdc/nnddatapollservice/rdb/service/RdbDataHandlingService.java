@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
@@ -60,7 +61,23 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             cleanupRDBTables(rdbTablesList);
         }
 
-        for (PollDataSyncConfig pollDataSyncConfig : rdbTablesList) {
+
+        List<PollDataSyncConfig> descList = rdbTablesList.stream()
+                .sorted((a, b) -> Integer.compare(b.getTableOrder(), a.getTableOrder())) // Sorting in descending order
+                .toList();
+
+        for(PollDataSyncConfig pollDataSyncConfig : descList) {
+            if (pollDataSyncConfig.isRecreateApplied() && storeInSql) {
+                rdbDataPersistentDAO.deleteTable(pollDataSyncConfig.getTableName());
+            }
+        }
+
+        List<PollDataSyncConfig> ascList = rdbTablesList.stream()
+                .sorted((a, b) -> Integer.compare(a.getTableOrder(), b.getTableOrder())) // Sort by tableOrder ASC
+                .toList();
+
+
+        for (PollDataSyncConfig pollDataSyncConfig : ascList) {
             try {
                 pollAndPersistRDBData(pollDataSyncConfig, isInitialLoad);
             } catch (Exception e){
@@ -77,10 +94,6 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             Integer totalRecordCounts;
 
             if(pollConfig.isRecreateApplied() ) {
-                // CLEAN UP LOGIC THERE
-                if (storeInSql) {
-                    rdbDataPersistentDAO.deleteTable(pollConfig.getTableName());
-                }
                 // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
                 isInitialLoad = true;
             }
@@ -97,7 +110,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
                 pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
-                throw new DataPollException("TASK FAILED: " + e.getMessage());
+                throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
             }
             int batchSize = pullLimit;
             int totalPages = (int) Math.ceil((double) totalRecordCounts / batchSize);
@@ -132,7 +145,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
                 catch (Exception e) {
                     log = new LogResponseModel(CRITICAL_NULL_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
                     pollCommonService.updateLastUpdatedTimeAndLogLocalDir(pollConfig.getTableName(), timestampWithNull, log);
-                    throw new DataPollException("TASK FAILED: " + e.getMessage());
+                    throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
                 for (int i = 0; i < totalPages; i++) {
                     String rawJsonData = "";
