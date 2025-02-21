@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.universal.service;
 
+import gov.cdc.nnddatapollservice.edx_nbs_odse.dao.EdxNbsOdseDataPersistentDAO;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
@@ -39,17 +40,19 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
     private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
+    private final EdxNbsOdseDataPersistentDAO edxNbsOdseDataPersistentDAO;
 
     public UniversalDataHandlingService(UniversalDataPersistentDAO universalDataPersistentDAO,
                                         IPollCommonService iPollCommonService,
-                                        IS3DataService is3DataService) {
+                                        IS3DataService is3DataService,
+                                        EdxNbsOdseDataPersistentDAO edxNbsOdseDataPersistentDAO) {
         this.universalDataPersistentDAO = universalDataPersistentDAO;
         this.iPollCommonService = iPollCommonService;
         this.is3DataService = is3DataService;
+        this.edxNbsOdseDataPersistentDAO = edxNbsOdseDataPersistentDAO;
     }
 
     public void handlingExchangedData(String source) throws DataPollException {
-        var startTime = getCurrentTimestamp();
         List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> filteredTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, source);
 
@@ -75,13 +78,13 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
 
         for (PollDataSyncConfig pollDataSyncConfig : ascList) {
-            pollAndPersistData(isInitialLoad, startTime, pollDataSyncConfig);
+            pollAndPersistData(isInitialLoad, pollDataSyncConfig);
         }
 
     }
 
     @SuppressWarnings({"java:S1141","java:S3776"})
-    protected void pollAndPersistData(boolean isInitialLoad, Timestamp startTime, PollDataSyncConfig config)  {
+    protected void pollAndPersistData(boolean isInitialLoad, PollDataSyncConfig config)  {
         try {
             LogResponseModel log = null;
             boolean exceptionAtApiLevel = false;
@@ -91,19 +94,21 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
                 isInitialLoad = true;
             }
-
             String timeStampForPoll = getPollTimestamp(isInitialLoad, config.getTableName());
-
             var timestampWithNull = getCurrentTimestamp();
+            var startTime = getCurrentTimestamp();
+
+            String logStr = "";
+
+
             try {
                 totalRecordCounts = iPollCommonService.callDataCountEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll);
             } catch (Exception e) {
                 log = new LogResponseModel(CRITICAL_COUNT_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
-                iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
+                iPollCommonService.updateLogNoTimestamp(config.getTableName(), log);
                 throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
             }
 
-            String logStr = null;
 
 
             int batchSize = pullLimit;
@@ -122,8 +127,12 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         iPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestampWithNull, log);
                     }
                     else if (storeInSql) {
-                        log =  universalDataPersistentDAO.saveRdbModernData(config, rawJsonDataWithNull,
-                                isInitialLoad);
+                        if (config.getSourceDb().equalsIgnoreCase(NBS_ODSE_EDX)) {
+                            log =  edxNbsOdseDataPersistentDAO.saveNbsOdseData(config.getTableName(), rawJsonDataWithNull);
+                        }
+                        else {
+                            log =  universalDataPersistentDAO.saveRdbModernData(config, rawJsonDataWithNull, isInitialLoad);
+                        }
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + log.getLog());
                         log.setStatus(SUCCESS);
@@ -138,12 +147,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     }
                 }
                 catch (Exception e) {
-                    log =  new LogResponseModel();
-                    log.setStatus(ERROR);
-                    log.setLog(CRITICAL_NULL_LOG + e.getMessage());
-                    log.setStackTrace(getStackTraceAsString(e));
-                    log.setStartTime(startTime);
-                    iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
+                    log = new LogResponseModel(CRITICAL_NULL_LOG + e.getMessage(), getStackTraceAsString(e), ERROR, startTime);
+                    iPollCommonService.updateLogNoTimestamp(config.getTableName(), log);
                     throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
 
@@ -158,10 +163,11 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         String encodedData = "";
                         if (i == 0) {
                             // First batch pull record will null time stamp
-                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true, String.valueOf(startRow), String.valueOf(endRow), false);
+                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true,
+                                    String.valueOf(startRow), String.valueOf(endRow), false);
                         } else {
-                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad,
-                                    timeStampForPoll, false, String.valueOf(startRow), String.valueOf(endRow), false);
+                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
+                                    String.valueOf(startRow), String.valueOf(endRow), false);
                         }
 
                         rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
@@ -172,7 +178,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     }
 
                     updateDataHelper(exceptionAtApiLevel, timestamp,
-                            rawJsonData, isInitialLoad, logStr, config.getSourceDb(),
+                            rawJsonData, isInitialLoad, logStr,
                             startTime, config);
 
                 }
@@ -196,7 +202,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
 
                 updateDataHelper(exceptionAtApiLevel, timestamp,
-                        rawJsonData, isInitialLoad, logStr, config.getSourceDb(),
+                        rawJsonData, isInitialLoad, logStr,
                         startTime, config);
             }
 
@@ -230,7 +236,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     @SuppressWarnings("java:S107")
     protected void updateDataHelper(boolean exceptionAtApiLevel, Timestamp timestamp,
-                                    String rawJsonData, boolean isInitialLoad, String log, String source,
+                                    String rawJsonData, boolean isInitialLoad, String log,
                                     Timestamp startTime, PollDataSyncConfig config) {
         LogResponseModel logResponseModel = new LogResponseModel();
 
@@ -253,7 +259,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
             } else {
                 if (storeJsonInS3) {
-                    logResponseModel = is3DataService.persistToS3MultiPart(source, rawJsonData, config.getTableName(), timestamp, isInitialLoad);
+                    logResponseModel = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonData, config.getTableName(), timestamp, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
@@ -261,7 +267,13 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
                 else if (storeInSql)
                 {
-                    logResponseModel = universalDataPersistentDAO.saveRdbModernData(config, rawJsonData, isInitialLoad);
+                    if (config.getSourceDb().equalsIgnoreCase(NBS_ODSE_EDX)) {
+                        logResponseModel = edxNbsOdseDataPersistentDAO.saveNbsOdseData(config.getTableName(), rawJsonData);
+                    }
+                    else {
+                        logResponseModel = universalDataPersistentDAO.saveRdbModernData(config, rawJsonData, isInitialLoad);
+
+                    }
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(SQL_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
@@ -270,7 +282,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
                 else
                 {
-                    logResponseModel = iPollCommonService.writeJsonDataToFile(source, config.getTableName(), timestamp, rawJsonData);
+                    logResponseModel = iPollCommonService.writeJsonDataToFile(config.getSourceDb(), config.getTableName(), timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + log);
                     logResponseModel.setStatus(SUCCESS);
@@ -284,7 +296,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             logResponseModel.setStartTime(startTime);
             logResponseModel.setLog(CRITICAL_NON_NULL_LOG + e.getMessage());
             logResponseModel.setStackTrace(getStackTraceAsString(e));
-            iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestamp, logResponseModel);
+            iPollCommonService.updateLogNoTimestamp(config.getTableName(), logResponseModel);
         }
     }
 

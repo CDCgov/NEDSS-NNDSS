@@ -423,6 +423,11 @@ public class JdbcTemplateUtil {
         pollDataLogRepository.save(pollDataLog);
     }
 
+    public void updateLogNoTimestamp(String tableName, LogResponseModel logResponseModel) {
+        PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
+        pollDataLogRepository.save(pollDataLog);
+    }
+
     public String getLastUpdatedTime(String tableName) {
         String sql = "select last_update_time from " + pollConfigTableName + " where table_name=?";
         String updatedTime = "";

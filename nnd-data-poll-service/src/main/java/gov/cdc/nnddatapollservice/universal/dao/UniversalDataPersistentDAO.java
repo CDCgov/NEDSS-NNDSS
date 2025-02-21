@@ -41,11 +41,6 @@ public class UniversalDataPersistentDAO {
 
     private final JdbcTemplateUtil jdbcTemplateUtil;
 
-
-
-    @Value("${datasync.sql_error_handle_log}")
-    protected String sqlErrorPath = "";
-
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
 

@@ -193,6 +193,10 @@ public class PollCommonService implements IPollCommonService {
         jdbcTemplateUtil.updateLastUpdatedTime(tableName, timestamp);
     }
 
+    public void updateLogNoTimestamp(String tableName, LogResponseModel logResponseModel) {
+        jdbcTemplateUtil.updateLogNoTimestamp(tableName, logResponseModel);
+    }
+
     public void deleteTable(String tableName) {
         jdbcTemplateUtil.deleteTable(tableName);
     }

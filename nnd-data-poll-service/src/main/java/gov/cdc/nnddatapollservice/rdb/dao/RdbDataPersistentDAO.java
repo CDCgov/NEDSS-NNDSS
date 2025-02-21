@@ -40,24 +40,15 @@ import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 @Slf4j
 public class RdbDataPersistentDAO {
     private static Logger logger = LoggerFactory.getLogger(RdbDataPersistentDAO.class);
-    private JdbcTemplate jdbcTemplate;
-    private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-    private final HandleError handleError;
-    private final Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
-            .create();
-    private final PollDataLogRepository pollDataLogRepository;
+
     private final JdbcTemplateUtil jdbcTemplateUtil;
-    @Value("${datasync.sql_error_handle_log}")
-    protected String sqlErrorPath = "";
+
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
-    private final Gson gsonNorm = new Gson();
+
     @Autowired
-    public RdbDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, PollDataLogRepository pollDataLogRepository, JdbcTemplateUtil jdbcTemplateUtil) {
-        this.jdbcTemplate = jdbcTemplate;
-        this.handleError = handleError;
-        this.pollDataLogRepository = pollDataLogRepository;
+    public RdbDataPersistentDAO(JdbcTemplateUtil jdbcTemplateUtil) {
+
         this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 

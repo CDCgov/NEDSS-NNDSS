@@ -1,12 +1,9 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.nbs_odse.service.interfaces.INbsOdseDataHandlingService;
-import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
 import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
-import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,21 +49,13 @@ public class DataPullService implements IDataPullService {
     @Value("${datasync.sql_reprocessing_data}")
     private boolean reprocessFailedSQL = false;
 
-    private final INbsOdseDataHandlingService edxActivitySyncService;
     private final INNDDataHandlingService dataHandlingService;
-    private final IRdbDataHandlingService rdbDataHandlingService;
     private final IUniversalDataHandlingService universalDataHandlingService;
-    private final ISrteDataHandlingService srteDataHandlingService;
 
-    public DataPullService(INbsOdseDataHandlingService edxActivitySyncService, INNDDataHandlingService dataHandlingService,
-                           IRdbDataHandlingService rdbDataHandlingService,
-                           IUniversalDataHandlingService universalDataHandlingService,
-                           ISrteDataHandlingService srteDataHandlingService) {
-        this.edxActivitySyncService = edxActivitySyncService;
+    public DataPullService(INNDDataHandlingService dataHandlingService,
+                           IUniversalDataHandlingService universalDataHandlingService) {
         this.dataHandlingService = dataHandlingService;
-        this.rdbDataHandlingService = rdbDataHandlingService;
         this.universalDataHandlingService = universalDataHandlingService;
-        this.srteDataHandlingService = srteDataHandlingService;
     }
 
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
@@ -85,7 +74,7 @@ public class DataPullService implements IDataPullService {
         if (edxActivityEnabled) {
             logger.info("START POLLING");
             logger.info("CRON: {}, TZ: {}", cron, zone);
-            edxActivitySyncService.handlingExchangedData();
+            universalDataHandlingService.handlingExchangedData(NBS_ODSE_EDX);
             logger.info("END POLLING");
             closePoller();
         }
@@ -97,7 +86,7 @@ public class DataPullService implements IDataPullService {
         if (rdbPollEnabled) {
             logger.info("START POLLING");
             logger.info("CRON: {}, TZ: {}", cron, zone);
-            rdbDataHandlingService.handlingExchangedData();
+            universalDataHandlingService.handlingExchangedData(RDB);
             logger.info("END POLLING");
             closePoller();
         }
@@ -145,7 +134,7 @@ public class DataPullService implements IDataPullService {
         if (srtePollEnabled) {
             logger.info("START POLLING");
             logger.info("CRON: {}, TZ: {}", cron, zone);
-            srteDataHandlingService.handlingExchangedData();
+            universalDataHandlingService.handlingExchangedData(SRTE);
             logger.info("END POLLING");
             closePoller();
         }

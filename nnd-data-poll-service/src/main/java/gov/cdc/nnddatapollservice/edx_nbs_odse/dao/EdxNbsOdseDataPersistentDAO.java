@@ -1,12 +1,12 @@
-package gov.cdc.nnddatapollservice.nbs_odse.dao;
+package gov.cdc.nnddatapollservice.edx_nbs_odse.dao;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import gov.cdc.nnddatapollservice.configuration.TimestampAdapter;
-import gov.cdc.nnddatapollservice.nbs_odse.dto.EDXActivityDetailLogDto;
-import gov.cdc.nnddatapollservice.nbs_odse.dto.EDXActivityLogDto;
+import gov.cdc.nnddatapollservice.edx_nbs_odse.dto.EDXActivityDetailLogDto;
+import gov.cdc.nnddatapollservice.edx_nbs_odse.dto.EDXActivityLogDto;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityDetailLogRepository;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityLogRepository;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityDetailLog;
@@ -30,8 +30,8 @@ import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.SUCCESS;
 
 @Service
-public class NbsOdseDataPersistentDAO {
-    private static Logger logger = LoggerFactory.getLogger(NbsOdseDataPersistentDAO.class);
+public class EdxNbsOdseDataPersistentDAO {
+    private static Logger logger = LoggerFactory.getLogger(EdxNbsOdseDataPersistentDAO.class);
 
     private JdbcTemplate jdbcTemplate;
     private final HandleError handleError;
@@ -43,8 +43,6 @@ public class NbsOdseDataPersistentDAO {
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
 
-    @Value("${datasync.data_sync_batch_limit}")
-    protected Integer batchSize = 1000;
     private final Gson gsonNorm = new Gson();
     private final Gson gson = new GsonBuilder()
             .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
@@ -52,7 +50,7 @@ public class NbsOdseDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
 
-    public NbsOdseDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, EDXActivityLogRepository edxActivityLogRepository, EDXActivityDetailLogRepository edxActivityDetailLogRepository, JdbcTemplateUtil jdbcTemplateUtil) {
+    public EdxNbsOdseDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, EDXActivityLogRepository edxActivityLogRepository, EDXActivityDetailLogRepository edxActivityDetailLogRepository, JdbcTemplateUtil jdbcTemplateUtil) {
         this.jdbcTemplate = jdbcTemplate;
         this.handleError = handleError;
         this.edxActivityLogRepository = edxActivityLogRepository;
