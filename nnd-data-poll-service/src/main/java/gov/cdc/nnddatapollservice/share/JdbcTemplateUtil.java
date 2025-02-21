@@ -7,7 +7,6 @@ import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 import gov.cdc.nnddatapollservice.repository.config.model.PollDataLog;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
-import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -45,6 +44,7 @@ public class JdbcTemplateUtil {
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+
 
     private final Gson gson = new GsonBuilder()
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)

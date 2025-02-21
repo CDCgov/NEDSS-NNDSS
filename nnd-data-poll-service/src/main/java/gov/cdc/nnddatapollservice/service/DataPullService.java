@@ -1,9 +1,9 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
+import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,7 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;

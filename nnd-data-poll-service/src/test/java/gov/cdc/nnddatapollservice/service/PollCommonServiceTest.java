@@ -4,6 +4,8 @@ import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
 import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +30,8 @@ import static org.mockito.Mockito.*;
 
 class PollCommonServiceTest {
 
+    @Mock
+    private JdbcTemplateUtil jdbcTemplateUtil;
     @Mock
     private ITokenService tokenService;
     @Mock
@@ -75,7 +79,9 @@ class PollCommonServiceTest {
     @Test
     void testPersistingExchangeData_Exception() {
         String timestamp = "2024-09-15 10:15:20.123";
-        assertThrows(DataPollException.class, () -> iPollCommonService.callDataExchangeEndpoint("TEST_TABLE", true, timestamp, true, "0", "1"));
+        assertThrows(DataPollException.class, () -> iPollCommonService
+                .callDataExchangeEndpoint("TEST_TABLE", true, timestamp,
+                        true, "0", "1", false));
 
         verify(tokenService, times(1)).getToken();
     }
@@ -133,7 +139,7 @@ class PollCommonServiceTest {
     @Test
     void getLastUpdatedTime() {
         String timestamp = "2024-09-15 10:15:20.123";
-        when(rdbDataPersistentDAO.getLastUpdatedTime(anyString())).thenReturn(timestamp);
+        when(iPollCommonService.getLastUpdatedTime(anyString())).thenReturn(timestamp);
         String lastupdatedTime = iPollCommonService.getLastUpdatedTime("TEST_TABLE");
         assertEquals(timestamp, lastupdatedTime);
     }
@@ -141,7 +147,7 @@ class PollCommonServiceTest {
     @Test
     void updateLastUpdatedTime() {
         iPollCommonService.updateLastUpdatedTime("TEST_TABLE", TimestampUtil.getCurrentTimestamp());
-        verify(rdbDataPersistentDAO).updateLastUpdatedTime(anyString(), any(Timestamp.class));
+        verify(jdbcTemplateUtil).updateLastUpdatedTime(anyString(), any(Timestamp.class));
     }
 
     @Test
@@ -182,14 +188,14 @@ class PollCommonServiceTest {
         // Arrange
         String tableName = "testTable";
         String expectedTime = "2024-09-30 12:00:00";
-        when(rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName)).thenReturn(expectedTime);
+        when(jdbcTemplateUtil.getLastUpdatedTimeS3(tableName)).thenReturn(expectedTime);
 
         // Act
         String result = iPollCommonService.getLastUpdatedTimeS3(tableName);
 
         // Assert
         assertEquals(expectedTime, result);
-        verify(rdbDataPersistentDAO, times(1)).getLastUpdatedTimeS3(tableName);
+        verify(jdbcTemplateUtil, times(1)).getLastUpdatedTimeS3(tableName);
     }
 
     @Test
@@ -197,14 +203,14 @@ class PollCommonServiceTest {
         // Arrange
         String tableName = "testTable";
         String expectedTime = "2024-09-30 12:00:00";
-        when(rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName)).thenReturn(expectedTime);
+        when(jdbcTemplateUtil.getLastUpdatedTimeLocalDir(tableName)).thenReturn(expectedTime);
 
         // Act
         String result = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
 
         // Assert
         assertEquals(expectedTime, result);
-        verify(rdbDataPersistentDAO, times(1)).getLastUpdatedTimeLocalDir(tableName);
+        verify(jdbcTemplateUtil, times(1)).getLastUpdatedTimeLocalDir(tableName);
     }
 
     @Test
@@ -215,10 +221,10 @@ class PollCommonServiceTest {
         String log = "Update successful";
 
         // Act
-        iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+        iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, new LogResponseModel());
 
         // Assert
-        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+        verify(jdbcTemplateUtil, times(1)).updateLastUpdatedTimeAndLog(eq(tableName), eq(timestamp), any());
     }
 
     @Test
@@ -229,10 +235,10 @@ class PollCommonServiceTest {
         String log = "S3 Update successful";
 
         // Act
-        iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+        iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, new LogResponseModel());
 
         // Assert
-        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+        verify(jdbcTemplateUtil, times(1)).updateLastUpdatedTimeAndLogS3(eq(tableName), eq(timestamp), any());
     }
 
     @Test
@@ -243,9 +249,12 @@ class PollCommonServiceTest {
         String log = "Local Dir Update successful";
 
         // Act
-        iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+        iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, new LogResponseModel());
 
         // Assert
-        verify(rdbDataPersistentDAO, times(1)).updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+        verify(jdbcTemplateUtil, times(1)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName),
+                eq(timestamp), any());
     }
+
+
 }

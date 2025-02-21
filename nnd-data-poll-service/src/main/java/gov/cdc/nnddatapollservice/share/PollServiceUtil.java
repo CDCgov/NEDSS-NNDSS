@@ -17,7 +17,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.ERROR;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.SUCCESS;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 public class PollServiceUtil {
