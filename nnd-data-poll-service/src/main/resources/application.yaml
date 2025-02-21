@@ -95,7 +95,7 @@ spring:
     nnd:
       url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${OP_DBNAME:};encrypt=true;trustServerCertificate=true;
     dataSync:
-      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_DBNAME:};encrypt=true;trustServerCertificate=true;
+      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${DATASYNC_DBNAME:};encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:
