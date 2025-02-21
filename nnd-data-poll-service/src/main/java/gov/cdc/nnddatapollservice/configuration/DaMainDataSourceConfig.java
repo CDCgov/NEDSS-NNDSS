@@ -37,7 +37,7 @@ public class DaMainDataSourceConfig {
     @Value("${spring.datasource.driverClassName}")
     private String driverClassName;
 
-    @Value("${spring.datasource.rdb.url}")
+    @Value("${spring.datasource.dataSync.url}")
     private String dbUrl;
 
     @Value("${spring.datasource.username}")
@@ -108,7 +108,7 @@ public class DaMainDataSourceConfig {
                         "gov.cdc.nnddatapollservice.repository.srte",
                         "gov.cdc.nnddatapollservice.repository.config",
                         "gov.cdc.nnddatapollservice.repository.nbs_odse") // Adjust package for your entities
-                .persistenceUnit("rdb")
+                .persistenceUnit("dataSync")
                 .build();
     }
 

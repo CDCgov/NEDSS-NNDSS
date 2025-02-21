@@ -1,8 +1,8 @@
 package gov.cdc.nnddatapollservice.service.interfaces;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
+import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 
 import java.sql.Timestamp;
 import java.util.List;

@@ -43,7 +43,7 @@ public class S3DataService implements IS3DataService {
             @Value("${aws.auth.static.token}") String token,
             @Value("${aws.s3.region}") String region,
             @Value("${aws.auth.profile.profile_name}") String profile
-    ) throws DataPollException
+    )
     {
         if (!keyId.isEmpty() && !accessKey.isEmpty() && !token.isEmpty()) {
             this.s3Client = S3Client.builder()

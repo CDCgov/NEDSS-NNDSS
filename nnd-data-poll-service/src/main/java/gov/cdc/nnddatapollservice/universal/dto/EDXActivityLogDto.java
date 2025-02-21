@@ -1,4 +1,4 @@
-package gov.cdc.nnddatapollservice.edx_nbs_odse.dto;
+package gov.cdc.nnddatapollservice.universal.dto;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Getter;

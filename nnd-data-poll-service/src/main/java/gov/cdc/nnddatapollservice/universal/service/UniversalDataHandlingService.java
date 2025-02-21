@@ -1,12 +1,12 @@
 package gov.cdc.nnddatapollservice.universal.service;
 
-import gov.cdc.nnddatapollservice.edx_nbs_odse.dao.EdxNbsOdseDataPersistentDAO;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
+import gov.cdc.nnddatapollservice.universal.dao.EdxNbsOdseDataPersistentDAO;
 import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
+import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -160,16 +160,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         int startRow = i * batchSize + 1;
                         int endRow = (i + 1) * batchSize;
 
-
                         String encodedData = "";
-//                        if (i == 0) {
-//                            // First batch pull record will null time stamp
-//                            encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true,
-//                                    String.valueOf(startRow), String.valueOf(endRow), false);
-//                        } else {
-//
-//                        }
-
                         encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
                                 String.valueOf(startRow), String.valueOf(endRow), false);
 

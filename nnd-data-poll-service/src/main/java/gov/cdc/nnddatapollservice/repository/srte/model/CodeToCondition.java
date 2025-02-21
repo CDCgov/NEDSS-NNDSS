@@ -1,6 +1,6 @@
 package gov.cdc.nnddatapollservice.repository.srte.model;
 
-import gov.cdc.nnddatapollservice.srte.dto.CodeToConditionDto;
+import gov.cdc.nnddatapollservice.universal.dto.CodeToConditionDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;

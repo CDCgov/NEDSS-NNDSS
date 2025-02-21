@@ -1,8 +1,8 @@
 package gov.cdc.nnddatapollservice.universal.dao;
 
-import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
+import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

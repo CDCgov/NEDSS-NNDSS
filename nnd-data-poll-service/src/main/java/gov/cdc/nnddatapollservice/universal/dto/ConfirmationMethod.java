@@ -1,4 +1,4 @@
-package gov.cdc.nnddatapollservice.rdb.dto;
+package gov.cdc.nnddatapollservice.universal.dto;
 
 import lombok.Getter;
 import lombok.Setter;

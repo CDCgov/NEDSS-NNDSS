@@ -1,12 +1,12 @@
 package gov.cdc.nnddatapollservice.universal.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
 import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
+import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

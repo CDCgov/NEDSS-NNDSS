@@ -10,7 +10,7 @@ import software.amazon.awssdk.services.s3.model.*;
 
 import java.sql.Timestamp;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 class S3DataServiceTest {

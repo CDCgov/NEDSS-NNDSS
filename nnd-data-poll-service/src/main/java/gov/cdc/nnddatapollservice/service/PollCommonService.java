@@ -1,7 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
@@ -9,6 +8,7 @@ import gov.cdc.nnddatapollservice.share.DataSimplification;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
+import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

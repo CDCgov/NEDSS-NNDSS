@@ -1,12 +1,10 @@
-package gov.cdc.nnddatapollservice.edx_nbs_odse.dao;
+package gov.cdc.nnddatapollservice.universal.dao;
 
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import gov.cdc.nnddatapollservice.configuration.TimestampAdapter;
-import gov.cdc.nnddatapollservice.edx_nbs_odse.dto.EDXActivityDetailLogDto;
-import gov.cdc.nnddatapollservice.edx_nbs_odse.dto.EDXActivityLogDto;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityDetailLogRepository;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityLogRepository;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityDetailLog;
@@ -14,6 +12,8 @@ import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityLog;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
+import gov.cdc.nnddatapollservice.universal.dto.EDXActivityDetailLogDto;
+import gov.cdc.nnddatapollservice.universal.dto.EDXActivityLogDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;

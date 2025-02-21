@@ -69,7 +69,7 @@ public class DataPullService implements IDataPullService {
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron_edx_activity}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleEdxActivityDataFetch() throws DataPollException {
         if (edxActivityEnabled) {
             logger.info("START POLLING");
@@ -81,7 +81,7 @@ public class DataPullService implements IDataPullService {
     }
 
     @SuppressWarnings("java:S125")
-    @Scheduled(cron = "${scheduler.cron_rdb}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
             logger.info("START POLLING");
@@ -92,8 +92,7 @@ public class DataPullService implements IDataPullService {
         }
     }
 
-
-    @Scheduled(cron = "${scheduler.cron_rdb_modern}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
             logger.info("START POLLING");
@@ -105,7 +104,7 @@ public class DataPullService implements IDataPullService {
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron_covid_datamart}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleCovidDataMartDataFetch() throws DataPollException {
         if (covidDataMartEnabled) {
             logger.info("START POLLING");
@@ -117,8 +116,7 @@ public class DataPullService implements IDataPullService {
         }
     }
 
-
-    @Scheduled(cron = "${scheduler.cron_odse}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleOdseDataFetch() throws DataPollException {
         if (odsePollEnabled) {
             logger.info("START POLLING");
@@ -129,7 +127,7 @@ public class DataPullService implements IDataPullService {
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron_srte}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleSRTEDataFetch() throws DataPollException {
         if (srtePollEnabled) {
             logger.info("START POLLING");

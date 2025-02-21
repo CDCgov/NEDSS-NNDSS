@@ -1,39 +1,22 @@
 package gov.cdc.nnddatapollservice.universal.dao;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
-import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservation;
-import gov.cdc.nnddatapollservice.repository.rdb_modern.model.NrtObservationCoded;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
-import gov.cdc.nnddatapollservice.share.PollServiceUtil;
-import gov.cdc.nnddatapollservice.universal.dto.NrtObservationCodedDto;
-import gov.cdc.nnddatapollservice.universal.dto.NrtObservationDto;
+import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Type;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 class UniversalDataPersistentDAOTest {
     @Mock

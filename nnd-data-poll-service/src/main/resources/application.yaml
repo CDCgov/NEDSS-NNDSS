@@ -1,6 +1,3 @@
-server:
-  port: 8082
-
 io:
   fileLocation: ${NND_FILE_LOCATION:NA}
 
@@ -58,6 +55,8 @@ aws:
     region: ${S3_REGION:}
 
 spring:
+  main:
+    web-application-type: none
   application:
     name: nnd-data-poll-service
   task:
@@ -65,16 +64,11 @@ spring:
       pool:
         size: 4
 scheduler:
-  zone: ${NBS_NND_CRON_TIME_ZONE:UTC}
+  zone: ${TIME_ZONE:UTC}
   # America/New_York
   # UTC
   cron: ${NBS_NND_CRON:0 */1 * * * * }
-  cron_rdb: ${NBS_RDB_CRON:0 */1 * * * * }
-  cron_srte: ${NBS_SRTE_CRON:0 */1 * * * * }
-  cron_rdb_modern: ${NBS_RDB_MODERN_CRON:0 */1 * * * * }
-  cron_edx_activity: ${NBS_EDX_ACTIVITY_CRON:0 */1 * * * * }
-  cron_covid_datamart: ${NBS_COVID_DATA_MART_CRON:0 */1 * * * * }
-  cron_odse: ${NBS_RDB_ODSE_CRON:0 */1 * * * * }
+  cron-data-sync: ${NBS_DATA_CRON:0 */1 * * * * }
   # "0 */5 0-2 * * *"
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *
@@ -98,16 +92,10 @@ spring:
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${OP_DBUSER}
     password: ${OP_DBPASSWORD}
-    ingest:
+    nnd:
       url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${OP_DBNAME:};encrypt=true;trustServerCertificate=true;
-    rdb:
+    dataSync:
       url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_DBNAME:};encrypt=true;trustServerCertificate=true;
-    rdb_modern:
-      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${RDB_MODERN_DBNAME:};encrypt=true;trustServerCertificate=true;
-    srte:
-      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${SRTE_DBNAME:};encrypt=true;trustServerCertificate=true;
-    odse:
-      url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${ODSE_DBNAME:};encrypt=true;trustServerCertificate=true;
   jpa:
     show-sql: true
     hibernate:

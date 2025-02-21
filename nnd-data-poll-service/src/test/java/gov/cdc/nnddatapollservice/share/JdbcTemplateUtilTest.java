@@ -1,11 +1,11 @@
 package gov.cdc.nnddatapollservice.share;
 
 import com.google.gson.Gson;
-import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;
 import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
+import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
