@@ -36,6 +36,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
     protected Integer pullLimit = 0;
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
+
     private final RdbDataPersistentDAO rdbDataPersistentDAO;
     private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
@@ -54,10 +55,8 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
         List<PollDataSyncConfig> rdbTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, RDB);
 
         boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(rdbTablesList);
-        logger.info("INITIAL LOAD: {}", isInitialLoad);
 
         if (isInitialLoad && storeInSql && deleteOnInit) {
-            logger.info("CLEANING UP THE TABLES");
             cleanupRDBTables(rdbTablesList);
         }
 
@@ -78,11 +77,7 @@ public class RdbDataHandlingService implements IRdbDataHandlingService {
 
 
         for (PollDataSyncConfig pollDataSyncConfig : ascList) {
-            try {
-                pollAndPersistRDBData(pollDataSyncConfig, isInitialLoad);
-            } catch (Exception e){
-                logger.error("Task error");
-            }
+            pollAndPersistRDBData(pollDataSyncConfig, isInitialLoad);
         }
     }
 

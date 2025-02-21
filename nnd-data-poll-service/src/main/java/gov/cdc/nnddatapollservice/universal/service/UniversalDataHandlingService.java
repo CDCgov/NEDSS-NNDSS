@@ -24,6 +24,7 @@ import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp
 @Slf4j
 public class UniversalDataHandlingService implements IUniversalDataHandlingService {
     private static Logger logger = LoggerFactory.getLogger(UniversalDataHandlingService.class);
+
     @Value("${datasync.store_in_local}")
     protected boolean storeJsonInLocalFolder = false;
     @Value("${datasync.store_in_S3}")
@@ -32,9 +33,9 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected boolean storeInSql = false;
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer pullLimit = 0;
-
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
+
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
     private final IPollCommonService iPollCommonService;
     private final IS3DataService is3DataService;
@@ -74,13 +75,13 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
 
         for (PollDataSyncConfig pollDataSyncConfig : ascList) {
-            pollAndPersistRDBMOdernData(source, isInitialLoad, startTime, pollDataSyncConfig);
+            pollAndPersistData(isInitialLoad, startTime, pollDataSyncConfig);
         }
 
     }
 
     @SuppressWarnings({"java:S1141","java:S3776"})
-    protected void pollAndPersistRDBMOdernData(String source, boolean isInitialLoad, Timestamp startTime, PollDataSyncConfig config)  {
+    protected void pollAndPersistData(boolean isInitialLoad, Timestamp startTime, PollDataSyncConfig config)  {
         try {
             LogResponseModel log = null;
             boolean exceptionAtApiLevel = false;
@@ -114,7 +115,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                             "0", "0", false);
                     var rawJsonDataWithNull = iPollCommonService.decodeAndDecompress(encodedDataWithNull);
                     if (storeJsonInS3) {
-                        log = is3DataService.persistToS3MultiPart(source, rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
+                        log = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
                         log.setStartTime(startTime);
                         log.setLog(S3_LOG + log.getLog());
                         log.setStatus(SUCCESS);
@@ -129,7 +130,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestampWithNull, log);
                     }
                     else  {
-                        log = iPollCommonService.writeJsonDataToFile(source, config.getTableName(), timestampWithNull, rawJsonDataWithNull);
+                        log = iPollCommonService.writeJsonDataToFile(config.getSourceDb(), config.getTableName(), timestampWithNull, rawJsonDataWithNull);
                         log.setStartTime(startTime);
                         log.setLog(LOCAL_DIR_LOG + log.getLog());
                         log.setStatus(SUCCESS);
@@ -171,7 +172,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     }
 
                     updateDataHelper(exceptionAtApiLevel, timestamp,
-                            rawJsonData, isInitialLoad, logStr, source,
+                            rawJsonData, isInitialLoad, logStr, config.getSourceDb(),
                             startTime, config);
 
                 }
@@ -195,7 +196,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
 
                 updateDataHelper(exceptionAtApiLevel, timestamp,
-                        rawJsonData, isInitialLoad, logStr, source,
+                        rawJsonData, isInitialLoad, logStr, config.getSourceDb(),
                         startTime, config);
             }
 

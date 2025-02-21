@@ -156,7 +156,7 @@ public class DataExchangeController {
                                            @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
                                            @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
                                            @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull,
-                                           @RequestHeader(name = "version", defaultValue = "false") String version,
+                                           @RequestHeader(name = "version", defaultValue = "") String version,
                                            @RequestHeader(name = "noPagination", defaultValue = "false") String noPagination,
                                            HttpServletRequest request) throws DataExchangeException {
         if (version == null || version.isEmpty()) {
