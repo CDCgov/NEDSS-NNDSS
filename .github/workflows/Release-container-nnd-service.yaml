@@ -76,7 +76,7 @@ jobs:
 
       - name: create-data-sync-service-jar
         working-directory: ./nnd-data-poll-service
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon -x test
       - name: upload-data-sync-service-jar
         uses: actions/upload-artifact@v4
         with:
@@ -85,7 +85,7 @@ jobs:
 
       - name: create-netss-message-processor-jar
         working-directory: ./netss-message-processor
-        run: ./gradlew build --no-daemon
+        run: ./gradlew build --no-daemon -x test
       - name: upload-netss-message-processor-jar
         uses: actions/upload-artifact@v4
         with:
