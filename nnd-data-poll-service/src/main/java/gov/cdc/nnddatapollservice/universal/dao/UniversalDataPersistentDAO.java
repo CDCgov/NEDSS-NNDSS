@@ -27,7 +27,7 @@ public class UniversalDataPersistentDAO {
 
     public LogResponseModel saveRdbModernData(PollDataSyncConfig config, String jsonData , boolean initialLoad) {
         logger.info("saveRdbModernData tableName: {}", config.getTableName());
-        LogResponseModel logBuilder = null;
+        LogResponseModel logBuilder;
         logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad);
 
 

@@ -111,9 +111,4 @@ public class EdxNbsOdseDataPersistentDAO {
             jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " OFF");
         }
     }
-
-    public void deleteTable(String tableName) {
-        jdbcTemplateUtil.deleteTable(tableName);
-    }
-
 }

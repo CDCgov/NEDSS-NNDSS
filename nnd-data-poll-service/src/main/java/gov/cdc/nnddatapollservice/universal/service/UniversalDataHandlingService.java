@@ -52,7 +52,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         this.edxNbsOdseDataPersistentDAO = edxNbsOdseDataPersistentDAO;
     }
 
-    public void handlingExchangedData(String source) throws DataPollException {
+    public void handlingExchangedData(String source) {
         List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> filteredTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, source);
 

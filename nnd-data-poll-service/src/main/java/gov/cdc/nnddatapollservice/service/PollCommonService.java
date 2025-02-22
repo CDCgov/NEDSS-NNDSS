@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
+import com.google.gson.Gson;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
@@ -50,9 +51,6 @@ public class PollCommonService implements IPollCommonService {
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
 
-    @Value("${datasync.store_in_sql}")
-    private boolean sqlSync;
-
     @Value("${datasync.store_in_local}")
     private boolean dirSync;
 
@@ -62,6 +60,8 @@ public class PollCommonService implements IPollCommonService {
 
     @Value("${data_exchange.version}")
     private String version;
+
+    private final Gson gson = new Gson();
 
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private final RestTemplate restTemplate = new RestTemplate();
@@ -89,7 +89,19 @@ public class PollCommonService implements IPollCommonService {
                     .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
-            logger.info("Exchange URI for rdb polling {} ", uri);
+
+            HttpHeaders headersForLogging = new HttpHeaders();
+            headers.entrySet().forEach(entry -> {
+                String key = entry.getKey();
+                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
+                || "clientsecret".equalsIgnoreCase(key)) {
+                    headersForLogging.add(key, "");
+                } else {
+                    headersForLogging.put(key, entry.getValue());
+                }
+            });
+            logger.info("API URL: {} , headers: {}", uri, gson.toJson(headersForLogging));
+
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             return Integer.valueOf(response.getBody());
         } catch (Exception e) {
@@ -119,13 +131,26 @@ public class PollCommonService implements IPollCommonService {
                     .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
-            logger.info("Exchange URI for rdb polling {} ", uri);
+
+            HttpHeaders headersForLogging = new HttpHeaders();
+            headers.entrySet().forEach(entry -> {
+                String key = entry.getKey();
+                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
+                        || "clientsecret".equalsIgnoreCase(key)) {
+                    headersForLogging.add(key, "");
+                } else {
+                    headersForLogging.put(key, entry.getValue());
+                }
+            });
+            logger.info("API URL: {} , headers: {}", uri, gson.toJson(headersForLogging));
+
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             return response.getBody();
         } catch (Exception e) {
             throw new DataPollException(e.getMessage());
         }
     }
+
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
         return jdbcTemplateUtil.getTableListFromConfig();

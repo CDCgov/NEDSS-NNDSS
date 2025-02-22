@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -56,18 +56,21 @@ public class JdbcTemplateUtil {
     }
 
     @SuppressWarnings("java:S1192")
-    public void upsertSingle(String tableName, Map<String, Object> data) throws SQLException {
+    public void upsertSingle(String tableName, Map<String, Object> data, String keyList) throws SQLException {
         if (data == null || data.isEmpty()) {
             throw new IllegalArgumentException("No data provided for table: " + tableName);
         }
 
+        if (keyList == null || keyList.trim().isEmpty()) {
+            throw new IllegalArgumentException("Key list cannot be null or empty");
+        }
+
         data.entrySet().removeIf(entry -> entry.getKey().equalsIgnoreCase("RowNum"));
 
-
         // Extract valid column names from the database
-        Set<String> columnNames = getColumnNames(tableName); // Assume this retrieves the column list
+        Set<String> columnNames = getColumnNames(tableName);
         Map<String, Object> validData = new LinkedHashMap<>(data);
-        validData.keySet().retainAll(columnNames); // Keep only valid columns
+        validData.keySet().retainAll(columnNames);
 
         if (validData.isEmpty()) {
             throw new IllegalArgumentException("No valid columns found for table: " + tableName);
@@ -81,20 +84,34 @@ public class JdbcTemplateUtil {
                 .map(col -> "target." + col + " = source." + col)
                 .collect(Collectors.joining(", "));
 
-        var valuesForQuery = columnList.stream()
+        String valuesForQuery = columnList.stream()
                 .map(col -> "source." + col)
                 .collect(Collectors.joining(", "));
+
+        // Build the ON condition dynamically
+        String[] keys = keyList.split("\\s*,\\s*");
+        StringBuilder condition = new StringBuilder("ON ");
+        for (int i = 0; i < keys.length; i++) {
+            if (i > 0) {
+                condition.append(" AND ");
+            }
+            condition.append("target.").append(keys[i].trim()).append(" = source.").append(keys[i].trim());
+        }
+
         // Construct the dynamic MERGE statement for a single record
         String sql = "MERGE INTO " + tableName + " AS target " +
                 "USING (VALUES " + placeholders + ") AS source(" + columns + ") " +
-                "ON target. "+ "observation_uid" + " = source."+ "observation_uid" + " " +
-                "WHEN MATCHED THEN UPDATE SET " + updates + " " +
-                "WHEN NOT MATCHED THEN INSERT (" + columns + ") VALUES (" +
-                valuesForQuery + ");";
+                condition +
+                " WHEN MATCHED THEN UPDATE SET " + updates + " " +
+                " WHEN NOT MATCHED THEN INSERT (" + columns + ") VALUES (" + valuesForQuery + ");";
 
         var values = validData.values().toArray();
-        // Execute the statement
-        rdbJdbcTemplate.update(sql, values);
+
+        try {
+            rdbJdbcTemplate.update(sql, values);
+        } catch (Exception e) {
+            throw new SQLException("Single record upsert failed", e);
+        }
     }
 
     @SuppressWarnings("java:S3776")
@@ -245,23 +262,7 @@ public class JdbcTemplateUtil {
                         }
                         catch (Exception e)
                         {
-                            for (Map<String, Object> res : records) {
-                                try {
-                                    jdbcInsert.execute(new MapSqlParameterSource(res));
-                                } catch (Exception ei) {
-                                    if (ei instanceof DuplicateKeyException) // NOSONAR
-                                    {
-                                        logger.debug("Duplicated Key Exception Resolved");
-                                    } else {
-                                        logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(res), e.getMessage()); // NOSONAR
-                                        handleError.writeRecordToFile(gsonNorm, res, config.getTableName()
-                                                + UUID.randomUUID(), sqlErrorPath
-                                                + config.getSourceDb() + ei.getClass().getSimpleName()
-                                                + "/" + config.getTableName() + "/"); // NOSONAR
-                                    }
-
-                                }
-                            }
+                            handleBatchInsertionFailure(records, config, jdbcInsert);
                         }
                     }
 
@@ -357,15 +358,28 @@ public class JdbcTemplateUtil {
     public void handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config, SimpleJdbcInsert simpleJdbcInsert) {
         for (Map<String, Object> res : records) {
             try {
-                simpleJdbcInsert.execute(new MapSqlParameterSource(res));
+                if (config.getKeyList().isEmpty()) {
+                    simpleJdbcInsert.execute(new MapSqlParameterSource(res));
+                }
+                else
+                {
+                    upsertSingle(config.getTableName(), res, config.getKeyList());
+                }
             } catch (Exception ei) {
-                logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
-                handleError.writeRecordToFile(gsonNorm, res,
-                        config.getTableName() + UUID.randomUUID(),
-                        sqlErrorPath
-                                + "/" + config.getSourceDb() + "/"
-                                + ei.getClass().getSimpleName()
-                                + "/" + config.getTableName() + "/");
+                if (ei instanceof DataIntegrityViolationException) // NOSONAR
+                {
+                    logger.debug("Duplicated Key Exception Resolved");
+                }
+                else {
+                    logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+                    handleError.writeRecordToFile(gsonNorm, res,
+                            config.getTableName() + UUID.randomUUID(),
+                            sqlErrorPath
+                                    + "/" + config.getSourceDb() + "/"
+                                    + ei.getClass().getSimpleName()
+                                    + "/" + config.getTableName() + "/");
+                }
+
             }
         }
     }
