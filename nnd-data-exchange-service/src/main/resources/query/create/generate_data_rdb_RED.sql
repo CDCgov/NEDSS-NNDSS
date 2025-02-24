@@ -26,7 +26,8 @@ WHERE table_name IN (
 
     );
 
-
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'ANTIMICROBIAL_GROUP')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -53,6 +54,10 @@ VALUES
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
 
+    END;
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'D_PCR_SOURCE_GROUP')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -79,8 +84,11 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
-INSERT INTO [RDB].[dbo].[data_sync_config]
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'D_RASH_LOC_GEN_GROUP')
+    BEGIN
+        INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
     ('D_RASH_LOC_GEN_GROUP', 'RDB',
@@ -106,7 +114,11 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'BMIRD_MULTI_VALUE_FIELD_GROUP')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -133,7 +145,11 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'D_VAR_PAM')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -148,7 +164,10 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'HEP_MULTI_VALUE_FIELD_GROUP')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -175,7 +194,10 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'LDF_DATA')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -189,8 +211,14 @@ VALUES
         FROM LDF_DATA
      )
      SELECT * FROM PaginatedResults
-     WHERE RowNum BETWEEN :startRow AND :endRow'),
+     WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'LDF_FOODBORNE')
+    BEGIN
+INSERT INTO [RDB].[dbo].[data_sync_config]
+(table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
+VALUES
     ('LDF_FOODBORNE', 'RDB',
      'SELECT LDF_FOODBORNE.* FROM LDF_FOODBORNE',
      NULL,
@@ -201,8 +229,15 @@ VALUES
         FROM LDF_FOODBORNE
      )
      SELECT * FROM PaginatedResults
-     WHERE RowNum BETWEEN :startRow AND :endRow'),
+     WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'LDF_GROUP')
+    BEGIN
+INSERT INTO [RDB].[dbo].[data_sync_config]
+(table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
+VALUES
     ('LDF_GROUP', 'RDB',
      'SELECT LDF_GROUP.* FROM LDF_GROUP',
      NULL,
@@ -214,8 +249,13 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
-INSERT INTO [RDB].[dbo].[data_sync_config]
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'NOTIFICATION')
+    BEGIN
+
+        INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
     ('NOTIFICATION', 'RDB',
@@ -229,7 +269,11 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
+
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'PERTUSSIS_SUSPECTED_SOURCE_GRP')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -255,7 +299,10 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'PERTUSSIS_TREATMENT_GROUP')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -281,8 +328,10 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
-
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'Act_relationship')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -311,8 +360,10 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
-
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'Act_relationship')
+    BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
@@ -327,10 +378,11 @@ VALUES
      )
      SELECT * FROM PaginatedResults
      WHERE RowNum BETWEEN :startRow AND :endRow');
+    END;
 
-
-
-INSERT INTO [RDB].[dbo].[data_sync_config]
+IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'Act_relationship')
+    BEGIN
+        INSERT INTO [RDB].[dbo].[data_sync_config]
 (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
 VALUES
     ('STD_HIV_DATAMART', 'RDB',
@@ -358,3 +410,4 @@ VALUES
            OR INVESTIGATION.LAST_CHG_TIME :operator :timestamp
     )
     SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+    END;
