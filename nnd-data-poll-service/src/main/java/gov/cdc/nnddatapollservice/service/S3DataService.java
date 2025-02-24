@@ -2,6 +2,7 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
+import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 @Service
 public class S3DataService implements IS3DataService {
@@ -41,7 +43,7 @@ public class S3DataService implements IS3DataService {
             @Value("${aws.auth.static.token}") String token,
             @Value("${aws.s3.region}") String region,
             @Value("${aws.auth.profile.profile_name}") String profile
-    ) throws DataPollException
+    )
     {
         if (!keyId.isEmpty() && !accessKey.isEmpty() && !token.isEmpty()) {
             this.s3Client = S3Client.builder()
@@ -64,7 +66,7 @@ public class S3DataService implements IS3DataService {
                     .credentialsProvider(ProfileCredentialsProvider.create(profile))
                     .build();
         } else {
-            throw new DataPollException("No Valid AWS Profile or Credentials found");
+            this.s3Client = null;
         }
     }
 
@@ -74,8 +76,9 @@ public class S3DataService implements IS3DataService {
     }
 
 
-    public String persistToS3MultiPart(String domain, String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) {
+    public LogResponseModel persistToS3MultiPart(String domain, String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) {
         String log = LOG_SUCCESS;
+        LogResponseModel logResponseModel = new LogResponseModel();
         try {
             if (records.equalsIgnoreCase("[]") || records.isEmpty()) {
                 throw new DataPollException("No data to persist for table " + fileName);
@@ -121,10 +124,13 @@ public class S3DataService implements IS3DataService {
         }
         catch (Exception e)
         {
+            logResponseModel.setLog(e.getMessage());
+            logResponseModel.setStackTrace(getStackTraceAsString(e));
             logger.info(e.getMessage());
-            log = e.getMessage();
         }
-        return log;
+
+        logResponseModel.setLog(log);
+        return logResponseModel;
     }
 
     private String initiateMultipartUpload(String fileName) {

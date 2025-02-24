@@ -59,7 +59,8 @@ class DataExchangeGenericServiceTest {
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.empty());
 
         DataExchangeException exception = assertThrows(DataExchangeException.class, () -> {
-            dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", false, false);
+            dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0",
+                    "1", false, false, false);
         });
         assertNotNull(exception);
 
@@ -90,7 +91,8 @@ class DataExchangeGenericServiceTest {
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
         when(dataSyncLogRepository.save(any())).thenReturn(new DataSyncLog());
-        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", true, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp,
+                "0", "1", true, false, false);
         assertNotNull(res);
     }
 
@@ -119,7 +121,8 @@ class DataExchangeGenericServiceTest {
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
         when(dataSyncLogRepository.save(any())).thenReturn(new DataSyncLog());
-        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", true, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0",
+                "1", true, false, false);
         assertNotNull(res);
     }
 
@@ -148,7 +151,8 @@ class DataExchangeGenericServiceTest {
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
         when(dataSyncLogRepository.save(any())).thenReturn(new DataSyncLog());
-        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", true, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0",
+                "1", true, false, false);
         assertNotNull(res);
     }
 
@@ -176,7 +180,8 @@ class DataExchangeGenericServiceTest {
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
         when(dataSyncLogRepository.save(any())).thenReturn(new DataSyncLog());
-        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", true, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0",
+                "1", true, false, false);
         assertNotNull(res);
     }
 
@@ -204,7 +209,8 @@ class DataExchangeGenericServiceTest {
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
         when(dataSyncLogRepository.save(any())).thenReturn(new DataSyncLog());
-        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", false, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0",
+                "1", false, false, false);
         assertNotNull(res);
     }
 
@@ -233,7 +239,8 @@ class DataExchangeGenericServiceTest {
         when(jdbcTemplate.queryForList(any())).thenReturn(data);
         when(gson.toJson(data)).thenReturn("TEST");
         when(dataSyncLogRepository.save(any())).thenReturn(new DataSyncLog());
-        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0", "1", false, false);
+        var res = dataExchangeGenericService.getDataForDataSync(tableName, timeStamp, "0",
+                "1", false, false, false);
         assertNotNull(res);
     }
 

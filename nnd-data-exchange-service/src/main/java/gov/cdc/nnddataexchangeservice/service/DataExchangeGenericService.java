@@ -96,7 +96,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     public String getDataForDataSync(String tableName, String timeStamp, String startRow, String endRow,
-                                     boolean initialLoad, boolean allowNull) throws DataExchangeException {
+                                     boolean initialLoad, boolean allowNull, boolean noPagination) throws DataExchangeException {
 
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
@@ -110,7 +110,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
         try {
             Callable<String> callable = () -> {
-                String baseQuery = preparePaginationQuery(dataConfig, timeStamp, startRow, endRow, initialLoad, allowNull);
+                String baseQuery = preparePaginationQuery(dataConfig, timeStamp, startRow, endRow, initialLoad, allowNull, noPagination);
 
                 List<Map<String, Object>> data = executeQueryForData(baseQuery, dataConfig.getSourceDb());
 
@@ -132,12 +132,15 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     private String preparePaginationQuery(DataSyncConfig dataConfig, String timeStamp, String startRow,
-                                          String endRow, boolean initialLoad, boolean allowNull) {
+                                          String endRow, boolean initialLoad, boolean allowNull, boolean noPagination) {
 
         String baseQuery;
 
         if (allowNull && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
             baseQuery = dataConfig.getQueryWithNullTimeStamp().replaceAll(";", "") ; //NOSONAR
+        }
+        else if (noPagination || dataConfig.getQueryWithPagination().isEmpty()) {
+            baseQuery = dataConfig.getQuery().replaceAll(";", "") ; //NOSONAR
         }
         else
         {

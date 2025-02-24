@@ -1,10 +1,8 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
-import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
+import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,11 +18,7 @@ class DataPullServiceTest {
     @Mock
     private INNDDataHandlingService dataHandlingService;
     @Mock
-    private IRdbDataHandlingService rdbDataHandlingService;
-    @Mock
     private IUniversalDataHandlingService universalDataHandlingService;
-    @Mock
-    private ISrteDataHandlingService srteDataHandlingService;
     @InjectMocks
     private DataPullService dataPullService;
 
@@ -59,15 +53,15 @@ class DataPullServiceTest {
     @Test
     void testScheduleRDBDataFetch_Success() throws DataPollException {
         dataPullService.scheduleRDBDataFetch();
-        verify(rdbDataHandlingService, times(1)).handlingExchangedData();
+        verify(universalDataHandlingService, times(1)).handlingExchangedData("RDB");
     }
     @Test
     void testScheduleRDBataFetch_Exception() throws DataPollException {
-        doThrow(new DataPollException("Exception")).when(rdbDataHandlingService).handlingExchangedData();
+        doThrow(new DataPollException("Exception")).when(universalDataHandlingService).handlingExchangedData("RDB");
 
         assertThrows(DataPollException.class, () -> dataPullService.scheduleRDBDataFetch());
 
-        verify(rdbDataHandlingService, times(1)).handlingExchangedData();
+        verify(universalDataHandlingService, times(1)).handlingExchangedData("RDB");
     }
     @Test
     void testScheduleRDBModernDataFetch_Success() throws DataPollException {
@@ -77,6 +71,6 @@ class DataPullServiceTest {
     @Test
     void testScheduleSrteDataFetch_Success() throws DataPollException {
         dataPullService.scheduleSRTEDataFetch();
-        verify(srteDataHandlingService, times(1)).handlingExchangedData();
+        verify(universalDataHandlingService, times(1)).handlingExchangedData("SRTE");
     }
 }

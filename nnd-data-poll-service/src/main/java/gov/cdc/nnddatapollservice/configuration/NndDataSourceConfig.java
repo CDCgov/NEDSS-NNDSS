@@ -33,7 +33,7 @@ public class NndDataSourceConfig {
     @Value("${spring.datasource.driverClassName}")
     private String driverClassName;
 
-    @Value("${spring.datasource.ingest.url}")
+    @Value("${spring.datasource.nnd.url}")
     private String dbUrl;
 
     @Value("${spring.datasource.username}")
@@ -68,7 +68,7 @@ public class NndDataSourceConfig {
                 .dataSource(ingestDataSource)
                 .packages("gov.cdc.nnddatapollservice.repository.msg", "gov.cdc.nnddatapollservice.repository.msg",
                         "gov.cdc.nnddatapollservice.repository.msg", "gov.cdc.nnddatapollservice.repository.odse")
-                .persistenceUnit("ingest")
+                .persistenceUnit("nnd")
                 .build();
     }
 

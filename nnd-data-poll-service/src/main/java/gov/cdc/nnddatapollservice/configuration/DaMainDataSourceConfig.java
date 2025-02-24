@@ -27,7 +27,9 @@ import java.util.HashMap;
         transactionManagerRef = "rdbTransactionManager",
         basePackages = {
                 "gov.cdc.nnddatapollservice.repository.rdb_modern",
-                "gov.cdc.nnddatapollservice.repository.srte"
+                "gov.cdc.nnddatapollservice.repository.srte",
+                "gov.cdc.nnddatapollservice.repository.config",
+                "gov.cdc.nnddatapollservice.repository.nbs_odse",
         }
 )
 @EnableTransactionManagement
@@ -35,7 +37,7 @@ public class DaMainDataSourceConfig {
     @Value("${spring.datasource.driverClassName}")
     private String driverClassName;
 
-    @Value("${spring.datasource.rdb.url}")
+    @Value("${spring.datasource.dataSync.url}")
     private String dbUrl;
 
     @Value("${spring.datasource.username}")
@@ -103,8 +105,10 @@ public class DaMainDataSourceConfig {
         return builder
                 .dataSource(dataSource)
                 .packages("gov.cdc.nnddatapollservice.repository.rdb_modern",
-                        "gov.cdc.nnddatapollservice.repository.srte") // Adjust package for your entities
-                .persistenceUnit("rdb")
+                        "gov.cdc.nnddatapollservice.repository.srte",
+                        "gov.cdc.nnddatapollservice.repository.config",
+                        "gov.cdc.nnddatapollservice.repository.nbs_odse") // Adjust package for your entities
+                .persistenceUnit("dataSync")
                 .build();
     }
 

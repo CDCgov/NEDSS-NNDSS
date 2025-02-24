@@ -98,7 +98,8 @@ class DataExchangeControllerTest {
         String base64CompressedData = "mockBase64Data";
         String load = "true";
 
-        when(dataExchangeGenericService.getDataForDataSync(anyString(), anyString(),anyString(), anyString(), anyBoolean(), anyBoolean()))
+        when(dataExchangeGenericService.getDataForDataSync(anyString(), anyString(),anyString(),
+                anyString(), anyBoolean(), anyBoolean(), anyBoolean()))
                 .thenReturn(base64CompressedData);
 
         ResponseEntity<String> response = dataExchangeController.dataSync(
@@ -108,6 +109,8 @@ class DataExchangeControllerTest {
                 "1",
                 limit,
                 load,
+                "1",
+                "false",
                 null);
 
         assertNotNull(response);
@@ -144,7 +147,8 @@ class DataExchangeControllerTest {
         ResponseEntity<Integer> response = dataExchangeController.dataSyncTotalRecords(
                 tableName,
                 timestamp,
-                "true");
+                "true",
+                "1");
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());

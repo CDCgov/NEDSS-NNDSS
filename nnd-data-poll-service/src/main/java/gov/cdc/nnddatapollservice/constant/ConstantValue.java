@@ -5,7 +5,7 @@ public class ConstantValue {
     public static final String RDB_MODERN = "RDB_MODERN";
     public static final String ODSE_OBS = "ODSE_OBS";
     public static final String COVID_DATAMART = "COVID_DATAMART";
-    public static final String NBS_ODSE = "NBS_ODSE";
+    public static final String NBS_ODSE_EDX = "NBS_ODSE";
     public static final String RDB = "RDB";
     public static final String SRTE = "SRTE";
     public static final String SQL_LOG = "SQL Log: ";
@@ -16,4 +16,6 @@ public class ConstantValue {
     public static final String CRITICAL_COUNT_LOG = "Critical Count Log: ";
 
     public static final String CRITICAL_NON_NULL_LOG = "Critical Non Null Log: ";
+    public static final String SUCCESS = "SUCCESS";
+    public static final String ERROR = "ERROR";
 }

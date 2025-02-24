@@ -3,9 +3,9 @@
 - Data Poll Service ENV:
   - Share Process:
     - SINGLE_TIME_POLL: (optional) default is false, can be set to true. Forcing the application to exist the process after it executed
-    - NBS_NND_CRON_TIME_ZONE: (optional) Time zone for CRON process, default is UTC
+    - TIME_ZONE: (optional) Time zone for CRON process, default is UTC
     - NBS_NND_CRON: (optional) NND CRON scheduler, default is 0 */1 * * * * -> every one minutes
-    - NBS_RDB_CRON: same as above but for RDB CRON
+    - NBS_DATA_CRON: same as above but for RDB CRON
   - NND Process
     - NND_POLL_ENABLED: (optional) default is false, must set to true to enable the NND POLL  
     - NND_FILE_LOCATION: Log location for NND process (ex: /Users/UserName/Desktop/LOG)
@@ -36,16 +36,9 @@
   - Client Database
     - OP_DBSERVER: server url
     - OP_DBNAME: NND DB name
-    - RDB_DBNAME: RDB DB name
+    - DATASYNC_DBNAME: RDB DB name
     - OP_DBUSER: DB Username
     - OP_DBPASSWORD: DB Password
-  - OBSOLETED parameters
-    - RDB_MODERN_DBNAME: RDB Modern DB name
-    - SRTE_DBNAME: SRTE DB name
-    - RDB_MODERN_POLL_ENABLED: (optional) default is false, set to true to enable RDB MODERN POLL
-    - SRTE_POLL_ENABLED: (optional) default is false, set to true to enable SRTE POLL
-    - NBS_SRTE_CRON: same as above but for SRTE CRON
-    - NBS_RDB_MODERN_CRON: same as above but for RDB MODERN CRON
 
 ## CRON Guide
 - Ex: Setting up the scheduler time.

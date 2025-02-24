@@ -1,12 +1,9 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.nbs_odse.service.interfaces.INbsOdseDataHandlingService;
-import gov.cdc.nnddatapollservice.rdb.service.interfaces.IRdbDataHandlingService;
-import gov.cdc.nnddatapollservice.rdbmodern.service.interfaces.IUniversalDataHandlingService;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
-import gov.cdc.nnddatapollservice.srte.service.interfaces.ISrteDataHandlingService;
+import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,100 +49,91 @@ public class DataPullService implements IDataPullService {
     @Value("${datasync.sql_reprocessing_data}")
     private boolean reprocessFailedSQL = false;
 
-    private final INbsOdseDataHandlingService edxActivitySyncService;
     private final INNDDataHandlingService dataHandlingService;
-    private final IRdbDataHandlingService rdbDataHandlingService;
     private final IUniversalDataHandlingService universalDataHandlingService;
-    private final ISrteDataHandlingService srteDataHandlingService;
 
-    public DataPullService(INbsOdseDataHandlingService edxActivitySyncService, INNDDataHandlingService dataHandlingService,
-                           IRdbDataHandlingService rdbDataHandlingService,
-                           IUniversalDataHandlingService universalDataHandlingService,
-                           ISrteDataHandlingService srteDataHandlingService) {
-        this.edxActivitySyncService = edxActivitySyncService;
+    public DataPullService(INNDDataHandlingService dataHandlingService,
+                           IUniversalDataHandlingService universalDataHandlingService) {
         this.dataHandlingService = dataHandlingService;
-        this.rdbDataHandlingService = rdbDataHandlingService;
         this.universalDataHandlingService = universalDataHandlingService;
-        this.srteDataHandlingService = srteDataHandlingService;
     }
 
     @Scheduled(cron = "${scheduler.cron}", zone = "${scheduler.zone}")
     public void scheduleNNDDataFetch() throws DataPollException {
         if (nndPollEnabled) {
-            logger.info("CRON STARTED FOR NND");
-            logger.info(cron);
-            logger.info(zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             dataHandlingService.handlingExchangedData();
+            logger.info("END POLLING");
             closePoller();
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron_edx_activity}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleEdxActivityDataFetch() throws DataPollException {
         if (edxActivityEnabled) {
-            logger.info("CRON STARTED FOR EDX ACTIVITY");
-            logger.info(cron);
-            logger.info(zone);
-            edxActivitySyncService.handlingExchangedData();
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
+            universalDataHandlingService.handlingExchangedData(NBS_ODSE_EDX);
+            logger.info("END POLLING");
             closePoller();
         }
     }
 
     @SuppressWarnings("java:S125")
-    @Scheduled(cron = "${scheduler.cron_rdb}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleRDBDataFetch() throws DataPollException {
         if (rdbPollEnabled) {
-            logger.info("CRON STARTED FOR POLLING RDB");
-            logger.info("{}, {} FOR RDB", cron, zone);
-            rdbDataHandlingService.handlingExchangedData();
-
-            // RDB MODERN and SRTE are now part of RDB
-//            universalDataHandlingService.handlingExchangedData(RDB_MODERN);
-//            srteDataHandlingService.handlingExchangedData();
-            logger.info("CRON ENDED FOR POLLING RDB");
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
+            universalDataHandlingService.handlingExchangedData(RDB);
+            logger.info("END POLLING");
             closePoller();
         }
     }
 
-
-    @Scheduled(cron = "${scheduler.cron_rdb_modern}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleRdbModernDataFetch() throws DataPollException {
         if (rdbModernPollEnabled) {
-            logger.info("CRON STARTED FOR POLLING RDB_MODERN");
-            logger.info("{}, {} FOR RDB_MODERN", cron, zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             // RDB MODERN will be converted to more generic -- use this for any new db sync
             universalDataHandlingService.handlingExchangedData(RDB_MODERN);
+            logger.info("END POLLING");
             closePoller();
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron_covid_datamart}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleCovidDataMartDataFetch() throws DataPollException {
         if (covidDataMartEnabled) {
-            logger.info("CRON STARTED FOR POLLING COVID DATAMART");
-            logger.info("{}, {} FOR COVID DATAMART", cron, zone);
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             // RDB MODERN will be converted to more generic -- use this for any new db sync
             universalDataHandlingService.handlingExchangedData(COVID_DATAMART);
+            logger.info("END POLLING");
             closePoller();
         }
     }
 
-
-    @Scheduled(cron = "${scheduler.cron_odse}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleOdseDataFetch() throws DataPollException {
         if (odsePollEnabled) {
-            logger.info("CRON STARTED");
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
             universalDataHandlingService.handlingExchangedData(ODSE_OBS);
+            logger.info("END POLLING");
             closePoller();
         }
     }
 
-    @Scheduled(cron = "${scheduler.cron_srte}", zone = "${scheduler.zone}")
+    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
     public void scheduleSRTEDataFetch() throws DataPollException {
         if (srtePollEnabled) {
-            logger.info("CRON STARTED FOR POLLING SRTE");
-            logger.info("{}, {} FOR SRTE", cron, zone);
-            srteDataHandlingService.handlingExchangedData();
+            logger.info("START POLLING");
+            logger.info("CRON: {}, TZ: {}", cron, zone);
+            universalDataHandlingService.handlingExchangedData(SRTE);
+            logger.info("END POLLING");
             closePoller();
         }
 

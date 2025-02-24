@@ -1,6 +1,6 @@
 @echo off
 set SINGLE_TIME_POLL = false
-set NBS_RDB_CRON=0 */1 * * * *
+set NBS_DATA_CRON=0 */1 * * * *
 
 
 set NND_DE_CLIENT_ID=nnd-keycloak-client
@@ -20,7 +20,7 @@ set S3_REGION=region-2
 
 set OP_DBSERVER=localhost:1433
 set OP_DBNAME=MSGOUTE
-set RDB_DBNAME=RDB
+set DATASYNC_DBNAME=RDB
 set OP_DBPASSWORD=fake.fake.fake.1234
 set OP_DBUSER=sa
 

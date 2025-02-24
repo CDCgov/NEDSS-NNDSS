@@ -1,13 +1,15 @@
 package gov.cdc.nnddatapollservice.service;
 
+import com.google.gson.Gson;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
-import gov.cdc.nnddatapollservice.rdb.dao.RdbDataPersistentDAO;
-import gov.cdc.nnddatapollservice.rdb.dto.PollDataSyncConfig;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
+import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
+import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,8 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class PollCommonService implements IPollCommonService {
+    private final JdbcTemplateUtil jdbcTemplateUtil;
+
     private static Logger logger = LoggerFactory.getLogger(PollCommonService.class);
     @Value("${data_exchange.clientId}")
     private String clientId;
@@ -47,9 +51,6 @@ public class PollCommonService implements IPollCommonService {
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
 
-    @Value("${datasync.store_in_sql}")
-    private boolean sqlSync;
-
     @Value("${datasync.store_in_local}")
     private boolean dirSync;
 
@@ -57,15 +58,18 @@ public class PollCommonService implements IPollCommonService {
     private boolean s3Sync;
 
 
+    @Value("${data_exchange.version}")
+    private String version;
+
+    private final Gson gson = new Gson();
+
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
     private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
-    private final RdbDataPersistentDAO rdbDataPersistentDAO;
 
-    public PollCommonService(ITokenService tokenService,
-                             RdbDataPersistentDAO rdbDataPersistentDAO) {
+    public PollCommonService(JdbcTemplateUtil jdbcTemplateUtil, ITokenService tokenService) {
+        this.jdbcTemplateUtil = jdbcTemplateUtil;
         this.tokenService = tokenService;
-        this.rdbDataPersistentDAO = rdbDataPersistentDAO;
     }
 
     public Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
@@ -77,6 +81,7 @@ public class PollCommonService implements IPollCommonService {
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
             headers.add("initialLoad", String.valueOf(isInitialLoad));
+            headers.add("version", version);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
             URI uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
@@ -84,7 +89,19 @@ public class PollCommonService implements IPollCommonService {
                     .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
-            logger.info("Exchange URI for rdb polling {} ", uri);
+
+            HttpHeaders headersForLogging = new HttpHeaders();
+            headers.entrySet().forEach(entry -> {
+                String key = entry.getKey();
+                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
+                || "clientsecret".equalsIgnoreCase(key)) {
+                    headersForLogging.add(key, "");
+                } else {
+                    headersForLogging.put(key, entry.getValue());
+                }
+            });
+            logger.info("API URL: {} , headers: {}", uri, gson.toJson(headersForLogging));
+
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             return Integer.valueOf(response.getBody());
         } catch (Exception e) {
@@ -93,7 +110,7 @@ public class PollCommonService implements IPollCommonService {
     }
 
     public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                                           String startRow, String endRow) throws DataPollException {
+                                           String startRow, String endRow, boolean noPagination) throws DataPollException {
         try {
             //Get token
             var token = tokenService.getToken();
@@ -104,6 +121,8 @@ public class PollCommonService implements IPollCommonService {
             headers.add("endRow",  endRow);
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
+            headers.add("version", version);
+            headers.add("noPagination", String.valueOf(noPagination));
             headers.setBearerAuth(token);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
@@ -112,7 +131,19 @@ public class PollCommonService implements IPollCommonService {
                     .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
-            logger.info("Exchange URI for rdb polling {} ", uri);
+
+            HttpHeaders headersForLogging = new HttpHeaders();
+            headers.entrySet().forEach(entry -> {
+                String key = entry.getKey();
+                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
+                        || "clientsecret".equalsIgnoreCase(key)) {
+                    headersForLogging.add(key, "");
+                } else {
+                    headersForLogging.put(key, entry.getValue());
+                }
+            });
+            logger.info("API URL: {} , headers: {}", uri, gson.toJson(headersForLogging));
+
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
             return response.getBody();
         } catch (Exception e) {
@@ -120,15 +151,14 @@ public class PollCommonService implements IPollCommonService {
         }
     }
 
+
     public List<PollDataSyncConfig> getTableListFromConfig() {
-        return rdbDataPersistentDAO.getTableListFromConfig();
+        return jdbcTemplateUtil.getTableListFromConfig();
     }
 
     public boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
         if(dirSync) {
             for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(),
-                        pollDataSyncConfig.getLastUpdateTimeLocalDir());
                 if (pollDataSyncConfig.getLastUpdateTimeLocalDir() != null
                         && !pollDataSyncConfig.getLastUpdateTimeLocalDir().toString().isBlank()) {
                     return false;
@@ -136,8 +166,6 @@ public class PollCommonService implements IPollCommonService {
             }
         } else if (s3Sync) {
             for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(),
-                        pollDataSyncConfig.getLastUpdateTimeS3());
                 if (pollDataSyncConfig.getLastUpdateTimeS3() != null
                         && !pollDataSyncConfig.getLastUpdateTimeS3().toString().isBlank()) {
                     return false;
@@ -145,7 +173,6 @@ public class PollCommonService implements IPollCommonService {
             }
         } else {
             for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
-                logger.info("pollDataSyncConfig Table:{}  LastUpdateTime:{}", pollDataSyncConfig.getTableName(), pollDataSyncConfig.getLastUpdateTime());
                 if (pollDataSyncConfig.getLastUpdateTime() != null && !pollDataSyncConfig.getLastUpdateTime().toString().isBlank()) {
                     return false;
                 }
@@ -163,31 +190,39 @@ public class PollCommonService implements IPollCommonService {
     }
 
     public String getLastUpdatedTime(String tableName) {
-        return rdbDataPersistentDAO.getLastUpdatedTime(tableName);
+        return jdbcTemplateUtil.getLastUpdatedTime(tableName);
     }
 
     public String getLastUpdatedTimeS3(String tableName) {
-        return rdbDataPersistentDAO.getLastUpdatedTimeS3(tableName);
+        return jdbcTemplateUtil.getLastUpdatedTimeS3(tableName);
     }
 
     public String getLastUpdatedTimeLocalDir(String tableName) {
-        return rdbDataPersistentDAO.getLastUpdatedTimeLocalDir(tableName);
+        return jdbcTemplateUtil.getLastUpdatedTimeLocalDir(tableName);
     }
 
-    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, String log) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLog(tableName, timestamp, log);
+    public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        jdbcTemplateUtil.updateLastUpdatedTimeAndLog(tableName, timestamp, logResponseModel);
     }
 
-    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, String log) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogS3(tableName, timestamp, log);
+    public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        jdbcTemplateUtil.updateLastUpdatedTimeAndLogS3(tableName, timestamp, logResponseModel);
     }
 
-    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, String log) {
-        rdbDataPersistentDAO.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, log);
+    public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        jdbcTemplateUtil.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, logResponseModel);
     }
 
     public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
-        rdbDataPersistentDAO.updateLastUpdatedTime(tableName, timestamp);
+        jdbcTemplateUtil.updateLastUpdatedTime(tableName, timestamp);
+    }
+
+    public void updateLogNoTimestamp(String tableName, LogResponseModel logResponseModel) {
+        jdbcTemplateUtil.updateLogNoTimestamp(tableName, logResponseModel);
+    }
+
+    public void deleteTable(String tableName) {
+        jdbcTemplateUtil.deleteTable(tableName);
     }
 
 
@@ -197,7 +232,7 @@ public class PollCommonService implements IPollCommonService {
         return configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).toList();
     }
 
-    public String writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
+    public LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
         return PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData);
     }
 

@@ -1,6 +1,6 @@
 package gov.cdc.nnddatapollservice.repository.nbs_odse.model;
 
-import gov.cdc.nnddatapollservice.nbs_odse.dto.EDXActivityDetailLogDto;
+import gov.cdc.nnddatapollservice.universal.dto.EDXActivityDetailLogDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

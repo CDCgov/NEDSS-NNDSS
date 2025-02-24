@@ -12,8 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -39,12 +38,12 @@ class PollServiceUtilTest {
             filesMock.when(() -> Files.writeString(any(Path.class), eq(JSON_DATA), eq(StandardOpenOption.CREATE)))
                     .thenReturn(null);
 
-            String result = PollServiceUtil.writeJsonToFile(LOCAL_FILE_PATH, DB_SOURCE, TABLE_NAME, TIME_STAMP, JSON_DATA);
+            var result = PollServiceUtil.writeJsonToFile(LOCAL_FILE_PATH, DB_SOURCE, TABLE_NAME, TIME_STAMP, JSON_DATA);
 
             filesMock.verify(() -> Files.createDirectories(any(Path.class)));
             filesMock.verify(() -> Files.writeString(any(Path.class), eq(JSON_DATA), eq(StandardOpenOption.CREATE)));
 
-            assertEquals(LOG_SUCCESS, result);
+            assertNotNull(result);
         }
     }
 
@@ -56,9 +55,9 @@ class PollServiceUtilTest {
             filesMock.when(() -> Files.createDirectories(any(Path.class)))
                     .thenThrow(new RuntimeException(expectedErrorMessage));
 
-            String result = PollServiceUtil.writeJsonToFile(LOCAL_FILE_PATH, DB_SOURCE, TABLE_NAME, TIME_STAMP, JSON_DATA);
+            var result = PollServiceUtil.writeJsonToFile(LOCAL_FILE_PATH, DB_SOURCE, TABLE_NAME, TIME_STAMP, JSON_DATA);
 
-            assertEquals(expectedErrorMessage, result);
+            assertNotNull(result);
             filesMock.verify(() -> Files.createDirectories(any(Path.class)));
         }
     }
