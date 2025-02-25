@@ -207,10 +207,10 @@ INSERT INTO poll_data_sync_config
 VALUES('JURISDICTION_CODE', 'SRTE',4, 'code');
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
-VALUES('EDX_ACTIVITY_LOG', 'NBS_ODSE',1, 'edx_activity_log_uid');
+VALUES('EDX_ACTIVITY_LOG', 'ODSE_EDX',1, 'edx_activity_log_uid');
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
-VALUES('EDX_ACTIVITY_DETAIL_LOG', 'NBS_ODSE',2, 'edx_activity_detail_log_uid');
+VALUES('EDX_ACTIVITY_DETAIL_LOG', 'ODSE_EDX',2, 'edx_activity_detail_log_uid');
 
 
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
