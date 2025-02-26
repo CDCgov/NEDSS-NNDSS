@@ -485,7 +485,7 @@ public class JdbcTemplateUtil {
 
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
-        String sql = "select * from " + pollConfigTableName + " pdsc order by table_order";
+        String sql = "select * from " + pollConfigTableName;
         List<PollDataSyncConfig> tableList = rdbJdbcTemplate.query(
                 sql,
                 new BeanPropertyRowMapper<>(PollDataSyncConfig.class));
