@@ -242,7 +242,7 @@ public class JdbcTemplateUtil {
                                 for (int i = 0; i < records.size(); i += sublistSize) {
                                     int end = Math.min(i + sublistSize, records.size());
                                     List<Map<String, Object>> sublist = records.subList(i, end);
-                                    if (initialLoad || config.getKeyList().isEmpty()) {
+                                    if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
                                         sublist.forEach(data -> data.remove("RowNum"));
                                         jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
 
@@ -251,7 +251,7 @@ public class JdbcTemplateUtil {
                                     }
                                 }
                             } else {
-                                if (initialLoad || config.getKeyList().isEmpty()) {
+                                if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
                                     records.forEach(data -> data.remove("RowNum"));
                                     jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
 
@@ -330,7 +330,7 @@ public class JdbcTemplateUtil {
                     for (int i = 0; i < deduplicatedRecords.size(); i += sublistSize) {
                         int end = Math.min(i + sublistSize, deduplicatedRecords.size());
                         List<Map<String, Object>> sublist = deduplicatedRecords.subList(i, end);
-                        if (initialLoad || config.getKeyList().isEmpty()) {
+                        if (initialLoad || config.getKeyList() == null  || config.getKeyList().isEmpty()) {
                             sublist.forEach(data -> data.remove("RowNum"));
                             simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
 
@@ -339,7 +339,7 @@ public class JdbcTemplateUtil {
                         }
                     }
                 } else {
-                    if (initialLoad || config.getKeyList().isEmpty()) {
+                    if (initialLoad || config.getKeyList() == null  || config.getKeyList().isEmpty()) {
                         records.forEach(data -> data.remove("RowNum"));
                         simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
 
@@ -358,7 +358,7 @@ public class JdbcTemplateUtil {
     public void handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config, SimpleJdbcInsert simpleJdbcInsert) {
         for (Map<String, Object> res : records) {
             try {
-                if (config.getKeyList().isEmpty()) {
+                if (config.getKeyList() == null  || config.getKeyList().isEmpty()) {
                     simpleJdbcInsert.execute(new MapSqlParameterSource(res));
                 }
                 else
