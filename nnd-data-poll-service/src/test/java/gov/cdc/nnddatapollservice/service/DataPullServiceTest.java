@@ -52,25 +52,20 @@ class DataPullServiceTest {
     }
     @Test
     void testScheduleRDBDataFetch_Success() throws DataPollException {
-        dataPullService.scheduleRDBDataFetch();
+        dataPullService.scheduleDataSync();
         verify(universalDataHandlingService, times(1)).handlingExchangedData("RDB");
     }
     @Test
     void testScheduleRDBataFetch_Exception() throws DataPollException {
         doThrow(new DataPollException("Exception")).when(universalDataHandlingService).handlingExchangedData("RDB");
 
-        assertThrows(DataPollException.class, () -> dataPullService.scheduleRDBDataFetch());
+        assertThrows(DataPollException.class, () -> dataPullService.scheduleDataSync());
 
         verify(universalDataHandlingService, times(1)).handlingExchangedData("RDB");
     }
     @Test
-    void testScheduleRDBModernDataFetch_Success() throws DataPollException {
-        dataPullService.scheduleRdbModernDataFetch();
-        verify(universalDataHandlingService, times(1)).handlingExchangedData(any());
-    }
-    @Test
     void testScheduleSrteDataFetch_Success() throws DataPollException {
-        dataPullService.scheduleSRTEDataFetch();
+        dataPullService.scheduleDataSync();
         verify(universalDataHandlingService, times(1)).handlingExchangedData("SRTE");
     }
 }

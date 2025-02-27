@@ -46,9 +46,6 @@ public class DataPullService implements IDataPullService {
     @Value("${poll.single_time_poll_enabled}")
     private boolean singlePoll;
 
-    @Value("${datasync.sql_reprocessing_data}")
-    private boolean reprocessFailedSQL = false;
-
     private final INNDDataHandlingService dataHandlingService;
     private final IUniversalDataHandlingService universalDataHandlingService;
 
@@ -68,76 +65,42 @@ public class DataPullService implements IDataPullService {
             closePoller();
         }
     }
-
     @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
-    public void scheduleEdxActivityDataFetch() throws DataPollException {
-        if (edxActivityEnabled) {
-            logger.info("START POLLING");
-            logger.info("CRON: {}, TZ: {}", cron, zone);
-            universalDataHandlingService.handlingExchangedData(NBS_ODSE_EDX);
-            logger.info("END POLLING");
-            closePoller();
-        }
-    }
-
-    @SuppressWarnings("java:S125")
-    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
-    public void scheduleRDBDataFetch() throws DataPollException {
+    public void scheduleDataSync() throws DataPollException {
+        logger.info("CRON: {}, TZ: {}", cron, zone);
         if (rdbPollEnabled) {
-            logger.info("START POLLING");
-            logger.info("CRON: {}, TZ: {}", cron, zone);
+            logger.info("START RDB POLLING");
             universalDataHandlingService.handlingExchangedData(RDB);
-            logger.info("END POLLING");
-            closePoller();
+            logger.info("END RDB POLLING");
         }
-    }
-
-    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
-    public void scheduleRdbModernDataFetch() throws DataPollException {
+        if (edxActivityEnabled) {
+            logger.info("START EDX POLLING");
+            universalDataHandlingService.handlingExchangedData(NBS_ODSE_EDX);
+            logger.info("END EDX POLLING");
+        }
         if (rdbModernPollEnabled) {
-            logger.info("START POLLING");
-            logger.info("CRON: {}, TZ: {}", cron, zone);
-            // RDB MODERN will be converted to more generic -- use this for any new db sync
+            logger.info("START RDB MOD POLLING");
             universalDataHandlingService.handlingExchangedData(RDB_MODERN);
-            logger.info("END POLLING");
-            closePoller();
+            logger.info("END RDB MOD POLLING");
         }
-    }
-
-    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
-    public void scheduleCovidDataMartDataFetch() throws DataPollException {
         if (covidDataMartEnabled) {
-            logger.info("START POLLING");
-            logger.info("CRON: {}, TZ: {}", cron, zone);
-            // RDB MODERN will be converted to more generic -- use this for any new db sync
+            logger.info("START COVID POLLING");
             universalDataHandlingService.handlingExchangedData(COVID_DATAMART);
-            logger.info("END POLLING");
-            closePoller();
+            logger.info("END COVID POLLING");
         }
-    }
-
-    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
-    public void scheduleOdseDataFetch() throws DataPollException {
         if (odsePollEnabled) {
-            logger.info("START POLLING");
-            logger.info("CRON: {}, TZ: {}", cron, zone);
+            logger.info("START ODSE POLLING");
             universalDataHandlingService.handlingExchangedData(ODSE_OBS);
-            logger.info("END POLLING");
-            closePoller();
+            logger.info("END ODSE POLLING");
         }
-    }
-
-    @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
-    public void scheduleSRTEDataFetch() throws DataPollException {
         if (srtePollEnabled) {
-            logger.info("START POLLING");
-            logger.info("CRON: {}, TZ: {}", cron, zone);
+            logger.info("START SRTE POLLING");
             universalDataHandlingService.handlingExchangedData(SRTE);
-            logger.info("END POLLING");
-            closePoller();
+            logger.info("END SRTE POLLING");
         }
-
+        closePoller();
     }
+
 
     private void closePoller() {
         if (singlePoll) {

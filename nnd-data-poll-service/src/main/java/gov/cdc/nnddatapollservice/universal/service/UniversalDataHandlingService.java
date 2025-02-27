@@ -122,8 +122,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     if (storeJsonInS3) {
                         log = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
                         log.setStartTime(startTime);
-                        log.setLog(S3_LOG + log.getLog());
-                        log.setStatus(SUCCESS);
+                        log.setLog(S3_LOG + (log.getLog() == null || log.getLog().isEmpty()? SUCCESS : log.getLog()));
+                        log.setStatus(log.getStatus().equalsIgnoreCase(ERROR)? log.getStatus() : SUCCESS);
                         iPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestampWithNull, log);
                     }
                     else if (storeInSql) {
@@ -134,15 +134,15 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                             log =  universalDataPersistentDAO.saveRdbModernData(config, rawJsonDataWithNull, isInitialLoad);
                         }
                         log.setStartTime(startTime);
-                        log.setLog(SQL_LOG + log.getLog());
-                        log.setStatus(SUCCESS);
+                        log.setLog(SQL_LOG + (log.getLog() == null ||log.getLog().isEmpty()? SUCCESS : log.getLog()));
+                        log.setStatus(log.getStatus().equalsIgnoreCase(ERROR)? log.getStatus() : SUCCESS);
                         iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestampWithNull, log);
                     }
                     else  {
                         log = iPollCommonService.writeJsonDataToFile(config.getSourceDb(), config.getTableName(), timestampWithNull, rawJsonDataWithNull);
                         log.setStartTime(startTime);
-                        log.setLog(LOCAL_DIR_LOG + log.getLog());
-                        log.setStatus(SUCCESS);
+                        log.setLog(LOCAL_DIR_LOG + (log.getLog() == null ||log.getLog().isEmpty()? SUCCESS : log.getLog()));
+                        log.setStatus(log.getStatus().equalsIgnoreCase(ERROR)? log.getStatus() : SUCCESS);
                         iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestampWithNull, log);
                     }
                 }
@@ -255,8 +255,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 if (storeJsonInS3) {
                     logResponseModel = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonData, config.getTableName(), timestamp, isInitialLoad);
                     logResponseModel.setStartTime(startTime);
-                    logResponseModel.setLog(S3_LOG + log);
-                    logResponseModel.setStatus(SUCCESS);
+                    logResponseModel.setLog(S3_LOG + (log == null || log.isEmpty()? SUCCESS : log));
+                    logResponseModel.setStatus(logResponseModel.getStatus().equalsIgnoreCase(ERROR)? logResponseModel.getStatus() : SUCCESS);
                     iPollCommonService.updateLastUpdatedTimeAndLogS3(config.getTableName(), timestamp, logResponseModel);
                 }
                 else if (storeInSql)
@@ -269,17 +269,16 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
                     }
                     logResponseModel.setStartTime(startTime);
-                    logResponseModel.setLog(SQL_LOG + log);
-                    logResponseModel.setStatus(SUCCESS);
-
+                    logResponseModel.setLog(SQL_LOG + (log == null || log.isEmpty()? SUCCESS : log));
+                    logResponseModel.setStatus(logResponseModel.getStatus().equalsIgnoreCase(ERROR)? logResponseModel.getStatus() : SUCCESS);
                     iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestamp, logResponseModel);
                 }
                 else
                 {
                     logResponseModel = iPollCommonService.writeJsonDataToFile(config.getSourceDb(), config.getTableName(), timestamp, rawJsonData);
                     logResponseModel.setStartTime(startTime);
-                    logResponseModel.setLog(LOCAL_DIR_LOG + log);
-                    logResponseModel.setStatus(SUCCESS);
+                    logResponseModel.setLog(LOCAL_DIR_LOG + (log == null || log.isEmpty()? SUCCESS : log));
+                    logResponseModel.setStatus(logResponseModel.getStatus().equalsIgnoreCase(ERROR)? logResponseModel.getStatus() : SUCCESS);
 
                     iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(config.getTableName(), timestamp, logResponseModel);
                 }
