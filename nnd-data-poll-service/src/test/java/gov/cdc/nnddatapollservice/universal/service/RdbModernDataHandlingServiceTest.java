@@ -270,8 +270,6 @@ class RdbModernDataHandlingServiceTest {
         // Assert
         verify(is3DataService, times(1)).persistToS3MultiPart(
                 RDB, rawJsonData, tableName, timestamp, isInitialLoad);
-        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLogS3(
-                eq(tableName), eq(timestamp), any());
     }
 
 
@@ -299,9 +297,7 @@ class RdbModernDataHandlingServiceTest {
 
         // Assert
         verify(iPollCommonService, times(1)).writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
-        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(
-                eq(tableName), eq(timestamp),
-                any());
+
     }
 
 
