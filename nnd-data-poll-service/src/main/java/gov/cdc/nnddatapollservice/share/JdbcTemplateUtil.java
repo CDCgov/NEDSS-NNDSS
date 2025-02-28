@@ -244,18 +244,22 @@ public class JdbcTemplateUtil {
                                     List<Map<String, Object>> sublist = records.subList(i, end);
                                     if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
                                         sublist.forEach(data -> data.remove("RowNum"));
+                                        logger.info("Hit initial Load - executeBatch");
                                         jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
 
                                     } else {
+                                        logger.info("Hit incremental Load - upsertBatch");
                                         upsertBatch(config.getTableName(), sublist, config.getKeyList());
                                     }
                                 }
                             } else {
                                 if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
                                     records.forEach(data -> data.remove("RowNum"));
+                                    logger.info("Hit initial Load - executeBatch");
                                     jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
 
                                 } else {
+                                    logger.info("Hit incremental Load - upsertBatch");
                                     upsertBatch(config.getTableName(), records, config.getKeyList());
                                 }
                             }
@@ -359,10 +363,12 @@ public class JdbcTemplateUtil {
         for (Map<String, Object> res : records) {
             try {
                 if (config.getKeyList() == null  || config.getKeyList().isEmpty()) {
+                    logger.info("Hit error resolver - simpleJdbcInsert.execute");
                     simpleJdbcInsert.execute(new MapSqlParameterSource(res));
                 }
                 else
                 {
+                    logger.info("Hit error resolver - upsertSingle");
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
