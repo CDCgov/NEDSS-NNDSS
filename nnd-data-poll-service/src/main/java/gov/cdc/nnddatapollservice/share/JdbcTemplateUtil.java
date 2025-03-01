@@ -387,8 +387,8 @@ public class JdbcTemplateUtil {
                 }
 
             }
-            logger.info("Exit error resolver");
         }
+        logger.info("Exit error resolver");
     }
 
 
