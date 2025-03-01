@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.universal.service;
 
+import com.google.gson.Gson;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
@@ -76,7 +77,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 .sorted((a, b) -> Integer.compare(a.getTableOrder(), b.getTableOrder())) // Sort by tableOrder ASC
                 .toList();
 
-
+        var gson = new Gson();
+        logger.info("Table Config: {}", gson.toJson(ascList));
         for (PollDataSyncConfig pollDataSyncConfig : ascList) {
             pollAndPersistData(isInitialLoad, pollDataSyncConfig);
         }
@@ -85,6 +87,10 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     @SuppressWarnings({"java:S1141","java:S3776"})
     protected void pollAndPersistData(boolean isInitialLoad, PollDataSyncConfig config)  {
+        logger.info("Table Name Check: {}",config.getTableName());
+        logger.info("Initial Load Check: {}",isInitialLoad);
+        logger.info("Recreate Flow Check: {}", config.isRecreateApplied());
+        logger.info("No Pagination Check: {}",config.isNoPagination());
         try {
             LogResponseModel log = null;
             boolean exceptionAtApiLevel = false;
@@ -95,6 +101,10 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 isInitialLoad = true;
             }
             String timeStampForPoll = getPollTimestamp(isInitialLoad, config.getTableName());
+            if (timeStampForPoll == null || timeStampForPoll.isEmpty()) {
+                timeStampForPoll = iPollCommonService.getCurrentTimestamp();
+                isInitialLoad = true;
+            }
             var timestampWithNull = getCurrentTimestamp();
             var startTime = getCurrentTimestamp();
 
@@ -225,6 +235,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 timeStampForPoll = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
             }
         }
+
         return timeStampForPoll;
     }
 
