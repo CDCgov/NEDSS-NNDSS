@@ -360,15 +360,15 @@ public class JdbcTemplateUtil {
     }
 
     public void handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config, SimpleJdbcInsert simpleJdbcInsert) {
+        logger.info("Hit error resolver - {}", config.getKeyList() == null || config.getKeyList().isEmpty() ?
+                "simpleJdbcInsert.execute" : "upsertSingle");
         for (Map<String, Object> res : records) {
             try {
                 if (config.getKeyList() == null  || config.getKeyList().isEmpty()) {
-                    logger.info("Hit error resolver - simpleJdbcInsert.execute");
                     simpleJdbcInsert.execute(new MapSqlParameterSource(res));
                 }
                 else
                 {
-                    logger.info("Hit error resolver - upsertSingle");
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
@@ -387,6 +387,7 @@ public class JdbcTemplateUtil {
                 }
 
             }
+            logger.info("Exit error resolver");
         }
     }
 
