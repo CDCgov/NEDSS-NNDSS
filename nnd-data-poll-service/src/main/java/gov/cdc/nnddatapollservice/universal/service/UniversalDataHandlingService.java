@@ -15,7 +15,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
@@ -25,6 +30,9 @@ import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp
 @Slf4j
 public class UniversalDataHandlingService implements IUniversalDataHandlingService {
     private static Logger logger = LoggerFactory.getLogger(UniversalDataHandlingService.class);
+    private static final int THREAD_POOL_SIZE = 5; // Adjust based on system capacity
+    private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    private static final int THREAD_CHECK = 100000;
 
     @Value("${datasync.store_in_local}")
     protected boolean storeJsonInLocalFolder = false;
@@ -152,30 +160,15 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
 
-
-                for (int i = 0; i < totalPages; i++) {
-                    String rawJsonData = "";
-                    Timestamp timestamp = null;
-                    try {
-                        int startRow = i * batchSize + 1;
-                        int endRow = (i + 1) * batchSize;
-
-                        String encodedData = "";
-                        encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
-                                String.valueOf(startRow), String.valueOf(endRow), false);
-
-                        rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
-                        timestamp = getCurrentTimestamp();
-                    } catch (Exception e) {
-                        logStr = e.getMessage();
-                        exceptionAtApiLevel = true;
-                    }
-
-                    updateDataHelper(exceptionAtApiLevel, timestamp,
-                            rawJsonData, isInitialLoad, logStr,
-                            startTime, config);
-
+                if (totalRecordCounts >= THREAD_CHECK) {
+                    processingDataBatchMultiThread( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
+                            config,  logStr,  exceptionAtApiLevel, startTime);
+                } else {
+                    processingDataBatch( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
+                         config,  logStr,  exceptionAtApiLevel, startTime);
                 }
+
+
             }
             else
             {
@@ -205,6 +198,63 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
         } catch (Exception e) {
             logger.error("TASK failed. tableName: {}, message: {}", config.getTableName(), getStackTraceAsString(e));
+        }
+    }
+
+    protected void processingDataBatchMultiThread(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
+                                       PollDataSyncConfig config, String logStr, boolean exceptionAtApiLevel,
+                                       Timestamp startTime) {
+
+        List<Future<Void>> futures = new ArrayList<>();
+
+        for (int i = 0; i < totalPages; i++) {
+            int batchIndex = i;
+
+            Future<Void> future = executorService.submit(() -> {
+                processingDataBatch(batchIndex, batchSize, isInitialLoad, timeStampForPoll, config, logStr, exceptionAtApiLevel, startTime);
+                return null;
+            });
+
+            futures.add(future);
+        }
+
+        // Wait for all threads to complete
+        for (Future<Void> future : futures) {
+            try {
+                future.get(); // Blocking call, ensures all tasks are completed before moving ahead
+            } catch (InterruptedException | ExecutionException e) {
+                logger.error("Batch processing interrupted: {}", e.getMessage());
+            }
+        }
+
+        executorService.shutdown();
+    }
+
+    protected void processingDataBatch(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
+                                       PollDataSyncConfig config, String logStr, boolean exceptionAtApiLevel,
+                                       Timestamp startTime) {
+        for (int i = 0; i < totalPages; i++) {
+            String rawJsonData = "";
+            Timestamp timestamp = null;
+            try {
+                int startRow = i * batchSize + 1;
+                int endRow = (i + 1) * batchSize;
+
+                String encodedData = "";
+                encodedData = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, false,
+                        String.valueOf(startRow), String.valueOf(endRow), false);
+
+                rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
+                timestamp = getCurrentTimestamp();
+            } catch (Exception e) {
+                logStr = e.getMessage();
+                exceptionAtApiLevel = true;
+            }
+
+            updateDataHelper(exceptionAtApiLevel, timestamp,
+                    rawJsonData, isInitialLoad, logStr,
+                    startTime, config);
+
         }
     }
 
