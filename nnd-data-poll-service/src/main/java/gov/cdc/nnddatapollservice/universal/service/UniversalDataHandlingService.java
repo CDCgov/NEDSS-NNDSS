@@ -17,10 +17,9 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
@@ -32,7 +31,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     private static Logger logger = LoggerFactory.getLogger(UniversalDataHandlingService.class);
     private static final int THREAD_POOL_SIZE = 5; // Adjust based on system capacity
     private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
-    private static final int THREAD_CHECK = 100000;
+    private static final int THREAD_CHECK = 10000;
 
     @Value("${datasync.store_in_local}")
     protected boolean storeJsonInLocalFolder = false;
@@ -161,7 +160,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
 
                 if (totalRecordCounts >= THREAD_CHECK) {
-                    processingDataBatchMultiThread( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
+                    processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
                             config,  logStr,  exceptionAtApiLevel, startTime);
                 } else {
                     processingDataBatch( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
@@ -204,31 +203,224 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected void processingDataBatchMultiThread(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
                                        PollDataSyncConfig config, String logStr, boolean exceptionAtApiLevel,
                                        Timestamp startTime) {
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Future<?>> futures = new ArrayList<>();
 
-        List<Future<Void>> futures = new ArrayList<>();
+            for (int i = 0; i < totalPages; i++) {
+                final int pageIndex = i;
+                Future<?> future = executor.submit(() -> {
+                    String rawJsonData = "";
+                    Timestamp timestamp = null;
+                    String localLogStr = logStr;
+                    boolean localExceptionAtApiLevel = exceptionAtApiLevel;
 
-        for (int i = 0; i < totalPages; i++) {
-            int batchIndex = i;
+                    try {
+                        int startRow = pageIndex * batchSize + 1;
+                        int endRow = (pageIndex + 1) * batchSize;
 
-            Future<Void> future = executorService.submit(() -> {
-                processingDataBatch(batchIndex, batchSize, isInitialLoad, timeStampForPoll, config, logStr, exceptionAtApiLevel, startTime);
-                return null;
-            });
+                        String encodedData = iPollCommonService.callDataExchangeEndpoint(
+                                config.getTableName(),
+                                isInitialLoad,
+                                timeStampForPoll,
+                                false,
+                                String.valueOf(startRow),
+                                String.valueOf(endRow),
+                                false
+                        );
 
-            futures.add(future);
-        }
+                        rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
+                        timestamp = getCurrentTimestamp();
+                    } catch (Exception e) {
+                        localLogStr = e.getMessage();
+                        localExceptionAtApiLevel = true;
+                    }
 
-        // Wait for all threads to complete
-        for (Future<Void> future : futures) {
-            try {
-                future.get(); // Blocking call, ensures all tasks are completed before moving ahead
-            } catch (InterruptedException | ExecutionException e) {
-                logger.error("Batch processing interrupted: {}", e.getMessage());
+                    updateDataHelper(
+                            localExceptionAtApiLevel,
+                            timestamp,
+                            rawJsonData,
+                            isInitialLoad,
+                            localLogStr,
+                            startTime,
+                            config
+                    );
+                });
+                futures.add(future);
+            }
+
+            // Wait for all tasks to complete
+            for (Future<?> future : futures) {
+                try {
+                    future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    // Handle exceptions from virtual threads
+                    Thread.currentThread().interrupt();
+                }
             }
         }
-
-        executorService.shutdown();
     }
+
+
+    protected void processingDataBatchMultiThreadSemaphore(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
+                                                           PollDataSyncConfig config, String logStr, boolean exceptionAtApiLevel,
+                                                           Timestamp startTime) {
+        // Assuming SLF4J logging, adjust as needed
+        Logger logger = LoggerFactory.getLogger(getClass());
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Future<?>> futures = new ArrayList<>(totalPages); // Pre-size for efficiency
+            int initialConcurrency = 100;
+            Semaphore semaphore = new Semaphore(initialConcurrency);
+            AtomicInteger currentConcurrency = new AtomicInteger(initialConcurrency);
+
+            // Metrics for dynamic adjustment
+            AtomicInteger errorCount = new AtomicInteger(0);
+            AtomicLong totalResponseTime = new AtomicLong(0);
+            AtomicInteger taskCount = new AtomicInteger(0);
+
+            logger.info("Starting processing of {} pages with initial concurrency {}", totalPages, initialConcurrency);
+
+            // Submit all tasks
+            for (int i = 0; i < totalPages; i++) {
+                final int pageIndex = i;
+                Future<?> future = executor.submit(() -> {
+                    boolean permitAcquired = false;
+                    try {
+                        semaphore.acquire();
+                        permitAcquired = true;
+                        long startTimeMs = System.currentTimeMillis();
+                        String rawJsonData = "";
+                        Timestamp timestamp = null;
+                        String localLogStr = logStr;
+                        boolean localExceptionAtApiLevel = exceptionAtApiLevel;
+
+                        try {
+                            int startRow = pageIndex * batchSize + 1;
+                            int endRow = (pageIndex + 1) * batchSize;
+
+                            logger.debug("Processing page {} (rows {}-{})", pageIndex, startRow, endRow);
+
+                            String encodedData = iPollCommonService.callDataExchangeEndpoint(
+                                    config.getTableName(),
+                                    isInitialLoad,
+                                    timeStampForPoll,
+                                    false,
+                                    String.valueOf(startRow),
+                                    String.valueOf(endRow),
+                                    false
+                            );
+
+                            rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
+                            timestamp = getCurrentTimestamp();
+                        } catch (Exception e) {
+                            localLogStr = e.getMessage();
+                            localExceptionAtApiLevel = true;
+                            errorCount.incrementAndGet();
+                            logger.error("Error processing page {}: {}", pageIndex, e.getMessage(), e);
+                        } finally {
+                            // Update metrics
+                            long responseTime = System.currentTimeMillis() - startTimeMs;
+                            totalResponseTime.addAndGet(responseTime);
+                            int completedTasks = taskCount.incrementAndGet();
+
+                            // Adjust concurrency every 100 tasks
+                            if (completedTasks % 100 == 0) {
+                                adjustConcurrency(semaphore, currentConcurrency, errorCount, totalResponseTime, completedTasks);
+                            }
+                            semaphore.release();
+                            permitAcquired = false;
+                        }
+
+                        updateDataHelper(
+                                localExceptionAtApiLevel,
+                                timestamp,
+                                rawJsonData,
+                                isInitialLoad,
+                                localLogStr,
+                                startTime,
+                                config
+                        );
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        logger.warn("Task for page {} interrupted", pageIndex);
+                    } finally {
+                        if (permitAcquired) {
+                            semaphore.release(); // Ensure release even on interruption
+                        }
+                    }
+                });
+                futures.add(future);
+            }
+
+            // Wait for all tasks to complete with timeout
+            long timeoutPerTaskMs = 30_000; // 30 seconds per task
+            int completedTasks = 0;
+            for (Future<?> future : futures) {
+                try {
+                    future.get(timeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                    completedTasks++;
+                } catch (TimeoutException e) {
+                    int pageIndex = futures.indexOf(future);
+                    logger.error("Task for page {} timed out after {} ms", pageIndex, timeoutPerTaskMs);
+                    future.cancel(true); // Cancel stuck task
+                } catch (InterruptedException e) {
+                    logger.warn("Interrupted while waiting for task completion");
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (ExecutionException e) {
+                    int pageIndex = futures.indexOf(future);
+                    logger.error("Task for page {} failed: {}", pageIndex, e.getCause().getMessage(), e.getCause());
+                }
+            }
+
+            logger.info("Completed processing {}/{} pages", completedTasks, totalPages);
+            if (completedTasks < totalPages) {
+                logger.warn("Processed fewer pages than expected: {} < {}", completedTasks, totalPages);
+            }
+
+            // Ensure executor shuts down
+            executor.shutdown();
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+                logger.warn("Executor did not terminate cleanly, forcing shutdown");
+                executor.shutdownNow();
+            }
+
+        } catch (Exception e) {
+            logger.error("Unexpected error in processing batch: {}", e.getMessage(), e);
+        }
+    }
+
+    // Method to dynamically adjust concurrency
+    private void adjustConcurrency(Semaphore semaphore, AtomicInteger currentConcurrency,
+                                   AtomicInteger errorCount, AtomicLong totalResponseTime, int taskCount) {
+        double avgResponseTime = (double) totalResponseTime.get() / taskCount;
+        double errorRate = (double) errorCount.get() / taskCount;
+
+        int currentPermits = currentConcurrency.get();
+        int newPermits = currentPermits;
+
+        // Example logic: Adjust based on response time and error rate
+        if (errorRate > 0.1) { // If error rate > 10%, reduce concurrency
+            newPermits = Math.max(10, currentPermits - 10); // Minimum 10
+        } else if (avgResponseTime < 50) { // If avg response < 50ms, increase concurrency
+            newPermits = Math.min(500, currentPermits + 10); // Maximum 500
+        } else if (avgResponseTime > 200) { // If avg response > 200ms, decrease concurrency
+            newPermits = Math.max(10, currentPermits - 10);
+        }
+
+        if (newPermits != currentPermits) {
+            int delta = newPermits - currentPermits;
+            if (delta > 0) {
+                semaphore.release(delta); // Increase permits
+                currentConcurrency.set(newPermits);
+                logger.info("Increased concurrency to: {} (avgResponseTime: {}ms, errorRate: {})", newPermits, avgResponseTime, errorRate);
+            } else if (delta < 0) {
+                currentConcurrency.set(newPermits);
+                logger.info("Desired concurrency reduced to: {}, waiting for tasks to complete (avgResponseTime: {}ms, errorRate: {})", newPermits, avgResponseTime, errorRate);
+            }
+        }
+    }
+
 
     protected void processingDataBatch(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
                                        PollDataSyncConfig config, String logStr, boolean exceptionAtApiLevel,
