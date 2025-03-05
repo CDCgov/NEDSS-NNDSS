@@ -82,11 +82,11 @@ spring:
       on-profile: default
   datasource:
     hikari:
-      maximum-pool-size: ${HIKARI_POOL_SIZE:100}
-      connection-timeout: ${HIKARI_CON_TIMEOUT:30000}
+      maximum-pool-size: ${HIKARI_POOL_SIZE:150}
+      connection-timeout: ${HIKARI_CON_TIMEOUT:60000}
       minimum-idle: ${HIKARI_MINIMUM_IDLE:50}
-      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
-      max-lifetime: ${HIKARI_MAX_LIFETIME:3600000}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:300000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
       pool-name: ${HIKARI_POOL_NAME:SQLServerHikariCP}
       leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:60000}
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -100,3 +100,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: none
+logging:
+  level:
+    com.zaxxer.hikari: DEBUG
