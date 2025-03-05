@@ -122,6 +122,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
             return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
         } catch (Exception exception) {
+            exception.printStackTrace();
             log.setStatusSync("ERROR");
             log.setEndTime(getCurrentTimeStamp(tz));
             log.setErrorDesc(exception.getMessage());

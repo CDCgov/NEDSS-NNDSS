@@ -159,13 +159,16 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
 
-                if (totalRecordCounts >= THREAD_CHECK) {
-                    processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
-                            config,  logStr,  exceptionAtApiLevel, startTime);
-                } else {
-                    processingDataBatch( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
-                         config,  logStr,  exceptionAtApiLevel, startTime);
-                }
+//                if (totalRecordCounts >= THREAD_CHECK) {
+//                    processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
+//                            config,  logStr,  exceptionAtApiLevel, startTime);
+//                } else {
+//                    processingDataBatch( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
+//                         config,  logStr,  exceptionAtApiLevel, startTime);
+//                }
+
+                processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
+                        config,  logStr,  exceptionAtApiLevel, startTime);
 
 
             }
