@@ -42,7 +42,7 @@ class UniversalDataPersistentDAOTest {
 
 
     @Test
-    void saveRdbModernData(){
+    void saveUniversalData(){
         String jsondata = "[{\"CONFIRMATION_METHOD_KEY\":1,\"CONFIRMATION_METHOD_CD\":null,\"CONFIRMATION_METHOD_DESC\":null},\n" +
                 "{\"CONFIRMATION_METHOD_KEY\":23,\"CONFIRMATION_METHOD_CD\":\"MR\",\"CONFIRMATION_METHOD_DESC\":\"Medical record review\"}]";
         PollDataSyncConfig config = new PollDataSyncConfig();
@@ -53,7 +53,7 @@ class UniversalDataPersistentDAOTest {
         when(jdbcTemplate.persistingGenericTable(
                 jsondata,
                 config, true, null)).thenReturn(new LogResponseModel());
-        var recordsSaved = universalDataPersistentDAO.saveRdbModernData(config, jsondata, true, null);
+        var recordsSaved = universalDataPersistentDAO.saveUniversalData(config, jsondata, true, null);
 
 
         assertNotNull(recordsSaved);

@@ -31,7 +31,6 @@ import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp
 public class UniversalDataHandlingService implements IUniversalDataHandlingService {
     private static Logger logger = LoggerFactory.getLogger(UniversalDataHandlingService.class);
     private static final int THREAD_POOL_SIZE = 5; // Adjust based on system capacity
-    private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
     private static final int THREAD_CHECK = 10000;
 
     @Value("${datasync.store_in_local}")
@@ -44,6 +43,16 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected Integer pullLimit = 0;
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
+
+    protected int tableLevelMaxConcurrentThreads = 5;  // Limit to 2 threads running simultaneously
+    protected long tableLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task
+
+
+    protected int apiLevelBatchSizeForProcessing = 3; // Process 3 pages (30,000 records) per batch
+    protected int apiLevelInitialConcurrency = 10;    // Start with 10 concurrent tasks
+    protected int apiLevelMaxConcurrency = 50;       // Cap at 50 (half of Hikari pool size for safety)
+    protected int apiLevelMaxRetries = 5;            // Retry up to 3 times
+    protected long apiLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task for large batches
 
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
     private final IPollCommonService iPollCommonService;
@@ -84,9 +93,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 .sorted((a, b) -> Integer.compare(a.getTableOrder(), b.getTableOrder())) // Sort by tableOrder ASC
                 .toList();
 
-        int maxConcurrentThreads = 5;  // Limit to 2 threads running simultaneously
-        int maxRetries = 3;            // Retry up to 3 times
-        long timeoutPerTaskMs = 120_000; // 2 minutes per task
+        int maxConcurrentThreads = tableLevelMaxConcurrentThreads;
+        long timeoutPerTaskMs = tableLevelTimeoutPerTaskMs;
 
         // Split the list into threaded and non-threaded entries
         List<PollDataSyncConfig> threadedConfigs = new ArrayList<>();
@@ -228,7 +236,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                             log =  edxNbsOdseDataPersistentDAO.saveNbsOdseData(config.getTableName(), rawJsonDataWithNull);
                         }
                         else {
-                            log =  universalDataPersistentDAO.saveRdbModernData(config, rawJsonDataWithNull, isInitialLoad, startTime);
+                            log =  universalDataPersistentDAO.saveUniversalData(config, rawJsonDataWithNull, isInitialLoad, startTime);
                         }
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + (log.getLog() == null ||log.getLog().isEmpty()? SUCCESS : log.getLog()));
@@ -298,12 +306,11 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected void processingDataBatchMultiThreadSemaphore(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
                                                            PollDataSyncConfig config, String logStr, boolean exceptionAtApiLevel,
                                                            Timestamp startTime, int totalRecordCounts) {
-        Logger logger = LoggerFactory.getLogger(getClass());
-        int batchSizeForProcessing = 3; // Process 3 pages (30,000 records) per batch
-        int initialConcurrency = 10;    // Start with 10 concurrent tasks
-        int maxConcurrency = 50;       // Cap at 50 (half of Hikari pool size for safety)
-        int maxRetries = 5;            // Retry up to 3 times
-        long timeoutPerTaskMs = 120_000; // 2 minutes per task for large batches
+        int batchSizeForProcessing = apiLevelBatchSizeForProcessing; // Process 3 pages (30,000 records) per batch
+        int initialConcurrency = apiLevelInitialConcurrency;    // Start with 10 concurrent tasks
+        int maxConcurrency = apiLevelMaxConcurrency;       // Cap at 50 (half of Hikari pool size for safety)
+        int maxRetries = apiLevelMaxRetries;            // Retry up to 3 times
+        long timeoutPerTaskMs = apiLevelTimeoutPerTaskMs; // 2 minutes per task for large batches
 
         logger.info("Starting processing of {} pages (batchSize={}) in batches of {} with concurrency {}-{}",
                 totalPages, batchSize, batchSizeForProcessing, initialConcurrency, maxConcurrency);
@@ -544,7 +551,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         logResponseModel = edxNbsOdseDataPersistentDAO.saveNbsOdseData(config.getTableName(), rawJsonData);
                     }
                     else {
-                        logResponseModel = universalDataPersistentDAO.saveRdbModernData(config, rawJsonData, isInitialLoad, startTime);
+                        logResponseModel = universalDataPersistentDAO.saveUniversalData(config, rawJsonData, isInitialLoad, startTime);
 
                     }
                     logResponseModel.setStartTime(startTime);
