@@ -130,8 +130,8 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('LDF_DATA', 'RDB',1, 'LDF_DATA_KEY', 1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, recreate_applied, key_list)
-VALUES('LDF_FOODBORNE', 'RDB',1, 1, 'INVESTIGATION_KEY');
+(table_name, source_db,table_order, recreate_applied)
+VALUES('LDF_FOODBORNE', 'RDB',1, 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('MEASLES_CASE', 'RDB',2,
@@ -161,8 +161,8 @@ VALUES('TREATMENT_EVENT', 'RDB',1,
        'CONDITION_KEY, INVESTIGATION_KEY, LDF_GROUP_KEY, MORB_RPT_KEY, PATIENT_KEY, TREATMENT_DT_KEY, TREATMENT_KEY, TREATMENT_PHYSICIAN_KEY, TREATMENT_PROVIDING_ORG_KEY',
        1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, recreate_applied, key_list)
-VALUES('VAR_PAM_LDF', 'RDB',1, 1, 'INVESTIGATION_KEY');
+(table_name, source_db,table_order, recreate_applied)
+VALUES('VAR_PAM_LDF', 'RDB',1, 1);
 
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
@@ -185,8 +185,8 @@ INSERT INTO poll_data_sync_config
 VALUES('BMIRD_MULTI_VALUE_FIELD', 'RDB',2, 'BMIRD_MULTI_VAL_FIELD_KEY, BMIRD_MULTI_VAL_GRP_KEY', 1);
 
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, key_list, recreate_applied)
-VALUES('STD_HIV_DATAMART', 'RDB',2, 'INVESTIGATION_KEY', 1);
+(table_name, source_db,table_order, recreate_applied)
+VALUES('STD_HIV_DATAMART', 'RDB',2, 1);
 
 
 
