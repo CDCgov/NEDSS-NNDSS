@@ -52,8 +52,8 @@ class UniversalDataPersistentDAOTest {
 
         when(jdbcTemplate.persistingGenericTable(
                 jsondata,
-                config, true)).thenReturn(new LogResponseModel());
-        var recordsSaved = universalDataPersistentDAO.saveRdbModernData(config, jsondata, true);
+                config, true, null)).thenReturn(new LogResponseModel());
+        var recordsSaved = universalDataPersistentDAO.saveRdbModernData(config, jsondata, true, null);
 
 
         assertNotNull(recordsSaved);

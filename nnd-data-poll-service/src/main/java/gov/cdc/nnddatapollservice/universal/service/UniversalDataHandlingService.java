@@ -84,8 +84,97 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 .sorted((a, b) -> Integer.compare(a.getTableOrder(), b.getTableOrder())) // Sort by tableOrder ASC
                 .toList();
 
+        int maxConcurrentThreads = 5;  // Limit to 2 threads running simultaneously
+        int maxRetries = 3;            // Retry up to 3 times
+        long timeoutPerTaskMs = 120_000; // 2 minutes per task
 
-        for (PollDataSyncConfig pollDataSyncConfig : ascList) {
+        // Split the list into threaded and non-threaded entries
+        List<PollDataSyncConfig> threadedConfigs = new ArrayList<>();
+        List<PollDataSyncConfig> sequentialConfigs = new ArrayList<>();
+        for (PollDataSyncConfig config : ascList) {
+            if (config.getTableOrder() == 1) {
+                threadedConfigs.add(config);
+            } else {
+                sequentialConfigs.add(config);
+            }
+        }
+//
+//        for (PollDataSyncConfig pollDataSyncConfig : ascList) {
+//            pollAndPersistData(isInitialLoad, pollDataSyncConfig);
+//        }
+
+        logger.info("Processing {} PollDataSyncConfig entries: {} threaded (TableOder=1) with max 2 concurrent threads, {} sequential (TableOder!=1)",
+                ascList.size(), threadedConfigs.size(), sequentialConfigs.size());
+
+        // Process threaded entries (TableOder == 1) using virtual threads with a max of 2 concurrent threads
+        if (!threadedConfigs.isEmpty()) {
+            try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                List<Future<?>> futures = new ArrayList<>(threadedConfigs.size());
+                Semaphore semaphore = new Semaphore(maxConcurrentThreads); // Fixed at 2
+
+                // Submit tasks for threaded entries
+                for (int i = 0; i < threadedConfigs.size(); i++) {
+                    final int index = i;
+                    final PollDataSyncConfig pollDataSyncConfig = threadedConfigs.get(i);
+                    Future<?> future = executor.submit(() -> {
+                        boolean permitAcquired = false;
+                        try {
+                            semaphore.acquire();
+                            permitAcquired = true;
+
+                            logger.debug("Processing PollDataSyncConfig (threaded) at index {}: {}", index, pollDataSyncConfig.getTableName());
+                            pollAndPersistData(isInitialLoad, pollDataSyncConfig);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            logger.warn("Task for PollDataSyncConfig (threaded) at index {} interrupted", index);
+                        } catch (Exception e) {
+                            logger.error("Error processing PollDataSyncConfig (threaded) at index {}: {}", index, e.getMessage(), e);
+                        } finally {
+                            if (permitAcquired) {
+                                semaphore.release();
+                            }
+                        }
+                    });
+                    futures.add(future);
+                }
+
+                // Wait for threaded tasks to complete
+                int completedTasks = 0;
+                for (int i = 0; i < futures.size(); i++) {
+                    Future<?> future = futures.get(i);
+                    int index = i;
+                    try {
+                        future.get(timeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                        completedTasks++;
+                    } catch (TimeoutException e) {
+                        logger.error("Task for PollDataSyncConfig (threaded) at index {} timed out after {} ms", index, timeoutPerTaskMs);
+                        future.cancel(true); // Cancel to free resources
+                    } catch (InterruptedException e) {
+                        logger.warn("Interrupted while waiting for threaded task completion");
+                        Thread.currentThread().interrupt();
+                        break;
+                    } catch (ExecutionException e) {
+                        logger.error("Task for PollDataSyncConfig (threaded) at index {} failed: {}", index, e.getCause().getMessage(), e.getCause());
+                    }
+                }
+
+                logger.info("Threaded processing completed: {}/{} PollDataSyncConfig entries processed", completedTasks, threadedConfigs.size());
+                if (completedTasks < threadedConfigs.size()) {
+                    logger.warn("Processed fewer threaded entries than expected: {} < {}", completedTasks, threadedConfigs.size());
+                }
+
+                // Clean shutdown
+                executor.shutdown();
+                if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    logger.warn("Executor did not terminate cleanly, forcing shutdown");
+                    executor.shutdownNow();
+                }
+            } catch (Exception e) {
+                logger.error("Unexpected error in processing threaded PollDataSyncConfig entries: {}", e.getMessage(), e);
+            }
+        }
+
+        for (PollDataSyncConfig pollDataSyncConfig : sequentialConfigs) {
             pollAndPersistData(isInitialLoad, pollDataSyncConfig);
         }
 
@@ -139,7 +228,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                             log =  edxNbsOdseDataPersistentDAO.saveNbsOdseData(config.getTableName(), rawJsonDataWithNull);
                         }
                         else {
-                            log =  universalDataPersistentDAO.saveRdbModernData(config, rawJsonDataWithNull, isInitialLoad);
+                            log =  universalDataPersistentDAO.saveRdbModernData(config, rawJsonDataWithNull, isInitialLoad, startTime);
                         }
                         log.setStartTime(startTime);
                         log.setLog(SQL_LOG + (log.getLog() == null ||log.getLog().isEmpty()? SUCCESS : log.getLog()));
@@ -160,18 +249,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     throw new DataPollException("TASK FAILED: " + getStackTraceAsString(e));
                 }
 
-                var specialList = Arrays.asList(
-                        "D_INV_HIV",
-                        "D_INV_ADMINISTRATIVE",
-                        "D_INV_EPIDEMIOLOGY",
-                        "D_INV_LAB_FINDING",
-                        "D_INV_MEDICAL_HISTORY",
-                        "D_INV_RISK_FACTOR",
-                        "D_INV_TREATMENT",
-                        "D_INV_VACCINATION"
-                );
 
-                if (totalRecordCounts >= THREAD_CHECK && !specialList.contains(config.getTableName().toUpperCase())) {
+                if (totalRecordCounts >= THREAD_CHECK && !SPECIAL_TABLES.contains(config.getTableName().toUpperCase())) {
                     processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
                             config,  logStr,  exceptionAtApiLevel, startTime, totalRecordCounts);
                 } else {
@@ -223,7 +302,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         int batchSizeForProcessing = 3; // Process 3 pages (30,000 records) per batch
         int initialConcurrency = 10;    // Start with 10 concurrent tasks
         int maxConcurrency = 50;       // Cap at 50 (half of Hikari pool size for safety)
-        int maxRetries = 3;            // Retry up to 3 times
+        int maxRetries = 5;            // Retry up to 3 times
         long timeoutPerTaskMs = 120_000; // 2 minutes per task for large batches
 
         logger.info("Starting processing of {} pages (batchSize={}) in batches of {} with concurrency {}-{}",
@@ -303,23 +382,27 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     futures.add(future);
                 }
 
+                List<Integer> failedPages = new ArrayList<>(); // Track failed pages for reprocessing
                 // Wait for batch to complete
                 int completedTasks = 0;
-                for (Future<?> future : futures) {
+                for (int i = 0; i < futures.size(); i++) {
+                    Future<?> future = futures.get(i);
+                    int pageIndex = start + i;
                     try {
                         future.get(timeoutPerTaskMs, TimeUnit.MILLISECONDS);
                         completedTasks++;
                     } catch (TimeoutException e) {
-                        int pageIndex = start + futures.indexOf(future);
                         logger.error("Task for page {} timed out after {} ms", pageIndex, timeoutPerTaskMs);
                         future.cancel(true); // Cancel to free resources
+                        failedPages.add(pageIndex); // Mark for reprocessing
                     } catch (InterruptedException e) {
                         logger.warn("Interrupted while waiting for batch completion");
                         Thread.currentThread().interrupt();
+                        failedPages.add(pageIndex); // Mark for reprocessing
                         break;
                     } catch (ExecutionException e) {
-                        int pageIndex = start + futures.indexOf(future);
                         logger.error("Task for page {} failed: {}", pageIndex, e.getCause().getMessage(), e.getCause());
+                        failedPages.add(pageIndex); // Mark for reprocessing
                     }
                 }
 
@@ -327,6 +410,10 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         completedTasks, end - start, start + completedTasks);
                 if (completedTasks < end - start) {
                     logger.warn("Batch processed fewer pages than expected: {} < {}", completedTasks, end - start);
+                }
+
+                if (!failedPages.isEmpty()) {
+                    logger.info("Check {} failed pages sequentially: {}", failedPages.size(), failedPages);
                 }
             }
 
@@ -457,7 +544,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         logResponseModel = edxNbsOdseDataPersistentDAO.saveNbsOdseData(config.getTableName(), rawJsonData);
                     }
                     else {
-                        logResponseModel = universalDataPersistentDAO.saveRdbModernData(config, rawJsonData, isInitialLoad);
+                        logResponseModel = universalDataPersistentDAO.saveRdbModernData(config, rawJsonData, isInitialLoad, startTime);
 
                     }
                     logResponseModel.setStartTime(startTime);

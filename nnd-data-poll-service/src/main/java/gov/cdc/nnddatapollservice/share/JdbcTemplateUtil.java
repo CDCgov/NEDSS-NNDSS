@@ -24,11 +24,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.ERROR;
-import static gov.cdc.nnddatapollservice.constant.ConstantValue.SUCCESS;
+import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 @Component
@@ -105,13 +107,36 @@ public class JdbcTemplateUtil {
                 " WHEN MATCHED THEN UPDATE SET " + updates + " " +
                 " WHEN NOT MATCHED THEN INSERT (" + columns + ") VALUES (" + valuesForQuery + ");";
 
-        var values = validData.values().toArray();
+//        var values = validData.values().toArray();
+        // Convert potential date strings into proper SQL Date objects
+        var values = validData.values().stream()
+                .map(this::convertIfDate)
+                .toArray();
+
 
         try {
             rdbJdbcTemplate.update(sql, values);
         } catch (Exception e) {
             throw new SQLException("Single record upsert failed", e);
         }
+    }
+
+    /**
+     * Converts a string value into SQL Date if it resembles a valid date format.
+     */
+    private Object convertIfDate(Object value) {
+        if (value instanceof String) {
+            String stringValue = (String) value;
+            try {
+                // Detects dates in MM-DD-YYYY format
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+                LocalDate parsedDate = LocalDate.parse(stringValue, formatter);
+                return java.sql.Date.valueOf(parsedDate);
+            } catch (DateTimeParseException ignored) {
+                // If parsing fails, return the original value
+            }
+        }
+        return value;
     }
 
     @SuppressWarnings("java:S3776")
@@ -178,7 +203,9 @@ public class JdbcTemplateUtil {
                 List<Object> combinedValues = new ArrayList<>();
                 for (Map<String, Object> data : batch) {
                     for (String column : columnList) {
-                        combinedValues.add(data.getOrDefault(column, null)); // Add each column value
+                      //  combinedValues.add(data.getOrDefault(column, null)); // Add each column value
+                        combinedValues.add(convertIfDate(data.getOrDefault(column, null))); // Convert potential dates
+
                     }
                 }
 
@@ -207,7 +234,8 @@ public class JdbcTemplateUtil {
     public LogResponseModel persistingGenericTable(
             String jsonData,
             PollDataSyncConfig config,
-            boolean initialLoad) {
+            boolean initialLoad,
+            Timestamp startTime) {
         LogResponseModel log = new LogResponseModel();
         try {
             if (config.getTableName() != null && !config.getTableName().isEmpty()) {
@@ -218,22 +246,9 @@ public class JdbcTemplateUtil {
 
                 if (records != null && !records.isEmpty()) {
 
-                    Set<String> specialTables = new HashSet<>(Arrays.asList(
-                            "D_INV_HIV",
-                            "D_INV_ADMINISTRATIVE",
-                            "D_INV_EPIDEMIOLOGY",
-                            "D_INV_LAB_FINDING",
-                            "D_INV_MEDICAL_HISTORY",
-                            "D_INV_RISK_FACTOR",
-                            "D_INV_TREATMENT",
-                            "D_INV_VACCINATION"
-                    ));
-
-
-
-                    if (specialTables.contains(config.getTableName().toUpperCase()))
+                    if (SPECIAL_TABLES.contains(config.getTableName().toUpperCase()))
                     {
-                        handleSpecialTableFiltering(config, records, jdbcInsert, initialLoad);
+                        handleSpecialTableFiltering(config, records, jdbcInsert, initialLoad, startTime);
                     }
                     else {
                         try {
@@ -262,7 +277,7 @@ public class JdbcTemplateUtil {
                         }
                         catch (Exception e)
                         {
-                            handleBatchInsertionFailure(records, config, jdbcInsert);
+                            handleBatchInsertionFailure(records, config, jdbcInsert, startTime);
                         }
                     }
 
@@ -283,7 +298,10 @@ public class JdbcTemplateUtil {
 
     // Helper method to handle filtering for special tables
     @SuppressWarnings("java:S3776")
-    public void handleSpecialTableFiltering(PollDataSyncConfig config, List<Map<String, Object>> records, SimpleJdbcInsert simpleJdbcInsert, boolean initialLoad) {
+    public void handleSpecialTableFiltering(PollDataSyncConfig config, List<Map<String, Object>> records,
+                                            SimpleJdbcInsert simpleJdbcInsert,
+                                            boolean initialLoad,
+                                            Timestamp startTime) {
         String keyColumn = config.getTableName() + "_KEY"; // Assuming each table has a key column with the pattern [table]_KEY
 
         // Query only the existing keys where the key is 1
@@ -348,14 +366,15 @@ public class JdbcTemplateUtil {
                     }
                 }
             } catch (Exception e) {
-                handleBatchInsertionFailure(records, config, simpleJdbcInsert);
+                handleBatchInsertionFailure(records, config, simpleJdbcInsert, startTime);
             }
         } else {
             logger.info("No new records to insert for {}.", config.getTableName());
         }
     }
 
-    public void handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config, SimpleJdbcInsert simpleJdbcInsert) {
+    public void handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config, SimpleJdbcInsert simpleJdbcInsert,
+                                             Timestamp startTime) {
         for (Map<String, Object> res : records) {
             try {
                 if (config.getKeyList() == null  || config.getKeyList().isEmpty()) {
@@ -372,6 +391,11 @@ public class JdbcTemplateUtil {
                 }
                 else {
                     logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+
+                    LogResponseModel logModel = new LogResponseModel(
+                            ei.getMessage(),getStackTraceAsString(ei),
+                            ERROR, startTime );
+                    updateLog(config.getTableName(), logModel);
                     handleError.writeRecordToFile(gsonNorm, res,
                             config.getTableName() + UUID.randomUUID(),
                             sqlErrorPath
@@ -412,6 +436,10 @@ public class JdbcTemplateUtil {
         rdbJdbcTemplate.update(updateSql, timestamp, tableName);
     }
 
+    public void updateLog(String tableName, LogResponseModel logResponseModel) {
+        PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
+        pollDataLogRepository.save(pollDataLog);
+    }
 
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
         String updateSql = "update " + pollConfigTableName + " set last_update_time =? where table_name=?;";

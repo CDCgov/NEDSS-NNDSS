@@ -76,7 +76,7 @@ class JdbcTemplateUtilTest {
         config.setTableName(tableName);
         config.setKeyList("key");
         var resultLog = jdbcTemplateUtil.persistingGenericTable( jsonData,
-                config, true);
+                config, true, null);
         assertNotNull(resultLog);
     }
 
@@ -296,7 +296,7 @@ class JdbcTemplateUtilTest {
         config.setKeyList("key");
         config.setSourceDb("SRTE");
         // Act & Assert
-        jdbcTemplateUtil.persistingGenericTable(jsonData, config, true);
+        jdbcTemplateUtil.persistingGenericTable(jsonData, config, true, null);
 
         // Ensure that writing to file is called
         verify(handleError, times(1)).writeRecordToFile(
@@ -318,7 +318,7 @@ class JdbcTemplateUtilTest {
         config.setKeyList("key");
         config.setSourceDb("SRTE");
 
-        jdbcTemplateUtil.persistingGenericTable(jsondata, config, true);
+        jdbcTemplateUtil.persistingGenericTable(jsondata, config, true, null);
         verify(handleError, times(2)).writeRecordToFile(
                 any(),
                 any(),
@@ -337,7 +337,7 @@ class JdbcTemplateUtilTest {
         config.setKeyList("key");
         config.setSourceDb("SRTE");
 
-        jdbcTemplateUtil.persistingGenericTable( jsondata, config, true);
+        jdbcTemplateUtil.persistingGenericTable( jsondata, config, true, null);
 
         verify(handleError, times(2)).writeRecordToFile(
                 any(),

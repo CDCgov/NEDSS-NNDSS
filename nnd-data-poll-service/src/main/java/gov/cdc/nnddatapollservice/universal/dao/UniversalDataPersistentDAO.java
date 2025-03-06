@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+
 @Service
 @Slf4j
 public class UniversalDataPersistentDAO {
@@ -25,10 +27,10 @@ public class UniversalDataPersistentDAO {
         this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
-    public LogResponseModel saveRdbModernData(PollDataSyncConfig config, String jsonData , boolean initialLoad) {
+    public LogResponseModel saveRdbModernData(PollDataSyncConfig config, String jsonData , boolean initialLoad, Timestamp timestamp) {
         logger.info("saveRdbModernData tableName: {}", config.getTableName());
         LogResponseModel logBuilder;
-        logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad);
+        logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad, timestamp);
 
 
         return logBuilder;
