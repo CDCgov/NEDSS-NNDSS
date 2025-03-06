@@ -24,29 +24,29 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order)
 VALUES('D_INTERVIEW', 'RDB',1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INV_ADMINISTRATIVE', 'RDB',4);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INV_ADMINISTRATIVE', 'RDB',4, 'D_INV_ADMINISTRATIVE_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INV_EPIDEMIOLOGY', 'RDB',4);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INV_EPIDEMIOLOGY', 'RDB',4, 'D_INV_EPIDEMIOLOGY_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INV_HIV', 'RDB',4);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INV_HIV', 'RDB',4, 'D_INV_HIV_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INV_LAB_FINDING', 'RDB',4);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INV_LAB_FINDING', 'RDB',4, 'D_INV_LAB_FINDING_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INV_MEDICAL_HISTORY', 'RDB',4);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INV_MEDICAL_HISTORY', 'RDB',4, 'D_INV_MEDICAL_HISTORY_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INV_RISK_FACTOR', 'RDB',4);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INV_RISK_FACTOR', 'RDB',4, 'D_INV_RISK_FACTOR_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INV_TREATMENT', 'RDB',4);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INV_TREATMENT', 'RDB',4, 'D_INV_TREATMENT_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INV_VACCINATION', 'RDB',4);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INV_VACCINATION', 'RDB',4, 'D_INV_VACCINATION_KEY');
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('D_PATIENT', 'RDB',1, 'PATIENT_KEY');
