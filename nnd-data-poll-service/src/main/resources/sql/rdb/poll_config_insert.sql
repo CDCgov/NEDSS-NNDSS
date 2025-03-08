@@ -72,8 +72,8 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('RDB_DATE', 'RDB',1, 'DATE_KEY', 1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, key_list)
-VALUES('CONFIRMATION_METHOD', 'RDB',2, 'CONFIRMATION_METHOD_KEY');
+(table_name, source_db,table_order, no_pagination, recreate_applied)
+VALUES('CONFIRMATION_METHOD', 'RDB',2, 1, 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('LDF_GROUP', 'RDB',1, 'LDF_GROUP', 1);
