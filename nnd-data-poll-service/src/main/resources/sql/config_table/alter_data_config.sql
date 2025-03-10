@@ -9,6 +9,11 @@ ALTER TABLE poll_data_sync_config
     ADD no_pagination bit DEFAULT 0;
 
 
+ALTER TABLE poll_data_sync_config
+    ADD use_key_pagination bit DEFAULT 0;
+
+
+
 
 IF EXISTS (
     SELECT 1
