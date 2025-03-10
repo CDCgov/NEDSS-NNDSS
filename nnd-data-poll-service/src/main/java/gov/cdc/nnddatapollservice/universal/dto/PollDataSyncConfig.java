@@ -18,4 +18,6 @@ public class PollDataSyncConfig {
     private String keyList = "";
     private boolean recreateApplied;
     private boolean noPagination;
+    private boolean useKeyPagination;
+//    private String lastMaxKey;
 }

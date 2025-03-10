@@ -246,11 +246,11 @@ public class JdbcTemplateUtil {
 
                 if (records != null && !records.isEmpty()) {
 
-                    if (SPECIAL_TABLES.contains(config.getTableName().toUpperCase()))
-                    {
-                        handleSpecialTableFiltering(config, records, jdbcInsert, initialLoad, startTime);
-                    }
-                    else {
+//                    if (SPECIAL_TABLES.contains(config.getTableName().toUpperCase()))
+//                    {
+//                        handleSpecialTableFiltering(config, records, jdbcInsert, initialLoad, startTime);
+//                    }
+//                    else {
                         try {
                             if (records.size() >  batchSize) {
                                 int sublistSize = batchSize;
@@ -279,7 +279,7 @@ public class JdbcTemplateUtil {
                         {
                             handleBatchInsertionFailure(records, config, jdbcInsert, startTime);
                         }
-                    }
+//                    }
 
                 }
             }
@@ -509,6 +509,14 @@ public class JdbcTemplateUtil {
         return updatedTime;
     }
 
+    public String getMaxId(String tableName, String key) {
+        String sql = "SELECT MAX(" + key + ") FROM " + tableName + ";";
+        String maxId =  rdbJdbcTemplate.queryForObject(
+                sql,
+                String.class, tableName);
+
+        return maxId;
+    }
 
 
 

@@ -8,10 +8,10 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface IPollCommonService {
-    Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
+    Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean useKeyPagination, String entityKey) throws DataPollException;
 
     String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                             String startRow, String endRow, boolean noPagination) throws DataPollException;
+                             String startRow, String endRow, boolean noPagination, boolean useKeyPagination, String entityKey) throws DataPollException;
 
     List<PollDataSyncConfig> getTableListFromConfig();
     boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList);
@@ -35,4 +35,6 @@ public interface IPollCommonService {
     void deleteTable(String tableName);
 
     void updateLogNoTimestamp(String tableName, LogResponseModel logResponseModel);
+
+    String getMaxId(String tableName, String key);
 }

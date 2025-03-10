@@ -13,4 +13,12 @@ public class StringUtil {
         throwable.printStackTrace(pw);
         return sw.toString();
     }
+
+    public static boolean hasOnlyOneKey(String keyList) {
+        if (keyList == null || keyList.trim().isEmpty()) {
+            return false; // No key
+        }
+        return !keyList.contains(",") && !keyList.contains(" ");
+    }
+
 }

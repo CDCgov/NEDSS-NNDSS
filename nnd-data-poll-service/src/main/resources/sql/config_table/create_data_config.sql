@@ -14,7 +14,9 @@ CREATE TABLE poll_data_sync_config
     key_list NVARCHAR(250),
     recreate_applied bit DEFAULT 0,
     no_pagination bit DEFAULT 0,
-    use_key_pagination bit DEFAULT 0
+
+    use_key_pagination bit DEFAULT 0,
+--     last_max_key NVARCHAR(255) NULL
 );
 END
 

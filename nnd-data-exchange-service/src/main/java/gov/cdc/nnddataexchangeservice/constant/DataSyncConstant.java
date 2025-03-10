@@ -2,7 +2,7 @@ package gov.cdc.nnddataexchangeservice.constant;
 
 public class DataSyncConstant {
     public static final String DEFAULT_TIME_STAMP = "1753-01-01";
-    public static final String TIME_STAMP_PARAM = ":timestamp";
+    public static final String GENERIC_PARAM = ":timestamp";    // THIS WILL ALWAYs is :timetamp (just naming thing)
     public static final String LIMIT_PARAM = ":limit";
     public static final String OPERATION = ":operator";
     public static final String START_ROW = ":startRow";

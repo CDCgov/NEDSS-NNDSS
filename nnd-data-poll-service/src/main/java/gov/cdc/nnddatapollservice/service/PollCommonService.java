@@ -72,7 +72,7 @@ public class PollCommonService implements IPollCommonService {
         this.tokenService = tokenService;
     }
 
-    public Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
+    public Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean useKeyPagination, String entityKey) throws DataPollException {
         try {
             //Get token
             var token = tokenService.getToken();
@@ -82,13 +82,25 @@ public class PollCommonService implements IPollCommonService {
             headers.add("clientsecret", clientSecret);
             headers.add("initialLoad", String.valueOf(isInitialLoad));
             headers.add("version", version);
+            headers.add("useKeyPagination", String.valueOf(useKeyPagination));
+            headers.add("lastKey", entityKey);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
-            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
-                    .path("/" + tableName)
-                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
-                    .build()
-                    .toUri();
+            URI uri = null;
+            if (useKeyPagination) {
+                uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
+                        .path("/" + tableName)
+                        .build()
+                        .toUri();
+            }
+            else {
+                uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
+                        .path("/" + tableName)
+                        .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
+                        .build()
+                        .toUri();
+            }
+
 
             HttpHeaders headersForLogging = new HttpHeaders();
             headers.entrySet().forEach(entry -> {
@@ -110,7 +122,7 @@ public class PollCommonService implements IPollCommonService {
     }
 
     public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                                           String startRow, String endRow, boolean noPagination) throws DataPollException {
+                                           String startRow, String endRow, boolean noPagination, boolean useKeyPagination, String entityKey) throws DataPollException {
         try {
             //Get token
             var token = tokenService.getToken();
@@ -123,14 +135,27 @@ public class PollCommonService implements IPollCommonService {
             headers.add("clientsecret", clientSecret);
             headers.add("version", version);
             headers.add("noPagination", String.valueOf(noPagination));
+            headers.add("useKeyPagination", String.valueOf(useKeyPagination));
+            headers.add("lastKey", entityKey);
             headers.setBearerAuth(token);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
-            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
-                    .path("/" + tableName)
-                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
-                    .build()
-                    .toUri();
+            URI uri = null;
+            if (useKeyPagination) {
+                uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
+                        .path("/" + tableName)
+                        .build()
+                        .toUri();
+            }
+            else {
+                uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
+                        .path("/" + tableName)
+                        .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
+                        .build()
+                        .toUri();
+            }
+
+
 
             HttpHeaders headersForLogging = new HttpHeaders();
             headers.entrySet().forEach(entry -> {
@@ -238,5 +263,9 @@ public class PollCommonService implements IPollCommonService {
 
     public String decodeAndDecompress(String base64EncodedData) {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
+    }
+
+    public String getMaxId(String tableName, String key) {
+        return jdbcTemplateUtil.getMaxId(tableName, key);
     }
 }
