@@ -56,10 +56,10 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 .create();
     }
 
-    public Integer getTotalRecord(String tableName, boolean initialLoad, String param, boolean keyPagination) throws DataExchangeException {
+    public Integer getTotalRecord(String tableName, boolean initialLoad, String param, boolean useKeyPagination) throws DataExchangeException {
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
-        String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, param);
+        String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, param, useKeyPagination);
 
         return executeQueryForTotalRecords(query, dataConfig.getSourceDb());
     }
@@ -69,8 +69,14 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 .orElseThrow(() -> new DataExchangeException("No Table Found"));
     }
 
-    private String prepareQuery(String query, boolean initialLoad, String timestamp) {
-        String operator = initialLoad ? LESS : GREATER_EQUAL;
+    private String prepareQuery(String query, boolean initialLoad, String timestamp, boolean useKeyPagination) {
+        String operator;
+        if (useKeyPagination) {
+            operator = initialLoad ? GREATER_EQUAL : LESS;
+        }
+        else {
+            operator = initialLoad ? LESS : GREATER_EQUAL;
+        }
         return query.replaceAll(OPERATION, operator)
                 .replaceAll(GENERIC_PARAM, "'" + timestamp + "'");
     }
@@ -146,21 +152,24 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
         else
         {
+            String operator;
+
             // ISOLATE these two on purpose, keyPagination will use KEY as condition while other will use timestmap
             // They similar for now but who know what change in future
             if (keyPagination) {
+                operator = initialLoad ? GREATER_EQUAL : LESS ;
                 baseQuery = dataConfig.getQueryWithPagination()
                         .replaceAll(GENERIC_PARAM, "'" + param + "'")
                         .replaceAll(START_ROW, startRow)
                         .replaceAll(END_ROW, endRow);
             }
             else {
+                operator = initialLoad ? LESS : GREATER_EQUAL;
                 baseQuery = dataConfig.getQueryWithPagination()
                         .replaceAll(GENERIC_PARAM, "'" + param + "'")
                         .replaceAll(START_ROW, startRow)
                         .replaceAll(END_ROW, endRow);
             }
-            String operator = initialLoad ? LESS : GREATER_EQUAL;
             baseQuery = baseQuery.replaceAll(OPERATION, operator);
 
         }
