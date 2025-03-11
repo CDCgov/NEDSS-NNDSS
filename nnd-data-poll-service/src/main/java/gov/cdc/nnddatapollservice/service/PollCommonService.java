@@ -86,20 +86,11 @@ public class PollCommonService implements IPollCommonService {
             headers.add("lastKey", entityKey);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
-            URI uri = null;
-            if (useKeyPagination) {
-                uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
-                        .path("/" + tableName)
-                        .build()
-                        .toUri();
-            }
-            else {
-                uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
-                        .path("/" + tableName)
-                        .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
-                        .build()
-                        .toUri();
-            }
+            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
+                    .path("/" + tableName)
+                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
+                    .build()
+                    .toUri();
 
 
             HttpHeaders headersForLogging = new HttpHeaders();
@@ -140,21 +131,11 @@ public class PollCommonService implements IPollCommonService {
             headers.setBearerAuth(token);
             HttpEntity<String> httpEntity = new HttpEntity<>(headers);
 
-            URI uri = null;
-            if (useKeyPagination) {
-                uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
-                        .path("/" + tableName)
-                        .build()
-                        .toUri();
-            }
-            else {
-                uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
-                        .path("/" + tableName)
-                        .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
-                        .build()
-                        .toUri();
-            }
-
+            URI  uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
+                    .path("/" + tableName)
+                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
+                    .build()
+                    .toUri();
 
 
             HttpHeaders headersForLogging = new HttpHeaders();

@@ -93,8 +93,8 @@ public class RdbDataSourceConfig {
             @Qualifier("rdbDataSource") DataSource dataSource) {
         return builder
                 .dataSource(dataSource)
-                .packages("gov.cdc.nnddataexchangeservice.repository.config_table.model")
-                .persistenceUnit("config_table")
+                .packages("gov.cdc.nnddataexchangeservice.repository.rdb.model")
+                .persistenceUnit("rdb")
                 .build();
     }
 
