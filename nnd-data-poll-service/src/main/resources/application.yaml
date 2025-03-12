@@ -100,6 +100,6 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: none
-logging:
-  level:
-    com.zaxxer.hikari: DEBUG
+#logging:
+#  level:
+#    com.zaxxer.hikari: DEBUG
