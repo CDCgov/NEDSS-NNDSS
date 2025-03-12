@@ -533,13 +533,10 @@ public class JdbcTemplateUtil {
     }
 
     public String getMaxId(String tableName, String key) {
-        String sql = "SELECT MAX(" + key + ") FROM " + tableName + ";";
-        String maxId =  rdbJdbcTemplate.queryForObject(
-                sql,
-                String.class, tableName);
-
-        return maxId;
+        String sql = "SELECT COALESCE(MAX(" + key + "), '0') FROM " + tableName + ";";
+        return rdbJdbcTemplate.queryForObject(sql, String.class);
     }
+
 
 
 
