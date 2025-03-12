@@ -45,13 +45,15 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
 
-    protected int tableLevelMaxConcurrentThreads = 5;  // Limit to 2 threads running simultaneously
+    protected boolean multiThreadEnabled = false;
+
+    protected int tableLevelMaxConcurrentThreads = 1;  // Limit to 2 threads running simultaneously
     protected long tableLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task
 
 
-    protected int apiLevelBatchSizeForProcessing = 3; // Process 3 pages (30,000 records) per batch
-    protected int apiLevelInitialConcurrency = 10;    // Start with 10 concurrent tasks
-    protected int apiLevelMaxConcurrency = 50;       // Cap at 50 (half of Hikari pool size for safety)
+    protected int apiLevelBatchSizeForProcessing = 1; // Process 3 pages (30,000 records) per batch
+    protected int apiLevelInitialConcurrency = 2;    // Start with 10 concurrent tasks
+    protected int apiLevelMaxConcurrency = 2;       // Cap at 50 (half of Hikari pool size for safety)
     protected int apiLevelMaxRetries = 5;            // Retry up to 3 times
     protected long apiLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task for large batches
 
@@ -101,7 +103,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         List<PollDataSyncConfig> threadedConfigs = new ArrayList<>();
         List<PollDataSyncConfig> sequentialConfigs = new ArrayList<>();
         for (PollDataSyncConfig config : ascList) {
-            if (config.getTableOrder() == 1) {
+            if (config.getTableOrder() == 1 && multiThreadEnabled) {
                 threadedConfigs.add(config);
             } else {
                 sequentialConfigs.add(config);
@@ -234,7 +236,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 try {
                     var encodedDataWithNull = iPollCommonService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true,
                             "0", "0", false, config.isUseKeyPagination(), maxId);
-                    var rawJsonDataWithNull = iPollCommonService.decodeAndDecompress(encodedDataWithNull);
+                    var rawJsonDataWithNull = encodedDataWithNull; //iPollCommonService.decodeAndDecompress(encodedDataWithNull);
                     if (storeJsonInS3) {
                         log = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
                         log.setStartTime(startTime);
@@ -269,7 +271,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
 
 
-                if (totalRecordCounts >= THREAD_CHECK
+                if (totalRecordCounts >= THREAD_CHECK && multiThreadEnabled
 //                        && !SPECIAL_TABLES.contains(config.getTableName().toUpperCase())
                 ) {
                     processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
@@ -295,7 +297,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                             "0", "0", true, config.isUseKeyPagination(), maxId);
 
 
-                    rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
+                    rawJsonData = encodedData;// iPollCommonService.decodeAndDecompress(encodedData);
                     timestamp = getCurrentTimestamp();
                 } catch (Exception e) {
                     logStr = e.getMessage();
@@ -366,7 +368,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                                             String.valueOf(startRow), String.valueOf(endRow), false,
                                             config.isUseKeyPagination(), maxId
                                     );
-                                    rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
+                                    rawJsonData = encodedData; //iPollCommonService.decodeAndDecompress(encodedData);
                                     timestamp = getCurrentTimestamp();
 
                                     updateDataHelper(localExceptionAtApiLevel, timestamp, rawJsonData,
@@ -495,7 +497,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         String.valueOf(startRow), String.valueOf(endRow), false,
                         config.isUseKeyPagination(), maxId);
 
-                rawJsonData = iPollCommonService.decodeAndDecompress(encodedData);
+                rawJsonData = encodedData; //iPollCommonService.decodeAndDecompress(encodedData);
                 timestamp = getCurrentTimestamp();
             } catch (Exception e) {
                 logStr = e.getMessage();
@@ -525,6 +527,10 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             {
                 timeStampForPoll = iPollCommonService.getLastUpdatedTimeLocalDir(tableName);
             }
+        }
+
+        if (timeStampForPoll.isEmpty()) {
+            timeStampForPoll = iPollCommonService.getCurrentTimestamp();
         }
         return timeStampForPoll;
     }

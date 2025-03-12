@@ -124,7 +124,8 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 dataCountHolder.set(data.size());
 
 
-                return DataSimplification.dataCompressionAndEncodeV2(data);
+                return DataSimplification.dataToString(data);
+                //return DataSimplification.dataCompressionAndEncodeV2(data);
             };
 
             return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);

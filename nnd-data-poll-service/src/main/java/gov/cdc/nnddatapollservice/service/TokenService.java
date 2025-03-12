@@ -4,17 +4,19 @@ import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 
 @Service
 public class TokenService implements ITokenService {
-    private static Logger logger = LoggerFactory.getLogger(TokenService.class);
-
+    private static final Logger logger = LoggerFactory.getLogger(TokenService.class);
 
     @Value("${data_exchange.endpoint_token}")
     private String tokenEndpoint;
@@ -25,34 +27,50 @@ public class TokenService implements ITokenService {
     @Value("${data_exchange.secret}")
     private String clientSecret;
 
-    private final RestTemplate restTemplate;
+    private final HttpClient httpClient;
 
-    public TokenService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
+    public TokenService() {
+        this.httpClient = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(10)) // 10s connect timeout
+                .executor(Executors.newVirtualThreadPerTaskExecutor()) // Optional, for async callbacks
+                .build();
     }
 
-
+    @Override
     public String getToken() {
         return fetchNewToken();
     }
 
     private String fetchNewToken() {
-        ResponseEntity<String> response = null;
         try {
+            // Build headers
             HttpHeaders headers = new HttpHeaders();
             headers.add("clientid", clientId);
             headers.add("clientsecret", clientSecret);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            response = restTemplate.postForEntity(tokenEndpoint, entity, String.class);
-            if (response.getStatusCode() != HttpStatus.OK) {
-                System.exit(0);
+            // Build HttpRequest (POST with no body)
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(tokenEndpoint))
+                    .POST(HttpRequest.BodyPublishers.noBody()) // Empty body for POST
+                    .headers(headers.entrySet().stream()
+                            .flatMap(e -> Stream.of(e.getKey(), e.getValue().get(0)))
+                            .toArray(String[]::new))
+                    .timeout(Duration.ofSeconds(30)) // 30s timeout for token fetch
+                    .build();
+
+            // Send request synchronously
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                logger.error("Failed to fetch token, status code: {}", response.statusCode());
+                System.exit(0); // Preserve original behavior
             }
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            System.exit(0);
-        }
-        return response.getBody();
+            return response.body();
 
+        } catch (Exception e) {
+            logger.error("Error fetching token: {}", e.getMessage(), e);
+            System.exit(0); // Preserve original behavior
+            return null; // Unreachable, but added for compiler
+        }
     }
 }

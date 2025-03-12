@@ -25,6 +25,21 @@ public class DataSimplification {
     private DataSimplification() {
     }
 
+    public static String dataToString(List<?> data) throws DataExchangeException {
+        try {
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
+                    .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
+                    .serializeNulls()
+                    .create();
+
+            return gson.toJson(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new DataExchangeException(e.getMessage());
+        }
+
+    }
     public static String dataCompressionAndEncodeV2(List<?> data) throws IOException {
         Logger logger = LoggerFactory.getLogger("DataCompressionUtil"); // Adjust logger name for API context
         try {

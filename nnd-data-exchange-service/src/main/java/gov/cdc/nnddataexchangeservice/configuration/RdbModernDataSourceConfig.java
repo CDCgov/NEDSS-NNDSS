@@ -62,6 +62,12 @@ public class RdbModernDataSourceConfig {
     @Value("${spring.datasource.hikari.pool-name:OdseHikariCP}")
     private String poolName;
 
+    @Value("${spring.datasource.hikari.keepalive-time:300000}")
+    private long keepaliveTime;
+
+    @Value("${spring.datasource.hikari.validation-timeout:500}")
+    private long validationTimeout;
+
     @Bean(name = "rdbModernDataSource")
     public DataSource rdbModernDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
@@ -78,6 +84,10 @@ public class RdbModernDataSourceConfig {
         hikariConfig.setConnectionTimeout(connectionTimeout);
         hikariConfig.setPoolName(poolName);
 
+        hikariConfig.setKeepaliveTime(keepaliveTime);
+        hikariConfig.setValidationTimeout(validationTimeout);
+        hikariConfig.setInitializationFailTimeout(-1);
+        hikariConfig.setConnectionTestQuery("SELECT 1");
         return new HikariDataSource(hikariConfig);
     }
 
