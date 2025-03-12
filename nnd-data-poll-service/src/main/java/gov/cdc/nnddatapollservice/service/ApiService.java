@@ -95,6 +95,15 @@ public class ApiService implements IApiService {
             headerStr = gson.toJson(headersForLogging);
             logger.info("API URL: {} , headers: {}", uri, headerStr);
 
+
+
+            responseModel.setLastApiCall(String.valueOf(uri));
+            responseModel.setLastApiHeader(headerStr);
+
+            // Get token
+            String token = tokenService.getToken();
+            headers.setBearerAuth(token);
+
             // Build HttpRequest
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(uri)
@@ -105,13 +114,6 @@ public class ApiService implements IApiService {
                     .timeout(Duration.ofSeconds(60)) // Read timeout
                     .build();
 
-
-            responseModel.setLastApiCall(String.valueOf(uri));
-            responseModel.setLastApiHeader(headerStr);
-
-            // Get token
-            String token = tokenService.getToken();
-            headers.setBearerAuth(token);
 
             // Send request synchronously
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -173,6 +175,14 @@ public class ApiService implements IApiService {
             headerStr = gson.toJson(headersForLogging);
             logger.info("API URL: {} , headers: {}", uri, headerStr);
 
+
+            responseModel.setLastApiCall(String.valueOf(uri));
+            responseModel.setLastApiHeader(headerStr);
+
+            // Get token
+            String token = tokenService.getToken();
+            headers.setBearerAuth(token);
+
             // Build HttpRequest
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(uri)
@@ -182,13 +192,6 @@ public class ApiService implements IApiService {
                             .toArray(String[]::new))
                     .timeout(Duration.ofSeconds(60)) // Read timeout
                     .build();
-
-            responseModel.setLastApiCall(String.valueOf(uri));
-            responseModel.setLastApiHeader(headerStr);
-
-            // Get token
-            String token = tokenService.getToken();
-            headers.setBearerAuth(token);
 
             // Send request synchronously
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());

@@ -3,6 +3,7 @@ package gov.cdc.nnddatapollservice.share;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,10 @@ public class PollServiceUtil {
         throw new IllegalStateException("PollServiceUtil cannot be instantiated");
     }
 
-    public static LogResponseModel writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
-        LogResponseModel logResponseModel = new LogResponseModel();
+    public static LogResponseModel writeJsonToFile(String localfilePath, String dbSource, String tableName,
+                                                   Timestamp timeStamp, String jsonData,
+                                                   ApiResponseModel<?> apiResponseModel) {
+        LogResponseModel logResponseModel = new LogResponseModel(apiResponseModel);
         try {
             if (jsonData != null && !jsonData.equalsIgnoreCase("[]") && !jsonData.isEmpty()) {
                 SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);

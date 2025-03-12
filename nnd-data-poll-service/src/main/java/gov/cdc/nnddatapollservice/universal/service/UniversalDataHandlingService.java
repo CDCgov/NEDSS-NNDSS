@@ -250,7 +250,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 try {
                     var rawJsonDataWithNull = encodedDataWithNullResponse.getResponse(); //iPollCommonService.decodeAndDecompress(encodedDataWithNull);
                     if (storeJsonInS3) {
-                        log = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonDataWithNull, config.getTableName(), timestampWithNull, isInitialLoad);
+                        log = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonDataWithNull, config.getTableName(),
+                                timestampWithNull, isInitialLoad, encodedDataWithNullResponse);
                         log.setStartTime(startTime);
                         log.setLog(S3_LOG + (log.getLog() == null || log.getLog().isEmpty()? SUCCESS : log.getLog()));
                         log.setStatus(log.getStatus().equalsIgnoreCase(ERROR)? log.getStatus() : SUCCESS);
@@ -269,7 +270,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestampWithNull, log);
                     }
                     else  {
-                        log = iPollCommonService.writeJsonDataToFile(config.getSourceDb(), config.getTableName(), timestampWithNull, rawJsonDataWithNull);
+                        log = iPollCommonService.writeJsonDataToFile(config.getSourceDb(), config.getTableName(), timestampWithNull, rawJsonDataWithNull, encodedDataWithNullResponse);
                         log.setStartTime(startTime);
                         log.setLog(LOCAL_DIR_LOG + (log.getLog() == null ||log.getLog().isEmpty()? SUCCESS : log.getLog()));
                         log.setStatus(log.getStatus().equalsIgnoreCase(ERROR)? log.getStatus() : SUCCESS);
@@ -612,7 +613,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             }
             else {
                 if (storeJsonInS3) {
-                    logResponseModel = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonData, config.getTableName(), timestamp, isInitialLoad);
+                    logResponseModel = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonData, config.getTableName(), timestamp, isInitialLoad, apiResponseModel);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(S3_LOG + (log == null || log.isEmpty()? SUCCESS : log));
                     logResponseModel.setStatus(logResponseModel.getStatus().equalsIgnoreCase(ERROR)? logResponseModel.getStatus() : SUCCESS);
@@ -634,7 +635,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
                 else
                 {
-                    logResponseModel = iPollCommonService.writeJsonDataToFile(config.getSourceDb(), config.getTableName(), timestamp, rawJsonData);
+                    logResponseModel = iPollCommonService.writeJsonDataToFile(config.getSourceDb(), config.getTableName(), timestamp, rawJsonData, apiResponseModel);
                     logResponseModel.setStartTime(startTime);
                     logResponseModel.setLog(LOCAL_DIR_LOG + (log == null || log.isEmpty()? SUCCESS : log));
                     logResponseModel.setStatus(logResponseModel.getStatus().equalsIgnoreCase(ERROR)? logResponseModel.getStatus() : SUCCESS);

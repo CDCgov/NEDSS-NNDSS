@@ -2,6 +2,7 @@ package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,9 +77,11 @@ public class S3DataService implements IS3DataService {
     }
 
 
-    public LogResponseModel persistToS3MultiPart(String domain, String records, String fileName, Timestamp persistingTimestamp, boolean initialLoad) {
+    public LogResponseModel persistToS3MultiPart(String domain, String records, String fileName,
+                                                 Timestamp persistingTimestamp, boolean initialLoad,
+                                                 ApiResponseModel<?> apiResponseModel) {
         String log = LOG_SUCCESS;
-        LogResponseModel logResponseModel = new LogResponseModel();
+        LogResponseModel logResponseModel = new LogResponseModel(apiResponseModel);
         try {
             if (records.equalsIgnoreCase("[]") || records.isEmpty()) {
                 throw new DataPollException("No data to persist for table " + fileName);

@@ -268,7 +268,7 @@ public class JdbcTemplateUtil {
                                     }
                                 }
                             } else {
-                                if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
+                                if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
                                     records.forEach(data -> data.remove("RowNum"));
                                     jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
 
@@ -380,7 +380,7 @@ public class JdbcTemplateUtil {
                                              Timestamp startTime, ApiResponseModel<?> apiResponseModel) {
         for (Map<String, Object> res : records) {
             try {
-                if (config.getKeyList() == null  || config.getKeyList().isEmpty()) {
+                if (config.getKeyList() == null  || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
                     simpleJdbcInsert.execute(new MapSqlParameterSource(res));
                 }
                 else

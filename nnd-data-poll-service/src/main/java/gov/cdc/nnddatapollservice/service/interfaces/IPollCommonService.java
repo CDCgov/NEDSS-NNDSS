@@ -2,6 +2,7 @@ package gov.cdc.nnddatapollservice.service.interfaces;
 
 import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 
@@ -13,7 +14,7 @@ public interface IPollCommonService {
     boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList);
     String getCurrentTimestamp();
     List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB);
-    LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData);
+    LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData, ApiResponseModel<?> apiResponseModel);
     String getLastUpdatedTime(String tableName);
     void updateLastUpdatedTime(String tableName, Timestamp timestamp);
     String decodeAndDecompress(String base64EncodedData);
