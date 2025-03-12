@@ -1,6 +1,7 @@
 package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
+import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
@@ -48,18 +49,6 @@ public class PollCommonService implements IPollCommonService {
     private final JdbcTemplateUtil jdbcTemplateUtil;
 
     private static Logger logger = LoggerFactory.getLogger(PollCommonService.class);
-    @Value("${data_exchange.clientId}")
-    private String clientId;
-
-    @Value("${data_exchange.secret}")
-    private String clientSecret;
-
-    @Value("${data_exchange.endpoint_generic}")
-    protected String exchangeEndpoint;
-
-    @Value("${data_exchange.endpoint_generic_total_record}")
-    protected String exchangeTotalRecordEndpoint;
-
 
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
@@ -70,148 +59,12 @@ public class PollCommonService implements IPollCommonService {
     @Value("${datasync.store_in_S3}")
     private boolean s3Sync;
 
-
-    @Value("${data_exchange.version}")
-    private String version;
-
-    private final Gson gson = new Gson();
-
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final ITokenService tokenService;
 
-    private final HttpClient httpClient;
     public PollCommonService(JdbcTemplateUtil jdbcTemplateUtil, ITokenService tokenService) {
         this.jdbcTemplateUtil = jdbcTemplateUtil;
-        this.tokenService = tokenService;
-        this.httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofSeconds(10))
-                .executor(Executors.newVirtualThreadPerTaskExecutor()) // Optional, for async callbacks
-                .build();
+
     }
-
-    public Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime,
-                                         boolean useKeyPagination, String entityKey) throws DataPollException {
-        try {
-            // Get token
-            String token = tokenService.getToken();
-
-            // Build headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.add("clientid", clientId);
-            headers.add("clientsecret", clientSecret);
-            headers.add("initialLoad", String.valueOf(isInitialLoad));
-            headers.add("version", version);
-            headers.add("useKeyPagination", String.valueOf(useKeyPagination));
-            headers.add("lastKey", entityKey);
-
-            // Build URI
-            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
-                    .path("/" + tableName)
-                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
-                    .build()
-                    .toUri();
-
-            // Log headers (mask sensitive info)
-            HttpHeaders headersForLogging = new HttpHeaders();
-            headers.entrySet().forEach(entry -> {
-                String key = entry.getKey();
-                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
-                        || "clientsecret".equalsIgnoreCase(key)) {
-                    headersForLogging.add(key, "");
-                } else {
-                    headersForLogging.put(key, entry.getValue());
-                }
-            });
-            logger.info("API URL: {} , headers: {}", uri, gson.toJson(headersForLogging));
-
-            // Build HttpRequest
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(uri)
-                    .GET()
-                    .headers(headers.entrySet().stream()
-                            .flatMap(e -> Stream.of(e.getKey(), e.getValue().get(0)))
-                            .toArray(String[]::new))
-                    .timeout(Duration.ofSeconds(60)) // Read timeout
-                    .build();
-
-            // Send request synchronously
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) {
-                throw new DataPollException("Unexpected status code: " + response.statusCode());
-            }
-            return Integer.valueOf(response.body());
-
-        } catch (Exception e) {
-            throw new DataPollException("Error calling data count endpoint: " + e.getMessage());
-        }
-    }
-
-    public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                                           String startRow, String endRow, boolean noPagination, boolean useKeyPagination,
-                                           String entityKey) throws DataPollException {
-        try {
-            // Get token
-            String token = tokenService.getToken();
-
-            // Build headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("initialLoad", String.valueOf(isInitialLoad));
-            headers.add("allowNull", String.valueOf(allowNull));
-            headers.add("startRow", startRow);
-            headers.add("endRow", endRow);
-            headers.add("clientid", clientId);
-            headers.add("clientsecret", clientSecret);
-            headers.add("version", version);
-            headers.add("noPagination", String.valueOf(noPagination));
-            headers.add("useKeyPagination", String.valueOf(useKeyPagination));
-            headers.add("lastKey", entityKey);
-            headers.setBearerAuth(token);
-
-            // Build URI
-            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
-                    .path("/" + tableName)
-                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
-                    .build()
-                    .toUri();
-
-            // Log headers (mask sensitive info)
-            HttpHeaders headersForLogging = new HttpHeaders();
-            headers.entrySet().forEach(entry -> {
-                String key = entry.getKey();
-                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
-                        || "clientsecret".equalsIgnoreCase(key)) {
-                    headersForLogging.add(key, "");
-                } else {
-                    headersForLogging.put(key, entry.getValue());
-                }
-            });
-            logger.info("API URL: {} , headers: {}", uri, gson.toJson(headersForLogging));
-
-            // Build HttpRequest
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(uri)
-                    .GET()
-                    .headers(headers.entrySet().stream()
-                            .flatMap(e -> Stream.of(e.getKey(), e.getValue().get(0)))
-                            .toArray(String[]::new))
-                    .timeout(Duration.ofSeconds(60)) // Read timeout
-                    .build();
-
-            // Send request synchronously
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() != 200) {
-                throw new DataPollException("Unexpected status code: " + response.statusCode());
-            }
-            return response.body();
-
-        } catch (Exception e) {
-            throw new DataPollException("Error calling data exchange endpoint: " + e.getMessage());
-        }
-    }
-
 
 
     public List<PollDataSyncConfig> getTableListFromConfig() {

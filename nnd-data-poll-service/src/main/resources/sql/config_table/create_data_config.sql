@@ -17,6 +17,8 @@ CREATE TABLE poll_data_sync_config
 
     use_key_pagination bit DEFAULT 0,
 --     last_max_key NVARCHAR(255) NULL
+
+    api_fatal_on_last_run bit DEFAULT 0,
 );
 END
 
@@ -35,6 +37,12 @@ CREATE TABLE poll_data_log
     end_time    DATETIME NULL,
     executed_log NVARCHAR(MAX) NULL,
     stack_trace NVARCHAR(MAX) NULL,
+
+    last_api_url NVARCHAR(255) NULL,
+    last_api_header NVARCHAR(MAX) NULL,
+    last_api_record_counts INT NULL,
+    last_total_pages INT NULL,
+    last_batch_size INT NULL,
 
     CONSTRAINT FK_poll_data_log_table
         FOREIGN KEY (table_name)

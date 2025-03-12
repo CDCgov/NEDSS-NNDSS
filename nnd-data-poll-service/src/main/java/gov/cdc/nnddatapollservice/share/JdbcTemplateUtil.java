@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 import gov.cdc.nnddatapollservice.repository.config.model.PollDataLog;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import org.slf4j.Logger;
@@ -235,8 +236,9 @@ public class JdbcTemplateUtil {
             String jsonData,
             PollDataSyncConfig config,
             boolean initialLoad,
-            Timestamp startTime) {
-        LogResponseModel log = new LogResponseModel();
+            Timestamp startTime,
+            ApiResponseModel<?> apiResponseModel) {
+        LogResponseModel log = new LogResponseModel(apiResponseModel);
         try {
             if (config.getTableName() != null && !config.getTableName().isEmpty()) {
 
@@ -277,7 +279,7 @@ public class JdbcTemplateUtil {
                         }
                         catch (Exception e)
                         {
-                            handleBatchInsertionFailure(records, config, jdbcInsert, startTime);
+                            handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel);
                         }
 //                    }
 
@@ -301,7 +303,8 @@ public class JdbcTemplateUtil {
     public void handleSpecialTableFiltering(PollDataSyncConfig config, List<Map<String, Object>> records,
                                             SimpleJdbcInsert simpleJdbcInsert,
                                             boolean initialLoad,
-                                            Timestamp startTime) {
+                                            Timestamp startTime,
+                                            ApiResponseModel<?> apiResponseModel) {
         String keyColumn = config.getTableName() + "_KEY"; // Assuming each table has a key column with the pattern [table]_KEY
 
         // Query only the existing keys where the key is 1
@@ -366,7 +369,7 @@ public class JdbcTemplateUtil {
                     }
                 }
             } catch (Exception e) {
-                handleBatchInsertionFailure(records, config, simpleJdbcInsert, startTime);
+                handleBatchInsertionFailure(records, config, simpleJdbcInsert, startTime, apiResponseModel);
             }
         } else {
             logger.info("No new records to insert for {}.", config.getTableName());
@@ -374,7 +377,7 @@ public class JdbcTemplateUtil {
     }
 
     public void handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config, SimpleJdbcInsert simpleJdbcInsert,
-                                             Timestamp startTime) {
+                                             Timestamp startTime, ApiResponseModel<?> apiResponseModel) {
         for (Map<String, Object> res : records) {
             try {
                 if (config.getKeyList() == null  || config.getKeyList().isEmpty()) {
@@ -394,7 +397,7 @@ public class JdbcTemplateUtil {
 
                     LogResponseModel logModel = new LogResponseModel(
                             ei.getMessage(),getStackTraceAsString(ei),
-                            ERROR, startTime );
+                            ERROR, startTime, apiResponseModel);
                     updateLog(config.getTableName(), logModel);
                     handleError.writeRecordToFile(gsonNorm, res,
                             config.getTableName() + UUID.randomUUID(),
@@ -442,7 +445,13 @@ public class JdbcTemplateUtil {
     }
 
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
-        String updateSql = "update " + pollConfigTableName + " set last_update_time =? where table_name=?;";
+        String updateSql;
+        if (!logResponseModel.apiResponseModel.isSuccess()) {
+            updateSql = "update " + pollConfigTableName + " set last_update_time =?, api_fatal_on_last_run = 1 where table_name=?;";
+        }
+        else {
+            updateSql = "update " + pollConfigTableName + " set last_update_time =? where table_name=?;";
+        }
         rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
@@ -450,7 +459,14 @@ public class JdbcTemplateUtil {
     }
 
     public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp,  LogResponseModel logResponseModel) {
-        String updateSql = "update " + pollConfigTableName + " set last_update_time_s3 =? where table_name=?;";
+        String updateSql;
+        if (!logResponseModel.apiResponseModel.isSuccess()) {
+            updateSql = "update " + pollConfigTableName + " set last_update_time_s3 =?, api_fatal_on_last_run = 1 where table_name=?;";
+        }
+        else {
+            updateSql = "update " + pollConfigTableName + " set last_update_time_s3 =? where table_name=?;";
+        }
+
         rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
@@ -458,7 +474,14 @@ public class JdbcTemplateUtil {
     }
 
     public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
-        String updateSql = "update " + pollConfigTableName + " set last_update_time_local_dir =? where table_name=?;";
+        String updateSql;
+        if (!logResponseModel.apiResponseModel.isSuccess()) {
+            updateSql = "update " + pollConfigTableName + " set last_update_time_local_dir =?, api_fatal_on_last_run = 1 where table_name=?;";
+        }
+        else {
+            updateSql = "update " + pollConfigTableName + " set last_update_time_local_dir =? where table_name=?;";
+        }
+
         rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);

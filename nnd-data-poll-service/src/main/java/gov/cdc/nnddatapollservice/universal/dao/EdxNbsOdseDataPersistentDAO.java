@@ -9,6 +9,7 @@ import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityDetailLogReposi
 import gov.cdc.nnddatapollservice.repository.nbs_odse.EDXActivityLogRepository;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityDetailLog;
 import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityLog;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
@@ -58,8 +59,8 @@ public class EdxNbsOdseDataPersistentDAO {
         this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
-    public LogResponseModel saveNbsOdseData(String tableName, String jsonData) {
-        LogResponseModel logBuilder = new LogResponseModel();
+    public LogResponseModel saveNbsOdseData(String tableName, String jsonData, ApiResponseModel<?> apiResponseModel) {
+        LogResponseModel logBuilder = new LogResponseModel(apiResponseModel);
         if ("EDX_ACTIVITY_LOG".equalsIgnoreCase(tableName)) {
             logBuilder.setLog(LOG_SUCCESS);
             logBuilder.setStatus(SUCCESS);

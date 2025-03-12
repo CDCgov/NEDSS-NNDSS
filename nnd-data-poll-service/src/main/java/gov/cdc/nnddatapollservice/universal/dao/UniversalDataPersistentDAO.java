@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.universal.dao;
 
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
@@ -27,10 +28,10 @@ public class UniversalDataPersistentDAO {
         this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
-    public LogResponseModel saveUniversalData(PollDataSyncConfig config, String jsonData , boolean initialLoad, Timestamp timestamp) {
+    public LogResponseModel saveUniversalData(PollDataSyncConfig config, String jsonData , boolean initialLoad, Timestamp timestamp, ApiResponseModel<?> apiResponseModel) {
         logger.info("saveUniversalData tableName: {}", config.getTableName());
         LogResponseModel logBuilder;
-        logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad, timestamp);
+        logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad, timestamp, apiResponseModel);
 
 
         return logBuilder;
