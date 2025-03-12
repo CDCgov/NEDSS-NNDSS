@@ -279,7 +279,7 @@ public class JdbcTemplateUtil {
                         }
                         catch (Exception e)
                         {
-                            handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel);
+                           log = handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel, log);
                         }
 //                    }
 
@@ -293,91 +293,23 @@ public class JdbcTemplateUtil {
             logger.error("Error executeBatch. class: {}, tableName: {}, Error:{}", e.getClass() ,config.getTableName(), e.getMessage());
         }
 
-        log.setStatus(SUCCESS);
+        if (log.getStatus() != null && !log.getStatus().equals(WARNING)) {
+            log.setStatus(SUCCESS);
+        } else if (log.getStatus() == null) {
+            log.setStatus(SUCCESS);
+        }
         return log;
     }
 
 
-    // Helper method to handle filtering for special tables
-    @SuppressWarnings("java:S3776")
-    public void handleSpecialTableFiltering(PollDataSyncConfig config, List<Map<String, Object>> records,
-                                            SimpleJdbcInsert simpleJdbcInsert,
-                                            boolean initialLoad,
-                                            Timestamp startTime,
-                                            ApiResponseModel<?> apiResponseModel) {
-        String keyColumn = config.getTableName() + "_KEY"; // Assuming each table has a key column with the pattern [table]_KEY
+    public LogResponseModel handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config,
+                                            SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
+                                            ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
+        boolean anyError = false;
+        List<String> errors = new ArrayList<>();
+        Exception anyErrorException = null;
+        Long errorCount = 0L;
 
-        // Query only the existing keys where the key is 1
-        String query = "SELECT " + keyColumn + " FROM " + config.getTableName() + " WHERE " + keyColumn + " = 1";
-        List<Double> existingKeys = new ArrayList<>(rdbJdbcTemplate.queryForList(query, Double.class));
-        logger.info("Found {} existing keys in {} with {} = 1", existingKeys.size(), config.getTableName(), keyColumn);
-
-        Double foundKey = existingKeys.isEmpty()? null : existingKeys.get(0);
-        // Filter out records that have a matching key of 1
-        List<Map<String, Object>> filteredRecords = records
-                .stream()
-                .filter(rec -> {
-                    // Check if the record contains the keyColumn
-                    if (rec.containsKey(keyColumn)) {
-                        // Get the value of the keyColumn from the record
-                        Object recordKey = rec.get(keyColumn);
-                        // Filter out the record if it matches the foundKey
-                        return !recordKey.equals(foundKey);
-                    }
-                    // If the record doesn't contain keyColumn, keep it
-                    return true;
-                })
-                .toList(); //NOSONAR
-        logger.info("After filtering, Records size: {}", filteredRecords.size());
-
-        // Additional logic block to remove records with duplicate keys based on keyColumn
-        Set<Object> uniqueKeys = new HashSet<>();
-        List<Map<String, Object>> deduplicatedRecords = new ArrayList<>();
-
-        for (Map<String, Object> rec : filteredRecords) {
-            Object recordKey = rec.get(keyColumn);
-
-            // If the keyColumn is present and the key hasn't been seen yet, keep the record
-            if (recordKey != null && uniqueKeys.add(recordKey)) {
-                deduplicatedRecords.add(rec);
-            }
-        }
-
-
-        if (!deduplicatedRecords.isEmpty()) {
-            try {
-                if (deduplicatedRecords.size() > batchSize) {
-                    int sublistSize = batchSize;
-                    for (int i = 0; i < deduplicatedRecords.size(); i += sublistSize) {
-                        int end = Math.min(i + sublistSize, deduplicatedRecords.size());
-                        List<Map<String, Object>> sublist = deduplicatedRecords.subList(i, end);
-                        if (initialLoad || config.getKeyList() == null  || config.getKeyList().isEmpty()) {
-                            sublist.forEach(data -> data.remove("RowNum"));
-                            simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
-
-                        } else {
-                            upsertBatch(config.getTableName(), sublist, config.getKeyList());
-                        }
-                    }
-                } else {
-                    if (initialLoad || config.getKeyList() == null  || config.getKeyList().isEmpty()) {
-                        records.forEach(data -> data.remove("RowNum"));
-                        simpleJdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-
-                    } else {
-                        upsertBatch(config.getTableName(), records, config.getKeyList());
-                    }
-                }
-            } catch (Exception e) {
-                handleBatchInsertionFailure(records, config, simpleJdbcInsert, startTime, apiResponseModel);
-            }
-        } else {
-            logger.info("No new records to insert for {}.", config.getTableName());
-        }
-    }
-
-    public void handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config, SimpleJdbcInsert simpleJdbcInsert,
-                                             Timestamp startTime, ApiResponseModel<?> apiResponseModel) {
         for (Map<String, Object> res : records) {
             try {
                 if (config.getKeyList() == null  || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
@@ -388,11 +320,20 @@ public class JdbcTemplateUtil {
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
-                if (ei instanceof DataIntegrityViolationException) // NOSONAR
-                {
-                    logger.debug("Duplicated Key Exception Resolved");
+                ++errorCount;
+                anyError= true;
+                if (anyErrorException == null) {
+                    errors.add(ei.getMessage());
                 }
-                else {
+                if (anyErrorException != null && !anyErrorException.getClass().equals(ei.getClass())) {
+                    errors.add(ei.getMessage());
+                }
+                anyErrorException = ei;
+//                if (ei instanceof DataIntegrityViolationException) // NOSONAR
+//                {
+//                    logger.debug("Duplicated Key Exception Resolved");
+//                }
+//                else {
                     logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
 
                     LogResponseModel logModel = new LogResponseModel(
@@ -405,10 +346,23 @@ public class JdbcTemplateUtil {
                                     + "/" + config.getSourceDb() + "/"
                                     + ei.getClass().getSimpleName()
                                     + "/" + config.getTableName() + "/");
-                }
+//                }
 
             }
         }
+
+        if (!anyError)
+        {
+            log.setStatus(SUCCESS);
+        }
+        else {
+            Gson gson = new Gson();
+            String jsonString = gson.toJson(errors);
+            log.setStatus(WARNING);
+            log.setLog(errorCount + " FAILED UPSERT OR SINGLE INSERTION at resolver level, failed data had been written to file log");
+            log.setStackTrace(jsonString);
+        }
+        return log;
     }
 
 

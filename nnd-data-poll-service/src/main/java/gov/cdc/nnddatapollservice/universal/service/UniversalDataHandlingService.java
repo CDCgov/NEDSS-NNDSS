@@ -631,8 +631,12 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
                     }
                     logResponseModel.setStartTime(startTime);
-                    logResponseModel.setLog(SQL_LOG + (log == null || log.isEmpty()? SUCCESS : log));
-                    logResponseModel.setStatus(logResponseModel.getStatus().equalsIgnoreCase(ERROR)? logResponseModel.getStatus() : SUCCESS);
+
+                    if (!logResponseModel.getStatus().equalsIgnoreCase(WARNING)) {
+                        logResponseModel.setLog(SQL_LOG + (log == null || log.isEmpty()? SUCCESS : log));
+                        logResponseModel.setStatus(logResponseModel.getStatus().equalsIgnoreCase(ERROR)? logResponseModel.getStatus() : SUCCESS);
+                    }
+
                     iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(), timestamp, logResponseModel);
                 }
                 else
