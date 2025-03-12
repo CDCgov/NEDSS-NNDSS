@@ -201,6 +201,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             LogResponseModel log;
             Integer totalRecordCounts = 0;
 
+            isInitialLoad = iPollCommonService.checkInitialLoadForIndividualTable(config);
+
             if(config.isRecreateApplied() ) {
                 // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
                 isInitialLoad = true;

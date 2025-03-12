@@ -99,6 +99,26 @@ public class PollCommonService implements IPollCommonService {
         return true;
     }
 
+    public boolean checkInitialLoadForIndividualTable(PollDataSyncConfig config) {
+        if(dirSync) {
+            if (config.getLastUpdateTimeLocalDir() != null
+                    && !config.getLastUpdateTimeLocalDir().toString().isBlank()) {
+                return false;
+            }
+
+        } else if (s3Sync) {
+            if (config.getLastUpdateTimeS3() != null
+                    && !config.getLastUpdateTimeS3().toString().isBlank()) {
+                return false;
+            }
+        } else {
+            if (config.getLastUpdateTime() != null && !config.getLastUpdateTime().toString().isBlank()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public String getCurrentTimestamp() {
         Timestamp timestamp = TimestampUtil.getCurrentTimestamp();
         SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);

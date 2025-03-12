@@ -34,4 +34,6 @@ public interface IPollCommonService {
     void updateLogNoTimestamp(String tableName, LogResponseModel logResponseModel);
 
     String getMaxId(String tableName, String key);
+
+    boolean checkInitialLoadForIndividualTable(PollDataSyncConfig config);
 }
