@@ -35,4 +35,6 @@ public interface IPollCommonService {
     void deleteTable(String tableName);
 
     void updateLogNoTimestamp(String tableName, LogResponseModel logResponseModel);
+
+    List<PollDataSyncConfig> filterSyncEnabledTables(List<PollDataSyncConfig> filteredTablesList);
 }

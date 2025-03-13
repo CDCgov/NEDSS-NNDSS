@@ -52,10 +52,12 @@ class RdbModernDataHandlingServiceTest {
         config.setTableOrder(1);
         config.setQuery("");
         config.setSourceDb("RDB_MODERN");
+        config.setIsSyncEnabled(1);
         configTableList.add(config);
 
         when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
         when(iPollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
+        when(iPollCommonService.filterSyncEnabledTables(anyList())).thenReturn(configTableList);
         when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
 
         universalDataHandlingService.handlingExchangedData("RDB");
@@ -72,10 +74,12 @@ class RdbModernDataHandlingServiceTest {
         config.setTableOrder(1);
         config.setQuery("");
         config.setSourceDb("RDB_MODERN");
+        config.setIsSyncEnabled(1);
         configTableList.add(config);
 
         when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
         when(iPollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
+        when(iPollCommonService.filterSyncEnabledTables(anyList())).thenReturn(configTableList);
         when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(false);
 
         universalDataHandlingService.handlingExchangedData("RDB");

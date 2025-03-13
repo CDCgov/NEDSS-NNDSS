@@ -92,6 +92,7 @@ class PollCommonServiceTest {
         config.setLastUpdateTime(null);
         config.setTableOrder(1);
         config.setQuery("");
+        config.setIsSyncEnabled(1);
         configTableList.add(config);
 
         boolean isInitailLoad = iPollCommonService.checkPollingIsInitailLoad(configTableList);
@@ -106,6 +107,7 @@ class PollCommonServiceTest {
         config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(1);
         config.setQuery("");
+        config.setIsSyncEnabled(1);
         configTableList.add(config);
 
         boolean isInitailLoad = iPollCommonService.checkPollingIsInitailLoad(configTableList);
@@ -126,6 +128,7 @@ class PollCommonServiceTest {
         config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(1);
         config.setQuery("");
+        config.setIsSyncEnabled(1);
         configTableList.add(config);
 
         when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
@@ -157,10 +160,45 @@ class PollCommonServiceTest {
         config.setTableOrder(1);
         config.setQuery("");
         config.setSourceDb("RDB");
+        config.setIsSyncEnabled(1);
         configTableList.add(config);
 
         List<PollDataSyncConfig> configTableListActual = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, "RDB");
         assertEquals(1, configTableListActual.size());
+    }
+
+    @Test
+    void filterSyncEnabledTables() {
+        List<PollDataSyncConfig> configTableList = new ArrayList<>();
+        PollDataSyncConfig config = new PollDataSyncConfig();
+        config.setTableName("D_ORGANIZATION");
+        config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
+        config.setTableOrder(1);
+        config.setQuery("");
+        config.setIsSyncEnabled(1);
+        configTableList.add(config);
+
+        when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
+
+        List<PollDataSyncConfig> tablesListActual = iPollCommonService.filterSyncEnabledTables(configTableList);
+        assertEquals(1, tablesListActual.size());
+    }
+
+    @Test
+    void filterSyncEnabledTables_None() {
+        List<PollDataSyncConfig> configTableList = new ArrayList<>();
+        PollDataSyncConfig config = new PollDataSyncConfig();
+        config.setTableName("D_ORGANIZATION");
+        config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
+        config.setTableOrder(1);
+        config.setQuery("");
+        config.setIsSyncEnabled(0);
+        configTableList.add(config);
+
+        when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
+
+        List<PollDataSyncConfig> tablesListActual = iPollCommonService.filterSyncEnabledTables(configTableList);
+        assertEquals(0, tablesListActual.size());
     }
 
     @Test

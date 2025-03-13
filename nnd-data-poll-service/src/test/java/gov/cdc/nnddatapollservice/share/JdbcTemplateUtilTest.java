@@ -110,6 +110,7 @@ class JdbcTemplateUtilTest {
         config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(2);
         config.setQuery("");
+        config.setIsSyncEnabled(1);
         configTableList.add(config);
 
         when(jdbcTemplate.query(anyString(), any(RowMapper.class))).thenReturn(configTableList);

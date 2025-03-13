@@ -19,4 +19,5 @@ public class PollDataSyncConfig {
     private String keyList = "";
     private boolean recreateApplied;
     private boolean noPagination;
+    private int isSyncEnabled;
 }

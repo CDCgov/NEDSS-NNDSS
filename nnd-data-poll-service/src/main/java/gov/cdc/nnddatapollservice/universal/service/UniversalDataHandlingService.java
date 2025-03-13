@@ -55,14 +55,16 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     public void handlingExchangedData(String source) {
         List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> filteredTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, source);
+        List<PollDataSyncConfig> syncEnabledTablesList = iPollCommonService.filterSyncEnabledTables(filteredTablesList);
 
-        boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(filteredTablesList);
+
+        boolean isInitialLoad = iPollCommonService.checkPollingIsInitailLoad(syncEnabledTablesList);
 
         if (isInitialLoad && storeInSql && deleteOnInit) {
-            cleanupTables(filteredTablesList);
+            cleanupTables(syncEnabledTablesList);
         }
 
-        List<PollDataSyncConfig> descList = filteredTablesList.stream()
+        List<PollDataSyncConfig> descList = syncEnabledTablesList.stream()
                 .sorted((a, b) -> Integer.compare(b.getTableOrder(), a.getTableOrder())) // Sorting in descending order
                 .toList();
 
@@ -72,7 +74,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             }
         }
 
-        List<PollDataSyncConfig> ascList = filteredTablesList.stream()
+        List<PollDataSyncConfig> ascList = syncEnabledTablesList.stream()
                 .sorted((a, b) -> Integer.compare(a.getTableOrder(), b.getTableOrder())) // Sort by tableOrder ASC
                 .toList();
 
