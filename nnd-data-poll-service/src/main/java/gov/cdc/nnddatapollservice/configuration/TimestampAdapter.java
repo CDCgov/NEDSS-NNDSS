@@ -17,7 +17,9 @@ public class TimestampAdapter {
     @SuppressWarnings("java:S2885")
     private static final List<SimpleDateFormat> dateFormats = Arrays.asList(
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"),  // Existing case
-            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")       // New case
+            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss") ,
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss"),    // ISO format without milliseconds
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS") // ISO format with milliseconds
     );
     // Serializer: Convert Timestamp to JSON
     public static JsonSerializer<Timestamp> getTimestampSerializer() {
