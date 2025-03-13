@@ -37,7 +37,7 @@ public class TimestampAdapter {
                     // Try next format
                 }
             }
-            throw new JsonParseException("Failed to parse Timestamp: " + dateStr);
-        };
+            throw new JsonParseException("Failed to parse Timestamp: " + dateStr + ". Supported formats: " +
+                    dateFormats.stream().map(SimpleDateFormat::toPattern).reduce((a, b) -> a + ", " + b).orElse(""));        };
     }
 }
