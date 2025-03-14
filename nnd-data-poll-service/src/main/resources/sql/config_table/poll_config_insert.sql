@@ -197,8 +197,8 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('CONDITION_CODE', 'SRTE',2, 'condition_cd');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, no_pagination)
-VALUES('CODE_TO_CONDITION', 'SRTE',1, 1);
+(table_name, source_db,table_order, no_pagination, recreate_applied)
+VALUES('CODE_TO_CONDITION', 'SRTE',1, 1, 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('JURISDICTION_CODE', 'SRTE',1, 'code');
