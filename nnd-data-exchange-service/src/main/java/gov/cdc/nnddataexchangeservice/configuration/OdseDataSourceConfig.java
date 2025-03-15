@@ -31,7 +31,7 @@ import java.util.HashMap;
         }
 )
 public class OdseDataSourceConfig {
-    @Value("${spring.datasource.driverClassName}")
+    @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
 
     @Value("${spring.datasource.odse.url}")

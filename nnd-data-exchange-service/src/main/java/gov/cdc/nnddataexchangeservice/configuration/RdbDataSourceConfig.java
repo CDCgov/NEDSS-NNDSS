@@ -32,7 +32,7 @@ import java.util.HashMap;
         }
 )
 public class RdbDataSourceConfig {
-    @Value("${spring.datasource.driverClassName}")
+    @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
 
     @Value("${spring.datasource.rdb.url}")

@@ -1,4 +1,13 @@
 server:
+  tomcat:
+    max-connections: 500
+    connection-timeout: 30000
+    accept-count: 500 # Queue up to # pending requests (avoids dropping)
+    threads:
+      max: 200
+      min-spare: 50 # Keeps warm threads ready for processing
+    keep-alive-timeout: 5000 # Allow connections to be reused (1 min)
+    max-keep-alive-requests: 50 # Prevent excessive keep-alive use
   port: 8081
   servlet:
     context-path: /extraction
@@ -37,9 +46,16 @@ spring:
       on-profile: default
   datasource:
     hikari:
-      connection-timeout: 60000
-      maximum-pool-size: 10
-    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      maximum-pool-size: ${HIKARI_POOL_SIZE:100}
+      connection-timeout: ${HIKARI_CON_TIMEOUT:30000}
+      minimum-idle: ${HIKARI_MINIMUM_IDLE:50}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+      keepalive-time: ${HIKARI_KEEPALIVE_TIME:300000}
+      pool-name: ${HIKARI_POOL_NAME:SQLServerHikariCP}
+      validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
+      leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:60000}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${NBS_DBUSER}
     password: ${NBS_DBPASSWORD}
     msg:
@@ -74,7 +90,7 @@ spring:
       pool-name: ${HIKARI_POOL_NAME:SQLServerHikariCP}
       validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
       leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:60000}
-    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${NBS_DBUSER}
     password: ${NBS_DBPASSWORD}
     msg:
@@ -99,3 +115,7 @@ diserver:
 
 service:
   timezone: ${SERVICE_TZ:UTC}
+
+logging:
+  level:
+    org.apache.coyote.http11: DEBUG

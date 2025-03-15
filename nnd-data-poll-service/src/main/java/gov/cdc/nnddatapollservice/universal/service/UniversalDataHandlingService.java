@@ -46,15 +46,16 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
 
-    protected boolean multiThreadEnabled = false;
+    protected boolean multiThreadApiLevelEnabled = true;
+    protected boolean multiThreadTableLevelEnabled = false;
 
     protected int tableLevelMaxConcurrentThreads = 1;  // Limit to 2 threads running simultaneously
     protected long tableLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task
 
 
-    protected int apiLevelBatchSizeForProcessing = 1; // Process 3 pages (30,000 records) per batch
-    protected int apiLevelInitialConcurrency = 2;    // Start with 10 concurrent tasks
-    protected int apiLevelMaxConcurrency = 2;       // Cap at 50 (half of Hikari pool size for safety)
+    protected int apiLevelBatchSizeForProcessing = 40; // Process 3 pages (30,000 records) per batch
+    protected int apiLevelInitialConcurrency = 80;    // Start with 10 concurrent tasks
+    protected int apiLevelMaxConcurrency = 100;       // Cap at 50 (half of Hikari pool size for safety)
     protected int apiLevelMaxRetries = 5;            // Retry up to 3 times
     protected long apiLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task for large batches
 
@@ -107,7 +108,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         List<PollDataSyncConfig> threadedConfigs = new ArrayList<>();
         List<PollDataSyncConfig> sequentialConfigs = new ArrayList<>();
         for (PollDataSyncConfig config : ascList) {
-            if (config.getTableOrder() == 1 && multiThreadEnabled) {
+            if (config.getTableOrder() == 1 && multiThreadTableLevelEnabled) {
                 threadedConfigs.add(config);
             } else {
                 sequentialConfigs.add(config);
@@ -286,7 +287,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
 
 
-                if (totalRecordCounts >= THREAD_CHECK && multiThreadEnabled
+                if (totalRecordCounts >= THREAD_CHECK && multiThreadApiLevelEnabled
 //                        && !SPECIAL_TABLES.contains(config.getTableName().toUpperCase())
                 ) {
                     processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
@@ -374,62 +375,86 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     Future<?> future = executor.submit(() -> {
                         boolean permitAcquired;
                         int retries = 0;
-                        while (retries < maxRetries) {
-                            try {
-                                semaphore.acquire();
-                                permitAcquired = true;
-                                long startTimeMs = System.currentTimeMillis();
-                                String rawJsonData;
-                                Timestamp timestamp;
-                                String localLogStr = logStr;
-
+                        try {
+                            while (retries < maxRetries) {
                                 try {
-                                    int startRow = pageIndex * batchSize + 1;
-                                    int endRow = Math.min((pageIndex + 1) * batchSize, totalRecordCounts ); // Respect total records
-                                    logger.debug("Processing page {} (rows {}-{})", pageIndex, startRow, endRow);
-                                    String encodedData;
+                                    semaphore.acquire();
+                                    permitAcquired = true;
+                                    long startTimeMs = System.currentTimeMillis();
+                                    String rawJsonData;
+                                    Timestamp timestamp;
+                                    String localLogStr = logStr;
 
-                                    var encodedDataResponse = apiService.callDataExchangeEndpoint(
-                                            config.getTableName(), isInitialLoad, timeStampForPoll, false,
-                                            String.valueOf(startRow), String.valueOf(endRow), false,
-                                            config.isUseKeyPagination(), maxId
-                                    );
+                                    try {
+                                        int startRow = pageIndex * batchSize + 1;
+                                        int endRow = Math.min((pageIndex + 1) * batchSize, totalRecordCounts ); // Respect total records
+                                        logger.debug("Processing page {} (rows {}-{})", pageIndex, startRow, endRow);
+                                        String encodedData;
 
-                                    encodedDataResponse.setLastTotalRecordCount(totalRecordCounts);
-                                    encodedDataResponse.setLastTotalPages(totalPages);
-                                    encodedDataResponse.setLastBatchSize(batchSize);
+                                        var encodedDataResponse = apiService.callDataExchangeEndpoint(
+                                                config.getTableName(), isInitialLoad, timeStampForPoll, false,
+                                                String.valueOf(startRow), String.valueOf(endRow), false,
+                                                config.isUseKeyPagination(), maxId
+                                        );
 
-                                    encodedData = encodedDataResponse.getResponse();
-                                    rawJsonData = encodedData; //iPollCommonService.decodeAndDecompress(encodedData);
-                                    timestamp = getCurrentTimestamp();
+                                        encodedDataResponse.setLastTotalRecordCount(totalRecordCounts);
+                                        encodedDataResponse.setLastTotalPages(totalPages);
+                                        encodedDataResponse.setLastBatchSize(batchSize);
 
-                                    updateDataHelper(encodedDataResponse, timestamp, rawJsonData,
-                                            isInitialLoad, localLogStr, startTime, config);
-                                    break; // Success, exit retry loop
-                                } catch (Exception e) {
-                                    errorCount.incrementAndGet();
-                                    logger.error("Error on page {} (attempt {}/{}): {}", pageIndex, retries + 1, maxRetries, e.getMessage(), e);
-                                    if (retries == maxRetries - 1) {
-                                        throw e; // Final failure
+                                        if (!encodedDataResponse.isSuccess()) {
+                                            var log = new LogResponseModel(CRITICAL_COUNT_LOG
+                                                    + encodedDataResponse.getApiException().getMessage(),
+                                                    getStackTraceAsString(encodedDataResponse.getApiException()),
+                                                    WARNING, startTime, encodedDataResponse);
+                                            iPollCommonService.updateLastUpdatedTimeAndLog(config.getTableName(),startTime , log);
+                                            throw encodedDataResponse.getApiException();
+                                        }
+
+
+                                        encodedData = encodedDataResponse.getResponse();
+                                        rawJsonData = encodedData; //iPollCommonService.decodeAndDecompress(encodedData);
+                                        timestamp = getCurrentTimestamp();
+
+                                        updateDataHelper(encodedDataResponse, timestamp, rawJsonData,
+                                                isInitialLoad, localLogStr, startTime, config);
+                                        break; // Success, exit retry loop
                                     }
-                                    Thread.sleep(2000 * (retries + 1)); // Backoff: 2s, 4s, 6s
-                                } finally {
-                                    long responseTime = System.currentTimeMillis() - startTimeMs;
-                                    totalResponseTime.addAndGet(responseTime);
-                                    int completedTasks = taskCount.incrementAndGet();
-                                    if (completedTasks % 3 == 0) { // Adjust more frequently for small batches
-                                        adjustConcurrency(semaphore, currentConcurrency, errorCount, totalResponseTime, completedTasks, maxConcurrency);
+                                    catch (APIException e) {
+                                        throw e;
                                     }
-                                    if (permitAcquired) {
-                                        semaphore.release();
+                                    catch (Exception e) {
+                                        errorCount.incrementAndGet();
+                                        logger.error("Error on page {} (attempt {}/{}): {}", pageIndex, retries + 1, maxRetries, e.getMessage(), e);
+                                        if (retries == maxRetries - 1) {
+                                            throw e; // Final failure
+                                        }
+                                        Thread.sleep(2000 * (retries + 1)); // Backoff: 2s, 4s, 6s
+                                    } finally {
+                                        long responseTime = System.currentTimeMillis() - startTimeMs;
+                                        totalResponseTime.addAndGet(responseTime);
+                                        int completedTasks = taskCount.incrementAndGet();
+                                        if (completedTasks % 3 == 0) { // Adjust more frequently for small batches
+                                            adjustConcurrency(semaphore, currentConcurrency, errorCount, totalResponseTime, completedTasks, maxConcurrency);
+                                        }
+                                        if (permitAcquired) {
+                                            semaphore.release();
+                                        }
                                     }
                                 }
-                            } catch (InterruptedException | APIException e) {
-                                Thread.currentThread().interrupt();
-                                logger.warn("Task for page {} interrupted", pageIndex);
-                                break; // Exit on interruption
+                                catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    logger.warn("Task for page {} interrupted", pageIndex);
+                                    break; // Exit on interruption
+                                }
                             }
                         }
+//                        catch (APIException e) {
+//                            throw e; // Propagate APIException to outer scope
+//                        }
+                        catch (Exception e) {
+                            throw new RuntimeException("Task failed after retries for page " + pageIndex, e);
+                        }
+
                     });
                     futures.add(future);
                 }
@@ -455,8 +480,13 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     } catch (ExecutionException e) {
                         Throwable cause = e.getCause();
                         logger.error("Task for page {} failed: {}", pageIndex, cause.getMessage(), cause);
-                        if (cause instanceof APIException) {
-                            throw (APIException) cause; // Propagate APIException to escape
+                        if (cause instanceof RuntimeException) {
+                            Throwable rootCause = cause.getCause();
+                            if (rootCause instanceof APIException) {
+                                throw (APIException) rootCause; // Propagate the nested APIException
+                            }
+                        } else if (cause instanceof APIException) {
+                            throw (APIException) cause; // Direct APIException case
                         }
                         failedPages.add(pageIndex);
                     }

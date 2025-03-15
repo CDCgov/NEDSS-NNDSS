@@ -27,7 +27,7 @@ public class TokenService implements ITokenService {
     @Value("${data_exchange.secret}")
     private String clientSecret;
 
-    private final HttpClient httpClient;
+    private HttpClient httpClient;
 
     public TokenService() {
         this.httpClient = HttpClient.newBuilder()
@@ -57,6 +57,13 @@ public class TokenService implements ITokenService {
                             .flatMap(e -> Stream.of(e.getKey(), e.getValue().get(0)))
                             .toArray(String[]::new))
                     .timeout(Duration.ofSeconds(30)) // 30s timeout for token fetch
+                    .build();
+
+            this.httpClient = HttpClient.newBuilder()
+                    .version(HttpClient.Version.HTTP_1_1)
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .executor(Executors.newVirtualThreadPerTaskExecutor()) // Optional, for async callbacks
+                    .followRedirects(HttpClient.Redirect.NORMAL) // Handles redirects properly
                     .build();
 
             // Send request synchronously
