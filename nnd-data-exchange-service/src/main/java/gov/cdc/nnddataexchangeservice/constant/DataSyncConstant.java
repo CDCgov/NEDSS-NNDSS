@@ -8,6 +8,7 @@ public class DataSyncConstant {
     public static final String START_ROW = ":startRow";
     public static final String END_ROW = ":endRow";
     public static final String GREATER_EQUAL = ">=";
+    public static final String GREATER = ">";
     public static final String LESS = "<";
     public static final Integer BYTE_SIZE = 1024;
     public static final String DB_RDB = "RDB";

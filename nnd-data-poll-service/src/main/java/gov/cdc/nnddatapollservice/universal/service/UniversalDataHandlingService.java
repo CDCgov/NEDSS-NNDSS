@@ -214,6 +214,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
             if (config.isUseKeyPagination() && hasOnlyOneKey(config.getKeyList())) {
                 maxId = getMaxId(isInitialLoad, config.getTableName(), config.getKeyList());
+                timestampWithNull = getCurrentTimestamp();
             }
             else {
                 timeStampForPoll = getPollTimestamp(isInitialLoad, config.getTableName());
@@ -553,6 +554,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                                        PollDataSyncConfig config, String logStr,
                                        Timestamp startTime, String maxId,
                                        Integer totalRecordCount) throws APIException {
+        // Total Page count will be zero if no new r
         for (int i = 0; i < totalPages; i++) {
             String rawJsonData = "";
             Timestamp timestamp = null;

@@ -72,7 +72,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private String prepareQuery(String query, boolean initialLoad, String timestamp, boolean useKeyPagination) {
         String operator;
         if (useKeyPagination) {
-            operator = initialLoad ? GREATER_EQUAL : LESS;
+            operator = GREATER;//initialLoad ? GREATER_EQUAL : LESS;
         }
         else {
             operator = initialLoad ? LESS : GREATER_EQUAL;
