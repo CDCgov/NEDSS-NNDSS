@@ -210,9 +210,6 @@ public class DataExchangeController {
             }
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
         }, Executors.newVirtualThreadPerTaskExecutor());
-
-
-
     }
 
     @Operation(
@@ -295,7 +292,6 @@ public class DataExchangeController {
             }
             return new ResponseEntity<>(res, HttpStatus.OK);
         }, Executors.newVirtualThreadPerTaskExecutor());
-
     }
 
     @Operation(

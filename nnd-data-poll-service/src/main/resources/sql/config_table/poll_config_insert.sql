@@ -107,8 +107,8 @@ VALUES('CASE_COUNT', 'RDB',2,
        'CONDITION_KEY, INV_ASSIGNED_DT_KEY, INVESTIGATION_KEY, INVESTIGATOR_KEY, PATIENT_KEY, PHYSICIAN_KEY, REPORTER_KEY, RPT_SRC_ORG_KEY',
        1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, key_list)
-VALUES('CONFIRMATION_METHOD_GROUP', 'RDB',3, 'CONFIRMATION_METHOD_KEY, INVESTIGATION_KEY');
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('CONFIRMATION_METHOD_GROUP', 'RDB',3, 'CONFIRMATION_METHOD_KEY, INVESTIGATION_KEY', 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('GENERIC_CASE', 'RDB',2,
@@ -197,8 +197,8 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('CONDITION_CODE', 'SRTE',2, 'condition_cd');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, no_pagination)
-VALUES('CODE_TO_CONDITION', 'SRTE',1, 1);
+(table_name, source_db,table_order, no_pagination, recreate_applied)
+VALUES('CODE_TO_CONDITION', 'SRTE',1, 1, 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('JURISDICTION_CODE', 'SRTE',1, 'code');

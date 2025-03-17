@@ -1,6 +1,7 @@
 package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
+
 import gov.cdc.nnddatapollservice.configuration.HttpClientProvider;
 import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.service.interfaces.IApiService;
@@ -28,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
 import java.util.stream.Stream;
 
 @Service
@@ -51,10 +53,12 @@ public class ApiService implements IApiService {
 
     private HttpClient httpClient;
 
+
     @Value("${data_exchange.version}")
     private String version;
 
     private final Gson gson = new Gson();
+
     private final Semaphore semaphore = new Semaphore(100); // Max 20 concurrent requests
 
     private final ScheduledExecutorService connectionLogger = Executors.newSingleThreadScheduledExecutor();

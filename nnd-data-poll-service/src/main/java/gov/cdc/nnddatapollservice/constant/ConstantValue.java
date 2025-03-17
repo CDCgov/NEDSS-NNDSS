@@ -22,7 +22,7 @@ public class ConstantValue {
     public static final String CRITICAL_NON_NULL_LOG = "Critical Non Null Log: ";
     public static final String SUCCESS = "SUCCESS";
     public static final String ERROR = "ERROR";
-    public static final String WARNING = "FATAL";
+    public static final String WARNING = "WARNING";
 
     public static final Set<String> SPECIAL_TABLES = new HashSet<>(Arrays.asList(
             "D_INV_HIV",

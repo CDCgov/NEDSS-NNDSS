@@ -90,7 +90,7 @@ spring:
       pool-name: ${HIKARI_POOL_NAME:SQLServerHikariCP}
       validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
       leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:60000}
-    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${NBS_DBUSER}
     password: ${NBS_DBPASSWORD}
     msg:
