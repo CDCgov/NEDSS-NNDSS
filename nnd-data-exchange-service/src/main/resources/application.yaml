@@ -1,7 +1,7 @@
 server:
-#  tomcat:
+  tomcat:
 #    max-connections: 500
-#    connection-timeout: 30000
+    connection-timeout: ${API_CONNECTION_TIMEOUT:30000}
 #    accept-count: 500 # Queue up to # pending requests (avoids dropping)
 #    threads:
 #      max: 200
