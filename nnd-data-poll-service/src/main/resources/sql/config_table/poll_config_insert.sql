@@ -107,8 +107,8 @@ VALUES('CASE_COUNT', 'RDB',2,
        'CONDITION_KEY, INV_ASSIGNED_DT_KEY, INVESTIGATION_KEY, INVESTIGATOR_KEY, PATIENT_KEY, PHYSICIAN_KEY, REPORTER_KEY, RPT_SRC_ORG_KEY',
        1);
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, key_list)
-VALUES('CONFIRMATION_METHOD_GROUP', 'RDB',3, 'CONFIRMATION_METHOD_KEY, INVESTIGATION_KEY');
+(table_name, source_db,table_order, key_list, recreate_applied)
+VALUES('CONFIRMATION_METHOD_GROUP', 'RDB',3, 'CONFIRMATION_METHOD_KEY, INVESTIGATION_KEY', 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('GENERIC_CASE', 'RDB',2,
