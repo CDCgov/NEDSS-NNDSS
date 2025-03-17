@@ -13,18 +13,22 @@ public class LogResponseModel {
     public String status;
     public Timestamp startTime;
 
-    public LogResponseModel() {
-
+    public ApiResponseModel<?> apiResponseModel;
+    public LogResponseModel(ApiResponseModel<?> apiResponseModel) {
+        this.apiResponseModel = apiResponseModel;
     }
 
-    public LogResponseModel(String log, String stackTrace, String status, Timestamp startTime) {
+    public LogResponseModel(String log, String stackTrace, String status, Timestamp startTime, ApiResponseModel<?> apiResponseModel) {
         this.log = log;
         this.stackTrace = stackTrace;
         this.status = status;
         this.startTime = startTime;
+        this.apiResponseModel = apiResponseModel;
     }
 
-    public LogResponseModel(String status) {
+    public LogResponseModel(String status, ApiResponseModel<?> apiResponseModel)
+    {
         this.status = status;
+        this.apiResponseModel = apiResponseModel;
     }
 }

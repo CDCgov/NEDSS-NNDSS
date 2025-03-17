@@ -2,6 +2,7 @@ package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import gov.cdc.nnddatapollservice.configuration.TimestampAdapter;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.*;
 import gov.cdc.nnddatapollservice.service.model.DataExchangeModel;
@@ -20,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,8 +57,11 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
                                   ITransportQOutService transportQOutService,
                                   ITokenService tokenService) {
         this.gson = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
+                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
+                .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
+//                .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
                 .create();
+
         this.icnTransportQOutService = icnTransportQOutService;
         this.netsstTransportService = netsstTransportService;
         this.transportQOutService = transportQOutService;

@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.universal.dao;
 
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
@@ -9,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
 
 @Service
 @Slf4j
@@ -25,10 +28,10 @@ public class UniversalDataPersistentDAO {
         this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
-    public LogResponseModel saveRdbModernData(PollDataSyncConfig config, String jsonData , boolean initialLoad) {
-        logger.info("saveRdbModernData tableName: {}", config.getTableName());
+    public LogResponseModel saveUniversalData(PollDataSyncConfig config, String jsonData , boolean initialLoad, Timestamp timestamp, ApiResponseModel<?> apiResponseModel) {
+        logger.info("saveUniversalData tableName: {}", config.getTableName());
         LogResponseModel logBuilder;
-        logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad);
+        logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad, timestamp, apiResponseModel);
 
 
         return logBuilder;

@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
+import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
 import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHandlingService;
@@ -51,20 +52,13 @@ class DataPullServiceTest {
         verify(dataHandlingService, times(1)).handlingExchangedData();
     }
     @Test
-    void testScheduleRDBDataFetch_Success() throws DataPollException {
+    void testScheduleRDBDataFetch_Success() throws DataPollException, APIException {
         dataPullService.scheduleDataSync();
         verify(universalDataHandlingService, times(1)).handlingExchangedData("RDB");
     }
-    @Test
-    void testScheduleRDBataFetch_Exception() throws DataPollException {
-        doThrow(new DataPollException("Exception")).when(universalDataHandlingService).handlingExchangedData("RDB");
 
-        assertThrows(DataPollException.class, () -> dataPullService.scheduleDataSync());
-
-        verify(universalDataHandlingService, times(1)).handlingExchangedData("RDB");
-    }
     @Test
-    void testScheduleSrteDataFetch_Success() throws DataPollException {
+    void testScheduleSrteDataFetch_Success() throws DataPollException, APIException {
         dataPullService.scheduleDataSync();
         verify(universalDataHandlingService, times(1)).handlingExchangedData("SRTE");
     }

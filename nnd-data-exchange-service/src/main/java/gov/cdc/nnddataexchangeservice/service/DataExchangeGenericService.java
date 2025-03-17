@@ -56,10 +56,10 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 .create();
     }
 
-    public Integer getTotalRecord(String tableName, boolean initialLoad, String timestamp) throws DataExchangeException {
+    public Integer getTotalRecord(String tableName, boolean initialLoad, String param, boolean useKeyPagination) throws DataExchangeException {
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
-        String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, timestamp);
+        String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, param, useKeyPagination);
 
         return executeQueryForTotalRecords(query, dataConfig.getSourceDb());
     }
@@ -69,10 +69,16 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 .orElseThrow(() -> new DataExchangeException("No Table Found"));
     }
 
-    private String prepareQuery(String query, boolean initialLoad, String timestamp) {
-        String operator = initialLoad ? LESS : GREATER_EQUAL;
+    private String prepareQuery(String query, boolean initialLoad, String timestamp, boolean useKeyPagination) {
+        String operator;
+        if (useKeyPagination) {
+            operator = initialLoad ? GREATER_EQUAL : LESS;
+        }
+        else {
+            operator = initialLoad ? LESS : GREATER_EQUAL;
+        }
         return query.replaceAll(OPERATION, operator)
-                .replaceAll(TIME_STAMP_PARAM, "'" + timestamp + "'");
+                .replaceAll(GENERIC_PARAM, "'" + timestamp + "'");
     }
 
     private Integer executeQueryForTotalRecords(String query, String sourceDb) throws DataExchangeException {
@@ -95,8 +101,9 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
     }
 
-    public String getDataForDataSync(String tableName, String timeStamp, String startRow, String endRow,
-                                     boolean initialLoad, boolean allowNull, boolean noPagination) throws DataExchangeException {
+    public String getDataForDataSync(String tableName, String param, String startRow, String endRow,
+                                     boolean initialLoad, boolean allowNull, boolean noPagination,
+                                     boolean keyPagination) throws DataExchangeException {
 
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
@@ -110,18 +117,20 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
         try {
             Callable<String> callable = () -> {
-                String baseQuery = preparePaginationQuery(dataConfig, timeStamp, startRow, endRow, initialLoad, allowNull, noPagination);
+                String baseQuery = preparePaginationQuery(dataConfig, param, startRow, endRow, initialLoad, allowNull, noPagination, keyPagination);
 
                 List<Map<String, Object>> data = executeQueryForData(baseQuery, dataConfig.getSourceDb());
 
                 dataCountHolder.set(data.size());
 
 
-                return DataSimplification.dataCompressionAndEncodeV2(gson, data);
+                return DataSimplification.dataToString(data);
+                //return DataSimplification.dataCompressionAndEncodeV2(data);
             };
 
             return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
         } catch (Exception exception) {
+            exception.printStackTrace();
             log.setStatusSync("ERROR");
             log.setEndTime(getCurrentTimeStamp(tz));
             log.setErrorDesc(exception.getMessage());
@@ -131,8 +140,8 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
     }
 
-    private String preparePaginationQuery(DataSyncConfig dataConfig, String timeStamp, String startRow,
-                                          String endRow, boolean initialLoad, boolean allowNull, boolean noPagination) {
+    private String preparePaginationQuery(DataSyncConfig dataConfig, String param, String startRow,
+                                          String endRow, boolean initialLoad, boolean allowNull, boolean noPagination, boolean keyPagination) {
 
         String baseQuery;
 
@@ -144,13 +153,26 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
         else
         {
-            baseQuery = dataConfig.getQueryWithPagination()
-                    .replaceAll(TIME_STAMP_PARAM, "'" + timeStamp + "'")
-                    .replaceAll(START_ROW, startRow)
-                    .replaceAll(END_ROW, endRow);
+            String operator;
 
-            String operator = initialLoad ? LESS : GREATER_EQUAL;
+            // ISOLATE these two on purpose, keyPagination will use KEY as condition while other will use timestmap
+            // They similar for now but who know what change in future
+            if (keyPagination) {
+                operator = initialLoad ? GREATER_EQUAL : LESS ;
+                baseQuery = dataConfig.getQueryWithPagination()
+                        .replaceAll(GENERIC_PARAM, "'" + param + "'")
+                        .replaceAll(START_ROW, startRow)
+                        .replaceAll(END_ROW, endRow);
+            }
+            else {
+                operator = initialLoad ? LESS : GREATER_EQUAL;
+                baseQuery = dataConfig.getQueryWithPagination()
+                        .replaceAll(GENERIC_PARAM, "'" + param + "'")
+                        .replaceAll(START_ROW, startRow)
+                        .replaceAll(END_ROW, endRow);
+            }
             baseQuery = baseQuery.replaceAll(OPERATION, operator);
+
         }
 
         return baseQuery + ";";

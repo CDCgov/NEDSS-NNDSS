@@ -1,5 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
+import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
@@ -66,39 +67,58 @@ public class DataPullService implements IDataPullService {
         }
     }
     @Scheduled(cron = "${scheduler.cron-data-sync}", zone = "${scheduler.zone}")
-    public void scheduleDataSync() throws DataPollException {
-        logger.info("CRON: {}, TZ: {}", cron, zone);
-        if (rdbPollEnabled) {
-            logger.info("START RDB POLLING");
-            universalDataHandlingService.handlingExchangedData(RDB);
-            logger.info("END RDB POLLING");
+    public void scheduleDataSync() {
+        try {
+            if (rdbPollEnabled) {
+                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("START RDB POLLING");
+                universalDataHandlingService.handlingExchangedData(RDB);
+                logger.info("END RDB POLLING");
+                closePoller();
+            }
+            if (edxActivityEnabled) {
+                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("START EDX POLLING");
+                universalDataHandlingService.handlingExchangedData(NBS_ODSE_EDX);
+                logger.info("END EDX POLLING");
+                closePoller();
+            }
+            if (rdbModernPollEnabled) {
+                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("START RDB MOD POLLING");
+                universalDataHandlingService.handlingExchangedData(RDB_MODERN);
+                logger.info("END RDB MOD POLLING");
+                closePoller();
+            }
+            if (covidDataMartEnabled) {
+                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("START COVID POLLING");
+                universalDataHandlingService.handlingExchangedData(COVID_DATAMART);
+                logger.info("END COVID POLLING");
+                closePoller();
+            }
+            if (odsePollEnabled) {
+                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("START ODSE POLLING");
+                universalDataHandlingService.handlingExchangedData(ODSE_OBS);
+                logger.info("END ODSE POLLING");
+                closePoller();
+            }
+            if (srtePollEnabled) {
+                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("START SRTE POLLING");
+                universalDataHandlingService.handlingExchangedData(SRTE);
+                logger.info("END SRTE POLLING");
+                closePoller();
+            }
+
+        } catch (Exception e) {
+            logger.error("Exception in main Cron job. Shutting down...");
+            logger.error(e.getMessage(), e);
+            closePoller();
         }
-        if (edxActivityEnabled) {
-            logger.info("START EDX POLLING");
-            universalDataHandlingService.handlingExchangedData(NBS_ODSE_EDX);
-            logger.info("END EDX POLLING");
-        }
-        if (rdbModernPollEnabled) {
-            logger.info("START RDB MOD POLLING");
-            universalDataHandlingService.handlingExchangedData(RDB_MODERN);
-            logger.info("END RDB MOD POLLING");
-        }
-        if (covidDataMartEnabled) {
-            logger.info("START COVID POLLING");
-            universalDataHandlingService.handlingExchangedData(COVID_DATAMART);
-            logger.info("END COVID POLLING");
-        }
-        if (odsePollEnabled) {
-            logger.info("START ODSE POLLING");
-            universalDataHandlingService.handlingExchangedData(ODSE_OBS);
-            logger.info("END ODSE POLLING");
-        }
-        if (srtePollEnabled) {
-            logger.info("START SRTE POLLING");
-            universalDataHandlingService.handlingExchangedData(SRTE);
-            logger.info("END SRTE POLLING");
-        }
-        closePoller();
+
+
     }
 
 

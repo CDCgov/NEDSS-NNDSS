@@ -15,8 +15,10 @@ public class PollDataSyncConfig {
     private Timestamp lastUpdateTimeLocalDir;
     private String lastExecutedLog;
     private int tableOrder;
-    private String query;
     private String keyList = "";
     private boolean recreateApplied;
     private boolean noPagination;
+    private boolean useKeyPagination;
+    private boolean apiFatalOnLastRun;
+//    private String lastMaxKey;
 }
