@@ -213,6 +213,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
             if (config.isUseKeyPagination() && hasOnlyOneKey(config.getKeyList())) {
                 maxId = getMaxId(isInitialLoad, config.getTableName(), config.getKeyList());
+                timestampWithNull = getCurrentTimestamp();
             }
             else {
                 timeStampForPoll = getPollTimestamp(isInitialLoad, config.getTableName());

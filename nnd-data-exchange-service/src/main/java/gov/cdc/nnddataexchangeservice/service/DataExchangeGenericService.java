@@ -158,7 +158,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             // ISOLATE these two on purpose, keyPagination will use KEY as condition while other will use timestmap
             // They similar for now but who know what change in future
             if (keyPagination) {
-                operator = initialLoad ? GREATER_EQUAL : LESS ;
+                operator = ">" ;
                 baseQuery = dataConfig.getQueryWithPagination()
                         .replaceAll(GENERIC_PARAM, "'" + param + "'")
                         .replaceAll(START_ROW, startRow)
