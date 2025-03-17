@@ -59,7 +59,7 @@ public class SrteDataSourceConfig {
     @Value("${spring.datasource.hikari.connection-timeout:300000}")
     private long connectionTimeout;
 
-    @Value("${spring.datasource.hikari.pool-name:OdseHikariCP}")
+    @Value("${spring.datasource.hikari.pool-name.srte:OdseHikariCP}")
     private String poolName;
 
     @Value("${spring.datasource.hikari.keepalive-time:300000}")

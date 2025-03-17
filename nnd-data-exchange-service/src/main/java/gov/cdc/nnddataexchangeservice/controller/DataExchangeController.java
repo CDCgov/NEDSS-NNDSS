@@ -18,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.convertTimestampFromString;
 
@@ -174,7 +172,7 @@ public class DataExchangeController {
             }
     )
     @GetMapping(path = "/api/datasync/{tableName}")
-    public CompletableFuture<ResponseEntity<String>> dataSync(@PathVariable String tableName, @RequestParam String timestamp,
+    public ResponseEntity<String> dataSync(@PathVariable String tableName, @RequestParam String timestamp,
                                                               @RequestHeader(name = "startRow", defaultValue = "0", required = false) String startRow,
                                                               @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
                                                               @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
@@ -184,7 +182,6 @@ public class DataExchangeController {
                                                               @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
                                                               @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
                                                               HttpServletRequest request) throws DataExchangeException {
-        return CompletableFuture.supplyAsync(() -> {
 
             if (version == null || version.isEmpty()) {
                 try {
@@ -209,7 +206,6 @@ public class DataExchangeController {
                 throw new RuntimeException(e);
             }
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
-        }, Executors.newVirtualThreadPerTaskExecutor());
     }
 
     @Operation(
@@ -259,39 +255,38 @@ public class DataExchangeController {
             }
     )
     @GetMapping(path = "/api/datasync/count/{tableName}")
-    public CompletableFuture<ResponseEntity<Integer>> dataSyncTotalRecords(@PathVariable String tableName,
+    public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
                                                        @RequestParam String timestamp,
                                                         @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
                                                         @RequestHeader(name = "version", defaultValue = "") String version,
                                                         @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
                                                         @RequestHeader(name = "lastKey", defaultValue = "") String lastKey
                                                         ) throws DataExchangeException {
-        return CompletableFuture.supplyAsync(() -> {
-            if (version == null || version.isEmpty()) {
-                try {
-                    throw new DataExchangeException("Version is Missing");
-                } catch (DataExchangeException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            logger.info("Fetching Data Count for Data Availability, Table {}", tableName);
-            String param = "";
-            if (Boolean.parseBoolean(useKeyPagination)) {
-                param = lastKey;
-            }
-            else {
-                param = convertTimestampFromString(timestamp);
-            }
-
-            Integer res = null;
+        if (version == null || version.isEmpty()) {
             try {
-                res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
+                throw new DataExchangeException("Version is Missing");
             } catch (DataExchangeException e) {
                 throw new RuntimeException(e);
             }
-            return new ResponseEntity<>(res, HttpStatus.OK);
-        }, Executors.newVirtualThreadPerTaskExecutor());
+        }
+
+        logger.info("Fetching Data Count for Data Availability, Table {}", tableName);
+        String param = "";
+        if (Boolean.parseBoolean(useKeyPagination)) {
+            param = lastKey;
+        }
+        else {
+            param = convertTimestampFromString(timestamp);
+        }
+
+        Integer res = null;
+        try {
+            res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
+        } catch (DataExchangeException e) {
+            throw new RuntimeException(e);
+        }
+        return new ResponseEntity<>(res, HttpStatus.OK);
+
     }
 
     @Operation(
