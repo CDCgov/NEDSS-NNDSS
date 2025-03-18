@@ -33,6 +33,7 @@ public interface IPollCommonService {
 
     void updateLogNoTimestamp(String tableName, LogResponseModel logResponseModel);
 
+    List<PollDataSyncConfig> filterSyncEnabledTables(List<PollDataSyncConfig> filteredTablesList);
     String getMaxId(String tableName, String key);
 
     boolean checkInitialLoadForIndividualTable(PollDataSyncConfig config);
