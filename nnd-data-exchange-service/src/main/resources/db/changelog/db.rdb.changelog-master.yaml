@@ -5,14 +5,14 @@ databaseChangeLog:
       runOnChange: true
       changes:
         - sqlFile:
-            path: 000-rdb-db-general-001.sql
+            path: db/rdb/000-rdb-db-general-001.sql
             splitStatements: false
   - changeSet:
       id: 1
       author: liquibase
       changes:
         - sqlFile:
-            path: 001-create-data-sync-config-001.sql
+            path: db/rdb/tables/001-create-data-sync-config-001.sql
             splitStatements: false
   - changeSet:
       id: 2
@@ -20,7 +20,7 @@ databaseChangeLog:
       runOnChange: false
       changes:
         - sqlFile:
-            path: 002-create-data-sync-log-001.sql
+            path: db/rdb/tables/002-create-data-sync-log-001.sql
             splitStatements: false
   - changeSet:
       id: 3
@@ -28,5 +28,5 @@ databaseChangeLog:
       runOnChange: false
       changes:
         - sqlFile:
-            path: 001-generate_data_for_data_sync_config-001.sql
+            path: db/rdb/routines/001-generate_data_for_data_sync_config-001.sql
             splitStatements: false
