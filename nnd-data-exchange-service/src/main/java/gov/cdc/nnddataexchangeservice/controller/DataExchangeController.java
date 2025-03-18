@@ -79,7 +79,8 @@ public class DataExchangeController {
                             name = "compress",
                             description = "Boolean flag to compress the response",
                             schema = @Schema(type = "string", defaultValue = "false"),
-                            required = false)
+                            required = false),
+
             }
     )
     @GetMapping(path = "/api/nnd")
@@ -147,6 +148,26 @@ public class DataExchangeController {
                             name = "allowNull",
                             description = "Flag indicating whether null timestamps are allowed",
                             schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "version",
+                            description = "Version check Flag",
+                            schema = @Schema(type = "string", defaultValue = "1"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "noPagination",
+                            description = "No Pagination check Flag",
+                            schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "useKeyPagination",
+                            description = "Use Key Pagination check Flag",
+                            schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "lastKey",
+                            description = "Last use Key indicator",
+                            schema = @Schema(type = "string", defaultValue = ""),
                             required = false)
             }
     )
@@ -158,21 +179,22 @@ public class DataExchangeController {
                                            @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull,
                                            @RequestHeader(name = "version", defaultValue = "") String version,
                                            @RequestHeader(name = "noPagination", defaultValue = "false") String noPagination,
+                                           @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
+                                           @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
                                            HttpServletRequest request) throws DataExchangeException {
         if (version == null || version.isEmpty()) {
             throw new DataExchangeException("Version is Missing");
         }
 
-        if (request != null) {
-            String clientIp = getClientIp(request); // Retrieve client IP
-            logger.info("Fetching Data for Data Availability, Table: {}, Client IP: {}", tableName, clientIp);
-        } else {
-            logger.info("Fetching Data for Data Availability, Table: {}", tableName);
+        String param = "";
+        if (Boolean.parseBoolean(useKeyPagination)) {
+            param = lastKey;
         }
-
-        var ts = convertTimestampFromString(timestamp);
-        var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, ts, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
-                Boolean.parseBoolean(allowNull), Boolean.parseBoolean(noPagination));
+        else {
+            param = convertTimestampFromString(timestamp);
+        }
+        var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, param, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
+                Boolean.parseBoolean(allowNull), Boolean.parseBoolean(noPagination), Boolean.parseBoolean(useKeyPagination));
         return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
     }
 
@@ -204,6 +226,21 @@ public class DataExchangeController {
                             name = "initialLoad",
                             description = "Flag indicating whether this is an initial data load",
                             schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "version",
+                            description = "Version check Flag",
+                            schema = @Schema(type = "string", defaultValue = "1"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "useKeyPagination",
+                            description = "Use Key Pagination check Flag",
+                            schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "lastKey",
+                            description = "Last use Key indicator",
+                            schema = @Schema(type = "string", defaultValue = ""),
                             required = false)
             }
     )
@@ -211,15 +248,24 @@ public class DataExchangeController {
     public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
                                                        @RequestParam String timestamp,
                                                         @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
-                                                        @RequestHeader(name = "version", defaultValue = "") String version
+                                                        @RequestHeader(name = "version", defaultValue = "") String version,
+                                                        @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
+                                                        @RequestHeader(name = "lastKey", defaultValue = "") String lastKey
                                                         ) throws DataExchangeException {
         if (version == null || version.isEmpty()) {
             throw new DataExchangeException("Version is Missing");
         }
 
         logger.info("Fetching Data Count for Data Availability, Table {}", tableName);
-        var ts = convertTimestampFromString(timestamp);
-        var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), ts);
+        String param = "";
+        if (Boolean.parseBoolean(useKeyPagination)) {
+            param = lastKey;
+        }
+        else {
+            param = convertTimestampFromString(timestamp);
+        }
+
+        var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
@@ -245,24 +291,4 @@ public class DataExchangeController {
         return new ResponseEntity<>(val, HttpStatus.OK);
     }
 
-
-    private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For"); // Check if behind proxy
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP"); // For WebLogic
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr(); // Fallback to direct IP
-        }
-
-        // If multiple IPs exist (e.g., proxies), take the first one
-        if (ip != null && ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-
-        return ip;
-    }
 }

@@ -1,6 +1,8 @@
 package gov.cdc.nnddatapollservice.service.interfaces;
 
+import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 
@@ -8,16 +10,11 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface IPollCommonService {
-    Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException;
-
-    String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                             String startRow, String endRow, boolean noPagination) throws DataPollException;
-
     List<PollDataSyncConfig> getTableListFromConfig();
     boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList);
     String getCurrentTimestamp();
     List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB);
-    LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData);
+    LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData, ApiResponseModel<?> apiResponseModel);
     String getLastUpdatedTime(String tableName);
     void updateLastUpdatedTime(String tableName, Timestamp timestamp);
     String decodeAndDecompress(String base64EncodedData);
@@ -37,4 +34,7 @@ public interface IPollCommonService {
     void updateLogNoTimestamp(String tableName, LogResponseModel logResponseModel);
 
     List<PollDataSyncConfig> filterSyncEnabledTables(List<PollDataSyncConfig> filteredTablesList);
+    String getMaxId(String tableName, String key);
+
+    boolean checkInitialLoadForIndividualTable(PollDataSyncConfig config);
 }

@@ -1,9 +1,11 @@
 package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
+import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
@@ -18,16 +20,29 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -35,18 +50,6 @@ public class PollCommonService implements IPollCommonService {
     private final JdbcTemplateUtil jdbcTemplateUtil;
 
     private static Logger logger = LoggerFactory.getLogger(PollCommonService.class);
-    @Value("${data_exchange.clientId}")
-    private String clientId;
-
-    @Value("${data_exchange.secret}")
-    private String clientSecret;
-
-    @Value("${data_exchange.endpoint_generic}")
-    protected String exchangeEndpoint;
-
-    @Value("${data_exchange.endpoint_generic_total_record}")
-    protected String exchangeTotalRecordEndpoint;
-
 
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
@@ -57,98 +60,11 @@ public class PollCommonService implements IPollCommonService {
     @Value("${datasync.store_in_S3}")
     private boolean s3Sync;
 
-
-    @Value("${data_exchange.version}")
-    private String version;
-
-    private final Gson gson = new Gson();
-
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final ITokenService tokenService;
 
     public PollCommonService(JdbcTemplateUtil jdbcTemplateUtil, ITokenService tokenService) {
         this.jdbcTemplateUtil = jdbcTemplateUtil;
-        this.tokenService = tokenService;
-    }
 
-    public Integer callDataCountEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime) throws DataPollException {
-        try {
-            //Get token
-            var token = tokenService.getToken();
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.add("clientid", clientId);
-            headers.add("clientsecret", clientSecret);
-            headers.add("initialLoad", String.valueOf(isInitialLoad));
-            headers.add("version", version);
-            HttpEntity<String> httpEntity = new HttpEntity<>(headers);
-
-            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
-                    .path("/" + tableName)
-                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
-                    .build()
-                    .toUri();
-
-            HttpHeaders headersForLogging = new HttpHeaders();
-            headers.entrySet().forEach(entry -> {
-                String key = entry.getKey();
-                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
-                || "clientsecret".equalsIgnoreCase(key)) {
-                    headersForLogging.add(key, "");
-                } else {
-                    headersForLogging.put(key, entry.getValue());
-                }
-            });
-            logger.info("API URL: {} , headers: {}", uri, gson.toJson(headersForLogging));
-
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-            return Integer.valueOf(response.getBody());
-        } catch (Exception e) {
-            throw new DataPollException(e.getMessage());
-        }
-    }
-
-    public String callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                                           String startRow, String endRow, boolean noPagination) throws DataPollException {
-        try {
-            //Get token
-            var token = tokenService.getToken();
-            HttpHeaders headers = new HttpHeaders();
-            headers.add("initialLoad", String.valueOf(isInitialLoad));
-            headers.add("allowNull", String.valueOf(allowNull));
-            headers.add("startRow", startRow);
-            headers.add("endRow",  endRow);
-            headers.add("clientid", clientId);
-            headers.add("clientsecret", clientSecret);
-            headers.add("version", version);
-            headers.add("noPagination", String.valueOf(noPagination));
-            headers.setBearerAuth(token);
-            HttpEntity<String> httpEntity = new HttpEntity<>(headers);
-
-            URI uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
-                    .path("/" + tableName)
-                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
-                    .build()
-                    .toUri();
-
-            HttpHeaders headersForLogging = new HttpHeaders();
-            headers.entrySet().forEach(entry -> {
-                String key = entry.getKey();
-                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
-                        || "clientsecret".equalsIgnoreCase(key)) {
-                    headersForLogging.add(key, "");
-                } else {
-                    headersForLogging.put(key, entry.getValue());
-                }
-            });
-            logger.info("API URL: {} , headers: {}", uri, gson.toJson(headersForLogging));
-
-            ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, httpEntity, String.class);
-            return response.getBody();
-        } catch (Exception e) {
-            throw new DataPollException(e.getMessage());
-        }
     }
 
 
@@ -180,6 +96,26 @@ public class PollCommonService implements IPollCommonService {
         }
 
 
+        return true;
+    }
+
+    public boolean checkInitialLoadForIndividualTable(PollDataSyncConfig config) {
+        if(dirSync) {
+            if (config.getLastUpdateTimeLocalDir() != null
+                    && !config.getLastUpdateTimeLocalDir().toString().isBlank()) {
+                return false;
+            }
+
+        } else if (s3Sync) {
+            if (config.getLastUpdateTimeS3() != null
+                    && !config.getLastUpdateTimeS3().toString().isBlank()) {
+                return false;
+            }
+        } else {
+            if (config.getLastUpdateTime() != null && !config.getLastUpdateTime().toString().isBlank()) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -233,11 +169,16 @@ public class PollCommonService implements IPollCommonService {
         return filteredTablesList.stream().filter(configObj -> Objects.equals(configObj.getIsSyncEnabled(), 1)).toList();
     }
 
-    public LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
-        return PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData);
+    public LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp,
+                                                String jsonData, ApiResponseModel<?> apiResponseModel) {
+        return PollServiceUtil.writeJsonToFile(datasyncLocalFilePath, dbSource, tableName, timeStamp, jsonData, apiResponseModel);
     }
 
     public String decodeAndDecompress(String base64EncodedData) {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
+    }
+
+    public String getMaxId(String tableName, String key) {
+        return jdbcTemplateUtil.getMaxId(tableName, key);
     }
 }

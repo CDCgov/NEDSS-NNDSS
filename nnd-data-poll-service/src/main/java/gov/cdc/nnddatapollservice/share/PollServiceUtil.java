@@ -3,6 +3,7 @@ package gov.cdc.nnddatapollservice.share;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.ERROR;
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.SUCCESS;
@@ -29,8 +31,10 @@ public class PollServiceUtil {
         throw new IllegalStateException("PollServiceUtil cannot be instantiated");
     }
 
-    public static LogResponseModel writeJsonToFile(String localfilePath, String dbSource, String tableName, Timestamp timeStamp, String jsonData) {
-        LogResponseModel logResponseModel = new LogResponseModel();
+    public static LogResponseModel writeJsonToFile(String localfilePath, String dbSource, String tableName,
+                                                   Timestamp timeStamp, String jsonData,
+                                                   ApiResponseModel<?> apiResponseModel) {
+        LogResponseModel logResponseModel = new LogResponseModel(apiResponseModel);
         try {
             if (jsonData != null && !jsonData.equalsIgnoreCase("[]") && !jsonData.isEmpty()) {
                 SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FOR_FILE_FORMAT);
@@ -54,13 +58,42 @@ public class PollServiceUtil {
     }
 
     public static List<Map<String, Object>> jsonToListOfMap(String jsonData) {
-        List<Map<String, Object>> list = null;
+        List<Map<String, Object>> list = new ArrayList<>();
         if (jsonData != null && !jsonData.isEmpty()) {
             Gson gson = new GsonBuilder().serializeNulls().create();
-            Type resultType = new TypeToken<List<Map<String, Object>>>() {
-            }.getType();
-            list = gson.fromJson(jsonData, resultType);
+            Type resultType = new TypeToken<List<Map<String, Object>>>() {}.getType();
+            List<Map<String, Object>> tempList = gson.fromJson(jsonData, resultType);
+
+            // Define possible datetime formats (modify if needed)
+            List<DateTimeFormatter> formatters = Arrays.asList(
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"), // ISO format
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+            );
+
+            for (Map<String, Object> record : tempList) {
+                Map<String, Object> convertedRecord = new HashMap<>(record);
+
+                for (Map.Entry<String, Object> entry : record.entrySet()) {
+                    if (entry.getValue() instanceof String) {
+                        String value = (String) entry.getValue();
+
+                        // Attempt to parse if it looks like a date/time string
+                        for (DateTimeFormatter formatter : formatters) {
+                            try {
+                                LocalDateTime parsedDate = LocalDateTime.parse(value, formatter);
+                                convertedRecord.put(entry.getKey(), parsedDate);
+                                break; // Stop checking once it successfully converts
+                            } catch (Exception e) {
+                                // Ignore and continue checking formats
+                            }
+                        }
+                    }
+                }
+                list.add(convertedRecord);
+            }
         }
         return list;
     }
+
 }

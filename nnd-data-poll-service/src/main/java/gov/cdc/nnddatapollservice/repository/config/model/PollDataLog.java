@@ -37,6 +37,21 @@ public class PollDataLog {
     @Column(name = "stack_trace")
     private String stackTrace;
 
+    @Column(name = "last_api_url")
+    private String lastApiUrl;
+
+    @Column(name = "last_api_header")
+    private String lastApiHeader;
+
+    @Column(name = "last_api_record_counts")
+    private Integer lastApiRecordCounts;
+
+    @Column(name = "last_total_pages")
+    private Integer lastTotalPages;
+
+    @Column(name = "last_batch_size")
+    private Integer lastBatchSize;
+
     public PollDataLog() {}
 
     public PollDataLog(LogResponseModel logResponseModel, String tableName) {
@@ -46,5 +61,10 @@ public class PollDataLog {
         this.executedLog = logResponseModel.getLog();
         this.stackTrace = logResponseModel.getStackTrace();
         this.endTime = getCurrentTimestamp();
+        this.lastApiUrl = logResponseModel.getApiResponseModel().getLastApiCall();
+        this.lastApiHeader = logResponseModel.getApiResponseModel().getLastApiHeader();
+        this.lastApiRecordCounts = logResponseModel.getApiResponseModel().getLastTotalRecordCount();
+        this.lastTotalPages = logResponseModel.getApiResponseModel().getLastTotalPages();
+        this.lastBatchSize = logResponseModel.getApiResponseModel().getLastBatchSize();
     }
 }

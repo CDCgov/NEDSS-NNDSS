@@ -65,8 +65,15 @@ spring:
       on-profile: data-generation
   datasource:
     hikari:
-      connection-timeout: 60000
-      maximum-pool-size: 10
+      maximum-pool-size: ${HIKARI_POOL_SIZE:100}
+      connection-timeout: ${HIKARI_CON_TIMEOUT:30000}
+      minimum-idle: ${HIKARI_MINIMUM_IDLE:50}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+      keepalive-time: ${HIKARI_KEEPALIVE_TIME:300000}
+      pool-name: ${HIKARI_POOL_NAME:SQLServerHikariCP}
+      validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
+      leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:60000}
     driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${NBS_DBUSER}
     password: ${NBS_DBPASSWORD}

@@ -1,7 +1,9 @@
 package gov.cdc.nnddatapollservice.service;
 
 import gov.cdc.nnddatapollservice.exception.DataPollException;
+import gov.cdc.nnddatapollservice.service.interfaces.IApiService;
 import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
+import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.share.PollServiceUtil;
@@ -36,6 +38,8 @@ class PollCommonServiceTest {
 
     @Mock
     private RestTemplate restTemplate;
+    @Mock
+    private IApiService apiService;
     @InjectMocks
     private PollCommonService iPollCommonService;
 
@@ -44,45 +48,7 @@ class PollCommonServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void testCallDataCountEndpoint_Success() {
-        // Arrange
-        iPollCommonService.exchangeTotalRecordEndpoint = "http://ip.jsontest.com/";
-        String tableName = "NRT_OBSERVATION";
-        boolean isInitialLoad = true;
-        String lastUpdatedTime = "2024-10-01";
-        String token = "sampleToken";
 
-        when(tokenService.getToken()).thenReturn(token);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        headers.add("clientid", "clientId");
-        headers.add("clientsecret", "clientSecret");
-        headers.add("initialLoad", String.valueOf(isInitialLoad));
-
-        when(tokenService.getToken()).thenReturn("testtoken");
-
-        ResponseEntity<String> mockResponse = ResponseEntity.ok("Mock Response Body");
-        when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
-                .thenReturn(mockResponse);
-
-        // Act
-        assertThrows(DataPollException.class,
-                () ->
-                        iPollCommonService.callDataCountEndpoint(tableName, isInitialLoad, lastUpdatedTime));
-
-    }
-
-
-    @Test
-    void testPersistingExchangeData_Exception() {
-        String timestamp = "2024-09-15 10:15:20.123";
-        assertThrows(DataPollException.class, () -> iPollCommonService
-                .callDataExchangeEndpoint("TEST_TABLE", true, timestamp,
-                        true, "0", "1", false));
-
-        verify(tokenService, times(1)).getToken();
-    }
 
     @Test
     void checkPollingIsInitailLoad_true() {
@@ -91,7 +57,6 @@ class PollCommonServiceTest {
         config.setTableName("D_ORGANIZATION");
         config.setLastUpdateTime(null);
         config.setTableOrder(1);
-        config.setQuery("");
         config.setIsSyncEnabled(1);
         configTableList.add(config);
 
@@ -106,7 +71,6 @@ class PollCommonServiceTest {
         config.setTableName("D_ORGANIZATION");
         config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(1);
-        config.setQuery("");
         config.setIsSyncEnabled(1);
         configTableList.add(config);
 
@@ -127,7 +91,6 @@ class PollCommonServiceTest {
         config.setTableName("D_ORGANIZATION");
         config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(1);
-        config.setQuery("");
         config.setIsSyncEnabled(1);
         configTableList.add(config);
 
@@ -158,7 +121,6 @@ class PollCommonServiceTest {
         config.setTableName("D_ORGANIZATION");
         config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(1);
-        config.setQuery("");
         config.setSourceDb("RDB");
         config.setIsSyncEnabled(1);
         configTableList.add(config);
@@ -174,7 +136,6 @@ class PollCommonServiceTest {
         config.setTableName("D_ORGANIZATION");
         config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(1);
-        config.setQuery("");
         config.setIsSyncEnabled(1);
         configTableList.add(config);
 
@@ -191,7 +152,6 @@ class PollCommonServiceTest {
         config.setTableName("D_ORGANIZATION");
         config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
         config.setTableOrder(1);
-        config.setQuery("");
         config.setIsSyncEnabled(0);
         configTableList.add(config);
 
@@ -211,11 +171,15 @@ class PollCommonServiceTest {
     void writeJsonDataToFile() {
         ReflectionTestUtils.setField(iPollCommonService, "datasyncLocalFilePath", System.getProperty("java.io.tmpdir"));
         try (MockedStatic<PollServiceUtil> mocked = Mockito.mockStatic(PollServiceUtil.class)) {
-            mocked.when(() -> PollServiceUtil.writeJsonToFile(any(), any(), anyString(), any(), anyString()))
+            mocked.when(() -> PollServiceUtil.writeJsonToFile(any(), any(), anyString(), any(), anyString(), any()))
                     .thenAnswer((Answer<Void>) invocation -> null);
-            iPollCommonService.writeJsonDataToFile("RDB", "TEST_TABLE",
-                    TimestampUtil.getCurrentTimestamp(), "TEST DATA");
-            mocked.verify(() -> PollServiceUtil.writeJsonToFile(any(), any(), any(), any(), any()));
+            iPollCommonService.writeJsonDataToFile(
+                    "RDB",
+                    "TEST_TABLE",
+                    TimestampUtil.getCurrentTimestamp(),
+                    "TEST DATA",
+                    new ApiResponseModel());
+            mocked.verify(() -> PollServiceUtil.writeJsonToFile(any(), any(), any(), any(), any(), any()));
         }
     }
 
@@ -257,7 +221,7 @@ class PollCommonServiceTest {
         String log = "Update successful";
 
         // Act
-        iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, new LogResponseModel());
+        iPollCommonService.updateLastUpdatedTimeAndLog(tableName, timestamp, new LogResponseModel(new ApiResponseModel<>()));
 
         // Assert
         verify(jdbcTemplateUtil, times(1)).updateLastUpdatedTimeAndLog(eq(tableName), eq(timestamp), any());
@@ -271,7 +235,7 @@ class PollCommonServiceTest {
         String log = "S3 Update successful";
 
         // Act
-        iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, new LogResponseModel());
+        iPollCommonService.updateLastUpdatedTimeAndLogS3(tableName, timestamp, new LogResponseModel(new ApiResponseModel<>()));
 
         // Assert
         verify(jdbcTemplateUtil, times(1)).updateLastUpdatedTimeAndLogS3(eq(tableName), eq(timestamp), any());
@@ -285,7 +249,7 @@ class PollCommonServiceTest {
         String log = "Local Dir Update successful";
 
         // Act
-        iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, new LogResponseModel());
+        iPollCommonService.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, new LogResponseModel(new ApiResponseModel<>()));
 
         // Assert
         verify(jdbcTemplateUtil, times(1)).updateLastUpdatedTimeAndLogLocalDir(eq(tableName),

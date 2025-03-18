@@ -1,5 +1,9 @@
 package gov.cdc.nnddatapollservice.constant;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public class ConstantValue {
     public static final String LOG_SUCCESS = "SUCCESS";
     public static final String RDB_MODERN = "RDB_MODERN";
@@ -18,4 +22,16 @@ public class ConstantValue {
     public static final String CRITICAL_NON_NULL_LOG = "Critical Non Null Log: ";
     public static final String SUCCESS = "SUCCESS";
     public static final String ERROR = "ERROR";
+    public static final String WARNING = "WARNING";
+
+    public static final Set<String> SPECIAL_TABLES = new HashSet<>(Arrays.asList(
+            "D_INV_HIV",
+            "D_INV_ADMINISTRATIVE",
+            "D_INV_EPIDEMIOLOGY",
+            "D_INV_LAB_FINDING",
+            "D_INV_MEDICAL_HISTORY",
+            "D_INV_RISK_FACTOR",
+            "D_INV_TREATMENT",
+            "D_INV_VACCINATION"
+    ));
 }
