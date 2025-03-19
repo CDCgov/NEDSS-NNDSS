@@ -290,7 +290,7 @@ public class DataExchangeController {
                             required = true,
                             schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.QUERY,
-                            name = "sourceDb",
+                            name = "sourcedb",
                             description = "Source DB",
                             required = true,
                             schema = @Schema(type = "string")),
@@ -302,16 +302,15 @@ public class DataExchangeController {
 
             }
     )
-    @GetMapping(path = "/api/datasync/count/{tableName}")
+    @GetMapping(path = "/api/datasync/metadata/{tableName}")
     public ResponseEntity<?> dataSyncMetaData(@PathVariable String tableName,
                                               @RequestHeader(name = "version", defaultValue = "") String version,
-                                              @RequestParam String sourceDb,
                                               HttpServletRequest request) throws DataExchangeException {
             if (version == null || version.isEmpty()) {
                 throw new DataExchangeException("Version is Missing");
             }
 
-            var res = dataExchangeGenericService.getTableMetaData(tableName, sourceDb);
+            var res = dataExchangeGenericService.getTableMetaData(tableName);
             return new ResponseEntity<>(res, HttpStatus.OK);
 
     }

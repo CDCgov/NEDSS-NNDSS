@@ -102,8 +102,9 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
     }
 
-    public String getTableMetaData(String tableName, String sourceDb) throws DataExchangeException {
-        List<Map<String, Object>> data = new ArrayList<>();
+    public String getTableMetaData(String tableName) throws DataExchangeException {
+        DataSyncConfig dataConfig = getConfigByTableName(tableName);
+        List<Map<String, Object>> data;
 
         try {
             String query = """
@@ -118,20 +119,20 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 AND TABLE_SCHEMA = 'dbo'
             """;
 
-            if (sourceDb.equalsIgnoreCase(DB_RDB)) {
+            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_RDB)) {
                 data = jdbcTemplate.queryForList(query, tableName);
             }
-            else if (sourceDb.equalsIgnoreCase(DB_SRTE)) {
+            else if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
                 data = srteJdbcTemplate.queryForList(query, tableName);
             }
-            else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
+            else if (dataConfig.getSourceDb().equalsIgnoreCase(DB_RDB_MODERN)) {
                 data = rdbModernJdbcTemplate.queryForList(query,tableName);
             }
-            else if (sourceDb.equalsIgnoreCase("NBS_ODSE")) {
+            else if (dataConfig.getSourceDb().equalsIgnoreCase("NBS_ODSE")) {
                 data = odseJdbcTemplate.queryForList(query, tableName);
             }
             else {
-                throw new DataExchangeException("Database Not Supported: " + sourceDb);
+                throw new DataExchangeException("Database Not Supported: " + dataConfig.getSourceDb());
             }
         } catch (Exception e) {
             throw new DataExchangeException("Error retrieving metadata for table: " + tableName);
