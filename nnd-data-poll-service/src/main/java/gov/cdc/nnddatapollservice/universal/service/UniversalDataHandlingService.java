@@ -52,9 +52,9 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected int tableLevelMaxConcurrentThreads = 1;  // Limit to 2 threads running simultaneously
     protected long tableLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task
 
-    protected int apiLevelBatchSizeForProcessing = 40; // Process 3 pages (30,000 records) per batch
-    protected int apiLevelInitialConcurrency = 80;    // Start with 10 concurrent tasks
-    protected int apiLevelMaxConcurrency = 100;       // Cap at 50 (half of Hikari pool size for safety)
+    protected int apiLevelBatchSizeForProcessing = 10; // Process 3 pages (30,000 records) per batch
+    protected int apiLevelInitialConcurrency = 20;    // Start with 10 concurrent tasks
+    protected int apiLevelMaxConcurrency = 40;       // Cap at 50 (half of Hikari pool size for safety)
 
     protected int apiLevelMaxRetries = 5;            // Retry up to 3 times
     protected long apiLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task for large batches
