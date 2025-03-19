@@ -1,3 +1,5 @@
+DELETE FROM [dbo].[data_sync_config];
+
 IF
 NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'D_PATIENT')
 BEGIN
@@ -193,21 +195,6 @@ VALUES
     'SELECT * FROM D_ORGANIZATION WHERE D_ORGANIZATION.ORGANIZATION_LAST_CHANGE_TIME IS NULL;',
     'SELECT COUNT(*) FROM D_ORGANIZATION WHERE D_ORGANIZATION.ORGANIZATION_LAST_CHANGE_TIME :operator :timestamp;',
     'WITH PaginatedResults AS (SELECT *, ROW_NUMBER() OVER (ORDER BY ORGANIZATION_KEY) AS RowNum FROM D_ORGANIZATION WHERE D_ORGANIZATION.ORGANIZATION_LAST_CHANGE_TIME :operator :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
-END;
-
-
-
-IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'D_PCR_SOURCE')
-BEGIN
-INSERT INTO [RDB].[dbo].[data_sync_config]
-(table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
-VALUES
-    ('D_PCR_SOURCE', 'RDB',
-    'SELECT D_PCR_SOURCE.* FROM D_PCR_SOURCE',
-    NULL,
-    'SELECT COUNT(*) FROM D_PCR_SOURCE',
-    'WITH PaginatedResults AS (SELECT D_PCR_SOURCE.*, ROW_NUMBER() OVER (ORDER BY D_PCR_SOURCE.D_PCR_SOURCE_KEY, D_PCR_SOURCE.VAR_PAM_UID) AS RowNum FROM D_PCR_SOURCE)
-     SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow');
 END;
 
 
