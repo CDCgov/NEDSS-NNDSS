@@ -12,14 +12,22 @@ server:
   servlet:
     context-path: /extraction
 
+info:
+  app:
+    name: DataSync (NND) API
+
 management:
   endpoint:
     prometheus:
       enabled: true
+    health:
+      show-details: always
+      roles: ADMIN
   endpoints:
     web:
+      base-path: /actuator
       exposure:
-        include: '*'
+        include: "health,info"
   prometheus:
     metrics:
       export:
@@ -84,6 +92,8 @@ diserver:
 
 service:
   timezone: ${SERVICE_TZ:UTC}
+
+
 
 #logging:
 #  level:
