@@ -215,7 +215,6 @@ public class ApiService implements IApiService {
                             .flatMap(e -> Stream.of(e.getKey(), e.getValue().get(0)))
                             .toArray(String[]::new))
                     .timeout(Duration.ofSeconds(120)) // Read timeout
-//                    .header("Connection", "keep-alive")
                     .build();
 
 

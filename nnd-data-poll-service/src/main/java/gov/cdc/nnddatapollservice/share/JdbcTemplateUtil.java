@@ -329,13 +329,12 @@ public class JdbcTemplateUtil {
                     errors.add(ei.getMessage());
                 }
                 anyErrorException = ei;
-//                if (ei instanceof DataIntegrityViolationException) // NOSONAR
-//                {
-//                    logger.debug("Duplicated Key Exception Resolved");
-//                }
-//                else {
+                if (ei instanceof DataIntegrityViolationException) // NOSONAR
+                {
+                    logger.debug("Duplicated Key Exception Resolved");
+                }
+                else {
                     logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
-
                     LogResponseModel logModel = new LogResponseModel(
                             ei.getMessage(),getStackTraceAsString(ei),
                             ERROR, startTime, apiResponseModel);
@@ -346,7 +345,7 @@ public class JdbcTemplateUtil {
                                     + "/" + config.getSourceDb() + "/"
                                     + ei.getClass().getSimpleName()
                                     + "/" + config.getTableName() + "/");
-//                }
+                }
 
             }
         }
@@ -359,7 +358,7 @@ public class JdbcTemplateUtil {
             Gson gson = new Gson();
             String jsonString = gson.toJson(errors);
             log.setStatus(WARNING);
-            log.setLog(errorCount + " FAILED UPSERT OR SINGLE INSERTION at resolver level, failed data had been written to file log");
+            log.setLog(errorCount + " FAILED UPSERT OR SINGLE INSERTION at resolver level");
             log.setStackTrace(jsonString);
         }
         return log;

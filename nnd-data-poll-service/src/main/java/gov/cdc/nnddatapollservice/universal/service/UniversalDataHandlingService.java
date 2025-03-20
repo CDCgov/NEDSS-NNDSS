@@ -49,15 +49,24 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected boolean multiThreadApiLevelEnabled = true;
     protected boolean multiThreadTableLevelEnabled = false;
 
-    protected int tableLevelMaxConcurrentThreads = 1;  // Limit to 2 threads running simultaneously
-    protected long tableLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task
+    // These are table level task - probably dont need this
+    protected int tableLevelMaxConcurrentThreads = 1;
+    protected long tableLevelTimeoutPerTaskMs = 120_000;
 
-    protected int apiLevelBatchSizeForProcessing = 10; // Process 3 pages (30,000 records) per batch
-    protected int apiLevelInitialConcurrency = 20;    // Start with 10 concurrent tasks
-    protected int apiLevelMaxConcurrency = 40;       // Cap at 50 (half of Hikari pool size for safety)
+    // Determine how many pages are processed in a single batch, if page container 10k record each, 3x pages. 30k will be processed
+    protected int apiLevelBatchSizeForProcessing = 10;
 
-    protected int apiLevelMaxRetries = 5;            // Retry up to 3 times
-    protected long apiLevelTimeoutPerTaskMs = 120_000; // 2 minutes per task for large batches
+    // Initial starter number of task - if 20 then the system begin with 20 parallel task
+    protected int apiLevelInitialConcurrency = 20;
+
+    // Task max limit, ex: no more than 40 task running in parallel
+    protected int apiLevelMaxConcurrency = 40;
+
+    // Retry if task failed,
+    protected int apiLevelMaxRetries = 5;
+
+    // if task hit timeout it will be terminated, 120_000 == 2 min
+    protected long apiLevelTimeoutPerTaskMs = 120_000;
 
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
     private final IPollCommonService iPollCommonService;
@@ -349,21 +358,16 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected void processingDataBatchMultiThreadSemaphore(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
                                                            PollDataSyncConfig config, String logStr,
                                                            Timestamp startTime, int totalRecordCounts, String maxId) throws APIException {
-        int batchSizeForProcessing = apiLevelBatchSizeForProcessing; // Process 3 pages (30,000 records) per batch
-        int initialConcurrency = apiLevelInitialConcurrency;    // Start with 10 concurrent tasks
-        int maxConcurrency = apiLevelMaxConcurrency;       // Cap at 50 (half of Hikari pool size for safety)
-        int maxRetries = apiLevelMaxRetries;            // Retry up to 3 times
-        long timeoutPerTaskMs = apiLevelTimeoutPerTaskMs; // 2 minutes per task for large batches
 
         logger.info("Starting processing of {} pages (batchSize={}) in batches of {} with concurrency {}-{}",
-                totalPages, batchSize, batchSizeForProcessing, initialConcurrency, maxConcurrency);
+                totalPages, batchSize, apiLevelBatchSizeForProcessing, apiLevelInitialConcurrency, apiLevelMaxConcurrency);
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            for (int start = 0; start < totalPages; start += batchSizeForProcessing) {
-                int end = Math.min(start + batchSizeForProcessing, totalPages);
+            for (int start = 0; start < totalPages; start += apiLevelBatchSizeForProcessing) {
+                int end = Math.min(start + apiLevelBatchSizeForProcessing, totalPages);
                 List<Future<?>> futures = new ArrayList<>(end - start);
-                Semaphore semaphore = new Semaphore(initialConcurrency);
-                AtomicInteger currentConcurrency = new AtomicInteger(initialConcurrency);
+                Semaphore semaphore = new Semaphore(apiLevelInitialConcurrency);
+                AtomicInteger currentConcurrency = new AtomicInteger(apiLevelInitialConcurrency);
                 AtomicInteger errorCount = new AtomicInteger(0);
                 AtomicLong totalResponseTime = new AtomicLong(0);
                 AtomicInteger taskCount = new AtomicInteger(0);
@@ -377,14 +381,13 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         boolean permitAcquired;
                         int retries = 0;
                         try {
-                            while (retries < maxRetries) {
+                            while (retries < apiLevelMaxRetries) {
                                 try {
                                     semaphore.acquire();
                                     permitAcquired = true;
                                     long startTimeMs = System.currentTimeMillis();
                                     String rawJsonData;
                                     Timestamp timestamp;
-                                    String localLogStr = logStr;
 
                                     try {
                                         int startRow = pageIndex * batchSize + 1;
@@ -413,11 +416,11 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
 
                                         encodedData = encodedDataResponse.getResponse();
-                                        rawJsonData = encodedData; //iPollCommonService.decodeAndDecompress(encodedData);
+                                        rawJsonData = encodedData;
                                         timestamp = getCurrentTimestamp();
 
                                         updateDataHelper(encodedDataResponse, timestamp, rawJsonData,
-                                                isInitialLoad, localLogStr, startTime, config);
+                                                isInitialLoad, logStr, startTime, config);
                                         break; // Success, exit retry loop
                                     }
                                     catch (APIException e) {
@@ -425,8 +428,8 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                                     }
                                     catch (Exception e) {
                                         errorCount.incrementAndGet();
-                                        logger.error("Error on page {} (attempt {}/{}): {}", pageIndex, retries + 1, maxRetries, e.getMessage(), e);
-                                        if (retries == maxRetries - 1) {
+                                        logger.error("Error on page {} (attempt {}/{}): {}", pageIndex, retries + 1, apiLevelMaxRetries, e.getMessage(), e);
+                                        if (retries == apiLevelMaxRetries - 1) {
                                             throw e; // Final failure
                                         }
                                         Thread.sleep(2000 * (retries + 1)); // Backoff: 2s, 4s, 6s
@@ -435,7 +438,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                                         totalResponseTime.addAndGet(responseTime);
                                         int completedTasks = taskCount.incrementAndGet();
                                         if (completedTasks % 3 == 0) { // Adjust more frequently for small batches
-                                            adjustConcurrency(semaphore, currentConcurrency, errorCount, totalResponseTime, completedTasks, maxConcurrency);
+                                            adjustConcurrency(semaphore, currentConcurrency, errorCount, totalResponseTime, completedTasks, apiLevelMaxConcurrency);
                                         }
                                         if (permitAcquired) {
                                             semaphore.release();
@@ -449,9 +452,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                                 }
                             }
                         }
-//                        catch (APIException e) {
-//                            throw e; // Propagate APIException to outer scope
-//                        }
                         catch (Exception e) {
                             throw new RuntimeException("Task failed after retries for page " + pageIndex, e);
                         }
@@ -466,10 +466,10 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     Future<?> future = futures.get(i);
                     int pageIndex = start + i;
                     try {
-                        future.get(timeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                        future.get(apiLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
                         completedTasks++;
                     } catch (TimeoutException e) {
-                        logger.error("Task for page {} timed out after {} ms", pageIndex, timeoutPerTaskMs);
+                        logger.error("Task for page {} timed out after {} ms", pageIndex, apiLevelTimeoutPerTaskMs);
                         future.cancel(true); // Cancel to free resources
                         failedPages.add(pageIndex); // Mark for reprocessing
                     } catch (InterruptedException e) {
@@ -492,8 +492,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     }
                 }
 
-                logger.info("Batch completed: {}/{} pages processed (total so far: {})",
-                        completedTasks, end - start, start + completedTasks);
+                logger.info("Batch completed: {}/{} pages processed (total so far: {})", completedTasks, end - start, start + completedTasks);
                 if (completedTasks < end - start) {
                     logger.warn("Batch processed fewer pages than expected: {} < {}", completedTasks, end - start);
                 }
