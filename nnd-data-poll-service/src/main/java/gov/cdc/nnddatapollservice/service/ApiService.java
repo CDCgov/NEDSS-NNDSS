@@ -75,7 +75,7 @@ public class ApiService implements IApiService {
             Process process = Runtime.getRuntime().exec("netstat -anp tcp | grep ESTABLISHED | wc -l");
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String activeConnections = reader.readLine().trim();
-            logger.info("Active API connections: {}", activeConnections);
+            logger.info("Active API (MAIN) connections: {}", activeConnections);
         } catch (IOException e) {
             logger.error("Failed to check active connections", e);
         }

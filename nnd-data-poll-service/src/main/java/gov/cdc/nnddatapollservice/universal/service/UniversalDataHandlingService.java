@@ -52,7 +52,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected boolean multiThreadTableLevelEnabled = false;
     @Value("${thread.table-level.max-concurrency}")
     protected int tableLevelMaxConcurrentThreads = 1;
-    @Value("${thread.table-level.timeout}")
+//    @Value("${thread.table-level.timeout}")
     protected long tableLevelTimeoutPerTaskMs = 120_000;
 
     @Value("${thread.processer-level.enabled}")
@@ -60,23 +60,23 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     // Determine how many pages are processed in a single batch, if page container 10k record each, 3x pages. 30k will be processed
     @Value("${thread.processer-level.batch-size}")
-    protected int apiLevelBatchSizeForProcessing = 10;
+    protected int apiLevelBatchSizeForProcessing = 40;
 
     // Initial starter number of task - if 20 then the system begin with 20 parallel task
     @Value("${thread.processer-level.initial-concurrency}")
-    protected int apiLevelInitialConcurrency = 20;
+    protected int apiLevelInitialConcurrency = 80;
 
     // Task max limit, ex: no more than 40 task running in parallel
     @Value("${thread.processer-level.max-concurrency}")
-    protected int apiLevelMaxConcurrency = 40;
+    protected int apiLevelMaxConcurrency = 160;
 
     // Retry if task failed
     @Value("${thread.processer-level.max-retry}")
     protected int apiLevelMaxRetries = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-    @Value("${thread.processer-level.timeout}")
-    protected long apiLevelTimeoutPerTaskMs = 120_000;
+//    @Value("${thread.processer-level.timeout}")
+    protected long apiLevelTimeoutPerTaskMs = 600_000;
 
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
     private final IPollCommonService iPollCommonService;

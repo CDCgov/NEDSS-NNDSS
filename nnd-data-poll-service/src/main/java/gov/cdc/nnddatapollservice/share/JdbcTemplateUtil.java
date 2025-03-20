@@ -56,19 +56,19 @@ public class JdbcTemplateUtil {
 
     // Initial starter number of task - if 20 then the system begin with 20 parallel task
     @Value("${thread.jdbc-level.initial-concurrency}")
-    protected int jdbcLevelInitialConcurrency = 20;
+    protected int jdbcLevelInitialConcurrency = 80;
 
     // Task max limit, ex: no more than 40 task running in parallel
     @Value("${thread.jdbc-level.max-concurrency}")
-    protected int jdbcLevelMaxConcurrency = 40;
+    protected int jdbcLevelMaxConcurrency = 160;
 
     // Retry if task failed
     @Value("${thread.jdbc-level.max-retry}")
     protected int jdbcLevelMaxRetry = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-    @Value("${thread.jdbc-level.timeout}")
-    protected long jdbcLevelTimeoutPerTaskMs = 120_000;
+//    @Value("${thread.jdbc-level.timeout}")
+    protected long jdbcLevelTimeoutPerTaskMs = 600_000;
 
     public JdbcTemplateUtil(PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError) {
         this.pollDataLogRepository = pollDataLogRepository;
