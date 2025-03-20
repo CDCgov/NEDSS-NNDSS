@@ -306,6 +306,7 @@ public class JdbcTemplateUtil {
                                             SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
                                             ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
         boolean anyError = false;
+        boolean anyFatal = false;
         List<String> errors = new ArrayList<>();
         Exception anyErrorException = null;
         Long errorCount = 0L;
@@ -334,6 +335,7 @@ public class JdbcTemplateUtil {
                     logger.debug("Duplicated Key Exception Resolved");
                 }
                 else {
+                    anyFatal = true;
                     logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
                     LogResponseModel logModel = new LogResponseModel(
                             ei.getMessage(),getStackTraceAsString(ei),
@@ -357,8 +359,12 @@ public class JdbcTemplateUtil {
         else {
             Gson gson = new Gson();
             String jsonString = gson.toJson(errors);
-            log.setStatus(WARNING);
-            log.setLog(errorCount + " FAILED UPSERT OR SINGLE INSERTION at resolver level");
+            if (anyFatal) {
+                log.setStatus(ERROR);
+            } else {
+                log.setStatus(WARNING);
+            }
+            log.setLog(errorCount + " Issues occurred during UPSERT/SINGLE INSERTION at resolver level");
             log.setStackTrace(jsonString);
         }
         return log;
