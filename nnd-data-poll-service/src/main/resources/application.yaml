@@ -73,6 +73,18 @@ scheduler:
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *
   # 0 (start at zero sec), * (run every min),  0-2 (run during 12 am to 3 am), * (run every day), * (run every month), * (run every year)
+thread:
+  processer-level:
+      enabled: ${THREAD_PROCESSOR_LEVEL_ENABLED:false}
+      batch-size: ${THREAD_PROCESSOR_LEVEL_BATCH_SIZE:10}
+      initial-concurrency: ${THREAD_PROCESSOR_LEVEL_INIT_CONCURRENCY:20}
+      max-concurrency: ${THREAD_PROCESSOR_LEVEL_MAX_CONCURRENCY:40}
+      max-retry: ${THREAD_PROCESSOR_LEVEL_MAX_RETRY:5}
+      timeout: ${THREAD_PROCESSOR_TIMEOUT:120_000}
+  table-level:
+      enabled: false
+      max-concurrency: 1
+      timeout: 120_000
 ---
 spring:
   main:

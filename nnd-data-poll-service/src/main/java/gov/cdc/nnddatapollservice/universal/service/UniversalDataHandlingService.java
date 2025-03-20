@@ -46,26 +46,36 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
 
-    protected boolean multiThreadApiLevelEnabled = true;
-    protected boolean multiThreadTableLevelEnabled = false;
 
     // These are table level task - probably dont need this
+    @Value("${thread.table-level.enabled}")
+    protected boolean multiThreadTableLevelEnabled = false;
+    @Value("${thread.table-level.max-concurrency}")
     protected int tableLevelMaxConcurrentThreads = 1;
+    @Value("${thread.table-level.timeout}")
     protected long tableLevelTimeoutPerTaskMs = 120_000;
 
+    @Value("${thread.processer-level.enabled}")
+    protected boolean multiThreadApiLevelEnabled = true;
+
     // Determine how many pages are processed in a single batch, if page container 10k record each, 3x pages. 30k will be processed
+    @Value("${thread.processer-level.batch-size}")
     protected int apiLevelBatchSizeForProcessing = 10;
 
     // Initial starter number of task - if 20 then the system begin with 20 parallel task
+    @Value("${thread.processer-level.initial-concurrency}")
     protected int apiLevelInitialConcurrency = 20;
 
     // Task max limit, ex: no more than 40 task running in parallel
+    @Value("${thread.processer-level.max-concurrency}")
     protected int apiLevelMaxConcurrency = 40;
 
-    // Retry if task failed,
+    // Retry if task failed
+    @Value("${thread.processer-level.max-retry}")
     protected int apiLevelMaxRetries = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
+    @Value("${thread.processer-level.timeout}")
     protected long apiLevelTimeoutPerTaskMs = 120_000;
 
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
@@ -148,7 +158,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                             permitAcquired = true;
 
                             logger.debug("Processing PollDataSyncConfig (threaded) at index {}: {}", index, pollDataSyncConfig.getTableName());
-                            pollAndPersistData(isInitialLoad, pollDataSyncConfig);
+                            pollAndPersistData(pollDataSyncConfig);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                             logger.warn("Task for PollDataSyncConfig (threaded) at index {} interrupted", index);
@@ -200,18 +210,18 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         }
 
         for (PollDataSyncConfig pollDataSyncConfig : sequentialConfigs) {
-            pollAndPersistData(isInitialLoad, pollDataSyncConfig);
+            pollAndPersistData(pollDataSyncConfig);
         }
 
     }
 
     @SuppressWarnings({"java:S1141","java:S3776"})
-    protected void pollAndPersistData(boolean isInitialLoad, PollDataSyncConfig config) throws APIException {
+    protected void pollAndPersistData(PollDataSyncConfig config) throws APIException {
         try {
             LogResponseModel log;
             Integer totalRecordCounts = 0;
 
-            isInitialLoad = iPollCommonService.checkInitialLoadForIndividualTable(config);
+            boolean isInitialLoad = iPollCommonService.checkInitialLoadForIndividualTable(config);
 
             if(config.isRecreateApplied() ) {
                 // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
