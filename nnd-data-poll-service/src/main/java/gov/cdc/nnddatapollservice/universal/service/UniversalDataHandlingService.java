@@ -56,7 +56,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected long tableLevelTimeoutPerTaskMs = 120_000;
 
     @Value("${thread.processer-level.enabled}")
-    protected boolean multiThreadApiLevelEnabled = true;
+    protected boolean multiThreadApiLevelEnabled = false;
 
     // Determine how many pages are processed in a single batch, if page container 10k record each, 3x pages. 30k will be processed
     @Value("${thread.processer-level.batch-size}")

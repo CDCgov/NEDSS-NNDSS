@@ -29,6 +29,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
@@ -48,10 +51,25 @@ public class JdbcTemplateUtil {
     protected String sqlErrorPath = "";
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
+    @Value("${thread.jdbc-level.enabled}")
+    protected boolean multiThreadJdbcLevelEnabled = false;
 
-    private final Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
-            .create();
+    // Initial starter number of task - if 20 then the system begin with 20 parallel task
+    @Value("${thread.jdbc-level.initial-concurrency}")
+    protected int jdbcLevelInitialConcurrency = 20;
+
+    // Task max limit, ex: no more than 40 task running in parallel
+    @Value("${thread.jdbc-level.max-concurrency}")
+    protected int jdbcLevelMaxConcurrency = 40;
+
+    // Retry if task failed
+    @Value("${thread.jdbc-level.max-retry}")
+    protected int jdbcLevelMaxRetry = 5;
+
+    // if task hit timeout it will be terminated, 120_000 == 2 min
+    @Value("${thread.jdbc-level.timeout}")
+    protected long jdbcLevelTimeoutPerTaskMs = 120_000;
+
     public JdbcTemplateUtil(PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError) {
         this.pollDataLogRepository = pollDataLogRepository;
         this.rdbJdbcTemplate = rdbJdbcTemplate;
@@ -247,42 +265,39 @@ public class JdbcTemplateUtil {
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
 
                 if (records != null && !records.isEmpty()) {
-
-//                    if (SPECIAL_TABLES.contains(config.getTableName().toUpperCase()))
-//                    {
-//                        handleSpecialTableFiltering(config, records, jdbcInsert, initialLoad, startTime);
-//                    }
-//                    else {
-                        try {
-                            if (records.size() >  batchSize) {
-                                int sublistSize = batchSize;
-                                for (int i = 0; i < records.size(); i += sublistSize) {
-                                    int end = Math.min(i + sublistSize, records.size());
-                                    List<Map<String, Object>> sublist = records.subList(i, end);
-                                    if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
-                                        sublist.forEach(data -> data.remove("RowNum"));
-                                        jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
-
-                                    } else {
-                                        upsertBatch(config.getTableName(), sublist, config.getKeyList());
-                                    }
-                                }
-                            } else {
-                                if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
-                                    records.forEach(data -> data.remove("RowNum"));
-                                    jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                    try {
+                        if (records.size() >  batchSize) {
+                            int sublistSize = batchSize;
+                            for (int i = 0; i < records.size(); i += sublistSize) {
+                                int end = Math.min(i + sublistSize, records.size());
+                                List<Map<String, Object>> sublist = records.subList(i, end);
+                                if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
+                                    sublist.forEach(data -> data.remove("RowNum"));
+                                    jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
 
                                 } else {
-                                    upsertBatch(config.getTableName(), records, config.getKeyList());
+                                    upsertBatch(config.getTableName(), sublist, config.getKeyList());
                                 }
                             }
-                        }
-                        catch (Exception e)
-                        {
-                           log = handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel, log);
-                        }
-//                    }
+                        } else {
+                            if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
+                                records.forEach(data -> data.remove("RowNum"));
+                                jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
 
+                            } else {
+                                upsertBatch(config.getTableName(), records, config.getKeyList());
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (multiThreadJdbcLevelEnabled) {
+                            log = handleBatchInsertionFailureMultiThread(records, config, jdbcInsert, startTime, apiResponseModel, log);
+                        }
+                        else {
+                            log = handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel, log);
+                        }
+                    }
                 }
             }
 
@@ -298,6 +313,116 @@ public class JdbcTemplateUtil {
         } else if (log.getStatus() == null) {
             log.setStatus(SUCCESS);
         }
+        return log;
+    }
+
+    public LogResponseModel handleBatchInsertionFailureMultiThread(List<Map<String, Object>> records, PollDataSyncConfig config,
+                                                        SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
+                                                        ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
+        AtomicLong errorCount = new AtomicLong(0);
+        List<String> errors = Collections.synchronizedList(new ArrayList<>());
+        Semaphore semaphore = new Semaphore(jdbcLevelInitialConcurrency);
+        Exception[] anyErrorException = new Exception[1];
+        AtomicBoolean anyFatal = new AtomicBoolean(false);
+
+        logger.info("Starting batch insertion with concurrency {}-{}, timeout {} ms",
+                jdbcLevelInitialConcurrency, jdbcLevelMaxConcurrency, jdbcLevelTimeoutPerTaskMs);
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Future<?>> futures = new ArrayList<>();
+
+            for (Map<String, Object> res : records) {
+                Future<?> future = executor.submit(() -> {
+                    boolean acquired = false;
+                    int retries = 0;
+
+                    try {
+                        while (retries < jdbcLevelMaxRetry) {
+                            try {
+                                semaphore.acquire();
+                                acquired = true;
+
+                                long startTimeMs = System.currentTimeMillis();
+
+                                if (config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
+                                    simpleJdbcInsert.execute(new MapSqlParameterSource(res));
+                                } else {
+                                    upsertSingle(config.getTableName(), res, config.getKeyList());
+                                }
+
+                                long duration = System.currentTimeMillis() - startTimeMs;
+                                if (duration > jdbcLevelTimeoutPerTaskMs) {
+                                    throw new TimeoutException("Task exceeded timeout of " + jdbcLevelTimeoutPerTaskMs + " ms");
+                                }
+                                break; // Success, exit retry loop
+                            } catch (TimeoutException e) {
+                                logger.error("Timeout for record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                errorCount.incrementAndGet();
+                                errors.add(e.getMessage());
+                                break; // No retry on timeout
+                            } catch (Exception e) {
+                                errorCount.incrementAndGet();
+                                errors.add(e.getMessage());
+                                anyErrorException[0] = e;
+
+                                if (e instanceof DataIntegrityViolationException) {
+                                    logger.debug("Duplicated Key Exception Resolved");
+                                    break; // No retry needed
+                                } else {
+                                    logger.error("ERROR on record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                    LogResponseModel logModel = new LogResponseModel(
+                                            e.getMessage(), getStackTraceAsString(e),
+                                            ERROR, startTime, apiResponseModel);
+                                    updateLog(config.getTableName(), logModel);
+                                    handleError.writeRecordToFile(gsonNorm, res,
+                                            config.getTableName() + UUID.randomUUID(),
+                                            sqlErrorPath + "/" + config.getSourceDb() + "/"
+                                                    + e.getClass().getSimpleName() + "/"
+                                                    + config.getTableName() + "/");
+                                    retries++;
+                                    if (retries < jdbcLevelMaxRetry) {
+                                        Thread.sleep(2000 * (retries + 1)); // Exponential backoff
+                                    } else {
+                                        anyFatal.set(true);
+                                        break;
+                                    }
+                                }
+                            } finally {
+                                if (acquired) semaphore.release();
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        logger.warn("Task interrupted for record: {}", gsonNorm.toJson(res));
+                    }
+                });
+                futures.add(future);
+            }
+
+            // Wait for all tasks to complete with timeout
+            for (Future<?> future : futures) {
+                try {
+                    future.get(jdbcLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException e) {
+                    logger.error("Task timeout after {} ms", jdbcLevelTimeoutPerTaskMs);
+                    errorCount.incrementAndGet();
+                } catch (Exception e) {
+                    logger.error("Unexpected error in batch execution: {}", e.getMessage(), e);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Executor failure: {}", e.getMessage(), e);
+        }
+
+        // Final log update
+        if (errorCount.get() == 0) {
+            log.setStatus(SUCCESS);
+        } else {
+            log.setStatus(anyFatal.get() ? ERROR : WARNING);
+            log.setLog(errorCount.get() + " Issues occurred during UPSERT/SINGLE INSERTION");
+            log.setStackTrace(new Gson().toJson(errors));
+        }
+
         return log;
     }
 

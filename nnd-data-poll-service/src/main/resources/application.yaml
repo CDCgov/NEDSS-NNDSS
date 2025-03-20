@@ -81,6 +81,12 @@ thread:
       max-concurrency: ${THREAD_PROCESSOR_LEVEL_MAX_CONCURRENCY:40}
       max-retry: ${THREAD_PROCESSOR_LEVEL_MAX_RETRY:5}
       timeout: ${THREAD_PROCESSOR_TIMEOUT:120_000}
+  jdbc-level:
+      enabled: ${THREAD_JDBC_LEVEL_ENABLED:false}
+      initial-concurrency: ${THREAD_JDBC_LEVEL_INIT_CONCURRENCY:20}
+      max-concurrency: ${THREAD_JDBC_LEVEL_MAX_CONCURRENCY:40}
+      max-retry: ${THREAD_JDBC_LEVEL_MAX_RETRY:5}
+      timeout: ${THREAD_JDBC_TIMEOUT:120_000}
   table-level:
       enabled: false
       max-concurrency: 1
