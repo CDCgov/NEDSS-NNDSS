@@ -58,7 +58,7 @@ spring:
       connection-timeout: ${HIKARI_CON_TIMEOUT:30000}
       minimum-idle: ${HIKARI_MINIMUM_IDLE:10}
       idle-timeout: ${HIKARI_IDLE_TIMEOUT:30000}
-      max-lifetime: ${HIKARI_MAX_LIFETIME:1200000  }
+      max-lifetime: ${HIKARI_MAX_LIFETIME:600000}
       keepalive-time: ${HIKARI_KEEPALIVE_TIME:300000}
       pool-name:
         msg: HIKARI_POOL_MSG
