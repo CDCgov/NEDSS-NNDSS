@@ -32,7 +32,7 @@ import java.util.HashMap;
         }
 )
 public class RdbModernDataSourceConfig {
-    @Value("${spring.datasource.driverClassName}")
+    @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
 
     @Value("${spring.datasource.rdbModern.url}")
@@ -59,7 +59,7 @@ public class RdbModernDataSourceConfig {
     @Value("${spring.datasource.hikari.connection-timeout:300000}")
     private long connectionTimeout;
 
-    @Value("${spring.datasource.hikari.pool-name:OdseHikariCP}")
+    @Value("${spring.datasource.hikari.pool-name.rdbmodern:OdseHikariCP}")
     private String poolName;
 
     @Value("${spring.datasource.hikari.keepalive-time:300000}")

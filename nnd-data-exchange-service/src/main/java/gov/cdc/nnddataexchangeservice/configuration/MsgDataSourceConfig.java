@@ -29,7 +29,7 @@ import java.util.HashMap;
         }
 )
 public class MsgDataSourceConfig {
-    @Value("${spring.datasource.driverClassName}")
+    @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
 
     @Value("${spring.datasource.msg.url}")
@@ -56,7 +56,7 @@ public class MsgDataSourceConfig {
     @Value("${spring.datasource.hikari.connection-timeout:300000}")
     private long connectionTimeout;
 
-    @Value("${spring.datasource.hikari.pool-name:OdseHikariCP}")
+    @Value("${spring.datasource.hikari.pool-name.msg:OdseHikariCP}")
     private String poolName;
 
     @Value("${spring.datasource.hikari.keepalive-time:300000}")

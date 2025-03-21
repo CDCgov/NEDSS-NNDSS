@@ -29,6 +29,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
@@ -48,10 +52,32 @@ public class JdbcTemplateUtil {
     protected String sqlErrorPath = "";
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
+    @Value("${thread.jdbc-level.enabled}")
+    protected boolean multiThreadJdbcLevelEnabled = false;
 
-    private final Gson gson = new GsonBuilder()
-            .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
-            .create();
+    // Initial starter number of task - if 20 then the system begin with 20 parallel task
+    @Value("${thread.jdbc-level.initial-concurrency}")
+    protected int jdbcLevelInitialConcurrency = 80;
+
+    // Task max limit, ex: no more than 40 task running in parallel
+    @Value("${thread.jdbc-level.max-concurrency}")
+    protected int jdbcLevelMaxConcurrency = 160;
+
+    // Retry if task failed
+    @Value("${thread.jdbc-level.max-retry}")
+    protected int jdbcLevelMaxRetry = 5;
+
+    // if task hit timeout it will be terminated, 120_000 == 2 min
+//    @Value("${thread.jdbc-level.timeout}")
+    protected long jdbcLevelTimeoutPerTaskMs = 600_000;
+
+
+    protected int jdbcBatchLevelThreadChunkSize = 2000;
+    protected int jdbcBatchLevelInitialConcurrency = 5;
+    protected int jdbcBatchLevelMaxConcurrency = 10;
+    protected int jdbcBatchLevelMaxRetry = 5;
+    protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
+
     public JdbcTemplateUtil(PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError) {
         this.pollDataLogRepository = pollDataLogRepository;
         this.rdbJdbcTemplate = rdbJdbcTemplate;
@@ -247,42 +273,39 @@ public class JdbcTemplateUtil {
                 List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
 
                 if (records != null && !records.isEmpty()) {
-
-//                    if (SPECIAL_TABLES.contains(config.getTableName().toUpperCase()))
-//                    {
-//                        handleSpecialTableFiltering(config, records, jdbcInsert, initialLoad, startTime);
-//                    }
-//                    else {
-                        try {
-                            if (records.size() >  batchSize) {
-                                int sublistSize = batchSize;
-                                for (int i = 0; i < records.size(); i += sublistSize) {
-                                    int end = Math.min(i + sublistSize, records.size());
-                                    List<Map<String, Object>> sublist = records.subList(i, end);
-                                    if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
-                                        sublist.forEach(data -> data.remove("RowNum"));
-                                        jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
-
-                                    } else {
-                                        upsertBatch(config.getTableName(), sublist, config.getKeyList());
-                                    }
-                                }
-                            } else {
-                                if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
-                                    records.forEach(data -> data.remove("RowNum"));
-                                    jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
+                    try {
+                        if (records.size() >  batchSize) {
+                            int sublistSize = batchSize;
+                            for (int i = 0; i < records.size(); i += sublistSize) {
+                                int end = Math.min(i + sublistSize, records.size());
+                                List<Map<String, Object>> sublist = records.subList(i, end);
+                                if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
+                                    sublist.forEach(data -> data.remove("RowNum"));
+                                    jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
 
                                 } else {
-                                    upsertBatch(config.getTableName(), records, config.getKeyList());
+                                    upsertBatch(config.getTableName(), sublist, config.getKeyList());
                                 }
                             }
-                        }
-                        catch (Exception e)
-                        {
-                           log = handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel, log);
-                        }
-//                    }
+                        } else {
+                            if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
+                                records.forEach(data -> data.remove("RowNum"));
+                                jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
 
+                            } else {
+                                upsertBatch(config.getTableName(), records, config.getKeyList());
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        if (multiThreadJdbcLevelEnabled) {
+                            log = handleBatchInsertionFailureMultiThread(records, config, jdbcInsert, startTime, apiResponseModel, log);
+                        }
+                        else {
+                            log = handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel, log);
+                        }
+                    }
                 }
             }
 
@@ -302,10 +325,269 @@ public class JdbcTemplateUtil {
     }
 
 
+    public LogResponseModel persistingGenericTableMultiThread(
+            String jsonData,
+            PollDataSyncConfig config,
+            boolean initialLoad,
+            Timestamp startTime,
+            ApiResponseModel<?> apiResponseModel) {
+
+        logger.info("Starting virtual-threaded persistence for table '{}'", config.getTableName());
+
+        LogResponseModel log = new LogResponseModel(apiResponseModel);
+
+        Semaphore semaphore = new Semaphore(jdbcBatchLevelInitialConcurrency);
+        AtomicInteger currentConcurrency = new AtomicInteger(jdbcBatchLevelInitialConcurrency);
+
+        try {
+            if (config.getTableName() != null && !config.getTableName().isEmpty()) {
+
+                SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(rdbJdbcTemplate)
+                        .withTableName(config.getTableName());
+
+                List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+
+                if (!records.isEmpty()) {
+                    int totalRecords = records.size();
+
+                    logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{}, timeout={}ms)",
+                            totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
+                            jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency, jdbcBatchLevelTimeoutPerTaskMs);
+
+                    try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+
+                        for (int i = 0; i < totalRecords; i += batchSize) {
+                            int end = Math.min(i + batchSize, totalRecords);
+                            List<Map<String, Object>> batch = records.subList(i, end);
+
+                            logger.info("Submitting batch records {} to {} (size = {})", i, end - 1, end - i);
+
+                            List<Future<?>> futures = new ArrayList<>();
+
+                            for (int j = 0; j < batch.size(); j += jdbcBatchLevelThreadChunkSize) {
+                                int chunkEnd = Math.min(j + jdbcBatchLevelThreadChunkSize, batch.size());
+                                List<Map<String, Object>> chunk = batch.subList(j, chunkEnd);
+                                int chunkNumber = j / jdbcBatchLevelThreadChunkSize + 1;
+
+                                futures.add(executor.submit(() -> {
+                                    int retries = 0;
+                                    boolean acquired = false;
+
+                                    while (retries < jdbcBatchLevelMaxRetry) {
+                                        try {
+                                            semaphore.acquire();
+                                            acquired = true;
+
+                                            if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
+                                                chunk.forEach(data -> data.remove("RowNum"));
+                                                logger.info("Chunk {}: Inserting {} records", chunkNumber, chunk.size());
+                                                jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(chunk));
+                                            } else {
+                                                logger.info("Chunk {}: Upserting {} records", chunkNumber, chunk.size());
+                                                upsertBatch(config.getTableName(), chunk, config.getKeyList());
+                                            }
+
+                                            logger.info("Chunk {}: Completed successfully", chunkNumber);
+                                            break;
+
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                            retries++;
+                                            logger.warn("Chunk {}: Attempt {}/{} failed - {}", chunkNumber, retries, jdbcBatchLevelMaxRetry, e.getMessage());
+
+                                            if (retries >= jdbcBatchLevelMaxRetry) {
+                                                logger.error("Chunk {}: Failed after max retries", chunkNumber, e);
+                                                throw new RuntimeException("Chunk insert failed", e);
+                                            }
+
+                                            try {
+                                                Thread.sleep(2000L * retries); // Exponential backoff
+                                            } catch (InterruptedException ex) {
+                                                Thread.currentThread().interrupt();
+                                                throw new RuntimeException("Interrupted during retry sleep", ex);
+                                            }
+                                        } finally {
+                                            if (acquired) semaphore.release();
+                                        }
+                                    }
+                                }));
+                            }
+
+                            // Wait for each chunk with timeout
+                            for (int idx = 0; idx < futures.size(); idx++) {
+                                Future<?> future = futures.get(idx);
+                                try {
+                                    future.get(jdbcBatchLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                                } catch (TimeoutException e) {
+                                    logger.error("Chunk task {} timed out after {}ms", idx + 1, jdbcBatchLevelTimeoutPerTaskMs);
+                                    future.cancel(true);
+                                    throw new RuntimeException("Chunk task timeout exceeded", e);
+                                } catch (ExecutionException e) {
+                                    throw e; // Already logged inside chunk
+                                }
+                            }
+
+                            if (currentConcurrency.get() < jdbcBatchLevelMaxConcurrency) {
+                                int increased = currentConcurrency.incrementAndGet();
+                                semaphore.release();
+                                logger.debug("Increased concurrency to {}", increased);
+                            }
+
+                            logger.info("Batch processed: records {} to {}", i, end - 1);
+                        }
+
+                        logger.info("All records processed successfully for table '{}'", config.getTableName());
+
+                    } catch (Exception e) {
+                        logger.error("Processing failed. Falling back. Reason: {}", e.getMessage(), e);
+                        if (multiThreadJdbcLevelEnabled) {
+                            log = handleBatchInsertionFailureMultiThread(records, config, jdbcInsert, startTime, apiResponseModel, log);
+                        } else {
+                            log = handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel, log);
+                        }
+                    }
+                } else {
+                    logger.warn("No records to persist for table '{}'", config.getTableName());
+                }
+
+            } else {
+                logger.warn("Table name is null or empty in config.");
+            }
+
+        } catch (Exception e) {
+            log.setLog(e.getMessage());
+            log.setStackTrace(getStackTraceAsString(e));
+            log.setStatus(ERROR);
+            logger.error("Unexpected error in virtual-threaded persistence for '{}': {}", config.getTableName(), e.getMessage(), e);
+        }
+
+        if (log.getStatus() != null && !log.getStatus().equals(WARNING)) {
+            log.setStatus(SUCCESS);
+        } else if (log.getStatus() == null) {
+            log.setStatus(SUCCESS);
+        }
+
+        return log;
+    }
+
+
+
+    public LogResponseModel handleBatchInsertionFailureMultiThread(List<Map<String, Object>> records, PollDataSyncConfig config,
+                                                        SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
+                                                        ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
+        AtomicLong errorCount = new AtomicLong(0);
+        List<String> errors = Collections.synchronizedList(new ArrayList<>());
+        Semaphore semaphore = new Semaphore(jdbcLevelInitialConcurrency);
+        Exception[] anyErrorException = new Exception[1];
+        AtomicBoolean anyFatal = new AtomicBoolean(false);
+
+        logger.info("Starting batch insertion with concurrency {}-{}, timeout {} ms",
+                jdbcLevelInitialConcurrency, jdbcLevelMaxConcurrency, jdbcLevelTimeoutPerTaskMs);
+
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Future<?>> futures = new ArrayList<>();
+
+            for (Map<String, Object> res : records) {
+                Future<?> future = executor.submit(() -> {
+                    boolean acquired = false;
+                    int retries = 0;
+
+                    try {
+                        while (retries < jdbcLevelMaxRetry) {
+                            try {
+                                semaphore.acquire();
+                                acquired = true;
+
+                                long startTimeMs = System.currentTimeMillis();
+
+                                if (config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
+                                    simpleJdbcInsert.execute(new MapSqlParameterSource(res));
+                                } else {
+                                    upsertSingle(config.getTableName(), res, config.getKeyList());
+                                }
+
+                                long duration = System.currentTimeMillis() - startTimeMs;
+                                if (duration > jdbcLevelTimeoutPerTaskMs) {
+                                    throw new TimeoutException("Task exceeded timeout of " + jdbcLevelTimeoutPerTaskMs + " ms");
+                                }
+                                break; // Success, exit retry loop
+                            } catch (TimeoutException e) {
+                                logger.error("Timeout for record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                errorCount.incrementAndGet();
+                                errors.add(e.getMessage());
+                                break; // No retry on timeout
+                            } catch (Exception e) {
+                                errorCount.incrementAndGet();
+                                errors.add(e.getMessage());
+                                anyErrorException[0] = e;
+
+                                if (e instanceof DataIntegrityViolationException) {
+                                    logger.debug("Duplicated Key Exception Resolved");
+                                    break; // No retry needed
+                                } else {
+                                    logger.error("ERROR on record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                    LogResponseModel logModel = new LogResponseModel(
+                                            e.getMessage(), getStackTraceAsString(e),
+                                            ERROR, startTime, apiResponseModel);
+                                    updateLog(config.getTableName(), logModel);
+                                    handleError.writeRecordToFile(gsonNorm, res,
+                                            config.getTableName() + UUID.randomUUID(),
+                                            sqlErrorPath + "/" + config.getSourceDb() + "/"
+                                                    + e.getClass().getSimpleName() + "/"
+                                                    + config.getTableName() + "/");
+                                    retries++;
+                                    if (retries < jdbcLevelMaxRetry) {
+                                        Thread.sleep(2000 * (retries + 1)); // Exponential backoff
+                                    } else {
+                                        anyFatal.set(true);
+                                        break;
+                                    }
+                                }
+                            } finally {
+                                if (acquired) semaphore.release();
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        logger.warn("Task interrupted for record: {}", gsonNorm.toJson(res));
+                    }
+                });
+                futures.add(future);
+            }
+
+            // Wait for all tasks to complete with timeout
+            for (Future<?> future : futures) {
+                try {
+                    future.get(jdbcLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                } catch (TimeoutException e) {
+                    logger.error("Task timeout after {} ms", jdbcLevelTimeoutPerTaskMs);
+                    errorCount.incrementAndGet();
+                } catch (Exception e) {
+                    logger.error("Unexpected error in batch execution: {}", e.getMessage(), e);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Executor failure: {}", e.getMessage(), e);
+        }
+
+        // Final log update
+        if (errorCount.get() == 0) {
+            log.setStatus(SUCCESS);
+        } else {
+            log.setStatus(anyFatal.get() ? ERROR : WARNING);
+            log.setLog(errorCount.get() + " Issues occurred during UPSERT/SINGLE INSERTION");
+            log.setStackTrace(new Gson().toJson(errors));
+        }
+
+        return log;
+    }
+
+
     public LogResponseModel handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config,
                                             SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
                                             ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
         boolean anyError = false;
+        boolean anyFatal = false;
         List<String> errors = new ArrayList<>();
         Exception anyErrorException = null;
         Long errorCount = 0L;
@@ -329,13 +611,13 @@ public class JdbcTemplateUtil {
                     errors.add(ei.getMessage());
                 }
                 anyErrorException = ei;
-//                if (ei instanceof DataIntegrityViolationException) // NOSONAR
-//                {
-//                    logger.debug("Duplicated Key Exception Resolved");
-//                }
-//                else {
+                if (ei instanceof DataIntegrityViolationException) // NOSONAR
+                {
+                    logger.debug("Duplicated Key Exception Resolved");
+                }
+                else {
+                    anyFatal = true;
                     logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
-
                     LogResponseModel logModel = new LogResponseModel(
                             ei.getMessage(),getStackTraceAsString(ei),
                             ERROR, startTime, apiResponseModel);
@@ -346,7 +628,7 @@ public class JdbcTemplateUtil {
                                     + "/" + config.getSourceDb() + "/"
                                     + ei.getClass().getSimpleName()
                                     + "/" + config.getTableName() + "/");
-//                }
+                }
 
             }
         }
@@ -358,8 +640,12 @@ public class JdbcTemplateUtil {
         else {
             Gson gson = new Gson();
             String jsonString = gson.toJson(errors);
-            log.setStatus(WARNING);
-            log.setLog(errorCount + " FAILED UPSERT OR SINGLE INSERTION at resolver level, failed data had been written to file log");
+            if (anyFatal) {
+                log.setStatus(ERROR);
+            } else {
+                log.setStatus(WARNING);
+            }
+            log.setLog(errorCount + " Issues occurred during UPSERT/SINGLE INSERTION at resolver level");
             log.setStackTrace(jsonString);
         }
         return log;
