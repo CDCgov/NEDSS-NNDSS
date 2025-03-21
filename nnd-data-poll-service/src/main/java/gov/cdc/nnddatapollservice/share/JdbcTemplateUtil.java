@@ -31,6 +31,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -69,6 +70,13 @@ public class JdbcTemplateUtil {
     // if task hit timeout it will be terminated, 120_000 == 2 min
 //    @Value("${thread.jdbc-level.timeout}")
     protected long jdbcLevelTimeoutPerTaskMs = 600_000;
+
+
+    protected int jdbcBatchLevelThreadChunkSize = 2000;
+    protected int jdbcBatchLevelInitialConcurrency = 5;
+    protected int jdbcBatchLevelMaxConcurrency = 10;
+    protected int jdbcBatchLevelMaxRetry = 5;
+    protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
 
     public JdbcTemplateUtil(PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError) {
         this.pollDataLogRepository = pollDataLogRepository;
@@ -315,6 +323,154 @@ public class JdbcTemplateUtil {
         }
         return log;
     }
+
+
+    public LogResponseModel persistingGenericTableMultiThread(
+            String jsonData,
+            PollDataSyncConfig config,
+            boolean initialLoad,
+            Timestamp startTime,
+            ApiResponseModel<?> apiResponseModel) {
+
+        logger.info("Starting virtual-threaded persistence for table '{}'", config.getTableName());
+
+        LogResponseModel log = new LogResponseModel(apiResponseModel);
+
+        Semaphore semaphore = new Semaphore(jdbcBatchLevelInitialConcurrency);
+        AtomicInteger currentConcurrency = new AtomicInteger(jdbcBatchLevelInitialConcurrency);
+
+        try {
+            if (config.getTableName() != null && !config.getTableName().isEmpty()) {
+
+                SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(rdbJdbcTemplate)
+                        .withTableName(config.getTableName());
+
+                List<Map<String, Object>> records = PollServiceUtil.jsonToListOfMap(jsonData);
+
+                if (!records.isEmpty()) {
+                    int totalRecords = records.size();
+
+                    logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{}, timeout={}ms)",
+                            totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
+                            jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency, jdbcBatchLevelTimeoutPerTaskMs);
+
+                    try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+
+                        for (int i = 0; i < totalRecords; i += batchSize) {
+                            int end = Math.min(i + batchSize, totalRecords);
+                            List<Map<String, Object>> batch = records.subList(i, end);
+
+                            logger.info("Submitting batch records {} to {} (size = {})", i, end - 1, end - i);
+
+                            List<Future<?>> futures = new ArrayList<>();
+
+                            for (int j = 0; j < batch.size(); j += jdbcBatchLevelThreadChunkSize) {
+                                int chunkEnd = Math.min(j + jdbcBatchLevelThreadChunkSize, batch.size());
+                                List<Map<String, Object>> chunk = batch.subList(j, chunkEnd);
+                                int chunkNumber = j / jdbcBatchLevelThreadChunkSize + 1;
+
+                                futures.add(executor.submit(() -> {
+                                    int retries = 0;
+                                    boolean acquired = false;
+
+                                    while (retries < jdbcBatchLevelMaxRetry) {
+                                        try {
+                                            semaphore.acquire();
+                                            acquired = true;
+
+                                            if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
+                                                chunk.forEach(data -> data.remove("RowNum"));
+                                                logger.info("Chunk {}: Inserting {} records", chunkNumber, chunk.size());
+                                                jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(chunk));
+                                            } else {
+                                                logger.info("Chunk {}: Upserting {} records", chunkNumber, chunk.size());
+                                                upsertBatch(config.getTableName(), chunk, config.getKeyList());
+                                            }
+
+                                            logger.info("Chunk {}: Completed successfully", chunkNumber);
+                                            break;
+
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                            retries++;
+                                            logger.warn("Chunk {}: Attempt {}/{} failed - {}", chunkNumber, retries, jdbcBatchLevelMaxRetry, e.getMessage());
+
+                                            if (retries >= jdbcBatchLevelMaxRetry) {
+                                                logger.error("Chunk {}: Failed after max retries", chunkNumber, e);
+                                                throw new RuntimeException("Chunk insert failed", e);
+                                            }
+
+                                            try {
+                                                Thread.sleep(2000L * retries); // Exponential backoff
+                                            } catch (InterruptedException ex) {
+                                                Thread.currentThread().interrupt();
+                                                throw new RuntimeException("Interrupted during retry sleep", ex);
+                                            }
+                                        } finally {
+                                            if (acquired) semaphore.release();
+                                        }
+                                    }
+                                }));
+                            }
+
+                            // Wait for each chunk with timeout
+                            for (int idx = 0; idx < futures.size(); idx++) {
+                                Future<?> future = futures.get(idx);
+                                try {
+                                    future.get(jdbcBatchLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                                } catch (TimeoutException e) {
+                                    logger.error("Chunk task {} timed out after {}ms", idx + 1, jdbcBatchLevelTimeoutPerTaskMs);
+                                    future.cancel(true);
+                                    throw new RuntimeException("Chunk task timeout exceeded", e);
+                                } catch (ExecutionException e) {
+                                    throw e; // Already logged inside chunk
+                                }
+                            }
+
+                            if (currentConcurrency.get() < jdbcBatchLevelMaxConcurrency) {
+                                int increased = currentConcurrency.incrementAndGet();
+                                semaphore.release();
+                                logger.debug("Increased concurrency to {}", increased);
+                            }
+
+                            logger.info("Batch processed: records {} to {}", i, end - 1);
+                        }
+
+                        logger.info("All records processed successfully for table '{}'", config.getTableName());
+
+                    } catch (Exception e) {
+                        logger.error("Processing failed. Falling back. Reason: {}", e.getMessage(), e);
+                        if (multiThreadJdbcLevelEnabled) {
+                            log = handleBatchInsertionFailureMultiThread(records, config, jdbcInsert, startTime, apiResponseModel, log);
+                        } else {
+                            log = handleBatchInsertionFailure(records, config, jdbcInsert, startTime, apiResponseModel, log);
+                        }
+                    }
+                } else {
+                    logger.warn("No records to persist for table '{}'", config.getTableName());
+                }
+
+            } else {
+                logger.warn("Table name is null or empty in config.");
+            }
+
+        } catch (Exception e) {
+            log.setLog(e.getMessage());
+            log.setStackTrace(getStackTraceAsString(e));
+            log.setStatus(ERROR);
+            logger.error("Unexpected error in virtual-threaded persistence for '{}': {}", config.getTableName(), e.getMessage(), e);
+        }
+
+        if (log.getStatus() != null && !log.getStatus().equals(WARNING)) {
+            log.setStatus(SUCCESS);
+        } else if (log.getStatus() == null) {
+            log.setStatus(SUCCESS);
+        }
+
+        return log;
+    }
+
+
 
     public LogResponseModel handleBatchInsertionFailureMultiThread(List<Map<String, Object>> records, PollDataSyncConfig config,
                                                         SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,

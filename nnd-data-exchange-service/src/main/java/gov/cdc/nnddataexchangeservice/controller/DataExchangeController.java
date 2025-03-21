@@ -182,6 +182,7 @@ public class DataExchangeController {
                                                               @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
                                                               @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
                                                               HttpServletRequest request) throws DataExchangeException {
+            logger.info("Data Sync for {}", tableName);
 
             if (version == null || version.isEmpty()) {
                 try {
@@ -203,6 +204,7 @@ public class DataExchangeController {
                 base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, param, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
                         Boolean.parseBoolean(allowNull), Boolean.parseBoolean(noPagination), Boolean.parseBoolean(useKeyPagination));
             } catch (DataExchangeException e) {
+                e.printStackTrace();
                 throw new RuntimeException(e);
             }
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
@@ -283,6 +285,7 @@ public class DataExchangeController {
         try {
             res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
         } catch (DataExchangeException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
         return new ResponseEntity<>(res, HttpStatus.OK);

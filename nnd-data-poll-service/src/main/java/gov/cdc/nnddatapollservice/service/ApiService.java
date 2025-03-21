@@ -146,6 +146,10 @@ public class ApiService implements IApiService {
                 responseModel.setApiException(new APIException("Unexpected status code: " + response.statusCode()));
                 return responseModel;
             }
+            else {
+                Gson g = new Gson();
+                logger.error("API RES: {}", g.toJson(response.body()));
+            }
 
             responseModel.setResponse(Integer.valueOf(response.body()));
             responseModel.setSuccess(true);
@@ -218,8 +222,8 @@ public class ApiService implements IApiService {
                     .build();
 
 
-            int maxRetries = 3;
-            int retryDelay = 1000; // 5 seconds
+            int maxRetries = 69;
+            int retryDelay = 5000; // 5 seconds
 
             for (int attempt = 1; attempt <= maxRetries; attempt++) {
                 logger.info("API URL: {} , fire: {}", uri, attempt);
@@ -237,10 +241,12 @@ public class ApiService implements IApiService {
                         responseModel.setSuccess(true);
                         return responseModel;
                     } else {
+                        Gson g = new Gson();
+                        logger.error("API RES: {}", g.toJson(response.body()));
                         if (attempt < maxRetries) {
-                            int retryDelayRandom = retryDelay * (1 << (attempt - 1)) + new Random().nextInt(500);
+                       //     int retryDelayRandom = retryDelay * (1 << (attempt - 1)) + new Random().nextInt(500);
 
-                            Thread.sleep(retryDelayRandom); // Exponential backoff
+                            Thread.sleep(retryDelay); // Exponential backoff
                         } else {
                             responseModel.setSuccess(false);
                             responseModel.setApiException(new APIException("Unexpected status code after " + maxRetries + " attempts: " + response.statusCode()));
@@ -248,6 +254,7 @@ public class ApiService implements IApiService {
                         }
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     if (attempt < maxRetries) {
                         Thread.sleep(retryDelay * attempt);
                     } else {
