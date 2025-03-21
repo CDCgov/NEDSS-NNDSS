@@ -17,9 +17,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
@@ -119,7 +118,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             Callable<String> callable = () -> {
                 String baseQuery = preparePaginationQuery(dataConfig, param, startRow, endRow, initialLoad, allowNull, noPagination, keyPagination);
 
-                List<Map<String, Object>> data = executeQueryForData(baseQuery, dataConfig.getSourceDb());
+                List<Map<String, Object>> data = executeQueryForDataAsync(baseQuery, dataConfig.getSourceDb());
 
                 dataCountHolder.set(data.size());
 
@@ -176,6 +175,52 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         }
 
         return baseQuery + ";";
+    }
+
+    private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private static final Semaphore semaphore = new Semaphore(50); // Limits to 50 concurrent queries
+
+
+    public List<Map<String, Object>> executeQueryForDataAsync(String query, String sourceDb) throws DataExchangeException {
+        try {
+            semaphore.acquire(); // Limit concurrent queries
+
+            JdbcTemplate template = getJdbcTemplate(sourceDb);
+            return CompletableFuture.supplyAsync(() -> {
+                return queryWithStreaming(template, query);
+            }, executor).get(); // Executes asynchronously
+        } catch (Exception e) {
+            throw new DataExchangeException("Error executing query on DB: " + e.getMessage());
+        } finally {
+            semaphore.release(); // Always release semaphore
+        }
+    }
+
+    private JdbcTemplate getJdbcTemplate(String sourceDb) throws DataExchangeException {
+        Map<String, JdbcTemplate> dbTemplateMap = Map.of(
+                DB_SRTE, srteJdbcTemplate,
+                DB_RDB, jdbcTemplate,
+                DB_RDB_MODERN, rdbModernJdbcTemplate,
+                "NBS_ODSE", odseJdbcTemplate
+        );
+
+        return Optional.ofNullable(dbTemplateMap.get(sourceDb))
+                .orElseThrow(() -> new DataExchangeException("DB IS NOT SUPPORTED: " + sourceDb));
+    }
+
+    private List<Map<String, Object>> queryWithStreaming(JdbcTemplate template, String query) {
+        List<Map<String, Object>> results = new ArrayList<>();
+       // template.setQueryTimeout(30); // Prevent long-running queries
+
+        template.query(query, rs -> {
+            Map<String, Object> row = new HashMap<>();
+            for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                row.put(rs.getMetaData().getColumnName(i), rs.getObject(i));
+            }
+            results.add(row);
+        });
+
+        return results;
     }
 
     private List<Map<String, Object>> executeQueryForData(String query, String sourceDb) throws DataExchangeException {

@@ -54,11 +54,11 @@ spring:
       on-profile: default
   datasource:
     hikari:
-      maximum-pool-size: ${HIKARI_POOL_SIZE:100}
+      maximum-pool-size: ${HIKARI_POOL_SIZE:50}
       connection-timeout: ${HIKARI_CON_TIMEOUT:30000}
-      minimum-idle: ${HIKARI_MINIMUM_IDLE:50}
-      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
-      max-lifetime: ${HIKARI_MAX_LIFETIME:1500000  }
+      minimum-idle: ${HIKARI_MINIMUM_IDLE:10}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:30000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:1200000  }
       keepalive-time: ${HIKARI_KEEPALIVE_TIME:300000}
       pool-name:
         msg: HIKARI_POOL_MSG
@@ -67,7 +67,7 @@ spring:
         rdbmodern: HIKARI_POOL_RDB_MODERN
         srte: HIKARI_POOL_SRTE
       validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
-      leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:60000}
+      leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:30000}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${NBS_DBUSER}
     password: ${NBS_DBPASSWORD}

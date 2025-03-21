@@ -23,6 +23,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -142,13 +143,11 @@ public class ApiService implements IApiService {
             // Send request synchronously
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
+                Gson g = new Gson();
+                logger.error("API RES: {}", g.toJson(response.body()));
                 responseModel.setSuccess(false);
                 responseModel.setApiException(new APIException("Unexpected status code: " + response.statusCode()));
                 return responseModel;
-            }
-            else {
-                Gson g = new Gson();
-                logger.error("API RES: {}", g.toJson(response.body()));
             }
 
             responseModel.setResponse(Integer.valueOf(response.body()));
@@ -163,13 +162,12 @@ public class ApiService implements IApiService {
     }
 
     public ApiResponseModel<String> callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
-                                           String startRow, String endRow, boolean noPagination, boolean useKeyPagination,
-                                           String entityKey) {
+                                                             String startRow, String endRow, boolean noPagination, boolean useKeyPagination,
+                                                             String entityKey) {
         ApiResponseModel<String> responseModel = new ApiResponseModel<>();
         URI uri;
         String headerStr;
         try {
-            // Build headers
             HttpHeaders headers = new HttpHeaders();
             headers.add("initialLoad", String.valueOf(isInitialLoad));
             headers.add("allowNull", String.valueOf(allowNull));
@@ -182,14 +180,12 @@ public class ApiService implements IApiService {
             headers.add("useKeyPagination", String.valueOf(useKeyPagination));
             headers.add("lastKey", entityKey);
 
-            // Build URI
             uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
                     .path("/" + tableName)
                     .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
 
-            // Log headers (mask sensitive info)
             HttpHeaders headersForLogging = new HttpHeaders();
             headers.entrySet().forEach(entry -> {
                 String key = entry.getKey();
@@ -203,33 +199,32 @@ public class ApiService implements IApiService {
             headerStr = gson.toJson(headersForLogging);
             logger.info("API URL: {} , headers: {}", uri, headerStr);
 
-
             responseModel.setLastApiCall(String.valueOf(uri));
             responseModel.setLastApiHeader(headerStr);
 
-            // Get token
             String token = tokenService.getToken();
             headers.setBearerAuth(token);
 
-            // Build HttpRequest
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(uri)
                     .GET()
                     .headers(headers.entrySet().stream()
                             .flatMap(e -> Stream.of(e.getKey(), e.getValue().get(0)))
                             .toArray(String[]::new))
-                    .timeout(Duration.ofSeconds(120)) // Read timeout
+                    .timeout(Duration.ofSeconds(120))
                     .build();
 
-
             int maxRetries = 69;
-            int retryDelay = 5000; // 5 seconds
+            int retryDelay = 5000;
+            Duration stuckThreshold = Duration.ofMinutes(10); // configurable
+            Instant retryStartTime = Instant.now();
+            boolean tokenRefreshed = false;
 
             for (int attempt = 1; attempt <= maxRetries; attempt++) {
-                logger.info("API URL: {} , fire: {}", uri, attempt);
+                logger.info("API URL: {} , attempt: {}", uri, attempt);
                 try {
                     HttpResponse<String> response;
-                    semaphore.acquire(); // Limits concurrent requests
+                    semaphore.acquire();
                     try {
                         response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                     } finally {
@@ -241,12 +236,28 @@ public class ApiService implements IApiService {
                         responseModel.setSuccess(true);
                         return responseModel;
                     } else {
-                        Gson g = new Gson();
-                        logger.error("API RES: {}", g.toJson(response.body()));
+                        logger.error("API RES: {}", new Gson().toJson(response.body()));
                         if (attempt < maxRetries) {
-                       //     int retryDelayRandom = retryDelay * (1 << (attempt - 1)) + new Random().nextInt(500);
+                            // Check if stuck
+                            if (!tokenRefreshed && Duration.between(retryStartTime, Instant.now()).compareTo(stuckThreshold) > 0) {
+                                logger.warn("Stuck in retry loop > {} minutes. Refreshing token...", stuckThreshold.toMinutes());
+                                token = tokenService.getToken(); // You must implement this or invalidate+getToken
+                                headers.setBearerAuth(token);
 
-                            Thread.sleep(retryDelay); // Exponential backoff
+                                // Rebuild request with new token
+                                request = HttpRequest.newBuilder()
+                                        .uri(uri)
+                                        .GET()
+                                        .headers(headers.entrySet().stream()
+                                                .flatMap(e -> Stream.of(e.getKey(), e.getValue().get(0)))
+                                                .toArray(String[]::new))
+                                        .timeout(Duration.ofSeconds(120))
+                                        .build();
+
+                                tokenRefreshed = true;
+                            }
+
+                            Thread.sleep(retryDelay);
                         } else {
                             responseModel.setSuccess(false);
                             responseModel.setApiException(new APIException("Unexpected status code after " + maxRetries + " attempts: " + response.statusCode()));
@@ -254,7 +265,7 @@ public class ApiService implements IApiService {
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Retry {} failed: {}", attempt, e.getMessage(), e);
                     if (attempt < maxRetries) {
                         Thread.sleep(retryDelay * attempt);
                     } else {
@@ -265,16 +276,17 @@ public class ApiService implements IApiService {
                 }
             }
 
-
         } catch (Exception e) {
             responseModel.setSuccess(false);
             responseModel.setApiException(new APIException("Error calling data endpoint: " + e.getMessage(), e));
             return responseModel;
         }
+
         responseModel.setSuccess(false);
-        responseModel.setApiException(new APIException("Error calling data endpoint: " ));
+        responseModel.setApiException(new APIException("Error calling data endpoint: "));
         return responseModel;
     }
+
 
 
 }
