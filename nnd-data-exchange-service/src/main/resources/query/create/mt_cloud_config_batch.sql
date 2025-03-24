@@ -1,4 +1,4 @@
-delete from data_sync_config where table_name in ('PERSON', 'PARTICIPATION');
+delete from data_sync_config where table_name in ('PERSON', 'PARTICIPATION', 'ROLE');
 
 IF
 NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'PERSON')
@@ -92,6 +92,58 @@ WHERE (OBSERVATION.add_time :operator :timestamp
     NumberedResults AS (
         SELECT *,
                ROW_NUMBER() OVER (ORDER BY latest_timestamp ASC, subject_entity_uid, act_uid, type_cd) AS RowNum
+        FROM PaginatedResults
+    )
+    SELECT * FROM NumberedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+
+END;
+
+
+IF
+NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'ROLE')
+BEGIN
+
+INSERT INTO [RDB].[dbo].[data_sync_config] (table_name, source_db, query, query_with_null_timestamp, query_count,
+                                            query_with_pagination)
+VALUES
+    ('ROLE', 'NBS_ODSE', 'SELECT DISTINCT ROLE.*
+     FROM ROLE
+  	INNER JOIN ENTITY
+        ON ROLE.subject_entity_uid = ENTITY.entity_uid
+	INNER JOIN PARTICIPATION
+        ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+    INNER JOIN OBSERVATION
+ 	ON OBSERVATION.OBSERVATION_UID = PARTICIPATION.act_uid
+    WHERE (OBSERVATION.add_time :operator :timestamp
+            OR OBSERVATION.last_chg_time :operator :timestamp);',
+    NULL,
+    'SELECT COUNT(*)
+    FROM ROLE
+     INNER JOIN ENTITY
+       ON ROLE.subject_entity_uid = ENTITY.entity_uid
+   INNER JOIN PARTICIPATION
+       ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+   INNER JOIN OBSERVATION
+    ON OBSERVATION.OBSERVATION_UID = PARTICIPATION.act_uid
+   WHERE (OBSERVATION.add_time :operator :timestamp
+           OR OBSERVATION.last_chg_time :operator :timestamp);',
+
+    'WITH PaginatedResults AS (
+        SELECT DISTINCT ROLE.*,
+               COALESCE(OBSERVATION.add_time, OBSERVATION.last_chg_time) AS latest_timestamp
+        FROM ROLE
+        INNER JOIN ENTITY
+        ON ROLE.subject_entity_uid = ENTITY.entity_uid
+		INNER JOIN PARTICIPATION
+	        ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+	    INNER JOIN OBSERVATION
+	 	ON OBSERVATION.OBSERVATION_UID = PARTICIPATION.act_uid
+        WHERE (OBSERVATION.add_time :operator :timestamp
+               OR OBSERVATION.last_chg_time :operator :timestamp)
+    ),
+    NumberedResults AS (
+        SELECT *,
+               ROW_NUMBER() OVER (ORDER BY latest_timestamp ASC, subject_entity_uid, role_seq, cd) AS RowNum
         FROM PaginatedResults
     )
     SELECT * FROM NumberedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
