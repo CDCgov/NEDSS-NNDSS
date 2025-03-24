@@ -106,7 +106,7 @@ BEGIN
 INSERT INTO [RDB].[dbo].[data_sync_config] (table_name, source_db, query, query_with_null_timestamp, query_count,
                                             query_with_pagination)
 VALUES
-    ('ROLE', 'NBS_ODSE', 'SELECT DISTINCT ROLE.*
+    ('ROLE', 'NBS_ODSE', 'SELECT ROLE.*
      FROM ROLE
   	INNER JOIN ENTITY
         ON ROLE.subject_entity_uid = ENTITY.entity_uid
@@ -117,19 +117,20 @@ VALUES
     WHERE (OBSERVATION.add_time :operator :timestamp
             OR OBSERVATION.last_chg_time :operator :timestamp);',
     NULL,
-    'SELECT COUNT(*)
-    FROM ROLE
-     INNER JOIN ENTITY
-       ON ROLE.subject_entity_uid = ENTITY.entity_uid
-   INNER JOIN PARTICIPATION
-       ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
-   INNER JOIN OBSERVATION
-    ON OBSERVATION.OBSERVATION_UID = PARTICIPATION.act_uid
-   WHERE (OBSERVATION.add_time :operator :timestamp
-           OR OBSERVATION.last_chg_time :operator :timestamp);',
+    'SELECT COUNT(DISTINCT SUB.subject_entity_uid)
+    FROM
+    (SELECT ROLE.*
+        FROM ROLE
+        INNER JOIN ENTITY
+            ON ROLE.subject_entity_uid = ENTITY.entity_uid
+        INNER JOIN PARTICIPATION
+            ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+        INNER JOIN OBSERVATION
+            ON OBSERVATION.OBSERVATION_UID = PARTICIPATION.act_uid
+        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)) SUB;',
 
     'WITH PaginatedResults AS (
-        SELECT DISTINCT ROLE.*,
+        SELECT ROLE.*,
                COALESCE(OBSERVATION.add_time, OBSERVATION.last_chg_time) AS latest_timestamp
         FROM ROLE
         INNER JOIN ENTITY
