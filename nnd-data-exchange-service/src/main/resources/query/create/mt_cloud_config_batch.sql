@@ -8,28 +8,100 @@ INSERT INTO [RDB].[dbo].[data_sync_config] (table_name, source_db, query, query_
                                             query_with_pagination)
 VALUES
     ('PERSON', 'NBS_ODSE',
-    'SELECT *
+    'SELECT DISTINCT PERSON.person_uid,
+   PERSON.add_time,
+   1 AS GroupOrder
 FROM PERSON
-WHERE last_chg_time :operator :timestamp;',
+INNER JOIN ENTITY
+ON ENTITY.entity_uid = PERSON.person_uid
+INNER JOIN PARTICIPATION
+ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+INNER JOIN OBSERVATION
+ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
+WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time  :operator :timestamp) AND person_parent_uid = person_uid
+
+UNION ALL
+
+SELECT DISTINCT PERSON.person_uid,
+   PERSON.add_time,
+   2 AS GroupOrder
+FROM PERSON
+INNER JOIN ENTITY
+ON ENTITY.entity_uid = PERSON.person_uid
+INNER JOIN PARTICIPATION
+ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+INNER JOIN OBSERVATION
+ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
+WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp) AND person_parent_uid != person_uid; ',
     NULL,
-    'SELECT COUNT(*) FROM PERSON
-    WHERE last_chg_time :operator :timestamp;',
-    'WITH NumberedResults AS (
-        SELECT person_uid,
-               ROW_NUMBER() OVER (ORDER BY last_chg_time ASC, person_uid) AS RowNum
+    'SELECT COUNT(*)
+    FROM (
+        SELECT DISTINCT PERSON.person_uid
         FROM PERSON
-        WHERE last_chg_time :operator :timestamp
+        INNER JOIN ENTITY
+            ON ENTITY.entity_uid = PERSON.person_uid
+        INNER JOIN PARTICIPATION
+            ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+        INNER JOIN OBSERVATION
+            ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
+        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
+          AND PERSON.person_parent_uid = PERSON.person_uid
+
+        UNION ALL
+
+        SELECT DISTINCT PERSON.person_uid
+        FROM PERSON
+        INNER JOIN ENTITY
+            ON ENTITY.entity_uid = PERSON.person_uid
+        INNER JOIN PARTICIPATION
+            ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+        INNER JOIN OBSERVATION
+            ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
+        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
+          AND PERSON.person_parent_uid != PERSON.person_uid
+    ) AS Combined;',
+    'WITH OrderedPersons AS (
+        SELECT DISTINCT PERSON.person_uid,
+               PERSON.add_time,
+               1 AS GroupOrder
+        FROM PERSON
+        INNER JOIN ENTITY
+            ON ENTITY.entity_uid = PERSON.person_uid
+        INNER JOIN PARTICIPATION
+            ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+        INNER JOIN OBSERVATION
+            ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
+        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
+          AND PERSON.person_parent_uid = PERSON.person_uid
+
+        UNION ALL
+
+        SELECT DISTINCT PERSON.person_uid,
+               PERSON.add_time,
+               2 AS GroupOrder
+        FROM PERSON
+        INNER JOIN ENTITY
+            ON ENTITY.entity_uid = PERSON.person_uid
+        INNER JOIN PARTICIPATION
+            ON ENTITY.entity_uid = PARTICIPATION.subject_entity_uid
+        INNER JOIN OBSERVATION
+            ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
+        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
+          AND PERSON.person_parent_uid != PERSON.person_uid
+    ),
+    NumberedResults AS (
+        SELECT person_uid,
+               ROW_NUMBER() OVER (ORDER BY GroupOrder, add_time ASC, person_uid) AS RowNum
+        FROM OrderedPersons
     )
-    SELECT *
-    FROM PERSON
-    WHERE person_uid IN (
-        SELECT person_uid
-        FROM NumberedResults
-        WHERE RowNum BETWEEN :startRow AND :endRow
-    );');
+    SELECT P.*
+    FROM PERSON P
+    INNER JOIN NumberedResults NR
+        ON P.person_uid = NR.person_uid
+    WHERE NR.RowNum BETWEEN :startRow AND :endRow;
+    ');
 
 END;
-
 
 
 
