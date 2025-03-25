@@ -9,6 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ErrorResponseBuilder {
+    private ErrorResponseBuilder() {
+        //SONARQ
+    }
     public static ResponseEntity<Map<String, Object>> buildErrorResponse(Exception e,
                                                                          HttpStatus status,
                                                                          HttpServletRequest request) {

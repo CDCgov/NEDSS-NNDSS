@@ -182,7 +182,7 @@ public class DataExchangeController {
                                            @RequestHeader(name = "noPagination", defaultValue = "false") String noPagination,
                                            @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
                                            @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
-                                           HttpServletRequest request) throws DataExchangeException {
+                                           HttpServletRequest request) {
         try {
             if (version == null || version.isEmpty()) {
                 throw new DataExchangeException("Version is Missing");
@@ -257,7 +257,7 @@ public class DataExchangeController {
                                                         @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
                                                         @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
                                                         HttpServletRequest request
-                                                        ) throws DataExchangeException {
+                                                        ) {
         try {
             if (version == null || version.isEmpty()) {
                 throw new DataExchangeException("Version is Missing");
