@@ -3,6 +3,8 @@ package gov.cdc.nnddatapollservice.share;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import gov.cdc.nnddatapollservice.configuration.LocalDateTimeAdapter;
+import gov.cdc.nnddatapollservice.configuration.TimestampAdapter;
 import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 import gov.cdc.nnddatapollservice.repository.config.model.PollDataLog;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
@@ -26,6 +28,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -77,6 +80,14 @@ public class JdbcTemplateUtil {
     protected int jdbcBatchLevelMaxConcurrency = 10;
     protected int jdbcBatchLevelMaxRetry = 5;
 //    protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
+
+
+    private final Gson gsonSpec = new GsonBuilder()
+            .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
+            .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
+            .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
+            .serializeNulls()
+            .create();
 
     public JdbcTemplateUtil(PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError) {
         this.pollDataLogRepository = pollDataLogRepository;
@@ -633,13 +644,16 @@ public class JdbcTemplateUtil {
                     logger.debug("Duplicated Key Exception Resolved");
                 }
                 else {
-                    anyFatal = true;
-                    logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+                    if (!config.getTableName().equalsIgnoreCase("PERSON")) {
+                        logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+                    }
                     LogResponseModel logModel = new LogResponseModel(
                             ei.getMessage(),getStackTraceAsString(ei),
                             ERROR, startTime, apiResponseModel);
                     updateLog(config.getTableName(), logModel);
-                    handleError.writeRecordToFile(gsonNorm, res,
+                    handleError.writeRecordToFile(config.getTableName().equalsIgnoreCase("PERSON")
+                                ? gsonSpec
+                                : gsonNorm, res,
                             config.getTableName() + UUID.randomUUID(),
                             sqlErrorPath
                                     + "/" + config.getSourceDb() + "/"
