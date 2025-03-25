@@ -476,13 +476,17 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     Future<?> future = futures.get(i);
                     int pageIndex = start + i;
                     try {
-                        future.get(apiLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                        future.get();
+                        // future.get(apiLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
                         completedTasks++;
-                    } catch (TimeoutException e) {
-                        logger.error("Task for page {} timed out after {} ms", pageIndex, apiLevelTimeoutPerTaskMs);
-                        future.cancel(true); // Cancel to free resources
-                        failedPages.add(pageIndex); // Mark for reprocessing
-                    } catch (InterruptedException e) {
+                    }
+//                    catch (TimeoutException e) {
+//                        logger.error("Task for page {} timed out after {} ms", pageIndex, apiLevelTimeoutPerTaskMs);
+//                        future.cancel(true); // Cancel to free resources
+//                        failedPages.add(pageIndex); // Mark for reprocessing
+//                    }
+
+                    catch (InterruptedException e) {
                         logger.warn("Interrupted while waiting for batch completion");
                         Thread.currentThread().interrupt();
                         failedPages.add(pageIndex); // Mark for reprocessing
