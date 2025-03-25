@@ -89,7 +89,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
                 return rdbModernJdbcTemplate.queryForObject(query, Integer.class);
             }
-            else if (sourceDb.equalsIgnoreCase("NBS_ODSE")) {
+            else if (sourceDb.equalsIgnoreCase(DB_NBS_ODSE)) {
                 return odseJdbcTemplate.queryForObject(query, Integer.class);
             }
             else {
@@ -124,7 +124,6 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
 
                 return DataSimplification.dataToString(data);
-                //return DataSimplification.dataCompressionAndEncodeV2(data);
             };
 
             return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
@@ -139,6 +138,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
     }
 
+    @SuppressWarnings("java:S107")
     private String preparePaginationQuery(DataSyncConfig dataConfig, String param, String startRow,
                                           String endRow, boolean initialLoad, boolean allowNull, boolean noPagination, boolean keyPagination) {
 
@@ -201,7 +201,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 DB_SRTE, srteJdbcTemplate,
                 DB_RDB, jdbcTemplate,
                 DB_RDB_MODERN, rdbModernJdbcTemplate,
-                "NBS_ODSE", odseJdbcTemplate
+                DB_NBS_ODSE, odseJdbcTemplate
         );
 
         return Optional.ofNullable(dbTemplateMap.get(sourceDb))
@@ -230,7 +230,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             return jdbcTemplate.queryForList(query);
         } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
             return rdbModernJdbcTemplate.queryForList(query);
-        } else if (sourceDb.equalsIgnoreCase("NBS_ODSE")) {
+        } else if (sourceDb.equalsIgnoreCase(DB_NBS_ODSE)) {
             return odseJdbcTemplate.queryForList(query);
         }
 

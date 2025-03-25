@@ -21,6 +21,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+import static gov.cdc.nnddatapollservice.constant.ApiConstantValue.CLIENT_ID;
+import static gov.cdc.nnddatapollservice.constant.ApiConstantValue.CLIENT_SECRET;
+
 @Service
 public class TokenService implements ITokenService {
     private static final Logger logger = LoggerFactory.getLogger(TokenService.class);
@@ -39,15 +42,8 @@ public class TokenService implements ITokenService {
     private final ScheduledExecutorService connectionLogger = Executors.newSingleThreadScheduledExecutor();
 
     public TokenService() {
-//        this.httpClient = HttpClient.newBuilder()
-//                .version(HttpClient.Version.HTTP_1_1)
-//                .connectTimeout(Duration.ofSeconds(10)) // 10s connect timeout
-//                .executor(Executors.newVirtualThreadPerTaskExecutor()) // Optional, for async callbacks
-//                .build();
-
         this.httpClient = HttpClientProvider.getInstance();
         connectionLogger.scheduleAtFixedRate(this::logActiveConnections, 5, 5, TimeUnit.MINUTES);
-
     }
 
     private void logActiveConnections() {
@@ -70,8 +66,8 @@ public class TokenService implements ITokenService {
         try {
             // Build headers
             HttpHeaders headers = new HttpHeaders();
-            headers.add("clientid", clientId);
-            headers.add("clientsecret", clientSecret);
+            headers.add(CLIENT_ID, clientId);
+            headers.add(CLIENT_SECRET, clientSecret);
 
             // Build HttpRequest (POST with no body)
             HttpRequest request = HttpRequest.newBuilder()

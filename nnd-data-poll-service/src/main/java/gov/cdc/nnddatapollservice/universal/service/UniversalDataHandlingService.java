@@ -96,6 +96,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         this.apiService = apiService;
     }
 
+    @SuppressWarnings({"java:S3776", "java:S6541", "java:S1141"})
     public void handlingExchangedData(String source) throws APIException {
         List<PollDataSyncConfig> configTableList = iPollCommonService.getTableListFromConfig();
         List<PollDataSyncConfig> filteredTablesList = iPollCommonService.getTablesConfigListBySOurceDB(configTableList, source);
@@ -211,7 +212,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     }
 
-    @SuppressWarnings({"java:S1141","java:S3776"})
+    @SuppressWarnings({"java:S1141","java:S3776", "java:S6541"})
     protected void pollAndPersistData(PollDataSyncConfig config) throws APIException {
         try {
             LogResponseModel log;
@@ -267,7 +268,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
 
                 try {
-                    var rawJsonDataWithNull = encodedDataWithNullResponse.getResponse(); //iPollCommonService.decodeAndDecompress(encodedDataWithNull);
+                    var rawJsonDataWithNull = encodedDataWithNullResponse.getResponse();
                     if (storeJsonInS3) {
                         log = is3DataService.persistToS3MultiPart(config.getSourceDb(), rawJsonDataWithNull, config.getTableName(),
                                 timestampWithNull, isInitialLoad, encodedDataWithNullResponse);
@@ -351,7 +352,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         }
     }
 
-
+    @SuppressWarnings({"java:S3776","java:S107", "java:S135", "java:S1141"})
     protected void processingDataBatchMultiThreadSemaphore(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
                                                            PollDataSyncConfig config, String logStr,
                                                            Timestamp startTime, int totalRecordCounts, String maxId) throws APIException {
@@ -549,6 +550,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         }
     }
 
+    @SuppressWarnings("java:S107")
     protected void processingDataBatch(int totalPages, int batchSize, boolean isInitialLoad, String timeStampForPoll,
                                        PollDataSyncConfig config, String logStr,
                                        Timestamp startTime, String maxId,
@@ -618,7 +620,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         }
     }
 
-    @SuppressWarnings("java:S107")
+    @SuppressWarnings({"java:S107","java:S3776", "java:S6541"})
     protected void updateDataHelper(ApiResponseModel<String> apiResponseModel, Timestamp timestamp,
                                     String rawJsonData, boolean isInitialLoad, String log,
                                     Timestamp startTime, PollDataSyncConfig config) throws APIException {

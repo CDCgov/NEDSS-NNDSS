@@ -38,13 +38,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
+import static gov.cdc.nnddatapollservice.constant.SqlConstantValue.UPDATE;
+import static gov.cdc.nnddatapollservice.constant.SqlConstantValue.WHERE_TABLE_NAME;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
 @Component
 public class JdbcTemplateUtil {
     private static Logger logger = LoggerFactory.getLogger(JdbcTemplateUtil.class);
     private final PollDataLogRepository pollDataLogRepository;
-    private final String pollConfigTableName = "POLL_DATA_SYNC_CONFIG";
+    private static final String POLL_CONFIG_TABLE_NAME = "POLL_DATA_SYNC_CONFIG";
     private final JdbcTemplate rdbJdbcTemplate;
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
@@ -144,7 +146,6 @@ public class JdbcTemplateUtil {
                 " WHEN MATCHED THEN UPDATE SET " + updates + " " +
                 " WHEN NOT MATCHED THEN INSERT (" + columns + ") VALUES (" + valuesForQuery + ");";
 
-//        var values = validData.values().toArray();
         // Convert potential date strings into proper SQL Date objects
         var values = validData.values().stream()
                 .map(this::convertIfDate)
@@ -334,7 +335,7 @@ public class JdbcTemplateUtil {
         return log;
     }
 
-
+    @SuppressWarnings("java:S3776")
     public LogResponseModel persistingGenericTableMultiThread(
             String jsonData,
             PollDataSyncConfig config,
@@ -488,7 +489,7 @@ public class JdbcTemplateUtil {
     }
 
 
-
+    @SuppressWarnings("java:S3776")
     public LogResponseModel handleBatchInsertionFailureMultiThread(List<Map<String, Object>> records, PollDataSyncConfig config,
                                                         SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
                                                         ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
@@ -604,6 +605,7 @@ public class JdbcTemplateUtil {
     }
 
 
+    @SuppressWarnings("java:S3776")
     public LogResponseModel handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config,
                                             SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
                                             ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
@@ -699,7 +701,7 @@ public class JdbcTemplateUtil {
     }
 
     public void updateLastUpdatedTime(String tableName, Timestamp timestamp) {
-        String updateSql = "update " + pollConfigTableName + " set last_update_time =? where table_name=?;";
+        String updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time =? where table_name=?;";
         rdbJdbcTemplate.update(updateSql, timestamp, tableName);
     }
 
@@ -711,10 +713,10 @@ public class JdbcTemplateUtil {
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
         String updateSql;
         if (!logResponseModel.apiResponseModel.isSuccess()) {
-            updateSql = "update " + pollConfigTableName + " set last_update_time =?, api_fatal_on_last_run = 1 where table_name=?;";
+            updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time =?, api_fatal_on_last_run = 1 where table_name=?;";
         }
         else {
-            updateSql = "update " + pollConfigTableName + " set last_update_time =? where table_name=?;";
+            updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time =? where table_name=?;";
         }
         rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
@@ -725,10 +727,10 @@ public class JdbcTemplateUtil {
     public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp,  LogResponseModel logResponseModel) {
         String updateSql;
         if (!logResponseModel.apiResponseModel.isSuccess()) {
-            updateSql = "update " + pollConfigTableName + " set last_update_time_s3 =?, api_fatal_on_last_run = 1 where table_name=?;";
+            updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_s3 =?, api_fatal_on_last_run = 1 where table_name=?;";
         }
         else {
-            updateSql = "update " + pollConfigTableName + " set last_update_time_s3 =? where table_name=?;";
+            updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_s3 =? where table_name=?;";
         }
 
         rdbJdbcTemplate.update(updateSql, timestamp, tableName);
@@ -740,10 +742,10 @@ public class JdbcTemplateUtil {
     public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
         String updateSql;
         if (!logResponseModel.apiResponseModel.isSuccess()) {
-            updateSql = "update " + pollConfigTableName + " set last_update_time_local_dir =?, api_fatal_on_last_run = 1 where table_name=?;";
+            updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_local_dir =?, api_fatal_on_last_run = 1 where table_name=?;";
         }
         else {
-            updateSql = "update " + pollConfigTableName + " set last_update_time_local_dir =? where table_name=?;";
+            updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_local_dir =? where table_name=?;";
         }
 
         rdbJdbcTemplate.update(updateSql, timestamp, tableName);
@@ -758,7 +760,7 @@ public class JdbcTemplateUtil {
     }
 
     public String getLastUpdatedTime(String tableName) {
-        String sql = "select last_update_time from " + pollConfigTableName + " where table_name=?";
+        String sql = "select last_update_time from " + POLL_CONFIG_TABLE_NAME + WHERE_TABLE_NAME;
         String updatedTime = "";
         Timestamp lastTime = rdbJdbcTemplate.queryForObject(
                 sql,
@@ -771,7 +773,7 @@ public class JdbcTemplateUtil {
     }
 
     public String getLastUpdatedTimeS3(String tableName) {
-        String sql = "select last_update_time_s3 from " + pollConfigTableName + " where table_name=?";
+        String sql = "select last_update_time_s3 from " + POLL_CONFIG_TABLE_NAME + WHERE_TABLE_NAME;
         String updatedTime = "";
         Timestamp lastTime = rdbJdbcTemplate.queryForObject(
                 sql,
@@ -784,7 +786,7 @@ public class JdbcTemplateUtil {
     }
 
     public String getLastUpdatedTimeLocalDir(String tableName) {
-        String sql = "select last_update_time_local_dir from " + pollConfigTableName + " where table_name=?";
+        String sql = "select last_update_time_local_dir from " + POLL_CONFIG_TABLE_NAME + WHERE_TABLE_NAME;
         String updatedTime = "";
         Timestamp lastTime = rdbJdbcTemplate.queryForObject(
                 sql,
@@ -805,7 +807,7 @@ public class JdbcTemplateUtil {
 
 
     public List<PollDataSyncConfig> getTableListFromConfig() {
-        String sql = "select * from " + pollConfigTableName;
+        String sql = "select * from " + POLL_CONFIG_TABLE_NAME;
         List<PollDataSyncConfig> tableList = rdbJdbcTemplate.query(
                 sql,
                 new BeanPropertyRowMapper<>(PollDataSyncConfig.class));

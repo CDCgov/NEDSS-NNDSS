@@ -1,7 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
 import com.google.gson.Gson;
-
 import gov.cdc.nnddatapollservice.configuration.HttpClientProvider;
 import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.service.interfaces.IApiService;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.BufferedReader;
@@ -25,13 +23,13 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-
 import java.util.stream.Stream;
+
+import static gov.cdc.nnddatapollservice.constant.ApiConstantValue.*;
 
 @Service
 public class ApiService implements IApiService {
@@ -49,7 +47,6 @@ public class ApiService implements IApiService {
     @Value("${data_exchange.endpoint_generic_total_record}")
     protected String exchangeTotalRecordEndpoint;
 
-    private final RestTemplate restTemplate = new RestTemplate();
     private final ITokenService tokenService;
 
     private HttpClient httpClient;
@@ -93,17 +90,17 @@ public class ApiService implements IApiService {
 
             // Build headers
             HttpHeaders headers = new HttpHeaders();
-            headers.add("clientid", clientId);
-            headers.add("clientsecret", clientSecret);
-            headers.add("initialLoad", String.valueOf(isInitialLoad));
-            headers.add("version", version);
-            headers.add("useKeyPagination", String.valueOf(useKeyPagination));
-            headers.add("lastKey", entityKey);
+            headers.add(CLIENT_ID, clientId);
+            headers.add(CLIENT_SECRET, clientSecret);
+            headers.add(INITIAL_LOAD, String.valueOf(isInitialLoad));
+            headers.add(VERSION, version);
+            headers.add(USE_KEY_PAGINATION, String.valueOf(useKeyPagination));
+            headers.add(LAST_KEY, entityKey);
 
             // Build URI
             uri = UriComponentsBuilder.fromHttpUrl(exchangeTotalRecordEndpoint)
                     .path("/" + tableName)
-                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
+                    .queryParamIfPresent(TIMESTAMP, Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
 
@@ -111,8 +108,8 @@ public class ApiService implements IApiService {
             HttpHeaders headersForLogging = new HttpHeaders();
             headers.entrySet().forEach(entry -> {
                 String key = entry.getKey();
-                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
-                        || "clientsecret".equalsIgnoreCase(key)) {
+                if (AUTHORIZATION.equalsIgnoreCase(key) || CLIENT_ID.equalsIgnoreCase(key)
+                        || CLIENT_SECRET.equalsIgnoreCase(key)) {
                     headersForLogging.add(key, "");
                 } else {
                     headersForLogging.put(key, entry.getValue());
@@ -161,6 +158,7 @@ public class ApiService implements IApiService {
         }
     }
 
+    @SuppressWarnings("java:S3776")
     public ApiResponseModel<String> callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
                                                              String startRow, String endRow, boolean noPagination, boolean useKeyPagination,
                                                              String entityKey) {
@@ -169,28 +167,28 @@ public class ApiService implements IApiService {
         String headerStr;
         try {
             HttpHeaders headers = new HttpHeaders();
-            headers.add("initialLoad", String.valueOf(isInitialLoad));
-            headers.add("allowNull", String.valueOf(allowNull));
-            headers.add("startRow", startRow);
-            headers.add("endRow", endRow);
-            headers.add("clientid", clientId);
-            headers.add("clientsecret", clientSecret);
-            headers.add("version", version);
-            headers.add("noPagination", String.valueOf(noPagination));
-            headers.add("useKeyPagination", String.valueOf(useKeyPagination));
-            headers.add("lastKey", entityKey);
+            headers.add(INITIAL_LOAD, String.valueOf(isInitialLoad));
+            headers.add(ALLOW_NULL, String.valueOf(allowNull));
+            headers.add(START_ROW, startRow);
+            headers.add(END_ROW, endRow);
+            headers.add(CLIENT_ID, clientId);
+            headers.add(CLIENT_SECRET, clientSecret);
+            headers.add(VERSION, version);
+            headers.add(NO_PAGINATION, String.valueOf(noPagination));
+            headers.add(USE_KEY_PAGINATION, String.valueOf(useKeyPagination));
+            headers.add(LAST_KEY, entityKey);
 
             uri = UriComponentsBuilder.fromHttpUrl(exchangeEndpoint)
                     .path("/" + tableName)
-                    .queryParamIfPresent("timestamp", Optional.ofNullable(lastUpdatedTime))
+                    .queryParamIfPresent(TIMESTAMP, Optional.ofNullable(lastUpdatedTime))
                     .build()
                     .toUri();
 
             HttpHeaders headersForLogging = new HttpHeaders();
             headers.entrySet().forEach(entry -> {
                 String key = entry.getKey();
-                if ("Authorization".equalsIgnoreCase(key) || "clientid".equalsIgnoreCase(key)
-                        || "clientsecret".equalsIgnoreCase(key)) {
+                if (AUTHORIZATION.equalsIgnoreCase(key) || CLIENT_ID.equalsIgnoreCase(key)
+                        || CLIENT_SECRET.equalsIgnoreCase(key)) {
                     headersForLogging.add(key, "");
                 } else {
                     headersForLogging.put(key, entry.getValue());

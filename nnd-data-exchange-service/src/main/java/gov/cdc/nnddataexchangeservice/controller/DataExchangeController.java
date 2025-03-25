@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -127,7 +126,7 @@ public class DataExchangeController {
                     @Parameter(in = ParameterIn.QUERY,
                             name = "timestamp",
                             description = "Timestamp parameter used to filter data",
-                            required = true,
+                            required = false,
                             schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.HEADER,
                             name = "startRow",
@@ -180,10 +179,7 @@ public class DataExchangeController {
                                                               @RequestHeader(name = "version", defaultValue = "") String version,
                                                               @RequestHeader(name = "noPagination", defaultValue = "false") String noPagination,
                                                               @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
-                                                              @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
-                                                              HttpServletRequest request) throws DataExchangeException {
-            logger.info("Data Sync for {}", tableName);
-
+                                                              @RequestHeader(name = "lastKey", defaultValue = "") String lastKey) {
             if (version == null || version.isEmpty()) {
                 try {
                     throw new DataExchangeException("Version is Missing");
@@ -232,7 +228,7 @@ public class DataExchangeController {
                     @Parameter(in = ParameterIn.QUERY,
                             name = "timestamp",
                             description = "Timestamp parameter used to filter records",
-                            required = true,
+                            required = false,
                             schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.HEADER,
                             name = "initialLoad",
@@ -263,7 +259,7 @@ public class DataExchangeController {
                                                         @RequestHeader(name = "version", defaultValue = "") String version,
                                                         @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
                                                         @RequestHeader(name = "lastKey", defaultValue = "") String lastKey
-                                                        ) throws DataExchangeException {
+                                                        ){
         if (version == null || version.isEmpty()) {
             try {
                 throw new DataExchangeException("Version is Missing");
@@ -281,11 +277,10 @@ public class DataExchangeController {
             param = convertTimestampFromString(timestamp);
         }
 
-        Integer res = null;
+        Integer res ;
         try {
             res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
         } catch (DataExchangeException e) {
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
         return new ResponseEntity<>(res, HttpStatus.OK);
