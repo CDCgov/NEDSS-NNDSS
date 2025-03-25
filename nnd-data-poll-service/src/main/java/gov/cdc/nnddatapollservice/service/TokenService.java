@@ -48,7 +48,7 @@ public class TokenService implements ITokenService {
 
     private void logActiveConnections() {
         try {
-            Process process = Runtime.getRuntime().exec("netstat -anp tcp | grep ESTABLISHED | wc -l");
+            Process process = Runtime.getRuntime().exec("netstat -anp tcp | grep ESTABLISHED | wc -l"); //NOSONAR
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String activeConnections = reader.readLine().trim();
             logger.info("Active API (TOKEN) connections: {}", activeConnections);

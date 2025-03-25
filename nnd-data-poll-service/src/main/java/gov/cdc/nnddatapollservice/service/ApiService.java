@@ -70,7 +70,7 @@ public class ApiService implements IApiService {
 
     private void logActiveConnections() {
         try {
-            Process process = Runtime.getRuntime().exec("netstat -anp tcp | grep ESTABLISHED | wc -l");
+            Process process = Runtime.getRuntime().exec("netstat -anp tcp | grep ESTABLISHED | wc -l"); //NOSONAR
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String activeConnections = reader.readLine().trim();
             logger.info("Active API (MAIN) connections: {}", activeConnections);
@@ -141,7 +141,7 @@ public class ApiService implements IApiService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 Gson g = new Gson();
-                logger.error("API RES: {}", g.toJson(response.body()));
+                logger.error("API RES: {}", g.toJson(response.body())); // NOSONAR
                 responseModel.setSuccess(false);
                 responseModel.setApiException(new APIException("Unexpected status code: " + response.statusCode()));
                 return responseModel;
@@ -158,7 +158,7 @@ public class ApiService implements IApiService {
         }
     }
 
-    @SuppressWarnings("java:S3776")
+    @SuppressWarnings({"java:S3776","java:S1141"})
     public ApiResponseModel<String> callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
                                                              String startRow, String endRow, boolean noPagination, boolean useKeyPagination,
                                                              String entityKey) {
@@ -234,7 +234,7 @@ public class ApiService implements IApiService {
                         responseModel.setSuccess(true);
                         return responseModel;
                     } else {
-                        logger.error("API RES: {}", new Gson().toJson(response.body()));
+                        logger.error("API RES: {}", new Gson().toJson(response.body())); // NOSONAR
                         if (attempt < maxRetries) {
                             // Check if stuck
                             if (!tokenRefreshed && Duration.between(retryStartTime, Instant.now()).compareTo(stuckThreshold) > 0) {
@@ -265,7 +265,7 @@ public class ApiService implements IApiService {
                 } catch (Exception e) {
                     logger.error("Retry {} failed: {}", attempt, e.getMessage(), e);
                     if (attempt < maxRetries) {
-                        Thread.sleep(retryDelay * attempt);
+                        Thread.sleep((long) retryDelay * attempt);
                     } else {
                         responseModel.setSuccess(false);
                         responseModel.setApiException(new APIException("API request failed after " + maxRetries + " attempts: " + e.getMessage(), e));

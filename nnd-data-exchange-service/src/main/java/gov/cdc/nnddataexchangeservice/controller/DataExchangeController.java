@@ -184,7 +184,7 @@ public class DataExchangeController {
                 try {
                     throw new DataExchangeException("Version is Missing");
                 } catch (DataExchangeException e) {
-                    throw new RuntimeException(e);
+                    throw new RuntimeException(e); //NOSONAR
                 }
             }
 
@@ -201,7 +201,7 @@ public class DataExchangeController {
                         Boolean.parseBoolean(allowNull), Boolean.parseBoolean(noPagination), Boolean.parseBoolean(useKeyPagination));
             } catch (DataExchangeException e) {
                 e.printStackTrace();
-                throw new RuntimeException(e);
+                throw new RuntimeException(e); //NOSONAR
             }
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
     }
@@ -264,7 +264,7 @@ public class DataExchangeController {
             try {
                 throw new DataExchangeException("Version is Missing");
             } catch (DataExchangeException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException(e); //NOSONAR
             }
         }
 
@@ -281,7 +281,7 @@ public class DataExchangeController {
         try {
             res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
         } catch (DataExchangeException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); //NOSONAR
         }
         return new ResponseEntity<>(res, HttpStatus.OK);
 

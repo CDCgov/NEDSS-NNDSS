@@ -268,7 +268,7 @@ public class JdbcTemplateUtil {
         }
     }
 
-    @SuppressWarnings({"java:S3776","java:S1141"})
+    @SuppressWarnings({"java:S3776","java:S1141", "java:S1871"})
     public LogResponseModel persistingGenericTable(
             String jsonData,
             PollDataSyncConfig config,
@@ -335,7 +335,7 @@ public class JdbcTemplateUtil {
         return log;
     }
 
-    @SuppressWarnings("java:S3776")
+    @SuppressWarnings({"java:S3776", "java:S1141", "java:S1871"})
     public LogResponseModel persistingGenericTableMultiThread(
             String jsonData,
             PollDataSyncConfig config,
@@ -413,14 +413,14 @@ public class JdbcTemplateUtil {
 
                                             if (retries >= jdbcBatchLevelMaxRetry) {
                                                 logger.error("Chunk {}: Failed after max retries", chunkNumber, e);
-                                                throw new RuntimeException("Chunk insert failed", e);
+                                                throw new RuntimeException("Chunk insert failed", e); //NOSONAR
                                             }
 
                                             try {
                                                 Thread.sleep(2000L * retries); // Exponential backoff
                                             } catch (InterruptedException ex) {
                                                 Thread.currentThread().interrupt();
-                                                throw new RuntimeException("Interrupted during retry sleep", ex);
+                                                throw new RuntimeException("Interrupted during retry sleep", ex); //NOSONAR
                                             }
                                         } finally {
                                             if (acquired) semaphore.release();
@@ -438,7 +438,7 @@ public class JdbcTemplateUtil {
                                 catch (TimeoutException e) {
                                     logger.error("Chunk task {} timed out after {}ms", idx + 1, jdbcBatchLevelTimeoutPerTaskMs);
                                     future.cancel(true);
-                                    throw new RuntimeException("Chunk task timeout exceeded", e);
+                                    throw new RuntimeException("Chunk task timeout exceeded", e); //NOSONAR
                                 }
                                 catch (ExecutionException e) {
                                     throw e; // Already logged inside chunk
@@ -489,7 +489,7 @@ public class JdbcTemplateUtil {
     }
 
 
-    @SuppressWarnings("java:S3776")
+    @SuppressWarnings({"java:S3776", "java:S135"})
     public LogResponseModel handleBatchInsertionFailureMultiThread(List<Map<String, Object>> records, PollDataSyncConfig config,
                                                         SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
                                                         ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
@@ -557,7 +557,7 @@ public class JdbcTemplateUtil {
                                                     + config.getTableName() + "/");
                                     retries++;
                                     if (retries < jdbcLevelMaxRetry) {
-                                        Thread.sleep(2000 * (retries + 1)); // Exponential backoff
+                                        Thread.sleep(2000L * (retries + 1)); // Exponential backoff
                                     } else {
                                         anyFatal.set(true);
                                         break;

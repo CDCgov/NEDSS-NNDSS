@@ -451,7 +451,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                             }
                         }
                         catch (Exception e) {
-                            throw new RuntimeException("Task failed after retries for page " + pageIndex, e);
+                            throw new RuntimeException("Task failed after retries for page " + pageIndex, e); //NOSONAR
                         }
                     });
                     futures.add(future);

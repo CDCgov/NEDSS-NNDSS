@@ -71,7 +71,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private String prepareQuery(String query, boolean initialLoad, String timestamp, boolean useKeyPagination) {
         String operator;
         if (useKeyPagination) {
-            operator = GREATER;//initialLoad ? GREATER_EQUAL : LESS;
+            operator = GREATER;
         }
         else {
             operator = initialLoad ? LESS : GREATER_EQUAL;
@@ -186,9 +186,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             semaphore.acquire(); // Limit concurrent queries
 
             JdbcTemplate template = getJdbcTemplate(sourceDb);
-            return CompletableFuture.supplyAsync(() -> {
-                return queryWithStreaming(template, query);
-            }, executor).get(); // Executes asynchronously
+            return CompletableFuture.supplyAsync(() -> queryWithStreaming(template, query), executor).get(); // Executes asynchronously
         } catch (Exception e) {
             throw new DataExchangeException("Error executing query on DB: " + e.getMessage());
         } finally {
@@ -221,22 +219,6 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         });
 
         return results;
-    }
-
-    private List<Map<String, Object>> executeQueryForData(String query, String sourceDb) throws DataExchangeException {
-        if (sourceDb.equalsIgnoreCase(DB_SRTE)) {
-            return srteJdbcTemplate.queryForList(query);
-        } else if (sourceDb.equalsIgnoreCase(DB_RDB)) {
-            return jdbcTemplate.queryForList(query);
-        } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
-            return rdbModernJdbcTemplate.queryForList(query);
-        } else if (sourceDb.equalsIgnoreCase(DB_NBS_ODSE)) {
-            return odseJdbcTemplate.queryForList(query);
-        }
-
-        else {
-            throw new DataExchangeException("DB IS NOT SUPPORTED: " + sourceDb);
-        }
     }
 
     private String executeDataSyncQuery(Callable<String> callable, String tableName, String startRow, String endRow,
