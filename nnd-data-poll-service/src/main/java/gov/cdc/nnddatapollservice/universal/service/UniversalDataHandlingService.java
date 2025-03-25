@@ -484,11 +484,11 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         logger.error("Task for page {} failed: {}", pageIndex, cause.getMessage(), cause);
                         if (cause instanceof RuntimeException) {
                             Throwable rootCause = cause.getCause();
-                            if (rootCause instanceof APIException) {
-                                throw (APIException) rootCause; // Propagate the nested APIException
+                            if (rootCause instanceof APIException apiException) {
+                                throw apiException; // Propagate the nested APIException
                             }
-                        } else if (cause instanceof APIException) {
-                            throw (APIException) cause; // Direct APIException case
+                        } else if (cause instanceof APIException apiException) {
+                            throw apiException; // Direct APIException case
                         }
                         failedPages.add(pageIndex);
                     }

@@ -335,7 +335,7 @@ public class JdbcTemplateUtil {
         return log;
     }
 
-    @SuppressWarnings({"java:S3776", "java:S1141", "java:S1871"})
+    @SuppressWarnings({"java:S3776", "java:S1141", "java:S1871", "java:S2142"})
     public LogResponseModel persistingGenericTableMultiThread(
             String jsonData,
             PollDataSyncConfig config,
@@ -489,7 +489,7 @@ public class JdbcTemplateUtil {
     }
 
 
-    @SuppressWarnings({"java:S3776", "java:S135"})
+    @SuppressWarnings({"java:S3776", "java:S135", "java:S1141", "java:S2142"})
     public LogResponseModel handleBatchInsertionFailureMultiThread(List<Map<String, Object>> records, PollDataSyncConfig config,
                                                         SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
                                                         ApiResponseModel<?> apiResponseModel, LogResponseModel log) {

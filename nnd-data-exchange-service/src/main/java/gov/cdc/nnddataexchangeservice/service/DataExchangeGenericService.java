@@ -180,7 +180,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
     private static final Semaphore semaphore = new Semaphore(50); // Limits to 50 concurrent queries
 
-
+    @SuppressWarnings("java:S2142")
     public List<Map<String, Object>> executeQueryForDataAsync(String query, String sourceDb) throws DataExchangeException {
         try {
             semaphore.acquire(); // Limit concurrent queries

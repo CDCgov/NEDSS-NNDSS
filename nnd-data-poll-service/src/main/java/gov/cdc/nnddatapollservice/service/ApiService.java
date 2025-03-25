@@ -158,7 +158,7 @@ public class ApiService implements IApiService {
         }
     }
 
-    @SuppressWarnings({"java:S3776","java:S1141"})
+    @SuppressWarnings({"java:S3776","java:S1141", "java:S2142"})
     public ApiResponseModel<String> callDataExchangeEndpoint(String tableName, boolean isInitialLoad, String lastUpdatedTime, boolean allowNull,
                                                              String startRow, String endRow, boolean noPagination, boolean useKeyPagination,
                                                              String entityKey) {
