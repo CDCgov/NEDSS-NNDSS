@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.share;
 
-import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import gov.cdc.nnddatapollservice.configuration.LocalDateTimeAdapter;
@@ -71,15 +70,15 @@ public class JdbcTemplateUtil {
     protected int jdbcLevelMaxRetry = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-//    @Value("${thread.jdbc-level.timeout}")
-//    protected long jdbcLevelTimeoutPerTaskMs = 600_000;
+    @Value("${thread.jdbc-level.timeout}")
+    protected long jdbcLevelTimeoutPerTaskMs = 600_000;
 
 
     protected int jdbcBatchLevelThreadChunkSize = 2000;
     protected int jdbcBatchLevelInitialConcurrency = 5;
     protected int jdbcBatchLevelMaxConcurrency = 10;
     protected int jdbcBatchLevelMaxRetry = 5;
-//    protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
+    protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
 
 
     private final Gson gsonSpec = new GsonBuilder()
@@ -361,9 +360,9 @@ public class JdbcTemplateUtil {
                 if (!records.isEmpty()) {
                     int totalRecords = records.size();
 
-//                    logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{}, timeout={}ms)",
-//                            totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
-//                            jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency, jdbcBatchLevelTimeoutPerTaskMs);
+                    logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{}, timeout={}ms)",
+                            totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
+                            jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency, jdbcBatchLevelTimeoutPerTaskMs);
 
                     logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{})",
                             totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
@@ -433,14 +432,13 @@ public class JdbcTemplateUtil {
                             for (int idx = 0; idx < futures.size(); idx++) {
                                 Future<?> future = futures.get(idx);
                                 try {
-                                    future.get();
-                                    //future.get(jdbcBatchLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                                    future.get(jdbcBatchLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
                                 }
-//                                catch (TimeoutException e) {
-//                                    logger.error("Chunk task {} timed out after {}ms", idx + 1, jdbcBatchLevelTimeoutPerTaskMs);
-//                                    future.cancel(true);
-//                                    throw new RuntimeException("Chunk task timeout exceeded", e);
-//                                }
+                                catch (TimeoutException e) {
+                                    logger.error("Chunk task {} timed out after {}ms", idx + 1, jdbcBatchLevelTimeoutPerTaskMs);
+                                    future.cancel(true);
+                                    throw new RuntimeException("Chunk task timeout exceeded", e);
+                                }
                                 catch (ExecutionException e) {
                                     throw e; // Already logged inside chunk
                                 }
@@ -500,12 +498,8 @@ public class JdbcTemplateUtil {
         Exception[] anyErrorException = new Exception[1];
         AtomicBoolean anyFatal = new AtomicBoolean(false);
 
-//        logger.info("Starting batch insertion with concurrency {}-{}, timeout {} ms",
-//                jdbcLevelInitialConcurrency, jdbcLevelMaxConcurrency, jdbcLevelTimeoutPerTaskMs);
-
-        logger.info("Starting batch insertion with concurrency {}-{}",
-                jdbcLevelInitialConcurrency, jdbcLevelMaxConcurrency);
-
+        logger.info("Starting batch insertion with concurrency {}-{}, timeout {} ms",
+                jdbcLevelInitialConcurrency, jdbcLevelMaxConcurrency, jdbcLevelTimeoutPerTaskMs);
 
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<?>> futures = new ArrayList<>();
@@ -529,18 +523,18 @@ public class JdbcTemplateUtil {
                                     upsertSingle(config.getTableName(), res, config.getKeyList());
                                 }
 
-//                                long duration = System.currentTimeMillis() - startTimeMs;
-//                                if (duration > jdbcLevelTimeoutPerTaskMs) {
-//                                    throw new TimeoutException("Task exceeded timeout of " + jdbcLevelTimeoutPerTaskMs + " ms");
-//                                }
+                                long duration = System.currentTimeMillis() - startTimeMs;
+                                if (duration > jdbcLevelTimeoutPerTaskMs) {
+                                    throw new TimeoutException("Task exceeded timeout of " + jdbcLevelTimeoutPerTaskMs + " ms");
+                                }
                                 break; // Success, exit retry loop
                             }
-//                            catch (TimeoutException e) {
-//                                logger.error("Timeout for record: {}, {}", gsonNorm.toJson(res), e.getMessage());
-//                                errorCount.incrementAndGet();
-//                                errors.add(e.getMessage());
-//                                break; // No retry on timeout
-//                            }
+                            catch (TimeoutException e) {
+                                logger.error("Timeout for record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                errorCount.incrementAndGet();
+                                errors.add(e.getMessage());
+                                break; // No retry on timeout
+                            }
                             catch (Exception e) {
                                 errorCount.incrementAndGet();
                                 errors.add(e.getMessage());
@@ -583,13 +577,12 @@ public class JdbcTemplateUtil {
             // Wait for all tasks to complete with timeout
             for (Future<?> future : futures) {
                 try {
-                    future.get();
-//                    future.get(jdbcLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                    future.get(jdbcLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
                 }
-//                catch (TimeoutException e) {
-//                    logger.error("Task timeout after {} ms", jdbcLevelTimeoutPerTaskMs);
-//                    errorCount.incrementAndGet();
-//                }
+                catch (TimeoutException e) {
+                    logger.error("Task timeout after {} ms", jdbcLevelTimeoutPerTaskMs);
+                    errorCount.incrementAndGet();
+                }
                 catch (Exception e) {
                     logger.error("Unexpected error in batch execution: {}", e.getMessage(), e);
                 }

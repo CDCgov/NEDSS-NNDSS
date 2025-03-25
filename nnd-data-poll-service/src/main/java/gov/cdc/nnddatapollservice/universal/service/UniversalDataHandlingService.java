@@ -75,7 +75,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected int apiLevelMaxRetries = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-//    @Value("${thread.processer-level.timeout}")
+    @Value("${thread.processer-level.timeout}")
     protected long apiLevelTimeoutPerTaskMs = 600_000;
 
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
@@ -133,10 +133,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 sequentialConfigs.add(config);
             }
         }
-//
-//        for (PollDataSyncConfig pollDataSyncConfig : ascList) {
-//            pollAndPersistData(isInitialLoad, pollDataSyncConfig);
-//        }
 
         logger.info("Processing {} PollDataSyncConfig entries: {} threaded (TableOder=1) with max 2 concurrent threads, {} sequential (TableOder!=1)",
                 ascList.size(), threadedConfigs.size(), sequentialConfigs.size());
@@ -307,19 +303,14 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 }
 
 
-                if (totalRecordCounts >= THREAD_CHECK && multiThreadApiLevelEnabled
-//                        && !SPECIAL_TABLES.contains(config.getTableName().toUpperCase())
-                ) {
+                if (totalRecordCounts >= THREAD_CHECK && multiThreadApiLevelEnabled)
+                {
                     processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
                             config,  logStr, startTime, totalRecordCounts, maxId);
                 } else {
                     processingDataBatch( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
                          config,  logStr, startTime, maxId, totalRecordCounts);
                 }
-
-//                processingDataBatchMultiThreadSemaphore( totalPages,  batchSize,  isInitialLoad,  timeStampForPoll,
-//                        config,  logStr,  exceptionAtApiLevel, startTime);
-
 
             }
             else
@@ -341,7 +332,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     }
 
                     encodedData = encodedDataResponse.getResponse();
-                    rawJsonData = encodedData;// iPollCommonService.decodeAndDecompress(encodedData);
+                    rawJsonData = encodedData;
                     timestamp = getCurrentTimestamp();
                 } catch (Exception e) {
                     logStr = e.getMessage();
@@ -351,10 +342,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                         rawJsonData, isInitialLoad, logStr,
                         startTime, config);
             }
-
-
-
-
         }
         catch (APIException e) {
             throw new APIException(e.getMessage(), e);
@@ -477,14 +464,14 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     int pageIndex = start + i;
                     try {
                         future.get();
-                        // future.get(apiLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
+                         future.get(apiLevelTimeoutPerTaskMs, TimeUnit.MILLISECONDS);
                         completedTasks++;
                     }
-//                    catch (TimeoutException e) {
-//                        logger.error("Task for page {} timed out after {} ms", pageIndex, apiLevelTimeoutPerTaskMs);
-//                        future.cancel(true); // Cancel to free resources
-//                        failedPages.add(pageIndex); // Mark for reprocessing
-//                    }
+                    catch (TimeoutException e) {
+                        logger.error("Task for page {} timed out after {} ms", pageIndex, apiLevelTimeoutPerTaskMs);
+                        future.cancel(true); // Cancel to free resources
+                        failedPages.add(pageIndex); // Mark for reprocessing
+                    }
 
                     catch (InterruptedException e) {
                         logger.warn("Interrupted while waiting for batch completion");
@@ -585,7 +572,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
                 encodedData = responseModel.getResponse();
 
-                rawJsonData = encodedData; //iPollCommonService.decodeAndDecompress(encodedData);
+                rawJsonData = encodedData;
                 timestamp = getCurrentTimestamp();
             } catch (Exception e) {
                 logStr = e.getMessage();
