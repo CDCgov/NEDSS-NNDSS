@@ -64,6 +64,12 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     private final EdxNbsOdseDataPersistentDAO edxNbsOdseDataPersistentDAO;
     private final IApiService apiService;
 
+
+    @Value("${poll.edx_activity.full_sync}")
+    private boolean edxFullSync;
+    @Value("${poll.odse.full_sync}")
+    private boolean odseFullSync;
+
     private boolean tryApiFatal = true;
     public UniversalDataHandlingService(UniversalDataPersistentDAO universalDataPersistentDAO,
                                         IPollCommonService iPollCommonService,
@@ -203,6 +209,14 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
             isInitialLoad = iPollCommonService.checkInitialLoadForIndividualTable(config);
 
+            boolean forceIncrementalLoadApplied = false;
+            // Forcing Initial Load when Config said so and these only apply on ODSE and EDX
+            if (edxFullSync || odseFullSync) {
+                if (config.getSourceDb().equalsIgnoreCase(ODSE_OBS) || config.getSourceDb().equalsIgnoreCase(NBS_ODSE_EDX)) {
+                    isInitialLoad = false;
+                }
+            }
+
             if(config.isRecreateApplied() ) {
                 // IF recreated applied, EXPLICITLY set initialLoad to true, so the flow can be rerun
                 isInitialLoad = true;
@@ -216,7 +230,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 timestampWithNull = getCurrentTimestamp();
             }
             else {
-                timeStampForPoll = getPollTimestamp(isInitialLoad, config.getTableName());
+                timeStampForPoll = getPollTimestamp(isInitialLoad, config.getTableName(), forceIncrementalLoadApplied);
                 timestampWithNull = getCurrentTimestamp();
             }
 
@@ -555,7 +569,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         }
     }
 
-    protected String getPollTimestamp(boolean isInitialLoad, String tableName) {
+    protected String getPollTimestamp(boolean isInitialLoad, String tableName, boolean forceIncrementalLoadApplied) {
         String timeStampForPoll;
         if (isInitialLoad) {
             timeStampForPoll = iPollCommonService.getCurrentTimestamp();
@@ -574,6 +588,10 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         }
 
         if (timeStampForPoll.isEmpty()) {
+            timeStampForPoll = iPollCommonService.getCurrentTimestamp();
+        }
+
+        if (forceIncrementalLoadApplied) {
             timeStampForPoll = iPollCommonService.getCurrentTimestamp();
         }
         return timeStampForPoll;
