@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
+import static gov.cdc.nnddataexchangeservice.shared.ErrorResponseBuilder.buildErrorResponse;
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.convertTimestampFromString;
 
 @RestController
@@ -170,22 +172,21 @@ public class DataExchangeController {
                             required = false)
             }
     )
+    @SuppressWarnings("java:S1452")
     @GetMapping(path = "/api/datasync/{tableName}")
-    public ResponseEntity<String> dataSync(@PathVariable String tableName, @RequestParam String timestamp,
-                                                              @RequestHeader(name = "startRow", defaultValue = "0", required = false) String startRow,
-                                                              @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
-                                                              @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
-                                                              @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull,
-                                                              @RequestHeader(name = "version", defaultValue = "") String version,
-                                                              @RequestHeader(name = "noPagination", defaultValue = "false") String noPagination,
-                                                              @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
-                                                              @RequestHeader(name = "lastKey", defaultValue = "") String lastKey) {
+    public ResponseEntity<?> dataSync(@PathVariable String tableName, @RequestParam String timestamp,
+                                           @RequestHeader(name = "startRow", defaultValue = "0", required = false) String startRow,
+                                           @RequestHeader(name = "endRow", defaultValue = "0", required = false) String endRow,
+                                           @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
+                                           @RequestHeader(name = "allowNull", defaultValue = "false", required = false) String allowNull,
+                                           @RequestHeader(name = "version", defaultValue = "") String version,
+                                           @RequestHeader(name = "noPagination", defaultValue = "false") String noPagination,
+                                           @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
+                                           @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
+                                           HttpServletRequest request) {
+        try {
             if (version == null || version.isEmpty()) {
-                try {
-                    throw new DataExchangeException("Version is Missing");
-                } catch (DataExchangeException e) {
-                    throw new RuntimeException(e); //NOSONAR
-                }
+                throw new DataExchangeException("Version is Missing");
             }
 
             String param = "";
@@ -204,6 +205,9 @@ public class DataExchangeController {
                 throw new RuntimeException(e); //NOSONAR
             }
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
+        } catch (Exception e) {
+            return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
     }
 
     @Operation(
@@ -252,39 +256,45 @@ public class DataExchangeController {
                             required = false)
             }
     )
+    @SuppressWarnings("java:S1452")
     @GetMapping(path = "/api/datasync/count/{tableName}")
-    public ResponseEntity<Integer> dataSyncTotalRecords(@PathVariable String tableName,
+    public ResponseEntity<?> dataSyncTotalRecords(@PathVariable String tableName,
                                                        @RequestParam String timestamp,
                                                         @RequestHeader(name = "initialLoad", defaultValue = "false", required = false) String initialLoadApplied,
                                                         @RequestHeader(name = "version", defaultValue = "") String version,
                                                         @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
-                                                        @RequestHeader(name = "lastKey", defaultValue = "") String lastKey
+                                                        @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
+                                                        HttpServletRequest request
                                                         ){
-        if (version == null || version.isEmpty()) {
+
+        try {
+            if (version == null || version.isEmpty()) {
+                try {
+                    throw new DataExchangeException("Version is Missing");
+                } catch (DataExchangeException e) {
+                    throw new RuntimeException(e); //NOSONAR
+                }
+            }
+
+            logger.info("Fetching Data Count for Data Availability, Table {}", tableName);
+            String param = "";
+            if (Boolean.parseBoolean(useKeyPagination)) {
+                param = lastKey;
+            }
+            else {
+                param = convertTimestampFromString(timestamp);
+            }
+
+            Integer res ;
             try {
-                throw new DataExchangeException("Version is Missing");
+                res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
             } catch (DataExchangeException e) {
                 throw new RuntimeException(e); //NOSONAR
             }
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (Exception e) {
+            return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
-
-        logger.info("Fetching Data Count for Data Availability, Table {}", tableName);
-        String param = "";
-        if (Boolean.parseBoolean(useKeyPagination)) {
-            param = lastKey;
-        }
-        else {
-            param = convertTimestampFromString(timestamp);
-        }
-
-        Integer res ;
-        try {
-            res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
-        } catch (DataExchangeException e) {
-            throw new RuntimeException(e); //NOSONAR
-        }
-        return new ResponseEntity<>(res, HttpStatus.OK);
-
     }
 
     @Operation(

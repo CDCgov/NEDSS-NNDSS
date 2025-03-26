@@ -46,6 +46,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server:3.4.3")
     implementation 'com.microsoft.sqlserver:mssql-jdbc:12.8.1.jre11'
     implementation 'com.zaxxer:HikariCP:6.2.1'
+    implementation 'org.liquibase:liquibase-core:4.31.1'
+
+
+    runtimeOnly 'com.nimbusds:oauth2-oidc-sdk:11.8'
+
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
     implementation("org.apache.httpcomponents.core5:httpcore5:5.2.5")

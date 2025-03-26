@@ -52,6 +52,13 @@ spring:
   config:
     activate:
       on-profile: default
+  liquibase:
+    change-log: classpath:db/changelog/db.rdb.changelog-master.yaml
+    enabled: true
+    url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=RDB;encrypt=true;trustServerCertificate=true;
+    user: ${NBS_DBUSER}
+    password: ${NBS_DBPASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   datasource:
     hikari:
       maximum-pool-size: ${HIKARI_POOL_SIZE:50}
