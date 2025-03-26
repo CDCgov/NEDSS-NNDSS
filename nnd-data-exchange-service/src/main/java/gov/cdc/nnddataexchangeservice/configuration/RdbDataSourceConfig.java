@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,7 +31,7 @@ import java.util.HashMap;
         }
 )
 public class RdbDataSourceConfig {
-    @Value("${spring.datasource.driverClassName}")
+    @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
 
     @Value("${spring.datasource.rdb.url}")
@@ -59,7 +58,7 @@ public class RdbDataSourceConfig {
     @Value("${spring.datasource.hikari.connection-timeout:300000}")
     private long connectionTimeout;
 
-    @Value("${spring.datasource.hikari.pool-name:OdseHikariCP}")
+    @Value("${spring.datasource.hikari.pool-name.rdb:OdseHikariCP}")
     private String poolName;
 
     @Value("${spring.datasource.hikari.keepalive-time:300000}")

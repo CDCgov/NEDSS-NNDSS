@@ -57,6 +57,7 @@ public class PollServiceUtil {
         return logResponseModel;
     }
 
+    @SuppressWarnings("java:S3776")
     public static List<Map<String, Object>> jsonToListOfMap(String jsonData) {
         List<Map<String, Object>> list = new ArrayList<>();
         if (jsonData != null && !jsonData.isEmpty()) {
@@ -71,10 +72,10 @@ public class PollServiceUtil {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
             );
 
-            for (Map<String, Object> record : tempList) {
-                Map<String, Object> convertedRecord = new HashMap<>(record);
+            for (Map<String, Object> tempRecord : tempList) {
+                Map<String, Object> convertedRecord = new HashMap<>(tempRecord);
 
-                for (Map.Entry<String, Object> entry : record.entrySet()) {
+                for (Map.Entry<String, Object> entry : tempRecord.entrySet()) {
                     if (entry.getValue() instanceof String) {
                         String value = (String) entry.getValue();
 

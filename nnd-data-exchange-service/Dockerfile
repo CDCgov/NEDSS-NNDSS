@@ -22,5 +22,8 @@ FROM amazoncorretto:21
 COPY --from=builder /usr/src/nnd/nnd-data-exchange-service/build/libs/nnd-data-exchange-service*.jar nnd-data-exchange-service.jar
 
 # Run jar
-ENTRYPOINT ["java", "-Xms256m", "-Xmx2048m", "-jar", "nnd-data-exchange-service.jar"]
-CMD ["java", "-Xms256m", "-Xmx2048m", "-jar", "nnd-data-exchange-service.jar"]
+#ENTRYPOINT ["java","-XX:+ExitOnOutOfMemoryError", "-Xms256m", "-Xmx2048m", "-jar", "nnd-data-exchange-service.jar"]
+#CMD ["java","-XX:+ExitOnOutOfMemoryError", "-Xms256m", "-Xmx2048m", "-jar", "nnd-data-exchange-service.jar"]
+
+# JVM picks up JAVA_TOOL_OPTIONS from HELM
+ENTRYPOINT ["java", "-jar", "nnd-data-exchange-service.jar"]

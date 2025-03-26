@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+
 @RestController
 
 public class TokenController {
@@ -52,28 +55,31 @@ public class TokenController {
             }
     )
     @PostMapping("/api/auth/token")
-    public ResponseEntity<String> token(@RequestHeader("clientid") String clientId, @RequestHeader("clientsecret") String clientSecret) {
-        String accessToken = null;
-        String postBody = "grant_type=client_credentials" +
-                "&client_id=" + clientId
-                + "&client_secret=" + clientSecret;
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Content-Type", "application/x-www-form-urlencoded");
-        HttpEntity<String> request = new HttpEntity<>(postBody, headers);
-        try{
-            ResponseEntity<String> exchange =
-                    restTemplate.exchange(
-                            authTokenUri,
-                            HttpMethod.POST,
-                            request,
-                            String.class);
-            String response = exchange.getBody();
-            JsonElement jsonElement = JsonParser.parseString(response);
-            JsonObject jsonObject = jsonElement.getAsJsonObject();
-            accessToken = jsonObject.get("access_token").getAsString();
-        }catch (Exception ex){
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
-        }
-        return ResponseEntity.ok(accessToken);
+    public CompletableFuture<ResponseEntity<String>> token(@RequestHeader("clientid") String clientId, @RequestHeader("clientsecret") String clientSecret) {
+        return CompletableFuture.supplyAsync(() -> {
+            String accessToken = null;
+            String postBody = "grant_type=client_credentials" +
+                    "&client_id=" + clientId
+                    + "&client_secret=" + clientSecret;
+            HttpHeaders headers = new HttpHeaders();
+            headers.add("Content-Type", "application/x-www-form-urlencoded");
+            HttpEntity<String> request = new HttpEntity<>(postBody, headers);
+            try{
+                ResponseEntity<String> exchange =
+                        restTemplate.exchange(
+                                authTokenUri,
+                                HttpMethod.POST,
+                                request,
+                                String.class);
+                String response = exchange.getBody();
+                JsonElement jsonElement = JsonParser.parseString(response);
+                JsonObject jsonObject = jsonElement.getAsJsonObject();
+                accessToken = jsonObject.get("access_token").getAsString();
+            }catch (Exception ex){
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+            }
+            return ResponseEntity.ok(accessToken);
+        }, Executors.newVirtualThreadPerTaskExecutor());
+
     }
 }

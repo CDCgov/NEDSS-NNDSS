@@ -128,7 +128,7 @@ public class DataExchangeController {
                     @Parameter(in = ParameterIn.QUERY,
                             name = "timestamp",
                             description = "Timestamp parameter used to filter data",
-                            required = true,
+                            required = false,
                             schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.HEADER,
                             name = "startRow",
@@ -196,8 +196,14 @@ public class DataExchangeController {
             else {
                 param = convertTimestampFromString(timestamp);
             }
-            var base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, param, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
-                    Boolean.parseBoolean(allowNull), Boolean.parseBoolean(noPagination), Boolean.parseBoolean(useKeyPagination));
+            String base64CompressedData = null;
+            try {
+                base64CompressedData = dataExchangeGenericService.getDataForDataSync(tableName, param, startRow, endRow, Boolean.parseBoolean(initialLoadApplied),
+                        Boolean.parseBoolean(allowNull), Boolean.parseBoolean(noPagination), Boolean.parseBoolean(useKeyPagination));
+            } catch (DataExchangeException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e); //NOSONAR
+            }
             return new ResponseEntity<>(base64CompressedData, HttpStatus.OK);
         } catch (Exception e) {
             return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
@@ -226,7 +232,7 @@ public class DataExchangeController {
                     @Parameter(in = ParameterIn.QUERY,
                             name = "timestamp",
                             description = "Timestamp parameter used to filter records",
-                            required = true,
+                            required = false,
                             schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.HEADER,
                             name = "initialLoad",
@@ -259,10 +265,15 @@ public class DataExchangeController {
                                                         @RequestHeader(name = "useKeyPagination", defaultValue = "false") String useKeyPagination,
                                                         @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
                                                         HttpServletRequest request
-                                                        ) {
+                                                        ){
+
         try {
             if (version == null || version.isEmpty()) {
-                throw new DataExchangeException("Version is Missing");
+                try {
+                    throw new DataExchangeException("Version is Missing");
+                } catch (DataExchangeException e) {
+                    throw new RuntimeException(e); //NOSONAR
+                }
             }
 
             logger.info("Fetching Data Count for Data Availability, Table {}", tableName);
@@ -274,12 +285,16 @@ public class DataExchangeController {
                 param = convertTimestampFromString(timestamp);
             }
 
-            var res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
+            Integer res ;
+            try {
+                res = dataExchangeGenericService.getTotalRecord(tableName, Boolean.parseBoolean(initialLoadApplied), param, Boolean.parseBoolean(useKeyPagination));
+            } catch (DataExchangeException e) {
+                throw new RuntimeException(e); //NOSONAR
+            }
             return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
             return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
-
     }
 
     @Operation(

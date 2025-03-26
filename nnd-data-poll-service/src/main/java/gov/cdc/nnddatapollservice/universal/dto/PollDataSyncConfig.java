@@ -20,5 +20,4 @@ public class PollDataSyncConfig {
     private boolean noPagination;
     private boolean useKeyPagination;
     private boolean apiFatalOnLastRun;
-//    private String lastMaxKey;
 }
