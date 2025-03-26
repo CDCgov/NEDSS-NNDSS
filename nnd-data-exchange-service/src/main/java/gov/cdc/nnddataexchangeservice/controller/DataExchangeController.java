@@ -172,6 +172,7 @@ public class DataExchangeController {
                             required = false)
             }
     )
+    @SuppressWarnings("java:S1452")
     @GetMapping(path = "/api/datasync/{tableName}")
     public ResponseEntity<?> dataSync(@PathVariable String tableName, @RequestParam String timestamp,
                                            @RequestHeader(name = "startRow", defaultValue = "0", required = false) String startRow,
@@ -249,6 +250,7 @@ public class DataExchangeController {
                             required = false)
             }
     )
+    @SuppressWarnings("java:S1452")
     @GetMapping(path = "/api/datasync/count/{tableName}")
     public ResponseEntity<?> dataSyncTotalRecords(@PathVariable String tableName,
                                                        @RequestParam String timestamp,
