@@ -197,22 +197,6 @@ IF
              'WITH PaginatedResults AS (SELECT *, ROW_NUMBER() OVER (ORDER BY ORGANIZATION_KEY) AS RowNum FROM D_ORGANIZATION WHERE D_ORGANIZATION.ORGANIZATION_LAST_CHANGE_TIME :operator :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
     END;
 
-
-
-IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'D_PCR_SOURCE')
-    BEGIN
-        INSERT INTO [RDB].[dbo].[data_sync_config]
-        (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
-        VALUES
-            ('D_PCR_SOURCE', 'RDB',
-             'SELECT D_PCR_SOURCE.* FROM D_PCR_SOURCE',
-             NULL,
-             'SELECT COUNT(*) FROM D_PCR_SOURCE',
-             'WITH PaginatedResults AS (SELECT D_PCR_SOURCE.*, ROW_NUMBER() OVER (ORDER BY D_PCR_SOURCE.D_PCR_SOURCE_KEY, D_PCR_SOURCE.VAR_PAM_UID) AS RowNum FROM D_PCR_SOURCE)
-              SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow');
-    END;
-
-
 IF
     NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'HEPATITIS_DATAMART')
     BEGIN
@@ -294,10 +278,10 @@ IF
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
             ('D_INV_RISK_FACTOR', 'RDB',
-             'SELECT D_INV_RISK_FACTOR.* FROM D_INV_RISK_FACTOR WHERE D_INV_RISK_FACTOR_KEY >= :timestamp;',
+             'SELECT D_INV_RISK_FACTOR.* FROM D_INV_RISK_FACTOR WHERE D_INV_RISK_FACTOR_KEY > :timestamp;',
              NULL,
-             'SELECT COUNT(*) FROM D_INV_RISK_FACTOR WHERE D_INV_RISK_FACTOR_KEY >= :timestamp;',
-             'WITH PaginatedResults AS (SELECT D_INV_RISK_FACTOR.*, ROW_NUMBER() OVER (ORDER BY D_INV_RISK_FACTOR.D_INV_RISK_FACTOR_KEY) AS RowNum FROM D_INV_RISK_FACTOR  WHERE D_INV_RISK_FACTOR_KEY >= :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+             'SELECT COUNT(*) FROM D_INV_RISK_FACTOR WHERE D_INV_RISK_FACTOR_KEY > :timestamp;',
+             'WITH PaginatedResults AS (SELECT D_INV_RISK_FACTOR.*, ROW_NUMBER() OVER (ORDER BY D_INV_RISK_FACTOR.D_INV_RISK_FACTOR_KEY) AS RowNum FROM D_INV_RISK_FACTOR  WHERE D_INV_RISK_FACTOR_KEY > :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
     END;
 
 
@@ -308,10 +292,10 @@ IF
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
             ('D_INV_ADMINISTRATIVE', 'RDB',
-             'SELECT D_INV_ADMINISTRATIVE.* FROM D_INV_ADMINISTRATIVE  WHERE D_INV_ADMINISTRATIVE_KEY >= :timestamp;',
+             'SELECT D_INV_ADMINISTRATIVE.* FROM D_INV_ADMINISTRATIVE  WHERE D_INV_ADMINISTRATIVE_KEY > :timestamp;',
              NULL,
-             'SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE  WHERE D_INV_ADMINISTRATIVE_KEY >= :timestamp;',
-             'WITH PaginatedResults AS (SELECT D_INV_ADMINISTRATIVE.*, ROW_NUMBER() OVER (ORDER BY D_INV_ADMINISTRATIVE.D_INV_ADMINISTRATIVE_KEY) AS RowNum FROM D_INV_ADMINISTRATIVE  WHERE D_INV_ADMINISTRATIVE_KEY >= :timestamp ) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+             'SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE  WHERE D_INV_ADMINISTRATIVE_KEY > :timestamp;',
+             'WITH PaginatedResults AS (SELECT D_INV_ADMINISTRATIVE.*, ROW_NUMBER() OVER (ORDER BY D_INV_ADMINISTRATIVE.D_INV_ADMINISTRATIVE_KEY) AS RowNum FROM D_INV_ADMINISTRATIVE  WHERE D_INV_ADMINISTRATIVE_KEY > :timestamp ) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
 
 
     END;
@@ -325,10 +309,10 @@ IF
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
             ('D_INV_EPIDEMIOLOGY', 'RDB',
-             'SELECT D_INV_EPIDEMIOLOGY.* FROM D_INV_EPIDEMIOLOGY WHERE D_INV_EPIDEMIOLOGY_KEY >= :timestamp;',
+             'SELECT D_INV_EPIDEMIOLOGY.* FROM D_INV_EPIDEMIOLOGY WHERE D_INV_EPIDEMIOLOGY_KEY > :timestamp;',
              NULL,
-             'SELECT COUNT(*) FROM D_INV_EPIDEMIOLOGY WHERE D_INV_EPIDEMIOLOGY_KEY >= :timestamp;',
-             'WITH PaginatedResults AS (SELECT D_INV_EPIDEMIOLOGY.*, ROW_NUMBER() OVER (ORDER BY D_INV_EPIDEMIOLOGY.D_INV_EPIDEMIOLOGY_KEY) AS RowNum FROM D_INV_EPIDEMIOLOGY WHERE D_INV_EPIDEMIOLOGY_KEY >= :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+             'SELECT COUNT(*) FROM D_INV_EPIDEMIOLOGY WHERE D_INV_EPIDEMIOLOGY_KEY > :timestamp;',
+             'WITH PaginatedResults AS (SELECT D_INV_EPIDEMIOLOGY.*, ROW_NUMBER() OVER (ORDER BY D_INV_EPIDEMIOLOGY.D_INV_EPIDEMIOLOGY_KEY) AS RowNum FROM D_INV_EPIDEMIOLOGY WHERE D_INV_EPIDEMIOLOGY_KEY > :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
 
 
     END;
@@ -341,10 +325,10 @@ IF
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
             ('D_INV_HIV', 'RDB',
-             'SELECT D_INV_HIV.* FROM D_INV_HIV WHERE D_INV_HIV_KEY >= :timestamp;',
+             'SELECT D_INV_HIV.* FROM D_INV_HIV WHERE D_INV_HIV_KEY > :timestamp;',
              NULL,
-             'SELECT COUNT(*) FROM D_INV_HIV WHERE D_INV_HIV_KEY >= :timestamp;',
-             'WITH PaginatedResults AS (SELECT D_INV_HIV.*, ROW_NUMBER() OVER (ORDER BY D_INV_HIV.D_INV_HIV_KEY) AS RowNum FROM D_INV_HIV WHERE D_INV_HIV_KEY >= :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+             'SELECT COUNT(*) FROM D_INV_HIV WHERE D_INV_HIV_KEY > :timestamp;',
+             'WITH PaginatedResults AS (SELECT D_INV_HIV.*, ROW_NUMBER() OVER (ORDER BY D_INV_HIV.D_INV_HIV_KEY) AS RowNum FROM D_INV_HIV WHERE D_INV_HIV_KEY > :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
 
 
     END;
@@ -357,10 +341,10 @@ IF
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
             ('D_INV_LAB_FINDING', 'RDB',
-             'SELECT D_INV_LAB_FINDING.* FROM D_INV_LAB_FINDING WHERE D_INV_LAB_FINDING_KEY >= :timestamp;',
+             'SELECT D_INV_LAB_FINDING.* FROM D_INV_LAB_FINDING WHERE D_INV_LAB_FINDING_KEY > :timestamp;',
              NULL,
-             'SELECT COUNT(*) FROM D_INV_LAB_FINDING WHERE D_INV_LAB_FINDING_KEY >= :timestamp;',
-             'WITH PaginatedResults AS (SELECT D_INV_LAB_FINDING.*, ROW_NUMBER() OVER (ORDER BY D_INV_LAB_FINDING.D_INV_LAB_FINDING_KEY) AS RowNum FROM D_INV_LAB_FINDING WHERE D_INV_LAB_FINDING_KEY >= :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+             'SELECT COUNT(*) FROM D_INV_LAB_FINDING WHERE D_INV_LAB_FINDING_KEY > :timestamp;',
+             'WITH PaginatedResults AS (SELECT D_INV_LAB_FINDING.*, ROW_NUMBER() OVER (ORDER BY D_INV_LAB_FINDING.D_INV_LAB_FINDING_KEY) AS RowNum FROM D_INV_LAB_FINDING WHERE D_INV_LAB_FINDING_KEY > :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
 
 
 
@@ -374,10 +358,10 @@ IF
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
             ('D_INV_MEDICAL_HISTORY', 'RDB',
-             'SELECT D_INV_MEDICAL_HISTORY.* FROM D_INV_MEDICAL_HISTORY WHERE D_INV_MEDICAL_HISTORY_KEY >= :timestamp;',
+             'SELECT D_INV_MEDICAL_HISTORY.* FROM D_INV_MEDICAL_HISTORY WHERE D_INV_MEDICAL_HISTORY_KEY > :timestamp;',
              NULL,
-             'SELECT COUNT(*) FROM D_INV_MEDICAL_HISTORY WHERE D_INV_MEDICAL_HISTORY_KEY >= :timestamp;',
-             'WITH PaginatedResults AS (SELECT D_INV_MEDICAL_HISTORY.*, ROW_NUMBER() OVER (ORDER BY D_INV_MEDICAL_HISTORY.D_INV_MEDICAL_HISTORY_KEY) AS RowNum FROM D_INV_MEDICAL_HISTORY WHERE D_INV_MEDICAL_HISTORY_KEY >= :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+             'SELECT COUNT(*) FROM D_INV_MEDICAL_HISTORY WHERE D_INV_MEDICAL_HISTORY_KEY > :timestamp;',
+             'WITH PaginatedResults AS (SELECT D_INV_MEDICAL_HISTORY.*, ROW_NUMBER() OVER (ORDER BY D_INV_MEDICAL_HISTORY.D_INV_MEDICAL_HISTORY_KEY) AS RowNum FROM D_INV_MEDICAL_HISTORY WHERE D_INV_MEDICAL_HISTORY_KEY > :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
 
 
 
@@ -391,10 +375,10 @@ IF
         INSERT INTO [dbo].[data_sync_config]
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
-            ('D_INV_TREATMENT', 'RDB', 'SELECT D_INV_TREATMENT.* FROM D_INV_TREATMENT WHERE D_INV_TREATMENT_KEY >= :timestamp;',
+            ('D_INV_TREATMENT', 'RDB', 'SELECT D_INV_TREATMENT.* FROM D_INV_TREATMENT WHERE D_INV_TREATMENT_KEY > :timestamp;',
              NULL,
-             'SELECT COUNT(*) FROM D_INV_TREATMENT WHERE D_INV_TREATMENT_KEY >= :timestamp;',
-             'WITH PaginatedResults AS (SELECT D_INV_TREATMENT.*, ROW_NUMBER() OVER (ORDER BY D_INV_TREATMENT.D_INV_TREATMENT_KEY) AS RowNum FROM D_INV_TREATMENT WHERE D_INV_TREATMENT_KEY >= :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+             'SELECT COUNT(*) FROM D_INV_TREATMENT WHERE D_INV_TREATMENT_KEY > :timestamp;',
+             'WITH PaginatedResults AS (SELECT D_INV_TREATMENT.*, ROW_NUMBER() OVER (ORDER BY D_INV_TREATMENT.D_INV_TREATMENT_KEY) AS RowNum FROM D_INV_TREATMENT WHERE D_INV_TREATMENT_KEY > :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
 
     END;
 
@@ -406,10 +390,10 @@ IF
         (table_name, source_db, query, query_with_null_timestamp, query_count, query_with_pagination)
         VALUES
             ('D_INV_VACCINATION', 'RDB',
-             'SELECT D_INV_VACCINATION.* FROM D_INV_VACCINATION WHERE D_INV_VACCINATION_KEY >= :timestamp;',
+             'SELECT D_INV_VACCINATION.* FROM D_INV_VACCINATION WHERE D_INV_VACCINATION_KEY > :timestamp;',
              NULL,
-             'SELECT COUNT(*) FROM D_INV_VACCINATION WHERE D_INV_VACCINATION_KEY >= :timestamp;',
-             'WITH PaginatedResults AS (SELECT D_INV_VACCINATION.*, ROW_NUMBER() OVER (ORDER BY D_INV_VACCINATION.D_INV_VACCINATION_KEY) AS RowNum FROM D_INV_VACCINATION  WHERE D_INV_VACCINATION_KEY >= :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
+             'SELECT COUNT(*) FROM D_INV_VACCINATION WHERE D_INV_VACCINATION_KEY > :timestamp;',
+             'WITH PaginatedResults AS (SELECT D_INV_VACCINATION.*, ROW_NUMBER() OVER (ORDER BY D_INV_VACCINATION.D_INV_VACCINATION_KEY) AS RowNum FROM D_INV_VACCINATION  WHERE D_INV_VACCINATION_KEY > :timestamp) SELECT * FROM PaginatedResults WHERE RowNum BETWEEN :startRow AND :endRow;');
 
     END;
 
