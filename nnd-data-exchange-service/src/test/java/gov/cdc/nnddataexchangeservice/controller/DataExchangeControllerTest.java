@@ -160,7 +160,7 @@ class DataExchangeControllerTest {
     }
 
     @Test
-    void testDataSyncTotalRecords_whenVersionIsMissing_shouldReturnErrorResponse() throws DataExchangeException {
+    void testDataSyncTotalRecords_whenVersionIsMissing_shouldReturnErrorResponse()  {
         // Arrange
         String tableName = "test_table";
         String timestamp = "2023-01-01T00:00:00";
@@ -179,7 +179,7 @@ class DataExchangeControllerTest {
         );
 
         // Assert
-        assertEquals(500, response.getStatusCodeValue());
+        assertEquals(500, response.getStatusCodeValue()); //NOSONAR
 
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertNotNull(body);
@@ -189,7 +189,7 @@ class DataExchangeControllerTest {
     }
 
     @Test
-    void testDataSync_whenVersionIsMissing_shouldReturnErrorResponse() throws DataExchangeException {
+    void testDataSync_whenVersionIsMissing_shouldReturnErrorResponse() {
         // Arrange
         String tableName = "test_table";
         String timestamp = "2023-01-01T00:00:00";
@@ -213,7 +213,7 @@ class DataExchangeControllerTest {
         );
 
         // Assert
-        assertEquals(500, response.getStatusCodeValue());
+        assertEquals(500, response.getStatusCodeValue()); // NOSONAR
 
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertNotNull(body);
