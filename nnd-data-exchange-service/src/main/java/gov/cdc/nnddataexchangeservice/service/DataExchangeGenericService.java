@@ -221,13 +221,13 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
     }
 
-    public List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp, boolean initialLoad) throws DataExchangeException {
+    public List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp) throws DataExchangeException {
         if (timestamp == null || timestamp.isEmpty()) {
             timestamp = "1753-01-01 00:00:00.000"; // Lowest timestamp for datetime column
         }
 
         List<DataSyncConfig> dataSyncConfigs = fetchDataSyncConfigs(sourceDbName, tableName);
-        return fetchTableCounts(dataSyncConfigs, timestamp, initialLoad);
+        return fetchTableCounts(dataSyncConfigs, timestamp);
     }
 
     List<DataSyncConfig> fetchDataSyncConfigs(String sourceDbName, String tableName) {
@@ -245,7 +245,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         return dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName);
     }
 
-    private List<Map<String, Object>> fetchTableCounts(List<DataSyncConfig> dataSyncConfigs, String timestamp, boolean initialLoad) throws DataExchangeException {
+    private List<Map<String, Object>> fetchTableCounts(List<DataSyncConfig> dataSyncConfigs, String timestamp) throws DataExchangeException {
         List<Map<String, Object>> tableCountsList = new ArrayList<>();
         // D_INV_* tables look for key instead of timestamp for count,
         // so we're setting the timestamp to -1 in the for loop below
@@ -255,19 +255,22 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 "D_INV_TREATMENT", "D_INV_VACCINATION"
         );
         for (DataSyncConfig dataConfig : dataSyncConfigs) {
-            tableCountsList.add(executeCountQuery(dataConfig, timestamp, initialLoad, invTableNames));
+            tableCountsList.add(executeCountQuery(dataConfig, timestamp, invTableNames));
         }
         tableCountsList.sort(Comparator.comparing(map -> (String) map.get("Table Name")));
         return tableCountsList;
     }
 
-    private Map<String, Object> executeCountQuery(DataSyncConfig dataConfig, String timestamp, boolean initialLoad, Set<String> invTableNames) throws DataExchangeException {
+    private String prepareQuery(String query, String timestamp) {
+        return query.replaceAll(OPERATION, GREATER_EQUAL)
+                .replaceAll(GENERIC_PARAM, "'" + timestamp + "'");
+    }
+
+    private Map<String, Object> executeCountQuery(DataSyncConfig dataConfig, String timestamp, Set<String> invTableNames) throws DataExchangeException {
         try {
             String query = prepareQuery(
                     dataConfig.getQueryCount(),
-                    initialLoad,
-                    invTableNames.contains(dataConfig.getTableName()) ? "-1" : timestamp,
-                    false
+                    invTableNames.contains(dataConfig.getTableName()) ? "-1" : timestamp
             );
             Integer count = executeQueryForTotalRecords(query, dataConfig.getSourceDb());
             Map<String, Object> countMap = new HashMap<>();

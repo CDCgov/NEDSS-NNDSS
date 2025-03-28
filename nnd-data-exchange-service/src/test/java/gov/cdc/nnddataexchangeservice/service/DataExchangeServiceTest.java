@@ -144,7 +144,7 @@ class DataExchangeServiceTest {
         when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(Collections.singletonList(config));
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(10);
 
-        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, null, timestamp, initialLoad);
+        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, null, timestamp);
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(10, result.getFirst().get("Record Count"));
@@ -164,7 +164,7 @@ class DataExchangeServiceTest {
         when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(Collections.singletonList(config));
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(5);
 
-        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, null, timestamp, initialLoad);
+        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, null, timestamp);
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(5, result.getFirst().get("Record Count"));
@@ -185,7 +185,7 @@ class DataExchangeServiceTest {
         when(dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName)).thenReturn(Collections.singletonList(config));
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(7);
 
-        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
+        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp);
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals(7, result.getFirst().get("Record Count"));

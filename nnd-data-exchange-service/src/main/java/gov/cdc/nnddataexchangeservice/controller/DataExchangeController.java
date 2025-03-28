@@ -348,10 +348,9 @@ public class DataExchangeController {
     public ResponseEntity<Map<String, Object>> getAllTablesCount(@RequestParam(value = "sourceDbName", required = false) String sourceDbName,
                                                @RequestParam(value = "tableName", required = false) String tableName,
                                                @RequestParam(value = "timestamp", required = false) String timestamp,
-                                               @RequestParam(value = "initialLoad", required = false) Boolean initialLoad,
                                                HttpServletRequest request) {
         try {
-            List<Map<String, Object>> tableCounts = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
+            List<Map<String, Object>> tableCounts = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp);
             Map<String, Object> response = new HashMap<>();
             if (tableCounts.isEmpty()) {
                 response.put("message", "No results found for the given input(s).");

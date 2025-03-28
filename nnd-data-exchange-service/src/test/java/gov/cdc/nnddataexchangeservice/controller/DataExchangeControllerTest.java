@@ -241,10 +241,10 @@ class DataExchangeControllerTest {
         mockResult.put("Record Count", 100);
         mockResult.put("Source Database Name", sourceDbName);
 
-        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad))
+        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp))
                 .thenReturn(List.of(mockResult));
 
-        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad, request);
+        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedOutput, Objects.requireNonNull(response.getBody()).toString());
@@ -260,10 +260,10 @@ class DataExchangeControllerTest {
         expectedOutput.put("message", "No results found for the given input(s).");
         expectedOutput.put("data", new ArrayList<>());
 
-        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad))
+        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp))
                 .thenReturn(List.of());
 
-        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad, request);
+        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedOutput, response.getBody());
@@ -276,10 +276,10 @@ class DataExchangeControllerTest {
         String timestamp = "2025-03-27T00:00:00Z";
         boolean initialLoad = true;
 
-        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad))
+        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp))
                 .thenThrow(new DataExchangeException("Test exception"));
 
-        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad, request);
+        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, request);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
