@@ -200,8 +200,8 @@ class DataExchangeServiceTest {
             "'table1', 'sourceDb1', 4"
     })
     void testFetchDataSyncConfigs(String tableName, String sourceDbName, int expectedMethodCall) {
-        DataExchangeGenericService spyService = spy(dataExchangeGenericService);
-        List<DataSyncConfig> result = spyService.fetchDataSyncConfigs(sourceDbName, tableName);
+        DataExchangeGenericService spyService = spy(dataExchangeGenericService); // NOSONAR
+        List<DataSyncConfig> result = spyService.fetchDataSyncConfigs(sourceDbName, tableName); // NOSONAR
 
         switch (expectedMethodCall) {
             case 0:
