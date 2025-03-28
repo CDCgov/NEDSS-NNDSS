@@ -18,6 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddataexchangeservice.shared.ErrorResponseBuilder.buildErrorResponse;
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.convertTimestampFromString;
@@ -302,6 +305,60 @@ public class DataExchangeController {
     public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) throws DataExchangeException {
         var val = dataExchangeGenericService.decodeAndDecompress(tableName);
         return new ResponseEntity<>(val, HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Get count for all tables",
+            description = "Fetches the record count for all tables, optionally filtered by source database, table name, and timestamp. Requires client authentication headers.",
+            parameters = {
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientid",
+                            description = "The Client Id for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientsecret",
+                            description = "The Client Secret for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "sourceDbName",
+                            description = "Optional source database name to filter counts",
+                            required = false,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "tableName",
+                            description = "Optional table name to filter counts",
+                            required = false,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "timestamp",
+                            description = "Optional timestamp to filter counts",
+                            required = false,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "initialLoad",
+                            description = "Flag indicating whether this is an initial data load",
+                            schema = @Schema(type = "string", defaultValue = "false"),
+                            required = false)
+            }
+    )
+    @GetMapping(path = "/api/datasync/all-tables-count")
+    public ResponseEntity<?> getAllTablesCount(@RequestParam(value = "sourceDbName", required = false) String sourceDbName,
+                                               @RequestParam(value = "tableName", required = false) String tableName,
+                                               @RequestParam(value = "timestamp", required = false) String timestamp,
+                                               @RequestParam(value = "initialLoad", required = false) boolean initialLoad,
+                                               HttpServletRequest request) {
+        try {
+            logger.info("Fetching counts for all tables, optional filters - sourceDbName: {}, tableName: {}, timestamp: {}", sourceDbName, tableName, timestamp);
+            List<Map<String, Object>> tableCounts = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
+            if(tableCounts.isEmpty()) {
+                return new ResponseEntity<>("No results found for the given input(s).", HttpStatus.OK);
+            }
+            return new ResponseEntity<>(tableCounts, HttpStatus.OK);
+        } catch (Exception e) {
+            return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
     }
 
 }

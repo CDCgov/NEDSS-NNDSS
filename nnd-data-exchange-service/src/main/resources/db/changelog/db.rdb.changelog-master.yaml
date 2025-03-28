@@ -25,7 +25,7 @@ databaseChangeLog:
   - changeSet:
       id: 3
       author: liquibase
-      runOnChange: false
+      runOnChange: true
       changes:
         - sqlFile:
             path: db/rdb/routines/001-generate_data_for_data_sync_config-001.sql

@@ -42,6 +42,7 @@ spring:
     user: ${NBS_DBUSER}
     password: ${NBS_DBPASSWORD}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    clear-check-sums: true
   datasource:
     hikari:
       connection-timeout: 60000

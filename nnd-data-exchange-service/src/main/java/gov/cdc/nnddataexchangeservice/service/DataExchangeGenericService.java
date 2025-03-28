@@ -17,8 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -220,5 +219,59 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     // DECODE TEST METHOD
     public String decodeAndDecompress(String base64EncodedData) throws DataExchangeException {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
+    }
+
+
+    public List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp, boolean initialLoad) throws DataExchangeException {
+        List<DataSyncConfig> dataSyncConfigs;
+        List<Map<String, Object>> tableCountsList = new ArrayList<>();
+        // D_INV_* tables look for key instead of timestamp for count,
+        // so we're setting the timestamp to -1 in the for loop below
+        Set<String> invTableNames = new HashSet<>(Arrays.asList(
+                "D_INV_ADMINISTRATIVE",
+                "D_INV_EPIDEMIOLOGY",
+                "D_INV_HIV",
+                "D_INV_LAB_FINDING",
+                "D_INV_MEDICAL_HISTORY",
+                "D_INV_RISK_FACTOR",
+                "D_INV_TREATMENT",
+                "D_INV_VACCINATION"
+        ));
+
+        if(timestamp == null || timestamp.isEmpty()) {
+            timestamp = "1753-01-01 00:00:00.000"; //Lowest timestamp possible for datetime column in database
+        }
+
+        if ((tableName == null || tableName.isEmpty()) && (sourceDbName == null || sourceDbName.isEmpty())) {
+            dataSyncConfigs = dataSyncConfigRepository.findAll();
+        } else if ((tableName != null && !tableName.isEmpty()) && (sourceDbName == null || sourceDbName.isEmpty())) {
+            dataSyncConfigs = dataSyncConfigRepository.findByTableName(tableName);
+        } else if ((sourceDbName != null && !sourceDbName.isEmpty()) && (tableName == null || tableName.isEmpty())) {
+            dataSyncConfigs = dataSyncConfigRepository.findBySourceDb(sourceDbName);
+        } else {
+            dataSyncConfigs = dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName);
+        }
+
+        for (DataSyncConfig dataConfig : dataSyncConfigs) {
+            try {
+                String query;
+                if(invTableNames.contains(dataConfig.getTableName())) {
+                    query = prepareQuery(dataConfig.getQueryCount(), initialLoad, "-1", false);
+                }
+                else {
+                    query = prepareQuery(dataConfig.getQueryCount(), initialLoad, timestamp, false);
+                }
+                Integer count = executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+                Map<String, Object> countMap = new HashMap<>();
+                countMap.put("Table Name", dataConfig.getTableName());
+                countMap.put("Source Database Name", dataConfig.getSourceDb());
+                countMap.put("Record Count", count);
+                tableCountsList.add(countMap);
+            } catch (DataExchangeException e) {
+                throw new DataExchangeException("Error while executing query to get count for the tables.");
+            }
+        }
+        tableCountsList.sort(Comparator.comparing(map -> (String) map.get("Table Name")));
+        return tableCountsList;
     }
 }
