@@ -336,12 +336,7 @@ public class DataExchangeController {
                             name = "timestamp",
                             description = "Optional timestamp to filter counts",
                             required = false,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "initialLoad",
-                            description = "Flag indicating whether this is an initial data load",
-                            schema = @Schema(type = "string", defaultValue = "false"),
-                            required = false)
+                            schema = @Schema(type = "string"))
             }
     )
     @GetMapping(path = "/api/datasync/all-tables-count")
