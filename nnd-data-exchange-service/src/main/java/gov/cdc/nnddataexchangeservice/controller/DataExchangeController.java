@@ -18,9 +18,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static gov.cdc.nnddataexchangeservice.shared.ErrorResponseBuilder.buildErrorResponse;
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.convertTimestampFromString;
@@ -344,21 +345,24 @@ public class DataExchangeController {
             }
     )
     @GetMapping(path = "/api/datasync/all-tables-count")
-    public ResponseEntity<?> getAllTablesCount(@RequestParam(value = "sourceDbName", required = false) String sourceDbName,
+    public ResponseEntity<Map<String, Object>> getAllTablesCount(@RequestParam(value = "sourceDbName", required = false) String sourceDbName,
                                                @RequestParam(value = "tableName", required = false) String tableName,
                                                @RequestParam(value = "timestamp", required = false) String timestamp,
-                                               @RequestParam(value = "initialLoad", required = false) boolean initialLoad,
+                                               @RequestParam(value = "initialLoad", required = false) Boolean initialLoad,
                                                HttpServletRequest request) {
         try {
-            logger.info("Fetching counts for all tables, optional filters - sourceDbName: {}, tableName: {}, timestamp: {}", sourceDbName, tableName, timestamp);
             List<Map<String, Object>> tableCounts = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
-            if(tableCounts.isEmpty()) {
-                return new ResponseEntity<>("No results found for the given input(s).", HttpStatus.OK);
+            Map<String, Object> response = new HashMap<>();
+            if (tableCounts.isEmpty()) {
+                response.put("message", "No results found for the given input(s).");
+                response.put("data", new ArrayList<>());
+                return new ResponseEntity<>(response, HttpStatus.OK);
             }
-            return new ResponseEntity<>(tableCounts, HttpStatus.OK);
+            response.put("message", "Success");
+            response.put("data", tableCounts);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
-
 }

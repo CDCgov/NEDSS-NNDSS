@@ -13,4 +13,6 @@ public interface DataSyncConfigRepository extends JpaRepository<DataSyncConfig, 
     List<DataSyncConfig> findByTableName(String tableName);
 
     List<DataSyncConfig> findBySourceDb(String sourceDbName);
+
+    List<DataSyncConfig> findByTableNameIn(List<String> tableNamesList);
 }

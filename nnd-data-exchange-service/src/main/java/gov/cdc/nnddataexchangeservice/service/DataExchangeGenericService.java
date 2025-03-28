@@ -221,57 +221,66 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
     }
 
-
     public List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp, boolean initialLoad) throws DataExchangeException {
-        List<DataSyncConfig> dataSyncConfigs;
+        if (timestamp == null || timestamp.isEmpty()) {
+            timestamp = "1753-01-01 00:00:00.000"; // Lowest timestamp for datetime column
+        }
+
+        List<DataSyncConfig> dataSyncConfigs = fetchDataSyncConfigs(sourceDbName, tableName);
+        return fetchTableCounts(dataSyncConfigs, timestamp, initialLoad);
+    }
+
+    List<DataSyncConfig> fetchDataSyncConfigs(String sourceDbName, String tableName) {
+        if (isEmpty(tableName) && isEmpty(sourceDbName)) {
+            return dataSyncConfigRepository.findAll();
+        }
+        if (!isEmpty(tableName) && isEmpty(sourceDbName)) {
+            return tableName.contains(",")
+                    ? dataSyncConfigRepository.findByTableNameIn(Arrays.asList(tableName.split("\\s*,\\s*")))
+                    : dataSyncConfigRepository.findByTableName(tableName);
+        }
+        if (!isEmpty(sourceDbName) && isEmpty(tableName)) {
+            return dataSyncConfigRepository.findBySourceDb(sourceDbName);
+        }
+        return dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName);
+    }
+
+    private List<Map<String, Object>> fetchTableCounts(List<DataSyncConfig> dataSyncConfigs, String timestamp, boolean initialLoad) throws DataExchangeException {
         List<Map<String, Object>> tableCountsList = new ArrayList<>();
         // D_INV_* tables look for key instead of timestamp for count,
         // so we're setting the timestamp to -1 in the for loop below
-        Set<String> invTableNames = new HashSet<>(Arrays.asList(
-                "D_INV_ADMINISTRATIVE",
-                "D_INV_EPIDEMIOLOGY",
-                "D_INV_HIV",
-                "D_INV_LAB_FINDING",
-                "D_INV_MEDICAL_HISTORY",
-                "D_INV_RISK_FACTOR",
-                "D_INV_TREATMENT",
-                "D_INV_VACCINATION"
-        ));
-
-        if(timestamp == null || timestamp.isEmpty()) {
-            timestamp = "1753-01-01 00:00:00.000"; //Lowest timestamp possible for datetime column in database
-        }
-
-        if ((tableName == null || tableName.isEmpty()) && (sourceDbName == null || sourceDbName.isEmpty())) {
-            dataSyncConfigs = dataSyncConfigRepository.findAll();
-        } else if ((tableName != null && !tableName.isEmpty()) && (sourceDbName == null || sourceDbName.isEmpty())) {
-            dataSyncConfigs = dataSyncConfigRepository.findByTableName(tableName);
-        } else if ((sourceDbName != null && !sourceDbName.isEmpty()) && (tableName == null || tableName.isEmpty())) {
-            dataSyncConfigs = dataSyncConfigRepository.findBySourceDb(sourceDbName);
-        } else {
-            dataSyncConfigs = dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName);
-        }
-
+        Set<String> invTableNames = Set.of(
+                "D_INV_ADMINISTRATIVE", "D_INV_EPIDEMIOLOGY", "D_INV_HIV",
+                "D_INV_LAB_FINDING", "D_INV_MEDICAL_HISTORY", "D_INV_RISK_FACTOR",
+                "D_INV_TREATMENT", "D_INV_VACCINATION"
+        );
         for (DataSyncConfig dataConfig : dataSyncConfigs) {
-            try {
-                String query;
-                if(invTableNames.contains(dataConfig.getTableName())) {
-                    query = prepareQuery(dataConfig.getQueryCount(), initialLoad, "-1", false);
-                }
-                else {
-                    query = prepareQuery(dataConfig.getQueryCount(), initialLoad, timestamp, false);
-                }
-                Integer count = executeQueryForTotalRecords(query, dataConfig.getSourceDb());
-                Map<String, Object> countMap = new HashMap<>();
-                countMap.put("Table Name", dataConfig.getTableName());
-                countMap.put("Source Database Name", dataConfig.getSourceDb());
-                countMap.put("Record Count", count);
-                tableCountsList.add(countMap);
-            } catch (DataExchangeException e) {
-                throw new DataExchangeException("Error while executing query to get count for the tables.");
-            }
+            tableCountsList.add(executeCountQuery(dataConfig, timestamp, initialLoad, invTableNames));
         }
         tableCountsList.sort(Comparator.comparing(map -> (String) map.get("Table Name")));
         return tableCountsList;
+    }
+
+    private Map<String, Object> executeCountQuery(DataSyncConfig dataConfig, String timestamp, boolean initialLoad, Set<String> invTableNames) throws DataExchangeException {
+        try {
+            String query = prepareQuery(
+                    dataConfig.getQueryCount(),
+                    initialLoad,
+                    invTableNames.contains(dataConfig.getTableName()) ? "-1" : timestamp,
+                    false
+            );
+            Integer count = executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+            Map<String, Object> countMap = new HashMap<>();
+            countMap.put("Table Name", dataConfig.getTableName());
+            countMap.put("Source Database Name", dataConfig.getSourceDb());
+            countMap.put("Record Count", count);
+            return countMap;
+        } catch (DataExchangeException e) {
+            throw new DataExchangeException("Error while executing query to get count for the tables.");
+        }
+    }
+
+    private boolean isEmpty(String value) {
+        return value == null || value.isEmpty();
     }
 }

@@ -234,6 +234,7 @@ class DataExchangeControllerTest {
         String tableName = "testTable";
         String timestamp = "2025-03-27T00:00:00Z";
         boolean initialLoad = true;
+        String expectedOutput = "{data=[{Table Name=testTable, Record Count=100, Source Database Name=testDb}], message=Success}";
 
         Map<String, Object> mockResult = new HashMap<>();
         mockResult.put("Table Name", tableName);
@@ -246,7 +247,7 @@ class DataExchangeControllerTest {
         ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("[{Table Name=testTable, Record Count=100, Source Database Name=testDb}]", Objects.requireNonNull(response.getBody()).toString());
+        assertEquals(expectedOutput, Objects.requireNonNull(response.getBody()).toString());
     }
 
     @Test
@@ -255,6 +256,9 @@ class DataExchangeControllerTest {
         String tableName = "testTable";
         String timestamp = "2025-03-27T00:00:00Z";
         boolean initialLoad = true;
+        Map<String, Object> expectedOutput = new HashMap<>();
+        expectedOutput.put("message", "No results found for the given input(s).");
+        expectedOutput.put("data", new ArrayList<>());
 
         when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad))
                 .thenReturn(List.of());
@@ -262,7 +266,7 @@ class DataExchangeControllerTest {
         ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad, request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("No results found for the given input(s).", response.getBody());
+        assertEquals(expectedOutput, response.getBody());
     }
 
     @Test

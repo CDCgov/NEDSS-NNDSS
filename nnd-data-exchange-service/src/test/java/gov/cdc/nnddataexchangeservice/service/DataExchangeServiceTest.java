@@ -14,6 +14,10 @@ import gov.cdc.nnddataexchangeservice.service.model.dto.NETSSTransportQOutDto;
 import gov.cdc.nnddataexchangeservice.service.model.dto.TransportQOutDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -126,137 +130,97 @@ class DataExchangeServiceTest {
         verify(netsstTransportService, times(0)).getNetssTransportData(netssTime,0);
     }
 
-    @Test
-    void testGetAllTablesCount() throws DataExchangeException {
+    @ParameterizedTest
+    @NullSource
+    void testGetAllTablesCount_NullTimestamp(String timestamp) throws DataExchangeException {
         String sourceDbName = "RDB";
-        String tableName = null;
-        String timestamp = "2023-01-01 00:00:00.000";
         boolean initialLoad = true;
 
-        DataSyncConfig dataSyncConfig = new DataSyncConfig();
-        dataSyncConfig.setTableName("D_INV_ADMINISTRATIVE");
-        dataSyncConfig.setSourceDb("RDB");
-        dataSyncConfig.setQueryCount("SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE WHERE timestamp > ?");
+        DataSyncConfig config = new DataSyncConfig();
+        config.setTableName("D_INV_ADMINISTRATIVE");
+        config.setSourceDb("RDB");
+        config.setQueryCount("SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE WHERE timestamp > ?");
 
-        List<DataSyncConfig> dataSyncConfigList = Collections.singletonList(dataSyncConfig);
-
-        when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(dataSyncConfigList);
+        when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(Collections.singletonList(config));
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(10);
 
-        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
-
+        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, null, timestamp, initialLoad);
         assertNotNull(result);
         assertEquals(1, result.size());
-        Map<String, Object> resultMap = result.get(0);
-        assertEquals("D_INV_ADMINISTRATIVE", resultMap.get("Table Name"));
-        assertEquals("RDB", resultMap.get("Source Database Name"));
-        assertEquals(10, resultMap.get("Record Count"));
+        assertEquals(10, result.getFirst().get("Record Count"));
     }
 
-    @Test
-    void testGetAllTablesCount_EmptyList() throws DataExchangeException {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "2023-01-01 00:00:00.000"})
+    void testGetAllTablesCount_DifferentTimestamps(String timestamp) throws DataExchangeException {
         String sourceDbName = "RDB";
-        String tableName = null;
+        boolean initialLoad = true;
+
+        DataSyncConfig config = new DataSyncConfig();
+        config.setTableName("D_INV_ADMINISTRATIVE");
+        config.setSourceDb("RDB");
+        config.setQueryCount("SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE WHERE timestamp > ?");
+
+        when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(Collections.singletonList(config));
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(5);
+
+        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, null, timestamp, initialLoad);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(5, result.getFirst().get("Record Count"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"Table1", "Table2", "Table3"})
+    void testGetAllTablesCount_DifferentTables(String tableName) throws DataExchangeException {
+        String sourceDbName = "RDB";
         String timestamp = "2023-01-01 00:00:00.000";
         boolean initialLoad = true;
 
-        when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(Collections.emptyList());
+        DataSyncConfig config = new DataSyncConfig();
+        config.setTableName(tableName);
+        config.setSourceDb("RDB");
+        config.setQueryCount("SELECT COUNT(*) FROM " + tableName + " WHERE timestamp > ?");
+
+        when(dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName)).thenReturn(Collections.singletonList(config));
+        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(7);
 
         List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void testGetAllTablesCount_NullTimestamp() throws DataExchangeException {
-        String sourceDbName = "RDB";
-        String tableName = null;
-        String timestamp = null; // Null timestamp
-        boolean initialLoad = true;
-
-        DataSyncConfig dataSyncConfig = new DataSyncConfig();
-        dataSyncConfig.setTableName("D_INV_ADMINISTRATIVE");
-        dataSyncConfig.setSourceDb("RDB");
-        dataSyncConfig.setQueryCount("SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE WHERE timestamp > ?");
-
-        List<DataSyncConfig> dataSyncConfigList = Collections.singletonList(dataSyncConfig);
-
-        when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(dataSyncConfigList);
-        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(10);
-
-        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
-
         assertNotNull(result);
         assertEquals(1, result.size());
-        Map<String, Object> resultMap = result.get(0);
-        assertEquals("D_INV_ADMINISTRATIVE", resultMap.get("Table Name"));
-        assertEquals("RDB", resultMap.get("Source Database Name"));
-        assertEquals(10, resultMap.get("Record Count"));
+        assertEquals(7, result.getFirst().get("Record Count"));
     }
 
-    @Test
-    void testGetAllTablesCount_NoRecordsReturned() throws DataExchangeException {
-        String sourceDbName = "RDB";
-        String tableName = null;
-        String timestamp = "2023-01-01 00:00:00.000";
-        boolean initialLoad = true;
+    @ParameterizedTest
+    @CsvSource({
+            "'', '', 0",
+            "'table1', '', 1",
+            "'table1,table2', '', 2",
+            "'', 'sourceDb1', 3",
+            "'table1', 'sourceDb1', 4"
+    })
+    void testFetchDataSyncConfigs(String tableName, String sourceDbName, int expectedMethodCall) {
+        DataExchangeGenericService spyService = spy(dataExchangeGenericService);
+        List<DataSyncConfig> result = spyService.fetchDataSyncConfigs(sourceDbName, tableName);
 
-        DataSyncConfig dataSyncConfig = new DataSyncConfig();
-        dataSyncConfig.setTableName("D_INV_ADMINISTRATIVE");
-        dataSyncConfig.setSourceDb("RDB");
-        dataSyncConfig.setQueryCount("SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE WHERE timestamp > ?");
-
-        List<DataSyncConfig> dataSyncConfigList = Collections.singletonList(dataSyncConfig);
-
-        when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(dataSyncConfigList);
-        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(0); // No records
-
-        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        Map<String, Object> resultMap = result.get(0);
-        assertEquals("D_INV_ADMINISTRATIVE", resultMap.get("Table Name"));
-        assertEquals("RDB", resultMap.get("Source Database Name"));
-        assertEquals(0, resultMap.get("Record Count"));
-    }
-
-    @Test
-    void testGetAllTablesCount_MultipleTables() throws DataExchangeException {
-        String sourceDbName = "RDB";
-        String tableName = null;
-        String timestamp = "2023-01-01 00:00:00.000";
-        boolean initialLoad = true;
-
-        DataSyncConfig dataSyncConfig1 = new DataSyncConfig();
-        dataSyncConfig1.setTableName("D_INV_ADMINISTRATIVE");
-        dataSyncConfig1.setSourceDb("RDB");
-        dataSyncConfig1.setQueryCount("SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE WHERE timestamp > ?");
-
-        DataSyncConfig dataSyncConfig2 = new DataSyncConfig();
-        dataSyncConfig2.setTableName("D_INV_EPIDEMIOLOGY");
-        dataSyncConfig2.setSourceDb("RDB");
-        dataSyncConfig2.setQueryCount("SELECT COUNT(*) FROM D_INV_EPIDEMIOLOGY WHERE timestamp > ?");
-
-        List<DataSyncConfig> dataSyncConfigList = Arrays.asList(dataSyncConfig1, dataSyncConfig2);
-
-        when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(dataSyncConfigList);
-        when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(10).thenReturn(15); // Different counts for each table
-
-        List<Map<String, Object>> result = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, initialLoad);
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-
-        Map<String, Object> resultMap1 = result.get(0);
-        assertEquals("D_INV_ADMINISTRATIVE", resultMap1.get("Table Name"));
-        assertEquals("RDB", resultMap1.get("Source Database Name"));
-        assertEquals(10, resultMap1.get("Record Count"));
-
-        Map<String, Object> resultMap2 = result.get(1);
-        assertEquals("D_INV_EPIDEMIOLOGY", resultMap2.get("Table Name"));
-        assertEquals("RDB", resultMap2.get("Source Database Name"));
-        assertEquals(15, resultMap2.get("Record Count"));
+        switch (expectedMethodCall) {
+            case 0:
+                verify(dataSyncConfigRepository, times(1)).findAll();
+                break;
+            case 1:
+                verify(dataSyncConfigRepository, times(1)).findByTableName(tableName);
+                break;
+            case 2:
+                verify(dataSyncConfigRepository, times(1)).findByTableNameIn(Arrays.asList(tableName.split("\\s*,\\s*")));
+                break;
+            case 3:
+                verify(dataSyncConfigRepository, times(1)).findBySourceDb(sourceDbName);
+                break;
+            case 4:
+                verify(dataSyncConfigRepository, times(1)).findByTableNameAndSourceDb(tableName, sourceDbName);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + expectedMethodCall);
+        }
     }
 }
