@@ -83,6 +83,7 @@ thread:
       max-retry: ${THREAD_PROCESSOR_LEVEL_MAX_RETRY:5}
   # 10000 record (1 processor batch) / 2000 = 5 concurrency
   jdbc-batch-level:
+      enabled: ${THREAD_JDBC_BATCH_LEVEL_ENABLED:false}
       chunk-size: ${THREAD_JDBC_BATCH_LEVEL_CHUNK_SIZE:2000}
       initial-concurrency: ${THREAD_JDBC_BATCH_LEVEL_INIT_CONCURRENCY:5}
       max-concurrency: ${THREAD_JDBC_BATCH_LEVEL_MAX_CONCURRENCY:10}

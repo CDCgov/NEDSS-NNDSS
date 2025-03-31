@@ -363,11 +363,11 @@ public class JdbcTemplateUtil {
                 if (!records.isEmpty()) {
                     int totalRecords = records.size();
 
-                    logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{}, timeout={}ms)",
+                    logger.debug("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{}, timeout={}ms)",
                             totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
                             jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency, jdbcBatchLevelTimeoutPerTaskMs);
 
-                    logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{})",
+                    logger.debug("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{})",
                             totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
                             jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency);
 
@@ -378,7 +378,7 @@ public class JdbcTemplateUtil {
                             int end = Math.min(i + batchSize, totalRecords);
                             List<Map<String, Object>> batch = records.subList(i, end);
 
-                            logger.info("Submitting batch records {} to {} (size = {})", i, end - 1, end - i);
+                            logger.debug("Submitting batch records {} to {} (size = {})", i, end - 1, end - i);
 
                             List<Future<?>> futures = new ArrayList<>();
 
@@ -398,10 +398,10 @@ public class JdbcTemplateUtil {
 
                                             if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
                                                 chunk.forEach(data -> data.remove("RowNum"));
-                                                logger.info("Chunk {}: Inserting {} records", chunkNumber, chunk.size());
+                                                logger.debug("Chunk {}: Inserting {} records", chunkNumber, chunk.size());
                                                 jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(chunk));
                                             } else {
-                                                logger.info("Chunk {}: Upserting {} records", chunkNumber, chunk.size());
+                                                logger.debug("Chunk {}: Upserting {} records", chunkNumber, chunk.size());
                                                 upsertBatch(config.getTableName(), chunk, config.getKeyList());
                                             }
 
@@ -453,7 +453,7 @@ public class JdbcTemplateUtil {
                                 logger.debug("Increased concurrency to {}", increased);
                             }
 
-                            logger.info("Batch processed: records {} to {}", i, end - 1);
+                            logger.debug("Batch processed: records {} to {}", i, end - 1);
                         }
 
                         logger.info("All records processed successfully for table '{}'", config.getTableName());
