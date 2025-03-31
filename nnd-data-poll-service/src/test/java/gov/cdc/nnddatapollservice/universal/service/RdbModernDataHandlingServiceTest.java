@@ -206,6 +206,48 @@ class RdbModernDataHandlingServiceTest {
         verify(iPollCommonService, times(1)).checkInitialLoadForIndividualTable(any());
     }
 
+    @Test
+    void testRestrictFullLoad_7() throws APIException {
+        // Arrange
+        String tableName = "exampleTable";
+        universalDataHandlingService.storeJsonInLocalFolder = true;
+        universalDataHandlingService.odseFullSync = false; // triggers first part of the condition
+
+        PollDataSyncConfig config = new PollDataSyncConfig();
+        config.setTableName(tableName);
+        config.setKeyList("key");
+        config.setSourceDb(ODSE_OBS); // triggers second part
+
+        when(iPollCommonService.checkInitialLoadForIndividualTable(config)).thenReturn(true);
+
+        // Act
+        universalDataHandlingService.pollAndPersistData(config);
+
+        // Assert
+        verify(iPollCommonService, times(1)).checkInitialLoadForIndividualTable(any());
+    }
+
+    @Test
+    void testRestrictFullLoad_8() throws APIException {
+        // Arrange
+        String tableName = "exampleTable";
+        universalDataHandlingService.storeJsonInLocalFolder = true;
+        universalDataHandlingService.odseFullSync = true; // triggers first part of the condition
+
+        PollDataSyncConfig config = new PollDataSyncConfig();
+        config.setTableName(tableName);
+        config.setKeyList("key");
+        config.setSourceDb(ODSE_OBS + "DUMP"); // triggers second part
+
+        when(iPollCommonService.checkInitialLoadForIndividualTable(config)).thenReturn(true);
+
+        // Act
+        universalDataHandlingService.pollAndPersistData(config);
+
+        // Assert
+        verify(iPollCommonService, times(1)).checkInitialLoadForIndividualTable(any());
+    }
+
 //    private void setupServiceWithMockedDependencies() throws DataPollException {
 //
 //        when(iPollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
