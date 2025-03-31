@@ -18,6 +18,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static gov.cdc.nnddataexchangeservice.shared.ErrorResponseBuilder.buildErrorResponse;
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.convertTimestampFromString;
@@ -319,4 +323,55 @@ public class DataExchangeController {
         return new ResponseEntity<>(val, HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Get count for all tables",
+            description = "Fetches the record count for all tables, optionally filtered by source database, table name, and timestamp. Requires client authentication headers.",
+            parameters = {
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientid",
+                            description = "The Client Id for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientsecret",
+                            description = "The Client Secret for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "sourceDbName",
+                            description = "Optional source database name to filter counts",
+                            required = false,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "tableName",
+                            description = "Optional table name to filter counts",
+                            required = false,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "timestamp",
+                            description = "Optional timestamp to filter counts",
+                            required = false,
+                            schema = @Schema(type = "string"))
+            }
+    )
+    @GetMapping(path = "/api/datasync/all-tables-count")
+    public ResponseEntity<Map<String, Object>> getAllTablesCount(@RequestParam(value = "sourceDbName", required = false) String sourceDbName,
+                                               @RequestParam(value = "tableName", required = false) String tableName,
+                                               @RequestParam(value = "timestamp", required = false) String timestamp,
+                                               HttpServletRequest request) {
+        try {
+            List<Map<String, Object>> tableCounts = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp);
+            Map<String, Object> response = new HashMap<>();
+            if (tableCounts.isEmpty()) {
+                response.put("message", "No results found for the given input(s).");
+                response.put("data", new ArrayList<>());
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+            response.put("message", "Success");
+            response.put("data", tableCounts);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
+        }
+    }
 }
