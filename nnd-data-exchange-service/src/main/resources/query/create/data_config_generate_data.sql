@@ -1,3 +1,6 @@
+USE RDB
+GO
+
 DELETE FROM [dbo].[data_sync_config];
 
 IF
