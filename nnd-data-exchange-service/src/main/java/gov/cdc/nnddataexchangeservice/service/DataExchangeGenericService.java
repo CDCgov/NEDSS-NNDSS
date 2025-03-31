@@ -17,8 +17,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -72,7 +72,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     private String prepareQuery(String query, boolean initialLoad, String timestamp, boolean useKeyPagination) {
         String operator;
         if (useKeyPagination) {
-            operator = initialLoad ? GREATER_EQUAL : LESS;
+            operator = GREATER;
         }
         else {
             operator = initialLoad ? LESS : GREATER_EQUAL;
@@ -90,7 +90,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
                 return rdbModernJdbcTemplate.queryForObject(query, Integer.class);
             }
-            else if (sourceDb.equalsIgnoreCase("NBS_ODSE")) {
+            else if (sourceDb.equalsIgnoreCase(DB_NBS_ODSE)) {
                 return odseJdbcTemplate.queryForObject(query, Integer.class);
             }
             else {
@@ -119,13 +119,12 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             Callable<String> callable = () -> {
                 String baseQuery = preparePaginationQuery(dataConfig, param, startRow, endRow, initialLoad, allowNull, noPagination, keyPagination);
 
-                List<Map<String, Object>> data = executeQueryForData(baseQuery, dataConfig.getSourceDb());
+                List<Map<String, Object>> data = executeQueryForDataAsync(baseQuery, dataConfig.getSourceDb());
 
                 dataCountHolder.set(data.size());
 
 
                 return DataSimplification.dataToString(data);
-                //return DataSimplification.dataCompressionAndEncodeV2(data);
             };
 
             return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
@@ -140,6 +139,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
     }
 
+    @SuppressWarnings("java:S107")
     private String preparePaginationQuery(DataSyncConfig dataConfig, String param, String startRow,
                                           String endRow, boolean initialLoad, boolean allowNull, boolean noPagination, boolean keyPagination) {
 
@@ -178,20 +178,48 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         return baseQuery + ";";
     }
 
-    private List<Map<String, Object>> executeQueryForData(String query, String sourceDb) throws DataExchangeException {
-        if (sourceDb.equalsIgnoreCase(DB_SRTE)) {
-            return srteJdbcTemplate.queryForList(query);
-        } else if (sourceDb.equalsIgnoreCase(DB_RDB)) {
-            return jdbcTemplate.queryForList(query);
-        } else if (sourceDb.equalsIgnoreCase(DB_RDB_MODERN)) {
-            return rdbModernJdbcTemplate.queryForList(query);
-        } else if (sourceDb.equalsIgnoreCase("NBS_ODSE")) {
-            return odseJdbcTemplate.queryForList(query);
-        }
+    private static final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    private static final Semaphore semaphore = new Semaphore(50); // Limits to 50 concurrent queries
 
-        else {
-            throw new DataExchangeException("DB IS NOT SUPPORTED: " + sourceDb);
+    @SuppressWarnings("java:S2142")
+    public List<Map<String, Object>> executeQueryForDataAsync(String query, String sourceDb) throws DataExchangeException {
+        try {
+            semaphore.acquire(); // Limit concurrent queries
+
+            JdbcTemplate template = getJdbcTemplate(sourceDb);
+            return CompletableFuture.supplyAsync(() -> queryWithStreaming(template, query), executor).get(); // Executes asynchronously
+        } catch (Exception e) {
+            throw new DataExchangeException("Error executing query on DB: " + e.getMessage());
+        } finally {
+            semaphore.release(); // Always release semaphore
         }
+    }
+
+    private JdbcTemplate getJdbcTemplate(String sourceDb) throws DataExchangeException {
+        Map<String, JdbcTemplate> dbTemplateMap = Map.of(
+                DB_SRTE, srteJdbcTemplate,
+                DB_RDB, jdbcTemplate,
+                DB_RDB_MODERN, rdbModernJdbcTemplate,
+                DB_NBS_ODSE, odseJdbcTemplate
+        );
+
+        return Optional.ofNullable(dbTemplateMap.get(sourceDb))
+                .orElseThrow(() -> new DataExchangeException("DB IS NOT SUPPORTED: " + sourceDb));
+    }
+
+    private List<Map<String, Object>> queryWithStreaming(JdbcTemplate template, String query) {
+        List<Map<String, Object>> results = new ArrayList<>();
+       // template.setQueryTimeout(30); // Prevent long-running queries
+
+        template.query(query, rs -> {
+            Map<String, Object> row = new HashMap<>();
+            for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+                row.put(rs.getMetaData().getColumnName(i), rs.getObject(i));
+            }
+            results.add(row);
+        });
+
+        return results;
     }
 
     private String executeDataSyncQuery(Callable<String> callable, String tableName, String startRow, String endRow,
@@ -220,5 +248,71 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     // DECODE TEST METHOD
     public String decodeAndDecompress(String base64EncodedData) throws DataExchangeException {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
+    }
+
+    public List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp) throws DataExchangeException {
+        if (timestamp == null || timestamp.isEmpty()) {
+            timestamp = "1753-01-01 00:00:00.000"; // Lowest timestamp for datetime column
+        }
+
+        List<DataSyncConfig> dataSyncConfigs = fetchDataSyncConfigs(sourceDbName, tableName);
+        return fetchTableCounts(dataSyncConfigs, timestamp);
+    }
+
+    List<DataSyncConfig> fetchDataSyncConfigs(String sourceDbName, String tableName) {
+        if (isEmpty(tableName) && isEmpty(sourceDbName)) {
+            return dataSyncConfigRepository.findAll();
+        }
+        if (!isEmpty(tableName) && isEmpty(sourceDbName)) {
+            return tableName.contains(",")
+                    ? dataSyncConfigRepository.findByTableNameIn(Arrays.asList(tableName.split("\\s*,\\s*")))
+                    : dataSyncConfigRepository.findByTableName(tableName);
+        }
+        if (!isEmpty(sourceDbName) && isEmpty(tableName)) {
+            return dataSyncConfigRepository.findBySourceDb(sourceDbName);
+        }
+        return dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName);
+    }
+
+    private List<Map<String, Object>> fetchTableCounts(List<DataSyncConfig> dataSyncConfigs, String timestamp) throws DataExchangeException {
+        List<Map<String, Object>> tableCountsList = new ArrayList<>();
+        // D_INV_* tables look for key instead of timestamp for count,
+        // so we're setting the timestamp to -1 in the for loop below
+        Set<String> invTableNames = Set.of(
+                "D_INV_ADMINISTRATIVE", "D_INV_EPIDEMIOLOGY", "D_INV_HIV",
+                "D_INV_LAB_FINDING", "D_INV_MEDICAL_HISTORY", "D_INV_RISK_FACTOR",
+                "D_INV_TREATMENT", "D_INV_VACCINATION"
+        );
+        for (DataSyncConfig dataConfig : dataSyncConfigs) {
+            tableCountsList.add(executeCountQuery(dataConfig, timestamp, invTableNames));
+        }
+        tableCountsList.sort(Comparator.comparing(map -> (String) map.get("Table Name")));
+        return tableCountsList;
+    }
+
+    private String prepareQuery(String query, String timestamp) {
+        return query.replaceAll(OPERATION, GREATER_EQUAL)
+                .replaceAll(GENERIC_PARAM, "'" + timestamp + "'");
+    }
+
+    private Map<String, Object> executeCountQuery(DataSyncConfig dataConfig, String timestamp, Set<String> invTableNames) throws DataExchangeException {
+        try {
+            String query = prepareQuery(
+                    dataConfig.getQueryCount(),
+                    invTableNames.contains(dataConfig.getTableName()) ? "-1" : timestamp
+            );
+            Integer count = executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+            Map<String, Object> countMap = new HashMap<>();
+            countMap.put("Table Name", dataConfig.getTableName());
+            countMap.put("Source Database Name", dataConfig.getSourceDb());
+            countMap.put("Record Count", count);
+            return countMap;
+        } catch (DataExchangeException e) {
+            throw new DataExchangeException("Error while executing query to get count for the tables.");
+        }
+    }
+
+    private boolean isEmpty(String value) {
+        return value == null || value.isEmpty();
     }
 }

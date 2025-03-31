@@ -46,7 +46,7 @@ public class LiquibaseConfig {
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(liquibaseDataSource);
         liquibase.setChangeLog(liquibaseProperties.getChangeLog());
-        liquibase.setContexts(liquibaseProperties.getContexts());
+        liquibase.setContexts(String.join(",", liquibaseProperties.getContexts()));
         return liquibase;
     }
 }

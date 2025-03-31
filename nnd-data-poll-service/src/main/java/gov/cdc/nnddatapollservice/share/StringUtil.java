@@ -4,6 +4,9 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public class StringUtil {
+    private StringUtil() {
+        //SONARQ
+    }
     public static String getStackTraceAsString(Throwable throwable) {
         if (throwable == null) {
             return "";

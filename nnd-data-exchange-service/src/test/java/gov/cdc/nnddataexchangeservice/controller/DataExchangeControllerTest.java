@@ -13,9 +13,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -32,9 +34,13 @@ class DataExchangeControllerTest {
     @InjectMocks
     private DataExchangeController dataExchangeController;
 
+    private HttpServletRequest request;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        request = mock(HttpServletRequest.class);
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
 
     @Test
@@ -183,7 +189,7 @@ class DataExchangeControllerTest {
 
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertNotNull(body);
-        assertEquals("Version is Missing", body.get("message"));
+        assertEquals("gov.cdc.nnddataexchangeservice.exception.DataExchangeException: Version is Missing", body.get("message"));
         assertEquals(500, body.get("status"));
         assertEquals("/api/datasync/count/" + tableName, body.get("path"));
     }
@@ -220,5 +226,58 @@ class DataExchangeControllerTest {
         assertEquals("Version is Missing", body.get("message"));
         assertEquals(500, body.get("status"));
         assertEquals("/api/datasync/" + tableName, body.get("path"));
+    }
+
+    @Test
+    void testGetAllTablesCount() throws DataExchangeException {
+        String sourceDbName = "testDb";
+        String tableName = "testTable";
+        String timestamp = "2025-03-27T00:00:00Z";
+        String expectedOutput = "{data=[{Table Name=testTable, Record Count=100, Source Database Name=testDb}], message=Success}";
+
+        Map<String, Object> mockResult = new HashMap<>();
+        mockResult.put("Table Name", tableName);
+        mockResult.put("Record Count", 100);
+        mockResult.put("Source Database Name", sourceDbName);
+
+        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp))
+                .thenReturn(List.of(mockResult));
+
+        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedOutput, Objects.requireNonNull(response.getBody()).toString());
+    }
+
+    @Test
+    void testGetAllTablesCount_NoResults() throws DataExchangeException {
+        String sourceDbName = "testDb";
+        String tableName = "testTable";
+        String timestamp = "2025-03-27T00:00:00Z";
+        Map<String, Object> expectedOutput = new HashMap<>();
+        expectedOutput.put("message", "No results found for the given input(s).");
+        expectedOutput.put("data", new ArrayList<>());
+
+        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp))
+                .thenReturn(List.of());
+
+        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(expectedOutput, response.getBody());
+    }
+
+    @Test
+    void testGetAllTablesCount_ExceptionHandling() throws DataExchangeException {
+        String sourceDbName = "testDb";
+        String tableName = "testTable";
+        String timestamp = "2025-03-27T00:00:00Z";
+
+        when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp))
+                .thenThrow(new DataExchangeException("Test exception"));
+
+        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, request);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 }
