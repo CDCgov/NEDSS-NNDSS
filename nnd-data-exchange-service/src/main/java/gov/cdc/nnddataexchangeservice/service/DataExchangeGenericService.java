@@ -17,8 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -220,5 +219,71 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     // DECODE TEST METHOD
     public String decodeAndDecompress(String base64EncodedData) throws DataExchangeException {
         return DataSimplification.decodeAndDecompress(base64EncodedData);
+    }
+
+    public List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp) throws DataExchangeException {
+        if (timestamp == null || timestamp.isEmpty()) {
+            timestamp = "1753-01-01 00:00:00.000"; // Lowest timestamp for datetime column
+        }
+
+        List<DataSyncConfig> dataSyncConfigs = fetchDataSyncConfigs(sourceDbName, tableName);
+        return fetchTableCounts(dataSyncConfigs, timestamp);
+    }
+
+    List<DataSyncConfig> fetchDataSyncConfigs(String sourceDbName, String tableName) {
+        if (isEmpty(tableName) && isEmpty(sourceDbName)) {
+            return dataSyncConfigRepository.findAll();
+        }
+        if (!isEmpty(tableName) && isEmpty(sourceDbName)) {
+            return tableName.contains(",")
+                    ? dataSyncConfigRepository.findByTableNameIn(Arrays.asList(tableName.split("\\s*,\\s*")))
+                    : dataSyncConfigRepository.findByTableName(tableName);
+        }
+        if (!isEmpty(sourceDbName) && isEmpty(tableName)) {
+            return dataSyncConfigRepository.findBySourceDb(sourceDbName);
+        }
+        return dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName);
+    }
+
+    private List<Map<String, Object>> fetchTableCounts(List<DataSyncConfig> dataSyncConfigs, String timestamp) throws DataExchangeException {
+        List<Map<String, Object>> tableCountsList = new ArrayList<>();
+        // D_INV_* tables look for key instead of timestamp for count,
+        // so we're setting the timestamp to -1 in the for loop below
+        Set<String> invTableNames = Set.of(
+                "D_INV_ADMINISTRATIVE", "D_INV_EPIDEMIOLOGY", "D_INV_HIV",
+                "D_INV_LAB_FINDING", "D_INV_MEDICAL_HISTORY", "D_INV_RISK_FACTOR",
+                "D_INV_TREATMENT", "D_INV_VACCINATION"
+        );
+        for (DataSyncConfig dataConfig : dataSyncConfigs) {
+            tableCountsList.add(executeCountQuery(dataConfig, timestamp, invTableNames));
+        }
+        tableCountsList.sort(Comparator.comparing(map -> (String) map.get("Table Name")));
+        return tableCountsList;
+    }
+
+    private String prepareQuery(String query, String timestamp) {
+        return query.replaceAll(OPERATION, GREATER_EQUAL)
+                .replaceAll(GENERIC_PARAM, "'" + timestamp + "'");
+    }
+
+    private Map<String, Object> executeCountQuery(DataSyncConfig dataConfig, String timestamp, Set<String> invTableNames) throws DataExchangeException {
+        try {
+            String query = prepareQuery(
+                    dataConfig.getQueryCount(),
+                    invTableNames.contains(dataConfig.getTableName()) ? "-1" : timestamp
+            );
+            Integer count = executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+            Map<String, Object> countMap = new HashMap<>();
+            countMap.put("Table Name", dataConfig.getTableName());
+            countMap.put("Source Database Name", dataConfig.getSourceDb());
+            countMap.put("Record Count", count);
+            return countMap;
+        } catch (DataExchangeException e) {
+            throw new DataExchangeException("Error while executing query to get count for the tables.");
+        }
+    }
+
+    private boolean isEmpty(String value) {
+        return value == null || value.isEmpty();
     }
 }
