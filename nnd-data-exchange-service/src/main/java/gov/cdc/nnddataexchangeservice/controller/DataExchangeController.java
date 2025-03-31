@@ -351,6 +351,11 @@ public class DataExchangeController {
                             name = "timestamp",
                             description = "Optional timestamp to filter counts",
                             required = false,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "nullTimestampAllow",
+                            description = "Optional null ts value allow flag to filter counts - value should be either true, false or empty",
+                            required = false,
                             schema = @Schema(type = "string"))
             }
     )
@@ -358,9 +363,15 @@ public class DataExchangeController {
     public ResponseEntity<Map<String, Object>> getAllTablesCount(@RequestParam(value = "sourceDbName", required = false) String sourceDbName,
                                                @RequestParam(value = "tableName", required = false) String tableName,
                                                @RequestParam(value = "timestamp", required = false) String timestamp,
+                                               @RequestParam(value = "nullTimestampAllow", required = false,
+                                                       defaultValue = "false") String nullTimestampAllow,
                                                HttpServletRequest request) {
         try {
-            List<Map<String, Object>> tableCounts = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp);
+            boolean nullTsAlow = false;
+            if (!nullTimestampAllow.isEmpty()) {
+                nullTsAlow = Boolean.parseBoolean(nullTimestampAllow);
+            }
+            List<Map<String, Object>> tableCounts = dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, nullTsAlow);
             Map<String, Object> response = new HashMap<>();
             if (tableCounts.isEmpty()) {
                 response.put("message", "No results found for the given input(s).");
