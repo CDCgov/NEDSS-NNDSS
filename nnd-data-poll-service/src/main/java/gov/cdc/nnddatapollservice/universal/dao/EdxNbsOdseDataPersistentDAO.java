@@ -12,7 +12,6 @@ import gov.cdc.nnddatapollservice.repository.nbs_odse.model.EDXActivityLog;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.HandleError;
-import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.universal.dto.EDXActivityDetailLogDto;
 import gov.cdc.nnddatapollservice.universal.dto.EDXActivityLogDto;
 import org.slf4j.Logger;
@@ -29,6 +28,7 @@ import java.util.UUID;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.LOG_SUCCESS;
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.SUCCESS;
+import static gov.cdc.nnddatapollservice.constant.SqlConstantValue.SET_IDENTITY_INSERT;
 
 @Service
 public class EdxNbsOdseDataPersistentDAO {
@@ -39,7 +39,6 @@ public class EdxNbsOdseDataPersistentDAO {
 
     private final EDXActivityLogRepository edxActivityLogRepository;
     private final EDXActivityDetailLogRepository edxActivityDetailLogRepository;
-    private final JdbcTemplateUtil jdbcTemplateUtil;
 
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
@@ -51,12 +50,12 @@ public class EdxNbsOdseDataPersistentDAO {
             .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
             .create();
 
-    public EdxNbsOdseDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError, EDXActivityLogRepository edxActivityLogRepository, EDXActivityDetailLogRepository edxActivityDetailLogRepository, JdbcTemplateUtil jdbcTemplateUtil) {
+    public EdxNbsOdseDataPersistentDAO(@Qualifier("rdbJdbcTemplate") JdbcTemplate jdbcTemplate, HandleError handleError,
+                                       EDXActivityLogRepository edxActivityLogRepository, EDXActivityDetailLogRepository edxActivityDetailLogRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.handleError = handleError;
         this.edxActivityLogRepository = edxActivityLogRepository;
         this.edxActivityDetailLogRepository = edxActivityDetailLogRepository;
-        this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
     public LogResponseModel saveNbsOdseData(String tableName, String jsonData, ApiResponseModel<?> apiResponseModel) {
@@ -87,7 +86,7 @@ public class EdxNbsOdseDataPersistentDAO {
     protected void persistingEdxActivity(List<EDXActivityLogDto> list, String tableName) {
         for (EDXActivityLogDto data : list) {
             try {
-                jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " ON");
+                jdbcTemplate.execute(SET_IDENTITY_INSERT + tableName + " ON");
                 var domainModel = new EDXActivityLog(data);
                 edxActivityLogRepository.save(domainModel);
             } catch (Exception e) {
@@ -95,21 +94,21 @@ public class EdxNbsOdseDataPersistentDAO {
                 handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
             }
         }
-        jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " OFF");
+        jdbcTemplate.execute(SET_IDENTITY_INSERT + tableName + " OFF");
 
     }
 
     protected void persistingEdxActivityDetail(List<EDXActivityDetailLogDto> list, String tableName) {
         for (EDXActivityDetailLogDto data : list) {
             try {
-                jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " ON");
+                jdbcTemplate.execute(SET_IDENTITY_INSERT + tableName + " ON");
                 var domainModel = new EDXActivityDetailLog(data);
                 edxActivityDetailLogRepository.save(domainModel);
             } catch (Exception e) {
                 logger.error("ERROR occured at record: {}, {}", gsonNorm.toJson(data), e.getMessage()); // NOSONAR
                 handleError.writeRecordToFileTypedObject(gsonNorm, data, tableName + UUID.randomUUID(), sqlErrorPath + "/RDB_MODERN/" + e.getClass().getSimpleName() + "/" + tableName + "/"); // NOSONAR
             }
-            jdbcTemplate.execute("SET IDENTITY_INSERT " + tableName + " OFF");
+            jdbcTemplate.execute(SET_IDENTITY_INSERT + tableName + " OFF");
         }
     }
 }

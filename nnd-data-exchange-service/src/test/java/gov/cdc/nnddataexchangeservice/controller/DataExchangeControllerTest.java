@@ -189,7 +189,7 @@ class DataExchangeControllerTest {
 
         Map<String, Object> body = (Map<String, Object>) response.getBody();
         assertNotNull(body);
-        assertEquals("Version is Missing", body.get("message"));
+        assertEquals("gov.cdc.nnddataexchangeservice.exception.DataExchangeException: Version is Missing", body.get("message"));
         assertEquals(500, body.get("status"));
         assertEquals("/api/datasync/count/" + tableName, body.get("path"));
     }
