@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.service;
 
-import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IDataPullService;
 import gov.cdc.nnddatapollservice.service.interfaces.INNDDataHandlingService;
@@ -60,7 +59,7 @@ public class DataPullService implements IDataPullService {
     public void scheduleNNDDataFetch() throws DataPollException {
         if (nndPollEnabled) {
             logger.info("START POLLING");
-            logger.info("CRON: {}, TZ: {}", cron, zone);
+            logger.info("NND CRON: {}, TZ: {}", cron, zone);
             dataHandlingService.handlingExchangedData();
             logger.info("END POLLING");
             closePoller();
@@ -70,42 +69,42 @@ public class DataPullService implements IDataPullService {
     public void scheduleDataSync() {
         try {
             if (rdbPollEnabled) {
-                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("RDB CRON: {}, TZ: {}", cron, zone);
                 logger.info("START RDB POLLING");
                 universalDataHandlingService.handlingExchangedData(RDB);
                 logger.info("END RDB POLLING");
                 closePoller();
             }
             if (edxActivityEnabled) {
-                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("EDX CRON: {}, TZ: {}", cron, zone);
                 logger.info("START EDX POLLING");
                 universalDataHandlingService.handlingExchangedData(NBS_ODSE_EDX);
                 logger.info("END EDX POLLING");
                 closePoller();
             }
             if (rdbModernPollEnabled) {
-                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("RDB MODERN CRON: {}, TZ: {}", cron, zone);
                 logger.info("START RDB MOD POLLING");
                 universalDataHandlingService.handlingExchangedData(RDB_MODERN);
                 logger.info("END RDB MOD POLLING");
                 closePoller();
             }
             if (covidDataMartEnabled) {
-                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("COVID DATAMART CRON: {}, TZ: {}", cron, zone);
                 logger.info("START COVID POLLING");
                 universalDataHandlingService.handlingExchangedData(COVID_DATAMART);
                 logger.info("END COVID POLLING");
                 closePoller();
             }
             if (odsePollEnabled) {
-                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("ODSE CRON: {}, TZ: {}", cron, zone);
                 logger.info("START ODSE POLLING");
                 universalDataHandlingService.handlingExchangedData(ODSE_OBS);
                 logger.info("END ODSE POLLING");
                 closePoller();
             }
             if (srtePollEnabled) {
-                logger.info("CRON: {}, TZ: {}", cron, zone);
+                logger.info("SRTE CRON: {}, TZ: {}", cron, zone);
                 logger.info("START SRTE POLLING");
                 universalDataHandlingService.handlingExchangedData(SRTE);
                 logger.info("END SRTE POLLING");

@@ -1,10 +1,6 @@
 package gov.cdc.nnddatapollservice.service;
 
-import com.google.gson.Gson;
-import gov.cdc.nnddatapollservice.exception.APIException;
-import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
-import gov.cdc.nnddatapollservice.service.interfaces.ITokenService;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.DataSimplification;
@@ -16,40 +12,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Recover;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Stream;
 
 @Service
 @Slf4j
 public class PollCommonService implements IPollCommonService {
     private final JdbcTemplateUtil jdbcTemplateUtil;
 
-    private static Logger logger = LoggerFactory.getLogger(PollCommonService.class);
+    private static Logger logger = LoggerFactory.getLogger(PollCommonService.class); // NOSONAR
 
     @Value("${datasync.local_file_path}")
     private String datasyncLocalFilePath;
@@ -62,7 +37,7 @@ public class PollCommonService implements IPollCommonService {
 
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 
-    public PollCommonService(JdbcTemplateUtil jdbcTemplateUtil, ITokenService tokenService) {
+    public PollCommonService(JdbcTemplateUtil jdbcTemplateUtil) {
         this.jdbcTemplateUtil = jdbcTemplateUtil;
 
     }
@@ -72,6 +47,7 @@ public class PollCommonService implements IPollCommonService {
         return jdbcTemplateUtil.getTableListFromConfig();
     }
 
+    @SuppressWarnings("java:S3776")
     public boolean checkPollingIsInitailLoad(List<PollDataSyncConfig> configTableList) {
         if(dirSync) {
             for (PollDataSyncConfig pollDataSyncConfig : configTableList) {
