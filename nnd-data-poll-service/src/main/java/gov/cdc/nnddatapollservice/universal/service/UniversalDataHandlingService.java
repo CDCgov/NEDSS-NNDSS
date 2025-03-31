@@ -233,8 +233,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                             (odseFullSync && config.getSourceDb().equalsIgnoreCase(ODSE_OBS))
             ) {
                 isInitialLoad = false; // NOSONAR
-            } {
-                isInitialLoad = false; // NOSONAR
             }
 
             if(config.isRecreateApplied() ) {
