@@ -211,10 +211,14 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
             boolean forceIncrementalLoadApplied = false;
             // Forcing Initial Load when Config said so and these only apply on ODSE and EDX
-            if (edxFullSync || odseFullSync) {
-                if (config.getSourceDb().equalsIgnoreCase(ODSE_OBS) || config.getSourceDb().equalsIgnoreCase(NBS_ODSE_EDX)) {
-                    isInitialLoad = false;
-                }
+            if (
+                    (edxFullSync || odseFullSync) &&
+                    (
+                            config.getSourceDb().equalsIgnoreCase(ODSE_OBS) ||
+                            config.getSourceDb().equalsIgnoreCase(NBS_ODSE_EDX)
+                    )
+            ) {
+                isInitialLoad = false; // NOSONAR
             }
 
             if(config.isRecreateApplied() ) {
