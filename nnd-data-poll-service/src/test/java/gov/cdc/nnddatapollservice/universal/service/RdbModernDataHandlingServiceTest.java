@@ -21,6 +21,7 @@ import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("java:S125")
 class RdbModernDataHandlingServiceTest {
 
     @Mock
