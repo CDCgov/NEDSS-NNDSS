@@ -134,7 +134,6 @@ class DataExchangeServiceTest {
     @NullSource
     void testGetAllTablesCount_NullTimestamp(String timestamp) throws DataExchangeException {
         String sourceDbName = "RDB";
-        boolean initialLoad = true;
 
         DataSyncConfig config = new DataSyncConfig();
         config.setTableName("D_INV_ADMINISTRATIVE");
@@ -154,7 +153,6 @@ class DataExchangeServiceTest {
     @ValueSource(strings = {"", "2023-01-01 00:00:00.000"})
     void testGetAllTablesCount_DifferentTimestamps(String timestamp) throws DataExchangeException {
         String sourceDbName = "RDB";
-        boolean initialLoad = true;
 
         DataSyncConfig config = new DataSyncConfig();
         config.setTableName("D_INV_ADMINISTRATIVE");
@@ -175,7 +173,6 @@ class DataExchangeServiceTest {
     void testGetAllTablesCount_DifferentTables(String tableName) throws DataExchangeException {
         String sourceDbName = "RDB";
         String timestamp = "2023-01-01 00:00:00.000";
-        boolean initialLoad = true;
 
         DataSyncConfig config = new DataSyncConfig();
         config.setTableName(tableName);

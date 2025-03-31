@@ -233,7 +233,6 @@ class DataExchangeControllerTest {
         String sourceDbName = "testDb";
         String tableName = "testTable";
         String timestamp = "2025-03-27T00:00:00Z";
-        boolean initialLoad = true;
         String expectedOutput = "{data=[{Table Name=testTable, Record Count=100, Source Database Name=testDb}], message=Success}";
 
         Map<String, Object> mockResult = new HashMap<>();
@@ -255,7 +254,6 @@ class DataExchangeControllerTest {
         String sourceDbName = "testDb";
         String tableName = "testTable";
         String timestamp = "2025-03-27T00:00:00Z";
-        boolean initialLoad = true;
         Map<String, Object> expectedOutput = new HashMap<>();
         expectedOutput.put("message", "No results found for the given input(s).");
         expectedOutput.put("data", new ArrayList<>());
@@ -274,7 +272,6 @@ class DataExchangeControllerTest {
         String sourceDbName = "testDb";
         String tableName = "testTable";
         String timestamp = "2025-03-27T00:00:00Z";
-        boolean initialLoad = true;
 
         when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp))
                 .thenThrow(new DataExchangeException("Test exception"));
