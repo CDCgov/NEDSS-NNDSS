@@ -317,7 +317,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             countMap.put("Record Count", count);
 
             Integer countNull = 0;
-            if (nullTimestampAllow && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
+            if (nullTimestampAllow && dataConfig.getQueryWithNullTimeStamp() != null && !dataConfig.getQueryWithNullTimeStamp().isEmpty()) {
                 query = prepareQuery(
                         dataConfig.getQueryCount(),
                         invTableNames.contains(dataConfig.getTableName()) ? "-1" : timestamp,
@@ -325,8 +325,6 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 );
                 countNull = executeQueryForTotalRecords(query, dataConfig.getSourceDb());
                 countMap.put("Record Count with Null TS", countNull);
-                countMap.put("Record Total Count (w Null TS)", count + countNull);
-
             }
             return countMap;
         } catch (DataExchangeException e) {

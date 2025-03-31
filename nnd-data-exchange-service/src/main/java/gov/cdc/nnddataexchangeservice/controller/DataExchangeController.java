@@ -363,7 +363,8 @@ public class DataExchangeController {
     public ResponseEntity<Map<String, Object>> getAllTablesCount(@RequestParam(value = "sourceDbName", required = false) String sourceDbName,
                                                @RequestParam(value = "tableName", required = false) String tableName,
                                                @RequestParam(value = "timestamp", required = false) String timestamp,
-                                               @RequestParam(value = "false", required = false, name = "nullTimestampAllow") String nullTimestampAllow,
+                                               @RequestParam(value = "nullTimestampAllow", required = false,
+                                                       defaultValue = "false") String nullTimestampAllow,
                                                HttpServletRequest request) {
         try {
             boolean nullTsAlow = false;
