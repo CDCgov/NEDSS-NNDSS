@@ -75,11 +75,15 @@ public class JdbcTemplateUtil {
     @Value("${thread.jdbc-level.timeout}")
     protected long jdbcLevelTimeoutPerTaskMs = 600_000;
 
-
+    @Value("${thread.jdbc-batch-level.chunk-size}")
     protected int jdbcBatchLevelThreadChunkSize = 2000;
+    @Value("${thread.jdbc-batch-level.initial-concurrency}")
     protected int jdbcBatchLevelInitialConcurrency = 5;
+    @Value("${thread.jdbc-batch-level.max-concurrency}")
     protected int jdbcBatchLevelMaxConcurrency = 10;
+    @Value("${thread.jdbc-batch-level.max-retry}")
     protected int jdbcBatchLevelMaxRetry = 5;
+    @Value("${thread.jdbc-batch-level.timeout}")
     protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
 
 

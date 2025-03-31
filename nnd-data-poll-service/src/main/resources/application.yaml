@@ -74,17 +74,25 @@ scheduler:
   # 0 * 0-2 * * *
   # 0 (start at zero sec), * (run every min),  0-2 (run during 12 am to 3 am), * (run every day), * (run every month), * (run every year)
 thread:
+  # 20000 records / 2 batch = 10000 per api request
   processer-level:
       enabled: ${THREAD_PROCESSOR_LEVEL_ENABLED:false}
-      batch-size: ${THREAD_PROCESSOR_LEVEL_BATCH_SIZE:10}
-      initial-concurrency: ${THREAD_PROCESSOR_LEVEL_INIT_CONCURRENCY:20}
-      max-concurrency: ${THREAD_PROCESSOR_LEVEL_MAX_CONCURRENCY:40}
+      batch-size: ${THREAD_PROCESSOR_LEVEL_BATCH_SIZE:2}
+      initial-concurrency: ${THREAD_PROCESSOR_LEVEL_INIT_CONCURRENCY:2}
+      max-concurrency: ${THREAD_PROCESSOR_LEVEL_MAX_CONCURRENCY:4}
       max-retry: ${THREAD_PROCESSOR_LEVEL_MAX_RETRY:5}
       timeout: ${THREAD_PROCESSOR_TIMEOUT:120_000}
-  jdbc-level:
+  # 10000 record (1 processor batch) / 2000 = 5 concurrency
+  jdbc-batch-level:
+      chunk-size: ${THREAD_JDBC_BATCH_LEVEL_CHUNK_SIZE:2000}
+      initial-concurrency: ${THREAD_JDBC_BATCH_LEVEL_INIT_CONCURRENCY:5}
+      max-concurrency: ${THREAD_JDBC_BATCH_LEVEL_MAX_CONCURRENCY:10}
+      max-retry: ${THREAD_JDBC_BATCH_LEVEL_MAX_RETRY:5}
+      timeout: ${THREAD_JDBC_BATCH_TIMEOUT:360_000}
+  jdbc-level: #Single upsert or Single Insert level
       enabled: ${THREAD_JDBC_LEVEL_ENABLED:false}
-      initial-concurrency: ${THREAD_JDBC_LEVEL_INIT_CONCURRENCY:20}
-      max-concurrency: ${THREAD_JDBC_LEVEL_MAX_CONCURRENCY:40}
+      initial-concurrency: ${THREAD_JDBC_LEVEL_INIT_CONCURRENCY:10}
+      max-concurrency: ${THREAD_JDBC_LEVEL_MAX_CONCURRENCY:20}
       max-retry: ${THREAD_JDBC_LEVEL_MAX_RETRY:5}
       timeout: ${THREAD_JDBC_TIMEOUT:120_000}
   table-level:
