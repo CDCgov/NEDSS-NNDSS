@@ -86,9 +86,9 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
 
     @Value("${poll.edx_activity.full_sync}")
-    private boolean edxFullSync;
+    protected boolean edxFullSync;
     @Value("${poll.odse.full_sync}")
-    private boolean odseFullSync;
+    protected boolean odseFullSync;
 
     private boolean tryApiFatal = true;
     public UniversalDataHandlingService(UniversalDataPersistentDAO universalDataPersistentDAO,
