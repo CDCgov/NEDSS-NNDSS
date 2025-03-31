@@ -10,6 +10,7 @@ databaseChangeLog:
   - changeSet:
       id: 1
       author: liquibase
+      runOnChange: true
       changes:
         - sqlFile:
             path: db/rdb/tables/001-create-data-sync-config-001.sql
@@ -17,7 +18,7 @@ databaseChangeLog:
   - changeSet:
       id: 2
       author: liquibase
-      runOnChange: false
+      runOnChange: true
       changes:
         - sqlFile:
             path: db/rdb/tables/002-create-data-sync-log-001.sql
@@ -25,7 +26,7 @@ databaseChangeLog:
   - changeSet:
       id: 3
       author: liquibase
-      runOnChange: false
+      runOnChange: true
       changes:
         - sqlFile:
             path: db/rdb/routines/001-generate_data_for_data_sync_config-001.sql
