@@ -137,11 +137,12 @@ public class PollCommonService implements IPollCommonService {
         jdbcTemplateUtil.deleteTable(tableName);
     }
 
-
-
-
     public List<PollDataSyncConfig> getTablesConfigListBySOurceDB(List<PollDataSyncConfig> configTableList, String sourceDB) {
         return configTableList.stream().filter(configObj -> Objects.equals(configObj.getSourceDb(), sourceDB)).toList();
+    }
+
+    public List<PollDataSyncConfig> filterSyncEnabledTables(List<PollDataSyncConfig> filteredTablesList) {
+        return filteredTablesList.stream().filter(configObj -> Objects.equals(configObj.getIsSyncEnabled(), 1)).toList();
     }
 
     public LogResponseModel writeJsonDataToFile(String dbSource, String tableName, Timestamp timeStamp,
