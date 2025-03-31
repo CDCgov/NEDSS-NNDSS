@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 @Configuration
 public class LiquibaseConfig {
@@ -46,7 +47,11 @@ public class LiquibaseConfig {
         SpringLiquibase liquibase = new SpringLiquibase();
         liquibase.setDataSource(liquibaseDataSource);
         liquibase.setChangeLog(liquibaseProperties.getChangeLog());
-        liquibase.setContexts(String.join(",", liquibaseProperties.getContexts()));
+        List<String> contextsList = liquibaseProperties.getContexts();
+        if (contextsList != null && !contextsList.isEmpty()) {
+            liquibase.setContexts(String.join(",", contextsList));
+        }
+
         return liquibase;
     }
 }
