@@ -75,7 +75,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected int apiLevelMaxRetries = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-    @Value("${thread.processer-level.timeout}")
     protected long apiLevelTimeoutPerTaskMs = 600_000;
 
     private final UniversalDataPersistentDAO universalDataPersistentDAO;

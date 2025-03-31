@@ -72,7 +72,6 @@ public class JdbcTemplateUtil {
     protected int jdbcLevelMaxRetry = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-    @Value("${thread.jdbc-level.timeout}")
     protected long jdbcLevelTimeoutPerTaskMs = 600_000;
 
     @Value("${thread.jdbc-batch-level.chunk-size}")
@@ -83,7 +82,6 @@ public class JdbcTemplateUtil {
     protected int jdbcBatchLevelMaxConcurrency = 10;
     @Value("${thread.jdbc-batch-level.max-retry}")
     protected int jdbcBatchLevelMaxRetry = 5;
-    @Value("${thread.jdbc-batch-level.timeout}")
     protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
 
 
