@@ -1,13 +1,11 @@
 package gov.cdc.nnddatapollservice.universal.service;
 
 import gov.cdc.nnddatapollservice.exception.APIException;
-import gov.cdc.nnddatapollservice.exception.DataPollException;
 import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.share.TimestampUtil;
-import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -181,6 +179,27 @@ class RdbModernDataHandlingServiceTest {
         when(iPollCommonService.getLastUpdatedTimeLocalDir(any())).thenReturn("");
         // Act
         universalDataHandlingService.pollAndPersistData( config);
+
+        // Assert
+        verify(iPollCommonService, times(1)).checkInitialLoadForIndividualTable(any());
+    }
+
+    @Test
+    void testRestrictFullLoad_6() throws APIException {
+        // Arrange
+        String tableName = "exampleTable";
+        universalDataHandlingService.storeJsonInLocalFolder = true;
+        universalDataHandlingService.edxFullSync = true; // triggers first part of the condition
+
+        PollDataSyncConfig config = new PollDataSyncConfig();
+        config.setTableName(tableName);
+        config.setKeyList("key");
+        config.setSourceDb("ODSE_OBS"); // triggers second part
+
+        when(iPollCommonService.checkInitialLoadForIndividualTable(config)).thenReturn(true);
+
+        // Act
+        universalDataHandlingService.pollAndPersistData(config);
 
         // Assert
         verify(iPollCommonService, times(1)).checkInitialLoadForIndividualTable(any());
