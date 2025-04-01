@@ -25,12 +25,14 @@ poll:
     enabled: ${RDB_MODERN_POLL_ENABLED:false}
   odse:
     enabled: ${ODSE_POLL_ENABLED:false}
+    full_sync: ${ODSE_POLL_FULL_SYNC:false}
   covid_datamart:
     enabled: ${COVID_DATA_MART_ENABLED:false}
   srte:
     enabled: ${SRTE_POLL_ENABLED:false}
   edx_activity:
     enabled: ${EDX_ACTIVITY_ENABLED:false}
+    full_sync: ${EDX_ACTIVITY_FULL_SYNC:false}
 
 datasync:
   store_in_sql: ${DATASYNC_STORE_SQL:false}
