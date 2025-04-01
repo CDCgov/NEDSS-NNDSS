@@ -57,7 +57,7 @@ class RdbModernDataHandlingServiceTest {
         when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
 
         universalDataHandlingService.handlingExchangedData("RDB");
-        verify(iPollCommonService, times(1)).deleteTable(anyString());
+        verify(iPollCommonService, times(0)).deleteTable(anyString());
     }
 
     @Test
