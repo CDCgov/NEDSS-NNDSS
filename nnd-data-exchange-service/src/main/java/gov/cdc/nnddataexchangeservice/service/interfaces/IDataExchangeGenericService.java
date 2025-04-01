@@ -12,5 +12,5 @@ public interface IDataExchangeGenericService {
                             boolean initialLoad, boolean allowNull, boolean noPagination, boolean keyPagination) throws DataExchangeException;
     String decodeAndDecompress(String base64EncodedData) throws DataExchangeException;
 
-    List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp) throws DataExchangeException;
+    List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp, boolean nullTimestampAllow) throws DataExchangeException;
 }

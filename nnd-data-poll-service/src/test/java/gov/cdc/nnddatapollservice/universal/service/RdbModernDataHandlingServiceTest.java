@@ -275,19 +275,23 @@ class RdbModernDataHandlingServiceTest {
 //        when(iPollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
 //        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
 //        when(iPollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
-//        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString(), anyBoolean())).thenReturn("encodedData");
+//
+//        shareResString.setResponse("encodedData");
+//        when(iApiService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(),
+//                anyBoolean(), anyString(), anyString(), anyBoolean(), anyBoolean(),
+//                anyString())).thenReturn(shareResString);
 //
 //
 //
 //    }
 
 //    @Test
-//    void testPollAndPersistRDBData_exception_task_failed_1() throws DataPollException {
+//    void testPollAndPersistRDBData_exception_task_failed_1() throws DataPollException, APIException {
 //        String tableName = "testTable";
 //        // Arrange
 //        String expectedErrorMessage = "Simulated API Exception";
 //        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-//        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+//        when(iApiService.callDataCountEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString()))
 //                .thenThrow(new RuntimeException(expectedErrorMessage));
 //
 //        PollDataSyncConfig config = new PollDataSyncConfig();
@@ -301,14 +305,17 @@ class RdbModernDataHandlingServiceTest {
 //    }
 
 //    @Test
-//    void testPollAndPersistRDBData_exception_FailedTask_2() throws DataPollException {
+//    void testPollAndPersistRDBData_exception_FailedTask_2() throws DataPollException, APIException {
 //        String tableName = "testTable";
 //        // Arrange
 //        String expectedErrorMessage = "Simulated API Exception";
 //        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-//        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
-//                .thenReturn(1000);
-//        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString(), anyBoolean()))
+//        var apiModel = new ApiResponseModel<Integer>();
+//        apiModel.setResponse(1000);
+//        when(iApiService.callDataCountEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString()))
+//                .thenReturn(apiModel);
+//        when(iApiService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(),
+//                anyString(), anyString(), anyBoolean(), anyBoolean(), anyString()))
 //                .thenThrow(new RuntimeException(expectedErrorMessage));
 //
 //        PollDataSyncConfig config = new PollDataSyncConfig();
@@ -323,21 +330,25 @@ class RdbModernDataHandlingServiceTest {
 //    }
 
 //    @Test
-//    void testPollAndPersistRDBData_exceptionAtApiLevel() throws DataPollException {
+//    void testPollAndPersistRDBData_exceptionAtApiLevel() throws DataPollException, APIException {
 //        String tableName = "testTable";
 //        // Arrange
 //        String expectedErrorMessage = "Simulated API Exception";
 //        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-//        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
-//                .thenReturn(1000);
-//        when(iPollCommonService.callDataExchangeEndpoint(
+//        var apiModel = new ApiResponseModel<Integer>();
+//        apiModel.setResponse(1000);
+//        when(iApiService.callDataCountEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString()))
+//                .thenReturn(apiModel);
+//        when(iApiService.callDataExchangeEndpoint(
 //                eq("testTable"),
 //                eq(true),
 //                anyString(),
 //                eq(false),
 //                anyString(),
 //                anyString(),
-//                anyBoolean()))
+//                anyBoolean(),
+//                anyBoolean(),
+//                anyString()))
 //                .thenThrow(new RuntimeException(expectedErrorMessage));
 //
 //        PollDataSyncConfig config = new PollDataSyncConfig();
@@ -354,7 +365,7 @@ class RdbModernDataHandlingServiceTest {
 
 
 //    @Test
-//    void testUpdateDataHelper_ExceptionAtApiLevel_StoreInSql() {
+//    void testUpdateDataHelper_ExceptionAtApiLevel_StoreInSql() throws APIException {
 //        // Arrange
 //        boolean exceptionAtApiLevel = true;
 //        String tableName = "NRT_OBSERVATION";
@@ -371,8 +382,10 @@ class RdbModernDataHandlingServiceTest {
 //        config.setKeyList("key");
 //        config.setSourceDb("RDB");
 //
+//        var apiModel = new ApiResponseModel<String>();
+//        apiModel.setApiException(new APIException("Simulated API Exception"));
 //        // Act
-//        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, timestamp,
+//        universalDataHandlingService.updateDataHelper(apiModel, timestamp,
 //                rawJsonData, isInitialLoad, log, timestamp, config);
 //
 //        // Assert
@@ -383,7 +396,7 @@ class RdbModernDataHandlingServiceTest {
 //
 //
 //    @Test
-//    void testUpdateDataHelper_ExceptionAtApiLevel_LocalDir() {
+//    void testUpdateDataHelper_ExceptionAtApiLevel_LocalDir() throws APIException {
 //        // Arrange
 //        boolean exceptionAtApiLevel = true;
 //        String tableName = "NRT_OBSERVATION";
@@ -398,8 +411,12 @@ class RdbModernDataHandlingServiceTest {
 //        config.setTableName(tableName);
 //        config.setKeyList("key");
 //        config.setSourceDb("RDB");
+//
+//        var apiModel = new ApiResponseModel<String>();
+//        apiModel.setApiException(new APIException("TEST"));
+//
 //        // Act
-//        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, timestamp,
+//        universalDataHandlingService.updateDataHelper(apiModel, timestamp,
 //                rawJsonData, isInitialLoad, log, timestamp, config);
 //
 //        // Assert
@@ -408,7 +425,6 @@ class RdbModernDataHandlingServiceTest {
 //        verifyNoMoreInteractions(iPollCommonService);
 //    }
 //
-
 
     @Test
     void testUpdateDataHelper_NoExceptionAtApiLevel_StoreJsonInS3() throws APIException {

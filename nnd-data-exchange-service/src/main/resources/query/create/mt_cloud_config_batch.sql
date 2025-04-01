@@ -1,3 +1,6 @@
+USE RDB
+GO
+
 delete from data_sync_config where table_name in ('PERSON', 'PARTICIPATION', 'ROLE');
 
 IF
