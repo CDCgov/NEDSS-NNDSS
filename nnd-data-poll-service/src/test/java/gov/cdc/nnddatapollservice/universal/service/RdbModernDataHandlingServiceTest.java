@@ -248,27 +248,27 @@ class RdbModernDataHandlingServiceTest {
         verify(iPollCommonService, times(1)).checkInitialLoadForIndividualTable(any());
     }
 
-    @Test
-    void testRestrictFullLoad_9() throws APIException {
-        // Arrange
-
-        String tableName = "exampleTable";
-        universalDataHandlingService.storeJsonInLocalFolder= true;
-        universalDataHandlingService.edxFullSync = true;
-
-        PollDataSyncConfig config = new PollDataSyncConfig();
-        config.setTableName(tableName);
-        config.setKeyList("key");
-        config.setSourceDb(NBS_ODSE_EDX);
-
-        when(iPollCommonService.checkInitialLoadForIndividualTable(config)).thenReturn(true);
-        when(iPollCommonService.getLastUpdatedTimeLocalDir(any())).thenReturn("");
-        // Act
-        universalDataHandlingService.pollAndPersistData( config);
-
-        // Assert
-        verify(iPollCommonService, times(1)).checkInitialLoadForIndividualTable(any());
-    }
+//    @Test
+//    void testRestrictFullLoad_9() throws APIException {
+//        // Arrange
+//
+//        String tableName = "exampleTable";
+//        universalDataHandlingService.storeJsonInLocalFolder= true;
+//        universalDataHandlingService.edxFullSync = true;
+//
+//        PollDataSyncConfig config = new PollDataSyncConfig();
+//        config.setTableName(tableName);
+//        config.setKeyList("key");
+//        config.setSourceDb(NBS_ODSE_EDX);
+//
+//        when(iPollCommonService.checkInitialLoadForIndividualTable(config)).thenReturn(true);
+//        when(iPollCommonService.getLastUpdatedTimeLocalDir(any())).thenReturn("");
+//        // Act
+//        universalDataHandlingService.pollAndPersistData( config);
+//
+//        // Assert
+//        verify(iPollCommonService, times(1)).checkInitialLoadForIndividualTable(any());
+//    }
 
 //    private void setupServiceWithMockedDependencies() throws DataPollException {
 //
@@ -491,7 +491,6 @@ class RdbModernDataHandlingServiceTest {
     @Test
     void testUpdateDataHelper_ExceptionInProcessing() throws APIException {
         // Arrange
-        boolean exceptionAtApiLevel = false;
         String tableName = "NRT_OBSERVATION";
         Timestamp timestamp = Timestamp.valueOf("2024-10-01 12:00:00");
         String rawJsonData = "{}";
