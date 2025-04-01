@@ -234,6 +234,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                     (edxFullSync && config.getSourceDb().equalsIgnoreCase(NBS_ODSE_EDX)) ||
                             (odseFullSync && config.getSourceDb().equalsIgnoreCase(ODSE_OBS))
             ) {
+                forceIncrementalLoadApplied = true;
                 isInitialLoad = false; // NOSONAR
             }
 
