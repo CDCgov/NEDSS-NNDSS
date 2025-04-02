@@ -110,6 +110,7 @@ public class DataExchangeController {
     }
 
 
+
     @Operation(
             summary = "Get data from multiple tables related to Datasync process",
             description = "Fetches data from the specified table based on the timestamp for data synchronization.",
@@ -299,6 +300,55 @@ public class DataExchangeController {
         } catch (Exception e) {
             return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
+    }
+
+    @Operation(
+            summary = "Get Meta data for specific table",
+            description = "This endpoint will return data detail info such as field information like name, and data type",
+            parameters = {
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientid",
+                            description = "The Client Id for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientsecret",
+                            description = "The Client Secret for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.PATH,
+                            name = "tableName",
+                            description = "The name of the table to retrieve the record count from",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "sourcedb",
+                            description = "Source DB",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "version",
+                            description = "Version check Flag",
+                            schema = @Schema(type = "string", defaultValue = "1"),
+                            required = false)
+
+            }
+    )
+    @GetMapping(path = "/api/datasync/metadata/{tableName}")
+    @SuppressWarnings("java:S1452")
+    public ResponseEntity<?> dataSyncMetaData(@PathVariable String tableName,
+                                              @RequestHeader(name = "version", defaultValue = "") String version,
+                                              HttpServletRequest request) {
+            try {
+                if (version == null || version.isEmpty()) {
+                    throw new DataExchangeException("Version is Missing");
+                }
+
+                var res = dataExchangeGenericService.getTableMetaData(tableName);
+                return new ResponseEntity<>(res, HttpStatus.OK);
+            } catch (Exception e) {
+                return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
+            }
     }
 
     @Operation(

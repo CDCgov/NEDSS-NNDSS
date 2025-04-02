@@ -17,6 +17,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.Callable;
@@ -99,6 +102,44 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         } catch (Exception e) {
             throw new DataExchangeException("Error executing query: " + e.getMessage());
         }
+    }
+
+    public String getTableMetaData(String tableName) throws DataExchangeException {
+        DataSyncConfig dataConfig = getConfigByTableName(tableName);
+        List<Map<String, Object>> data;
+
+        try {
+            String query = """
+                SELECT 
+                    COLUMN_NAME, 
+                    DATA_TYPE, 
+                    CHARACTER_MAXIMUM_LENGTH AS MaxLength, 
+                    IS_NULLABLE, 
+                    COLUMN_DEFAULT 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = ? 
+                AND TABLE_SCHEMA = 'dbo'
+            """;
+
+            if (dataConfig.getSourceDb().equalsIgnoreCase(DB_RDB)) {
+                data = jdbcTemplate.queryForList(query, tableName);
+            }
+            else if (dataConfig.getSourceDb().equalsIgnoreCase(DB_SRTE)) {
+                data = srteJdbcTemplate.queryForList(query, tableName);
+            }
+            else if (dataConfig.getSourceDb().equalsIgnoreCase(DB_RDB_MODERN)) {
+                data = rdbModernJdbcTemplate.queryForList(query,tableName);
+            }
+            else if (dataConfig.getSourceDb().equalsIgnoreCase("NBS_ODSE")) {
+                data = odseJdbcTemplate.queryForList(query, tableName);
+            }
+            else {
+                throw new DataExchangeException("Database Not Supported: " + dataConfig.getSourceDb());
+            }
+        } catch (Exception e) {
+            throw new DataExchangeException("Error retrieving metadata for table: " + tableName);
+        }
+        return DataSimplification.dataToString(data);
     }
 
     public String getDataForDataSync(String tableName, String param, String startRow, String endRow,
