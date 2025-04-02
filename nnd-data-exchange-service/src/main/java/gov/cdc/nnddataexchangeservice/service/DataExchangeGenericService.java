@@ -139,9 +139,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         } catch (Exception e) {
             throw new DataExchangeException("Error retrieving metadata for table: " + tableName);
         }
-
-        var str = DataSimplification.dataToString(data);
-        return str;
+        return DataSimplification.dataToString(data);
     }
 
     public String getDataForDataSync(String tableName, String param, String startRow, String endRow,

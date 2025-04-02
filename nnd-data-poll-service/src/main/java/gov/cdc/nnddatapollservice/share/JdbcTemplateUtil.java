@@ -819,6 +819,8 @@ public class JdbcTemplateUtil {
         return tableList;
     }
 
+
+    @SuppressWarnings("java:S6204")
     public List<TableMetaDataDto> getOnPremMetaData(String tableName) {
         String query = """
                 SELECT 
@@ -831,11 +833,9 @@ public class JdbcTemplateUtil {
                 WHERE TABLE_NAME = ? 
                 AND TABLE_SCHEMA = 'dbo'
             """;
-        var data = rdbJdbcTemplate.queryForList(query, tableName).stream()
+        return rdbJdbcTemplate.queryForList(query, tableName).stream()
                 .map(this::mapToTableMetaDataDto)
                 .collect(Collectors.toList());
-
-        return data;
     }
 
     private TableMetaDataDto mapToTableMetaDataDto(Map<String, Object> row) {

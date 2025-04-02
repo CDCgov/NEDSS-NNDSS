@@ -125,7 +125,7 @@ public class ApiService implements IApiService {
                 }
             });
             headerStr = gson.toJson(headersForLogging);
-            logger.info("API URL: {} , headers: {}", uri, headerStr);
+            logger.info("Count API URL: {} , headers: {}", uri, headerStr);
 
 
 
@@ -204,7 +204,7 @@ public class ApiService implements IApiService {
                 }
             });
             headerStr = gson.toJson(headersForLogging);
-            logger.info("API URL: {} , headers: {}", uri, headerStr);
+            logger.info("DataSync API URL: {} , headers: {}", uri, headerStr);
 
             responseModel.setLastApiCall(String.valueOf(uri));
             responseModel.setLastApiHeader(headerStr);
@@ -296,6 +296,7 @@ public class ApiService implements IApiService {
 
 
 
+    @SuppressWarnings("java:S2142")
     public ApiResponseModel<List<TableMetaDataDto>> callMetaEndpoint(String tableName) {
         ApiResponseModel<List<TableMetaDataDto>> responseModel = new ApiResponseModel<>();
         URI uri;
@@ -325,7 +326,7 @@ public class ApiService implements IApiService {
                 }
             });
             headerStr = gson.toJson(headersForLogging);
-            logger.info("API URL: {} , headers: {}", uri, headerStr);
+            logger.info("Meta API URL: {} , headers: {}", uri, headerStr);
 
 
             responseModel.setLastApiCall(String.valueOf(uri));
@@ -345,7 +346,6 @@ public class ApiService implements IApiService {
                     .timeout(Duration.ofSeconds(60)) // Read timeout
                     .build();
 
-            // Send request synchronously
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() != 200) {
                 responseModel.setSuccess(false);

@@ -335,16 +335,20 @@ public class DataExchangeController {
             }
     )
     @GetMapping(path = "/api/datasync/metadata/{tableName}")
+    @SuppressWarnings("java:S1452")
     public ResponseEntity<?> dataSyncMetaData(@PathVariable String tableName,
                                               @RequestHeader(name = "version", defaultValue = "") String version,
-                                              HttpServletRequest request) throws DataExchangeException {
-            if (version == null || version.isEmpty()) {
-                throw new DataExchangeException("Version is Missing");
+                                              HttpServletRequest request) {
+            try {
+                if (version == null || version.isEmpty()) {
+                    throw new DataExchangeException("Version is Missing");
+                }
+
+                var res = dataExchangeGenericService.getTableMetaData(tableName);
+                return new ResponseEntity<>(res, HttpStatus.OK);
+            } catch (Exception e) {
+                return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
             }
-
-            var res = dataExchangeGenericService.getTableMetaData(tableName);
-            return new ResponseEntity<>(res, HttpStatus.OK);
-
     }
 
     @Operation(
