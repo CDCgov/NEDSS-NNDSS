@@ -1,7 +1,7 @@
 FROM amazoncorretto:21 as builder
 
-# try patching system (libxml2) for security fixes
-RUN yum update -y libxml2 && yum clean all
+# try patching system for security fixes
+RUN yum update -y && yum clean all
 
 
 #Copy project config
