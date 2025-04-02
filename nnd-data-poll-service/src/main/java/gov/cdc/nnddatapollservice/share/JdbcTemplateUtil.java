@@ -51,7 +51,7 @@ public class JdbcTemplateUtil {
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
     private final HandleError handleError;
-    private final Gson gsonNorm = new Gson();
+//    private final Gson gsonNorm = new Gson();
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -533,7 +533,10 @@ public class JdbcTemplateUtil {
                                 break; // Success, exit retry loop
                             }
                             catch (TimeoutException e) {
-                                logger.error("Timeout for record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                logger.error("Timeout for record: {}, {}",
+                                        //gsonNorm.toJson(res)
+                                        gsonSpec.toJson(res)
+                                        , e.getMessage());
                                 errorCount.incrementAndGet();
                                 errors.add(e.getMessage());
                                 break; // No retry on timeout
@@ -547,12 +550,18 @@ public class JdbcTemplateUtil {
                                     logger.debug("Duplicated Key Exception Resolved");
                                     break; // No retry needed
                                 } else {
-                                    logger.error("ERROR on record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                    logger.error("ERROR on record: {}, {}",
+                                            // gsonNorm.toJson(res)
+                                            gsonSpec.toJson(res)
+                                            , e.getMessage());
                                     LogResponseModel logModel = new LogResponseModel(
                                             e.getMessage(), getStackTraceAsString(e),
                                             ERROR, startTime, apiResponseModel);
                                     updateLog(config.getTableName(), logModel);
-                                    handleError.writeRecordToFile(gsonNorm, res,
+                                    handleError.writeRecordToFile(
+                                            //gsonNorm
+                                            gsonSpec
+                                            , res,
                                             config.getTableName() + UUID.randomUUID(),
                                             sqlErrorPath + "/" + config.getSourceDb() + "/"
                                                     + e.getClass().getSimpleName() + "/"
@@ -571,7 +580,10 @@ public class JdbcTemplateUtil {
                         }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        logger.warn("Task interrupted for record: {}", gsonNorm.toJson(res));
+                        logger.warn("Task interrupted for record: {}",
+                                //gsonNorm.toJson(res)
+                                gsonSpec.toJson(res)
+                        );
                     }
                 });
                 futures.add(future);
@@ -642,15 +654,18 @@ public class JdbcTemplateUtil {
                 }
                 else {
                     if (!config.getTableName().equalsIgnoreCase("PERSON")) {
-                        logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+                        logger.error("ERROR occurred at record: {}, {}", gsonSpec.toJson(res), ei.getMessage()); // NOSONAR
                     }
                     LogResponseModel logModel = new LogResponseModel(
                             ei.getMessage(),getStackTraceAsString(ei),
                             ERROR, startTime, apiResponseModel);
                     updateLog(config.getTableName(), logModel);
-                    handleError.writeRecordToFile(config.getTableName().equalsIgnoreCase("PERSON")
-                                ? gsonSpec
-                                : gsonNorm, res,
+                    handleError.writeRecordToFile(
+//                            config.getTableName().equalsIgnoreCase("PERSON")
+//                                ? gsonSpec
+//                                : gsonNorm
+                            gsonSpec
+                            , res,
                             config.getTableName() + UUID.randomUUID(),
                             sqlErrorPath
                                     + "/" + config.getSourceDb() + "/"
