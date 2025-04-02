@@ -4,6 +4,7 @@
 //import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 //import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationCodedRepository;
 //import gov.cdc.nnddatapollservice.repository.rdb_modern.NrtObservationRepository;
+//import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 //import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 //import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 //import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +26,7 @@
 //import java.text.SimpleDateFormat;
 //import java.util.*;
 //
+//import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp;
 //import static org.junit.jupiter.api.Assertions.assertEquals;
 //import static org.junit.jupiter.api.Assertions.assertNotNull;
 //import static org.mockito.ArgumentMatchers.any;
@@ -76,7 +78,7 @@
 //        config.setTableName(tableName);
 //        config.setKeyList("key");
 //        var resultLog = jdbcTemplateUtil.persistingGenericTable( jsonData,
-//                config, true, null);
+//                config, true, getCurrentTimestamp(), new ApiResponseModel<>());
 //        assertNotNull(resultLog);
 //    }
 //
@@ -107,9 +109,9 @@
 //        List<PollDataSyncConfig> configTableList = new ArrayList<>();
 //        PollDataSyncConfig config = new PollDataSyncConfig();
 //        config.setTableName("D_PROVIDER");
-//        config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
+//        config.setLastUpdateTime(getCurrentTimestamp());
 //        config.setTableOrder(2);
-//        config.setQuery("");
+//        config.setIsSyncEnabled(1);
 //        configTableList.add(config);
 //
 //        when(jdbcTemplate.query(anyString(), any(RowMapper.class))).thenReturn(configTableList);
@@ -143,7 +145,7 @@
 //
 //    @Test
 //    void updateLastUpdatedTime() {
-//        Timestamp timestamp = TimestampUtil.getCurrentTimestamp();
+//        Timestamp timestamp = getCurrentTimestamp();
 //
 //        when(jdbcTemplate.update(anyString(), any(), anyString())).thenReturn(1);
 //        jdbcTemplateUtil.updateLastUpdatedTime("TEST_TABLE", timestamp);
@@ -158,7 +160,7 @@
 //        String log = "Executed successfully";
 //
 //        // Act
-//        jdbcTemplateUtil.updateLastUpdatedTimeAndLog(tableName, timestamp, new LogResponseModel());
+//        jdbcTemplateUtil.updateLastUpdatedTimeAndLog(tableName, timestamp, new LogResponseModel( new ApiResponseModel<>()));
 //
 //        ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
 //        ArgumentCaptor<Object[]> paramsCaptor = ArgumentCaptor.forClass(Object[].class);
@@ -255,7 +257,7 @@
 //        String expectedSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_s3 =?, last_executed_log=? where table_name=?;";
 //
 //        // Act
-//        jdbcTemplateUtil.updateLastUpdatedTimeAndLogS3(tableName, timestamp, new LogResponseModel());
+//        jdbcTemplateUtil.updateLastUpdatedTimeAndLogS3(tableName, timestamp, new LogResponseModel(new ApiResponseModel<>()));
 //
 //        // Assert
 //        verify(jdbcTemplate).update(any(), eq(timestamp), eq(tableName));
@@ -272,7 +274,7 @@
 //        String expectedSql = "update POLL_DATA_SYNC_CONFIG set last_update_time_local_dir =?, last_executed_log=? where table_name=?;";
 //
 //        // Act
-//        jdbcTemplateUtil.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, new LogResponseModel());
+//        jdbcTemplateUtil.updateLastUpdatedTimeAndLogLocalDir(tableName, timestamp, new LogResponseModel(new ApiResponseModel<>()));
 //
 //        // Assert
 //        verify(jdbcTemplate).update(any(), eq(timestamp), eq(tableName));
@@ -296,7 +298,7 @@
 //        config.setKeyList("key");
 //        config.setSourceDb("SRTE");
 //        // Act & Assert
-//        jdbcTemplateUtil.persistingGenericTable(jsonData, config, true, null);
+//        jdbcTemplateUtil.persistingGenericTable(jsonData, config, true, getCurrentTimestamp(), new ApiResponseModel<>());
 //
 //        // Ensure that writing to file is called
 //        verify(handleError, times(1)).writeRecordToFile(
@@ -318,7 +320,7 @@
 //        config.setKeyList("key");
 //        config.setSourceDb("SRTE");
 //
-//        jdbcTemplateUtil.persistingGenericTable(jsondata, config, true, null);
+//        jdbcTemplateUtil.persistingGenericTable(jsondata, config, true, getCurrentTimestamp(), new ApiResponseModel<>());
 //        verify(handleError, times(2)).writeRecordToFile(
 //                any(),
 //                any(),
@@ -337,7 +339,7 @@
 //        config.setKeyList("key");
 //        config.setSourceDb("SRTE");
 //
-//        jdbcTemplateUtil.persistingGenericTable( jsondata, config, true, null);
+//        jdbcTemplateUtil.persistingGenericTable( jsondata, config, true, getCurrentTimestamp(), new ApiResponseModel<>());
 //
 //        verify(handleError, times(2)).writeRecordToFile(
 //                any(),

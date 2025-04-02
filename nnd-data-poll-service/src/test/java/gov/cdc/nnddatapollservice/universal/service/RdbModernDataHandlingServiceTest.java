@@ -1,8 +1,11 @@
 //package gov.cdc.nnddatapollservice.universal.service;
 //
+//import gov.cdc.nnddatapollservice.exception.APIException;
 //import gov.cdc.nnddatapollservice.exception.DataPollException;
+//import gov.cdc.nnddatapollservice.service.interfaces.IApiService;
 //import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 //import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
+//import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 //import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 //import gov.cdc.nnddatapollservice.share.TimestampUtil;
 //import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
@@ -12,6 +15,7 @@
 //import org.mockito.InjectMocks;
 //import org.mockito.Mock;
 //import org.mockito.MockitoAnnotations;
+//import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 //
 //import java.sql.Timestamp;
 //import java.util.ArrayList;
@@ -28,6 +32,8 @@
 //    @Mock
 //    IPollCommonService iPollCommonService;
 //    @Mock
+//    IApiService iApiService;
+//    @Mock
 //    IS3DataService is3DataService;
 //    @InjectMocks
 //    private UniversalDataHandlingService universalDataHandlingService;
@@ -43,19 +49,20 @@
 //    }
 //
 //    @Test
-//    void handlingExchangedData_initialLoad() throws DataPollException {
+//    void handlingExchangedData_initialLoad() throws DataPollException, APIException {
 //        universalDataHandlingService.storeInSql = true;
 //        List<PollDataSyncConfig> configTableList = new ArrayList<>();
 //        PollDataSyncConfig config = new PollDataSyncConfig();
 //        config.setTableName("TEST");
 //        config.setLastUpdateTime(null);
 //        config.setTableOrder(1);
-//        config.setQuery("");
 //        config.setSourceDb("RDB_MODERN");
+//        config.setIsSyncEnabled(1);
 //        configTableList.add(config);
 //
 //        when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
 //        when(iPollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
+//        when(iPollCommonService.filterSyncEnabledTables(anyList())).thenReturn(configTableList);
 //        when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(true);
 //
 //        universalDataHandlingService.handlingExchangedData("RDB");
@@ -63,19 +70,20 @@
 //    }
 //
 //    @Test
-//    void handlingExchangedData_withTimestamp() throws DataPollException {
+//    void handlingExchangedData_withTimestamp() throws DataPollException, APIException {
 //        universalDataHandlingService.storeInSql = true;
 //        List<PollDataSyncConfig> configTableList = new ArrayList<>();
 //        PollDataSyncConfig config = new PollDataSyncConfig();
 //        config.setTableName("TEST");
 //        config.setLastUpdateTime(TimestampUtil.getCurrentTimestamp());
 //        config.setTableOrder(1);
-//        config.setQuery("");
 //        config.setSourceDb("RDB_MODERN");
+//        config.setIsSyncEnabled(1);
 //        configTableList.add(config);
 //
 //        when(iPollCommonService.getTableListFromConfig()).thenReturn(configTableList);
 //        when(iPollCommonService.getTablesConfigListBySOurceDB(anyList(), anyString())).thenReturn(configTableList);
+//        when(iPollCommonService.filterSyncEnabledTables(anyList())).thenReturn(configTableList);
 //        when(iPollCommonService.checkPollingIsInitailLoad(configTableList)).thenReturn(false);
 //
 //        universalDataHandlingService.handlingExchangedData("RDB");
@@ -83,12 +91,16 @@
 //    }
 //
 //    @Test
-//    void testStoreJsonInLocalDir() throws DataPollException {
+//    void testStoreJsonInLocalDir() throws DataPollException, APIException {
 //        // Arrange
 //        setupServiceWithMockedDependencies();
 //        String tableName = "exampleTable";
 //        universalDataHandlingService.storeJsonInLocalFolder= true;
-//        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString())).thenReturn(1000);
+//
+//        var apiModel = new ApiResponseModel<Integer>();
+//        apiModel.setResponse(1000);
+//        when(iApiService.callDataCountEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString()))
+//                .thenReturn(apiModel);
 //
 //        PollDataSyncConfig config = new PollDataSyncConfig();
 //        config.setTableName(tableName);
@@ -99,28 +111,33 @@
 //
 //        // Assert
 //        verify(iPollCommonService, times(1)).writeJsonDataToFile(anyString(), anyString(),
-//                any(),anyString());
+//                any(),anyString(), any());
 ////        verify(iPollCommonService, times(1)).updateLastUpdatedTimeAndLogLocalDir(anyString(), any(), any());
 //    }
 //
+//    ApiResponseModel shareResString = new ApiResponseModel<String>();
 //    private void setupServiceWithMockedDependencies() throws DataPollException {
 //
 //        when(iPollCommonService.decodeAndDecompress(anyString())).thenReturn("{\"data\": \"example\"}");
 //        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2023-01-01T00:00:00Z");
 //        when(iPollCommonService.getLastUpdatedTime(anyString())).thenReturn("2023-01-01T00:00:00Z");
-//        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString(), anyBoolean())).thenReturn("encodedData");
+//
+//        shareResString.setResponse("encodedData");
+//        when(iApiService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(),
+//                anyBoolean(), anyString(), anyString(), anyBoolean(), anyBoolean(),
+//                anyString())).thenReturn(shareResString);
 //
 //
 //
 //    }
 //
 //    @Test
-//    void testPollAndPersistRDBData_exception_task_failed_1() throws DataPollException {
+//    void testPollAndPersistRDBData_exception_task_failed_1() throws DataPollException, APIException {
 //        String tableName = "testTable";
 //        // Arrange
 //        String expectedErrorMessage = "Simulated API Exception";
 //        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-//        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
+//        when(iApiService.callDataCountEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString()))
 //                .thenThrow(new RuntimeException(expectedErrorMessage));
 //
 //        PollDataSyncConfig config = new PollDataSyncConfig();
@@ -134,14 +151,17 @@
 //    }
 //
 //    @Test
-//    void testPollAndPersistRDBData_exception_FailedTask_2() throws DataPollException {
+//    void testPollAndPersistRDBData_exception_FailedTask_2() throws DataPollException, APIException {
 //        String tableName = "testTable";
 //        // Arrange
 //        String expectedErrorMessage = "Simulated API Exception";
 //        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-//        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
-//                .thenReturn(1000);
-//        when(iPollCommonService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString(), anyString(), anyBoolean()))
+//        var apiModel = new ApiResponseModel<Integer>();
+//        apiModel.setResponse(1000);
+//        when(iApiService.callDataCountEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString()))
+//                .thenReturn(apiModel);
+//        when(iApiService.callDataExchangeEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(),
+//                anyString(), anyString(), anyBoolean(), anyBoolean(), anyString()))
 //                .thenThrow(new RuntimeException(expectedErrorMessage));
 //
 //        PollDataSyncConfig config = new PollDataSyncConfig();
@@ -156,21 +176,25 @@
 //    }
 //
 //    @Test
-//    void testPollAndPersistRDBData_exceptionAtApiLevel() throws DataPollException {
+//    void testPollAndPersistRDBData_exceptionAtApiLevel() throws DataPollException, APIException {
 //        String tableName = "testTable";
 //        // Arrange
 //        String expectedErrorMessage = "Simulated API Exception";
 //        when(iPollCommonService.getCurrentTimestamp()).thenReturn("2024-09-17T00:00:00Z");
-//        when(iPollCommonService.callDataCountEndpoint(anyString(), anyBoolean(), anyString()))
-//                .thenReturn(1000);
-//        when(iPollCommonService.callDataExchangeEndpoint(
+//        var apiModel = new ApiResponseModel<Integer>();
+//        apiModel.setResponse(1000);
+//        when(iApiService.callDataCountEndpoint(anyString(), anyBoolean(), anyString(), anyBoolean(), anyString()))
+//                .thenReturn(apiModel);
+//        when(iApiService.callDataExchangeEndpoint(
 //                eq("testTable"),
 //                eq(true),
 //                anyString(),
 //                eq(false),
 //                anyString(),
 //                anyString(),
-//                anyBoolean()))
+//                anyBoolean(),
+//                anyBoolean(),
+//                anyString()))
 //                .thenThrow(new RuntimeException(expectedErrorMessage));
 //
 //        PollDataSyncConfig config = new PollDataSyncConfig();
@@ -187,7 +211,7 @@
 //
 //
 //    @Test
-//    void testUpdateDataHelper_ExceptionAtApiLevel_StoreInSql() {
+//    void testUpdateDataHelper_ExceptionAtApiLevel_StoreInSql() throws APIException {
 //        // Arrange
 //        boolean exceptionAtApiLevel = true;
 //        String tableName = "NRT_OBSERVATION";
@@ -204,8 +228,10 @@
 //        config.setKeyList("key");
 //        config.setSourceDb("RDB");
 //
+//        var apiModel = new ApiResponseModel<String>();
+//        apiModel.setApiException(new APIException("Simulated API Exception"));
 //        // Act
-//        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, timestamp,
+//        universalDataHandlingService.updateDataHelper(apiModel, timestamp,
 //                rawJsonData, isInitialLoad, log, timestamp, config);
 //
 //        // Assert
@@ -216,7 +242,7 @@
 //
 //
 //    @Test
-//    void testUpdateDataHelper_ExceptionAtApiLevel_LocalDir() {
+//    void testUpdateDataHelper_ExceptionAtApiLevel_LocalDir() throws APIException {
 //        // Arrange
 //        boolean exceptionAtApiLevel = true;
 //        String tableName = "NRT_OBSERVATION";
@@ -231,8 +257,12 @@
 //        config.setTableName(tableName);
 //        config.setKeyList("key");
 //        config.setSourceDb("RDB");
+//
+//        var apiModel = new ApiResponseModel<String>();
+//        apiModel.setApiException(new APIException("TEST"));
+//
 //        // Act
-//        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, timestamp,
+//        universalDataHandlingService.updateDataHelper(apiModel, timestamp,
 //                rawJsonData, isInitialLoad, log, timestamp, config);
 //
 //        // Assert
@@ -244,7 +274,7 @@
 //
 //
 //    @Test
-//    void testUpdateDataHelper_NoExceptionAtApiLevel_StoreJsonInS3() {
+//    void testUpdateDataHelper_NoExceptionAtApiLevel_StoreJsonInS3() throws APIException {
 //        // Arrange
 //        boolean exceptionAtApiLevel = false;
 //        String tableName = "NRT_OBSERVATION";
@@ -256,25 +286,29 @@
 //        universalDataHandlingService.storeInSql = false;
 //        universalDataHandlingService.storeJsonInS3 = true;
 //
-//        when(is3DataService.persistToS3MultiPart(anyString(), anyString(), anyString(), any(Timestamp.class), anyBoolean()))
-//                .thenReturn(new LogResponseModel());
+//        when(is3DataService.persistToS3MultiPart(anyString(), anyString(), anyString(), any(Timestamp.class),
+//                anyBoolean(), any()))
+//                .thenReturn(new LogResponseModel(new ApiResponseModel<String>()));
 //
 //        PollDataSyncConfig config = new PollDataSyncConfig();
 //        config.setTableName(tableName);
 //        config.setKeyList("key");
 //        config.setSourceDb("RDB");
+//
+//        var apiModel = new ApiResponseModel<String>();
+//        apiModel.setApiException(new APIException("Simulated API Exception"));
 //        // Act
-//        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel,
+//        universalDataHandlingService.updateDataHelper(apiModel,
 //                timestamp, rawJsonData, isInitialLoad, log, timestamp, config);
 //
 //        // Assert
 //        verify(is3DataService, times(1)).persistToS3MultiPart(
-//                RDB, rawJsonData, tableName, timestamp, isInitialLoad);
+//                RDB, rawJsonData, tableName, timestamp, isInitialLoad, any());
 //    }
 //
 //
 //    @Test
-//    void testUpdateDataHelper_NoExceptionAtApiLevel_LocalDir() {
+//    void testUpdateDataHelper_NoExceptionAtApiLevel_LocalDir() throws APIException {
 //        // Arrange
 //        boolean exceptionAtApiLevel = false;
 //        String tableName = "NRT_OBSERVATION";
@@ -286,23 +320,25 @@
 //        universalDataHandlingService.storeInSql = false;
 //        universalDataHandlingService.storeJsonInS3 = false;
 //
-//        when(iPollCommonService.writeJsonDataToFile(anyString(), anyString(), any(Timestamp.class), anyString())).thenReturn(new LogResponseModel());
+//        when(iPollCommonService.writeJsonDataToFile(anyString(), anyString(), any(Timestamp.class),
+//                anyString(), any())).thenReturn(new LogResponseModel(new ApiResponseModel<String>()));
 //        PollDataSyncConfig config = new PollDataSyncConfig();
 //        config.setTableName(tableName);
 //        config.setKeyList("key");
 //        config.setSourceDb("RDB");
 //        // Act
-//        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, timestamp,
+//        universalDataHandlingService.updateDataHelper(new ApiResponseModel<>(), timestamp,
 //                rawJsonData, isInitialLoad, log, timestamp, config);
 //
 //        // Assert
-//        verify(iPollCommonService, times(1)).writeJsonDataToFile(RDB, tableName, timestamp, rawJsonData);
+//        verify(iPollCommonService, times(1)).writeJsonDataToFile(RDB, tableName,
+//                timestamp, rawJsonData, any());
 //
 //    }
 //
 //
 //    @Test
-//    void testUpdateDataHelper_ExceptionInProcessing() {
+//    void testUpdateDataHelper_ExceptionInProcessing() throws APIException {
 //        // Arrange
 //        boolean exceptionAtApiLevel = false;
 //        String tableName = "NRT_OBSERVATION";
@@ -314,14 +350,15 @@
 //        universalDataHandlingService.storeInSql = false;
 //        universalDataHandlingService.storeJsonInS3 = true;
 //
-//        when(is3DataService.persistToS3MultiPart(anyString(), anyString(), anyString(), any(Timestamp.class), anyBoolean()))
+//        when(is3DataService.persistToS3MultiPart(anyString(), anyString(), anyString(),
+//                any(Timestamp.class), anyBoolean(), any()))
 //                .thenThrow(new RuntimeException("S3 Error"));
 //        PollDataSyncConfig config = new PollDataSyncConfig();
 //        config.setTableName(tableName);
 //        config.setKeyList("key");
 //        config.setSourceDb("RDB");
 //        // Act
-//        universalDataHandlingService.updateDataHelper(exceptionAtApiLevel, timestamp,
+//        universalDataHandlingService.updateDataHelper(new ApiResponseModel<>(), timestamp,
 //                rawJsonData, isInitialLoad, log, timestamp, config);
 //
 //        // Assert

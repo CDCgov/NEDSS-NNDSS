@@ -22,6 +22,7 @@ public class UniversalDataPersistentDAO {
 
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
+    protected boolean jdbcBatchLevelEnabled = true;
 
     @Autowired
     public UniversalDataPersistentDAO(JdbcTemplateUtil jdbcTemplateUtil) {
@@ -31,7 +32,12 @@ public class UniversalDataPersistentDAO {
     public LogResponseModel saveUniversalData(PollDataSyncConfig config, String jsonData , boolean initialLoad, Timestamp timestamp, ApiResponseModel<?> apiResponseModel) {
         logger.info("saveUniversalData tableName: {}", config.getTableName());
         LogResponseModel logBuilder;
-        logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad, timestamp, apiResponseModel);
+        if (jdbcBatchLevelEnabled) {
+            logBuilder = jdbcTemplateUtil.persistingGenericTableMultiThread ( jsonData,config, initialLoad, timestamp, apiResponseModel);
+        }
+        else {
+            logBuilder = jdbcTemplateUtil.persistingGenericTable ( jsonData,config, initialLoad, timestamp, apiResponseModel);
+        }
 
 
         return logBuilder;

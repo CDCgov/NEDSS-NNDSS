@@ -15,6 +15,12 @@ ALTER TABLE poll_data_sync_config
 -- ALTER TABLE poll_data_sync_config
 --     ADD last_max_key NVARCHAR(255) NULL;
 
+ALTER TABLE poll_data_sync_config
+    ADD is_sync_enabled INT DEFAULT 0;
+
+UPDATE poll_data_sync_config
+SET is_sync_enabled = 0;
+
 
 IF EXISTS (
     SELECT 1

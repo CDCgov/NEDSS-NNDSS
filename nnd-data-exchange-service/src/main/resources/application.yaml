@@ -1,16 +1,33 @@
 server:
+  tomcat:
+#    max-connections: 500
+    connection-timeout: ${API_CONNECTION_TIMEOUT:30000}
+#    accept-count: 500 # Queue up to # pending requests (avoids dropping)
+#    threads:
+#      max: 200
+#      min-spare: 50 # Keeps warm threads ready for processing
+#    keep-alive-timeout: 5000 # Allow connections to be reused (1 min)
+#    max-keep-alive-requests: 50 # Prevent excessive keep-alive use
   port: 8081
   servlet:
     context-path: /extraction
+
+info:
+  app:
+    name: DataSync (NND) API
 
 management:
   endpoint:
     prometheus:
       enabled: true
+    health:
+      show-details: always
+      roles: ADMIN
   endpoints:
     web:
+      base-path: /actuator
       exposure:
-        include: '*'
+        include: "health,info"
   prometheus:
     metrics:
       export:
@@ -35,18 +52,30 @@ spring:
   config:
     activate:
       on-profile: default
+  liquibase:
+    change-log: classpath:db/changelog/db.rdb.changelog-master.yaml
+    enabled: true
+    url: jdbc:sqlserver://${NBS_DBSERVER};databaseName=RDB;encrypt=true;trustServerCertificate=true;
+    user: ${NBS_DBUSER}
+    password: ${NBS_DBPASSWORD}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   datasource:
     hikari:
-      maximum-pool-size: ${HIKARI_POOL_SIZE:100}
+      maximum-pool-size: ${HIKARI_POOL_SIZE:50}
       connection-timeout: ${HIKARI_CON_TIMEOUT:30000}
-      minimum-idle: ${HIKARI_MINIMUM_IDLE:50}
-      idle-timeout: ${HIKARI_IDLE_TIMEOUT:600000}
-      max-lifetime: ${HIKARI_MAX_LIFETIME:1800000}
+      minimum-idle: ${HIKARI_MINIMUM_IDLE:10}
+      idle-timeout: ${HIKARI_IDLE_TIMEOUT:30000}
+      max-lifetime: ${HIKARI_MAX_LIFETIME:600000}
       keepalive-time: ${HIKARI_KEEPALIVE_TIME:300000}
-      pool-name: ${HIKARI_POOL_NAME:SQLServerHikariCP}
+      pool-name:
+        msg: HIKARI_POOL_MSG
+        rdb: HIKARI_POOL_RDB
+        odse: HIKARI_POOL_ODSE
+        rdbmodern: HIKARI_POOL_RDB_MODERN
+        srte: HIKARI_POOL_SRTE
       validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
-      leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:60000}
-    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:30000}
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
     username: ${NBS_DBUSER}
     password: ${NBS_DBPASSWORD}
     msg:
@@ -65,9 +94,14 @@ spring:
       ddl-auto: none
 ---
 
-
 diserver:
   host: ${NND_SERVER_HOST:localhost:8081}
 
 service:
   timezone: ${SERVICE_TZ:UTC}
+
+
+
+#logging:
+#  level:
+#    org.apache.coyote.http11: DEBUG
