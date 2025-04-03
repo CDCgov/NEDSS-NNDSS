@@ -333,20 +333,20 @@ public class JdbcTemplateUtil {
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
-                ++errorCount;
-                anyError= true;
-                if (anyErrorException == null) {
-                    errors.add(ei.getMessage());
+                if (ei instanceof DataIntegrityViolationException) // NOSONAR
+                {
+                    logger.debug("Key Exception Resolved");
                 }
-                if (anyErrorException != null && !anyErrorException.getClass().equals(ei.getClass())) {
-                    errors.add(ei.getMessage());
-                }
-                anyErrorException = ei;
-//                if (ei instanceof DataIntegrityViolationException) // NOSONAR
-//                {
-//                    logger.debug("Duplicated Key Exception Resolved");
-//                }
-//                else {
+                else {
+                    ++errorCount;
+                    anyError= true;
+                    if (anyErrorException == null) {
+                        errors.add(ei.getMessage());
+                    }
+                    if (anyErrorException != null && !anyErrorException.getClass().equals(ei.getClass())) {
+                        errors.add(ei.getMessage());
+                    }
+                    anyErrorException = ei;
 
                     if (!config.getTableName().equalsIgnoreCase("PERSON")) {
                         logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
@@ -364,7 +364,7 @@ public class JdbcTemplateUtil {
                                     + "/" + config.getSourceDb() + "/"
                                     + ei.getClass().getSimpleName()
                                     + "/" + config.getTableName() + "/");
-//                }
+                }
 
             }
         }
