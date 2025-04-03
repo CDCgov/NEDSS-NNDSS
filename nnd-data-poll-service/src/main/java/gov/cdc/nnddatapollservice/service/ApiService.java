@@ -219,7 +219,7 @@ public class ApiService implements IApiService {
             boolean tokenRefreshed = false;
 
             for (int attempt = 1; attempt <= maxRetries; attempt++) {
-                logger.info("API URL: {} , attempt: {}", uri, attempt);
+                logger.info("Attempt: {}", attempt);
                 try {
                     HttpResponse<String> response;
                     semaphore.acquire();

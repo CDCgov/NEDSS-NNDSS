@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -69,7 +70,7 @@ public class JdbcTemplateUtil {
 
     // Retry if task failed
     @Value("${thread.jdbc-level.max-retry}")
-    protected int jdbcLevelMaxRetry = 5;
+    protected int jdbcLevelMaxRetry = 1;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
     protected long jdbcLevelTimeoutPerTaskMs = 600_000;
@@ -367,11 +368,6 @@ public class JdbcTemplateUtil {
                             totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
                             jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency, jdbcBatchLevelTimeoutPerTaskMs);
 
-                    logger.debug("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{})",
-                            totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
-                            jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency);
-
-
                     try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 
                         for (int i = 0; i < totalRecords; i += batchSize) {
@@ -409,21 +405,28 @@ public class JdbcTemplateUtil {
                                             break;
 
                                         } catch (Exception e) {
-                                            e.printStackTrace();
-                                            retries++;
-                                            logger.warn("Chunk {}: Attempt {}/{} failed - {}", chunkNumber, retries, jdbcBatchLevelMaxRetry, e.getMessage());
+                                            if (e instanceof DuplicateKeyException){
+                                                logger.info("Duplicated Key Found");
+                                                break;
+                                            }
+                                            else {
+                                                e.printStackTrace();
+                                                retries++;
+                                                logger.warn("Chunk {}: Attempt {}/{} failed - {}", chunkNumber, retries, jdbcBatchLevelMaxRetry, e.getMessage());
 
-                                            if (retries >= jdbcBatchLevelMaxRetry) {
-                                                logger.error("Chunk {}: Failed after max retries", chunkNumber, e);
-                                                throw new RuntimeException("Chunk insert failed", e); //NOSONAR
+                                                if (retries >= jdbcBatchLevelMaxRetry) {
+                                                    logger.error("Chunk {}: Failed after max retries", chunkNumber, e);
+                                                    throw new RuntimeException("Chunk insert failed", e); //NOSONAR
+                                                }
+
+                                                try {
+                                                    Thread.sleep(2000L * retries); // Exponential backoff
+                                                } catch (InterruptedException ex) {
+                                                    Thread.currentThread().interrupt();
+                                                    throw new RuntimeException("Interrupted during retry sleep", ex); //NOSONAR
+                                                }
                                             }
 
-                                            try {
-                                                Thread.sleep(2000L * retries); // Exponential backoff
-                                            } catch (InterruptedException ex) {
-                                                Thread.currentThread().interrupt();
-                                                throw new RuntimeException("Interrupted during retry sleep", ex); //NOSONAR
-                                            }
                                         } finally {
                                             if (acquired) semaphore.release();
                                         }
