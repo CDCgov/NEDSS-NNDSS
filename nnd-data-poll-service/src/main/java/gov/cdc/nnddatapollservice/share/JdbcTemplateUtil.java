@@ -22,10 +22,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -348,22 +345,22 @@ public class JdbcTemplateUtil {
                     }
                     anyErrorException = ei;
 
-                    if (!config.getTableName().equalsIgnoreCase("PERSON")) {
-                        logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
-                    }
+//                    if (!config.getTableName().equalsIgnoreCase("PERSON")) {
+//                        logger.debug("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+//                    }
 
-                    LogResponseModel logModel = new LogResponseModel(
-                            ei.getMessage(),getStackTraceAsString(ei),
-                            ERROR, startTime, apiResponseModel);
-                    updateLog(config.getTableName(), logModel);
-                    handleError.writeRecordToFile(config.getTableName().equalsIgnoreCase("PERSON")
-                                    ? gsonSpec
-                                    : gsonNorm, res,
-                            config.getTableName() + UUID.randomUUID(),
-                            sqlErrorPath
-                                    + "/" + config.getSourceDb() + "/"
-                                    + ei.getClass().getSimpleName()
-                                    + "/" + config.getTableName() + "/");
+//                    LogResponseModel logModel = new LogResponseModel(
+//                            ei.getMessage(),getStackTraceAsString(ei),
+//                            ERROR, startTime, apiResponseModel);
+//                    updateLog(config.getTableName(), logModel);
+//                    handleError.writeRecordToFile(config.getTableName().equalsIgnoreCase("PERSON")
+//                                    ? gsonSpec
+//                                    : gsonNorm, res,
+//                            config.getTableName() + UUID.randomUUID(),
+//                            sqlErrorPath
+//                                    + "/" + config.getSourceDb() + "/"
+//                                    + ei.getClass().getSimpleName()
+//                                    + "/" + config.getTableName() + "/");
                 }
 
             }
