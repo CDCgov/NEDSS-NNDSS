@@ -123,13 +123,7 @@ public class JdbcTemplateUtil {
         var values = validData.values().stream()
                 .map(this::convertIfDate)
                 .toArray();
-
-
-        try {
-            rdbJdbcTemplate.update(sql, values);
-        } catch (Exception e) {
-            throw new SQLException("Single record upsert failed", e);
-        }
+        rdbJdbcTemplate.update(sql, values);
     }
 
     /**
@@ -330,11 +324,11 @@ public class JdbcTemplateUtil {
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
-                if (ei instanceof DataIntegrityViolationException) // NOSONAR
-                {
-                    logger.debug("Key Exception Resolved");
-                }
-                else {
+//                if (ei instanceof DataIntegrityViolationException) // NOSONAR
+//                {
+//                    logger.debug("Key Exception Resolved");
+//                }
+//                else {
                     ++errorCount;
                     anyError= true;
                     if (anyErrorException == null) {
@@ -361,7 +355,7 @@ public class JdbcTemplateUtil {
 //                                    + "/" + config.getSourceDb() + "/"
 //                                    + ei.getClass().getSimpleName()
 //                                    + "/" + config.getTableName() + "/");
-                }
+//                }
 
             }
         }
@@ -374,7 +368,7 @@ public class JdbcTemplateUtil {
             Gson gson = new Gson();
             String jsonString = gson.toJson(errors);
             log.setStatus(WARNING);
-            log.setLog(errorCount + " FAILED UPSERT OR SINGLE INSERTION at resolver level, failed data had been written to file log");
+            log.setLog(errorCount + " Records have failed at resolver level");
             log.setStackTrace(jsonString);
         }
         return log;
