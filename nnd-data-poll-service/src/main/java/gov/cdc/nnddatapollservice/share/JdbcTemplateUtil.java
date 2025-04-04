@@ -537,13 +537,13 @@ public class JdbcTemplateUtil {
     public String getMaxId(String tableName, String key) {
         String sql = "SELECT COALESCE(MAX(" + key + "), '0') FROM " + tableName + ";";
         var data = rdbJdbcTemplate.queryForObject(sql, String.class);
-        logger.info(data);
+        logger.debug(data);
         if (data != null && !data.equalsIgnoreCase("0")) {
             // 5000 is a cache by ODSE ID Generator
             var id = Long.parseLong(data) - 5000;
             data = String.valueOf(id);
         }
-        logger.info(data);
+        logger.debug(data);
         return data;
     }
 
