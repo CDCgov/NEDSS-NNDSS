@@ -348,22 +348,22 @@ public class JdbcTemplateUtil {
 //                }
 //                else {
 
-                    if (!config.getTableName().equalsIgnoreCase("PERSON")) {
-                        logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
-                    }
-
-                    LogResponseModel logModel = new LogResponseModel(
-                            ei.getMessage(),getStackTraceAsString(ei),
-                            ERROR, startTime, apiResponseModel);
-                    updateLog(config.getTableName(), logModel);
-                    handleError.writeRecordToFile(config.getTableName().equalsIgnoreCase("PERSON")
-                                    ? gsonSpec
-                                    : gsonNorm, res,
-                            config.getTableName() + UUID.randomUUID(),
-                            sqlErrorPath
-                                    + "/" + config.getSourceDb() + "/"
-                                    + ei.getClass().getSimpleName()
-                                    + "/" + config.getTableName() + "/");
+//                    if (!config.getTableName().equalsIgnoreCase("PERSON")) {
+//                        logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+//                    }
+//
+//                    LogResponseModel logModel = new LogResponseModel(
+//                            ei.getMessage(),getStackTraceAsString(ei),
+//                            ERROR, startTime, apiResponseModel);
+//                    updateLog(config.getTableName(), logModel);
+//                    handleError.writeRecordToFile(config.getTableName().equalsIgnoreCase("PERSON")
+//                                    ? gsonSpec
+//                                    : gsonNorm, res,
+//                            config.getTableName() + UUID.randomUUID(),
+//                            sqlErrorPath
+//                                    + "/" + config.getSourceDb() + "/"
+//                                    + ei.getClass().getSimpleName()
+//                                    + "/" + config.getTableName() + "/");
 //                }
 
             }
@@ -377,7 +377,7 @@ public class JdbcTemplateUtil {
             Gson gson = new Gson();
             String jsonString = gson.toJson(errors);
             log.setStatus(WARNING);
-            log.setLog(errorCount + " FAILED UPSERT OR SINGLE INSERTION at resolver level, failed data had been written to file log");
+            log.setLog(errorCount + " Records have failed at resolver level");
             log.setStackTrace(jsonString);
         }
         return log;
