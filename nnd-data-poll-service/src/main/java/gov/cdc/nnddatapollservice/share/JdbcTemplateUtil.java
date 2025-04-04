@@ -651,30 +651,23 @@ public class JdbcTemplateUtil {
                     errors.add(ei.getMessage());
                 }
                 anyErrorException = ei;
-                if (ei instanceof DataIntegrityViolationException) // NOSONAR
-                {
-                    logger.debug("Duplicated Key Exception Resolved");
-                }
-                else {
-                    if (!config.getTableName().equalsIgnoreCase("PERSON")) {
-                        logger.error("ERROR occurred at record: {}, {}", gsonSpec.toJson(res), ei.getMessage()); // NOSONAR
-                    }
-                    LogResponseModel logModel = new LogResponseModel(
-                            ei.getMessage(),getStackTraceAsString(ei),
-                            ERROR, startTime, apiResponseModel);
-                    updateLog(config.getTableName(), logModel);
-                    handleError.writeRecordToFile(
-//                            config.getTableName().equalsIgnoreCase("PERSON")
-//                                ? gsonSpec
-//                                : gsonNorm
-                            gsonSpec
-                            , res,
-                            config.getTableName() + UUID.randomUUID(),
-                            sqlErrorPath
-                                    + "/" + config.getSourceDb() + "/"
-                                    + ei.getClass().getSimpleName()
-                                    + "/" + config.getTableName() + "/");
-                }
+
+//
+//                if (!config.getTableName().equalsIgnoreCase("PERSON")) {
+//                    logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+//                }
+//                LogResponseModel logModel = new LogResponseModel(
+//                        ei.getMessage(),getStackTraceAsString(ei),
+//                        ERROR, startTime, apiResponseModel);
+//                updateLog(config.getTableName(), logModel);
+//                handleError.writeRecordToFile(config.getTableName().equalsIgnoreCase("PERSON")
+//                            ? gsonSpec
+//                            : gsonNorm, res,
+//                        config.getTableName() + UUID.randomUUID(),
+//                        sqlErrorPath
+//                                + "/" + config.getSourceDb() + "/"
+//                                + ei.getClass().getSimpleName()
+//                                + "/" + config.getTableName() + "/");
 
             }
         }
@@ -686,12 +679,13 @@ public class JdbcTemplateUtil {
         else {
             Gson gson = new Gson();
             String jsonString = gson.toJson(errors);
-            if (anyFatal) {
-                log.setStatus(ERROR);
-            } else {
-                log.setStatus(WARNING);
-            }
-            log.setLog(errorCount + " Issues occurred during UPSERT/SINGLE INSERTION at resolver level");
+//            if (anyFatal) {
+//                log.setStatus(ERROR);
+//            } else {
+//                log.setStatus(WARNING);
+//            }
+            log.setStatus(WARNING);
+            log.setLog(errorCount + " Records have failed at resolver level");
             log.setStackTrace(jsonString);
         }
         return log;
