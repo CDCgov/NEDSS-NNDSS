@@ -40,4 +40,16 @@ public class ConstantValue {
             "PARTICIPATION"
     ));
 
+
+    public static final Set<String> ODSE_OBS_TABLES = new HashSet<>(Arrays.asList(
+            "ENTITY",
+            "ROLE",
+            "PERSON",
+            "ACT",
+            "OBSERVATION",
+            "PARTICIPATION",
+            "ACT_RELATIONSHIP"
+    ));
+
+
 }

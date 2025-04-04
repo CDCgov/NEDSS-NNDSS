@@ -439,6 +439,13 @@ public class JdbcTemplateUtil {
     }
 
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+
+        // Subtracting 1 hour for ODSE OBS Tables
+        if (ODSE_OBS_TABLES.contains(tableName)) {
+            LocalDateTime localDateTime = timestamp.toLocalDateTime();
+            LocalDateTime updatedDateTime = localDateTime.minusHours(1);
+            timestamp = Timestamp.valueOf(updatedDateTime);
+        }
         String updateSql;
         if (!logResponseModel.apiResponseModel.isSuccess()) {
             updateSql = "update " + pollConfigTableName + " set last_update_time =?, api_fatal_on_last_run = 1 where table_name=?;";
