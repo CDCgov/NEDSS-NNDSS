@@ -337,25 +337,26 @@ public class JdbcTemplateUtil {
                         var currentMaxEntityId = getMaxId("ENTITY", "entity_uid");
                         var totalRecordCountsResponse  = apiService.callDataCountEndpoint(config.getTableName(), false ,
                                 "", true, currentMaxEntityId);
-                        logger.info("Total record counts ENTITY: {}", totalRecordCountsResponse.getResponse());
+                        if (totalRecordCountsResponse.getResponse() != null) {
+                            logger.info("Total record counts ENTITY: {}", totalRecordCountsResponse.getResponse());
 
-                        var responseModel = apiService.callDataExchangeEndpoint(config.getTableName(), false, "", false,
-                                String.valueOf(0), String.valueOf(totalRecordCountsResponse.getResponse() + 1), false,
-                                config.isUseKeyPagination(), currentMaxEntityId);
-                        var rawData = responseModel.getResponse();
-                        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(rdbJdbcTemplate);
-                        jdbcInsert = jdbcInsert.withTableName(config.getTableName());
-                        List<Map<String, Object>> recordsEntity = PollServiceUtil.jsonToListOfMap(rawData);
-                        recordsEntity.forEach(data -> data.remove("RowNum"));
-                        jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(recordsEntity));
+                            var responseModel = apiService.callDataExchangeEndpoint(config.getTableName(), false, "", false,
+                                    String.valueOf(0), String.valueOf(totalRecordCountsResponse.getResponse() + 1), false,
+                                    config.isUseKeyPagination(), currentMaxEntityId);
+                            var rawData = responseModel.getResponse();
+                            List<Map<String, Object>> recordsEntity = PollServiceUtil.jsonToListOfMap(rawData);
+                            recordsEntity.forEach(data -> data.remove("RowNum"));
 
-                        // Reprocess the FK constraint record
-                        try {
-                            upsertSingle(config.getTableName(), res, config.getKeyList());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            logger.error("FATAL {}", e.getMessage());
+                            try {
+                                upsertBatch("ENTITY", recordsEntity, "entity_uid");
+                                // Reprocess the FK constraint record
+                                upsertSingle(config.getTableName(), res, config.getKeyList());
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                logger.error("FATAL {}", e.getMessage());
+                            }
                         }
+
 
                     }
 
@@ -535,7 +536,15 @@ public class JdbcTemplateUtil {
 
     public String getMaxId(String tableName, String key) {
         String sql = "SELECT COALESCE(MAX(" + key + "), '0') FROM " + tableName + ";";
-        return rdbJdbcTemplate.queryForObject(sql, String.class);
+        var data = rdbJdbcTemplate.queryForObject(sql, String.class);
+        logger.info(data);
+        if (data != null && !data.equalsIgnoreCase("0")) {
+            // 5000 is a cache by ODSE ID Generator
+            var id = Long.parseLong(sql) - 5000;
+            data = String.valueOf(id);
+        }
+        logger.info(data);
+        return data;
     }
 
 
