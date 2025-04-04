@@ -324,11 +324,11 @@ public class JdbcTemplateUtil {
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
-                if (ei instanceof DataIntegrityViolationException) // NOSONAR
-                {
-                    logger.debug("Key Exception Resolved");
-                }
-                else {
+//                if (ei instanceof DataIntegrityViolationException) // NOSONAR
+//                {
+//                    logger.debug("Key Exception Resolved");
+//                }
+//                else {
                     ++errorCount;
                     anyError= true;
                     if (anyErrorException == null) {
@@ -355,7 +355,7 @@ public class JdbcTemplateUtil {
 //                                    + "/" + config.getSourceDb() + "/"
 //                                    + ei.getClass().getSimpleName()
 //                                    + "/" + config.getTableName() + "/");
-                }
+//                }
             }
         }
 
@@ -367,7 +367,7 @@ public class JdbcTemplateUtil {
             Gson gson = new Gson();
             String jsonString = gson.toJson(errors);
             log.setStatus(WARNING);
-            log.setLog(errorCount + " Records have failed at resolver level");
+            log.setLog(errorCount + " Records have been processed by exception resolver");
             log.setStackTrace(jsonString);
         }
         return log;
