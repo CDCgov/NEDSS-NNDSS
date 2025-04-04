@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -51,7 +52,7 @@ public class JdbcTemplateUtil {
     @Value("${datasync.data_sync_batch_limit}")
     protected Integer batchSize = 1000;
     private final HandleError handleError;
-    private final Gson gsonNorm = new Gson();
+//    private final Gson gsonNorm = new Gson();
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -69,10 +70,9 @@ public class JdbcTemplateUtil {
 
     // Retry if task failed
     @Value("${thread.jdbc-level.max-retry}")
-    protected int jdbcLevelMaxRetry = 5;
+    protected int jdbcLevelMaxRetry = 1;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-    @Value("${thread.jdbc-level.timeout}")
     protected long jdbcLevelTimeoutPerTaskMs = 600_000;
 
     @Value("${thread.jdbc-batch-level.chunk-size}")
@@ -83,7 +83,6 @@ public class JdbcTemplateUtil {
     protected int jdbcBatchLevelMaxConcurrency = 10;
     @Value("${thread.jdbc-batch-level.max-retry}")
     protected int jdbcBatchLevelMaxRetry = 5;
-    @Value("${thread.jdbc-batch-level.timeout}")
     protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
 
 
@@ -365,14 +364,9 @@ public class JdbcTemplateUtil {
                 if (!records.isEmpty()) {
                     int totalRecords = records.size();
 
-                    logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{}, timeout={}ms)",
+                    logger.debug("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{}, timeout={}ms)",
                             totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
                             jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency, jdbcBatchLevelTimeoutPerTaskMs);
-
-                    logger.info("Processing {} records in batches of {} (chunkSize={}, concurrency={}→{})",
-                            totalRecords, batchSize, jdbcBatchLevelThreadChunkSize,
-                            jdbcBatchLevelInitialConcurrency, jdbcBatchLevelMaxConcurrency);
-
 
                     try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
 
@@ -380,7 +374,7 @@ public class JdbcTemplateUtil {
                             int end = Math.min(i + batchSize, totalRecords);
                             List<Map<String, Object>> batch = records.subList(i, end);
 
-                            logger.info("Submitting batch records {} to {} (size = {})", i, end - 1, end - i);
+                            logger.debug("Submitting batch records {} to {} (size = {})", i, end - 1, end - i);
 
                             List<Future<?>> futures = new ArrayList<>();
 
@@ -400,10 +394,10 @@ public class JdbcTemplateUtil {
 
                                             if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
                                                 chunk.forEach(data -> data.remove("RowNum"));
-                                                logger.info("Chunk {}: Inserting {} records", chunkNumber, chunk.size());
+                                                logger.debug("Chunk {}: Inserting {} records", chunkNumber, chunk.size());
                                                 jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(chunk));
                                             } else {
-                                                logger.info("Chunk {}: Upserting {} records", chunkNumber, chunk.size());
+                                                logger.debug("Chunk {}: Upserting {} records", chunkNumber, chunk.size());
                                                 upsertBatch(config.getTableName(), chunk, config.getKeyList());
                                             }
 
@@ -411,21 +405,28 @@ public class JdbcTemplateUtil {
                                             break;
 
                                         } catch (Exception e) {
-                                            e.printStackTrace();
-                                            retries++;
-                                            logger.warn("Chunk {}: Attempt {}/{} failed - {}", chunkNumber, retries, jdbcBatchLevelMaxRetry, e.getMessage());
+                                            if (e instanceof DuplicateKeyException){
+                                                logger.info("Duplicated Key Found");
+                                                break;
+                                            }
+                                            else {
+                                                e.printStackTrace();
+                                                retries++;
+                                                logger.warn("Chunk {}: Attempt {}/{} failed - {}", chunkNumber, retries, jdbcBatchLevelMaxRetry, e.getMessage());
 
-                                            if (retries >= jdbcBatchLevelMaxRetry) {
-                                                logger.error("Chunk {}: Failed after max retries", chunkNumber, e);
-                                                throw new RuntimeException("Chunk insert failed", e); //NOSONAR
+                                                if (retries >= jdbcBatchLevelMaxRetry) {
+                                                    logger.error("Chunk {}: Failed after max retries", chunkNumber, e);
+                                                    throw new RuntimeException("Chunk insert failed", e); //NOSONAR
+                                                }
+
+                                                try {
+                                                    Thread.sleep(2000L * retries); // Exponential backoff
+                                                } catch (InterruptedException ex) {
+                                                    Thread.currentThread().interrupt();
+                                                    throw new RuntimeException("Interrupted during retry sleep", ex); //NOSONAR
+                                                }
                                             }
 
-                                            try {
-                                                Thread.sleep(2000L * retries); // Exponential backoff
-                                            } catch (InterruptedException ex) {
-                                                Thread.currentThread().interrupt();
-                                                throw new RuntimeException("Interrupted during retry sleep", ex); //NOSONAR
-                                            }
                                         } finally {
                                             if (acquired) semaphore.release();
                                         }
@@ -455,7 +456,7 @@ public class JdbcTemplateUtil {
                                 logger.debug("Increased concurrency to {}", increased);
                             }
 
-                            logger.info("Batch processed: records {} to {}", i, end - 1);
+                            logger.debug("Batch processed: records {} to {}", i, end - 1);
                         }
 
                         logger.info("All records processed successfully for table '{}'", config.getTableName());
@@ -535,7 +536,10 @@ public class JdbcTemplateUtil {
                                 break; // Success, exit retry loop
                             }
                             catch (TimeoutException e) {
-                                logger.error("Timeout for record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                logger.error("Timeout for record: {}, {}",
+                                        //gsonNorm.toJson(res)
+                                        gsonSpec.toJson(res)
+                                        , e.getMessage());
                                 errorCount.incrementAndGet();
                                 errors.add(e.getMessage());
                                 break; // No retry on timeout
@@ -549,12 +553,18 @@ public class JdbcTemplateUtil {
                                     logger.debug("Duplicated Key Exception Resolved");
                                     break; // No retry needed
                                 } else {
-                                    logger.error("ERROR on record: {}, {}", gsonNorm.toJson(res), e.getMessage());
+                                    logger.error("ERROR on record: {}, {}",
+                                            // gsonNorm.toJson(res)
+                                            gsonSpec.toJson(res)
+                                            , e.getMessage());
                                     LogResponseModel logModel = new LogResponseModel(
                                             e.getMessage(), getStackTraceAsString(e),
                                             ERROR, startTime, apiResponseModel);
                                     updateLog(config.getTableName(), logModel);
-                                    handleError.writeRecordToFile(gsonNorm, res,
+                                    handleError.writeRecordToFile(
+                                            //gsonNorm
+                                            gsonSpec
+                                            , res,
                                             config.getTableName() + UUID.randomUUID(),
                                             sqlErrorPath + "/" + config.getSourceDb() + "/"
                                                     + e.getClass().getSimpleName() + "/"
@@ -573,7 +583,10 @@ public class JdbcTemplateUtil {
                         }
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
-                        logger.warn("Task interrupted for record: {}", gsonNorm.toJson(res));
+                        logger.warn("Task interrupted for record: {}",
+                                //gsonNorm.toJson(res)
+                                gsonSpec.toJson(res)
+                        );
                     }
                 });
                 futures.add(future);
@@ -644,15 +657,18 @@ public class JdbcTemplateUtil {
                 }
                 else {
                     if (!config.getTableName().equalsIgnoreCase("PERSON")) {
-                        logger.error("ERROR occurred at record: {}, {}", gsonNorm.toJson(res), ei.getMessage()); // NOSONAR
+                        logger.error("ERROR occurred at record: {}, {}", gsonSpec.toJson(res), ei.getMessage()); // NOSONAR
                     }
                     LogResponseModel logModel = new LogResponseModel(
                             ei.getMessage(),getStackTraceAsString(ei),
                             ERROR, startTime, apiResponseModel);
                     updateLog(config.getTableName(), logModel);
-                    handleError.writeRecordToFile(config.getTableName().equalsIgnoreCase("PERSON")
-                                ? gsonSpec
-                                : gsonNorm, res,
+                    handleError.writeRecordToFile(
+//                            config.getTableName().equalsIgnoreCase("PERSON")
+//                                ? gsonSpec
+//                                : gsonNorm
+                            gsonSpec
+                            , res,
                             config.getTableName() + UUID.randomUUID(),
                             sqlErrorPath
                                     + "/" + config.getSourceDb() + "/"

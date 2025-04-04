@@ -192,7 +192,7 @@ VALUES
     WHERE (OBSERVATION.add_time :operator :timestamp
             OR OBSERVATION.last_chg_time :operator :timestamp);',
     NULL,
-    'SELECT COUNT(DISTINCT SUB.subject_entity_uid)
+    'SELECT COUNT(SUB.subject_entity_uid)
     FROM
     (SELECT ROLE.*
         FROM ROLE

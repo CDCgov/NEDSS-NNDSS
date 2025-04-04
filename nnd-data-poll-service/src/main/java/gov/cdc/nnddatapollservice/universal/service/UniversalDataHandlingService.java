@@ -75,7 +75,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected int apiLevelMaxRetries = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-    @Value("${thread.processer-level.timeout}")
     protected long apiLevelTimeoutPerTaskMs = 600_000;
 
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
@@ -256,8 +255,17 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
 
             totalRecordCounts = totalRecordCountsResponse.getResponse();
+
+            if (config.getSourceDb().equalsIgnoreCase(ODSE_OBS)) {
+                /**
+                 * Reason for buffer because ODSE count and query can return in consistence match due to complex join
+                 * */
+                var bufferForCount = totalRecordCounts / 100 * 40;
+                totalRecordCounts = totalRecordCounts + bufferForCount;
+            }
             int batchSize = pullLimit;
             int totalPages = (int) Math.ceil((double)  totalRecordCounts / batchSize);
+            logger.info("TOTAL RECORDS: {}", totalRecordCounts);
 
             if (!config.isNoPagination()) {
                 var encodedDataWithNullResponse = apiService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true,
