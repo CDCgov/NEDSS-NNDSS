@@ -7,6 +7,7 @@ import gov.cdc.nnddatapollservice.configuration.LocalDateTimeAdapter;
 import gov.cdc.nnddatapollservice.configuration.TimestampAdapter;
 import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 import gov.cdc.nnddatapollservice.repository.config.model.PollDataLog;
+import gov.cdc.nnddatapollservice.service.interfaces.IApiService;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
+import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp;
 
 @Component
 public class JdbcTemplateUtil {
@@ -47,6 +49,7 @@ public class JdbcTemplateUtil {
     @Value("${datasync.sql_error_handle_log}")
     protected String sqlErrorPath = "";
     private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+    private final IApiService apiService;
 
 
     private final Gson gson = new GsonBuilder()
@@ -62,10 +65,11 @@ public class JdbcTemplateUtil {
 
 
 
-    public JdbcTemplateUtil(PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError) {
+    public JdbcTemplateUtil(PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError, IApiService apiService) {
         this.pollDataLogRepository = pollDataLogRepository;
         this.rdbJdbcTemplate = rdbJdbcTemplate;
         this.handleError = handleError;
+        this.apiService = apiService;
     }
 
     @SuppressWarnings("java:S1192")
@@ -324,11 +328,39 @@ public class JdbcTemplateUtil {
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
-//                if (ei instanceof DataIntegrityViolationException) // NOSONAR
-//                {
-//                    logger.debug("Key Exception Resolved");
-//                }
-//                else {
+                if (ei instanceof DataIntegrityViolationException && SPECIAL_ODSE_OBS_TABLES.contains(config.getTableName())) // NOSONAR
+                {
+                    logger.info("Resolving Key Conflict Item");
+                    if (SPECIAL_ODSE_OBS_TABLES.contains(config.getTableName())) {
+
+                        // THIS LOGIC TRY TO POPULATE MISSING ENTITY
+                        var currentMaxEntityId = getMaxId("ENTITY", "entity_uid");
+                        var totalRecordCountsResponse  = apiService.callDataCountEndpoint(config.getTableName(), false ,
+                                "", true, currentMaxEntityId);
+                        logger.info("Total record counts ENTITY: {}", totalRecordCountsResponse.getResponse());
+
+                        var responseModel = apiService.callDataExchangeEndpoint(config.getTableName(), false, "", false,
+                                String.valueOf(0), String.valueOf(totalRecordCountsResponse.getResponse() + 1), false,
+                                config.isUseKeyPagination(), currentMaxEntityId);
+                        var rawData = responseModel.getResponse();
+                        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(rdbJdbcTemplate);
+                        jdbcInsert = jdbcInsert.withTableName(config.getTableName());
+                        List<Map<String, Object>> recordsEntity = PollServiceUtil.jsonToListOfMap(rawData);
+                        recordsEntity.forEach(data -> data.remove("RowNum"));
+                        jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(recordsEntity));
+
+                        // Reprocess the FK constraint record
+                        try {
+                            upsertSingle(config.getTableName(), res, config.getKeyList());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            logger.error("FATAL {}", e.getMessage());
+                        }
+
+                    }
+
+                }
+                else {
                     ++errorCount;
                     anyError= true;
                     if (anyErrorException == null) {
@@ -355,7 +387,7 @@ public class JdbcTemplateUtil {
 //                                    + "/" + config.getSourceDb() + "/"
 //                                    + ei.getClass().getSimpleName()
 //                                    + "/" + config.getTableName() + "/");
-//                }
+                }
             }
         }
 
