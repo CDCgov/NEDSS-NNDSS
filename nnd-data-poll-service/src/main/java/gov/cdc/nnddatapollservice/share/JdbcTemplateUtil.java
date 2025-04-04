@@ -540,7 +540,7 @@ public class JdbcTemplateUtil {
         logger.info(data);
         if (data != null && !data.equalsIgnoreCase("0")) {
             // 5000 is a cache by ODSE ID Generator
-            var id = Long.parseLong(sql) - 5000;
+            var id = Long.parseLong(data) - 5000;
             data = String.valueOf(id);
         }
         logger.info(data);
