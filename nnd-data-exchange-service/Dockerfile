@@ -24,7 +24,7 @@ FROM amazoncorretto:21
 # try patching system for security fixes
 RUN yum update -y && yum clean all
 
-COPY --from=builder /usr/src/nnd/nnd-data-exchange-service/build/libs/nnd-data-exchange-service*.jar nnd-data-exchange-service.jarF
+COPY --from=builder /usr/src/nnd/nnd-data-exchange-service/build/libs/nnd-data-exchange-service*.jar nnd-data-exchange-service.jar
 
 # Run jar
 ENTRYPOINT ["java", "-Xms256m", "-Xmx2048m", "-jar", "nnd-data-exchange-service.jar"]
