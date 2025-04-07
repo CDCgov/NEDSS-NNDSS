@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -36,6 +35,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
@@ -83,7 +83,7 @@ public class JdbcTemplateUtil {
     @Value("${thread.jdbc-batch-level.max-concurrency}")
     protected int jdbcBatchLevelMaxConcurrency = 10;
     @Value("${thread.jdbc-batch-level.max-retry}")
-    protected int jdbcBatchLevelMaxRetry = 5;
+    protected int jdbcBatchLevelMaxRetry = 1;
     protected long jdbcBatchLevelTimeoutPerTaskMs = 360_000;
 
 
@@ -502,8 +502,10 @@ public class JdbcTemplateUtil {
         AtomicLong errorCount = new AtomicLong(0);
         List<String> errors = Collections.synchronizedList(new ArrayList<>());
         Semaphore semaphore = new Semaphore(jdbcLevelInitialConcurrency);
-        Exception[] anyErrorException = new Exception[1];
+        AtomicReference<Exception> anyErrorException = new AtomicReference<>();
         AtomicBoolean anyFatal = new AtomicBoolean(false);
+        AtomicBoolean anyError = new AtomicBoolean(false);
+
 
         logger.info("Starting batch insertion with concurrency {}-{}, timeout {} ms",
                 jdbcLevelInitialConcurrency, jdbcLevelMaxConcurrency, jdbcLevelTimeoutPerTaskMs);
@@ -537,46 +539,30 @@ public class JdbcTemplateUtil {
                                 break; // Success, exit retry loop
                             }
                             catch (TimeoutException e) {
-                                logger.error("Timeout for record: {}, {}",
-                                        //gsonNorm.toJson(res)
-                                        gsonSpec.toJson(res)
-                                        , e.getMessage());
+                                logger.error("Timeout Error Occurred");
                                 errorCount.incrementAndGet();
                                 errors.add(e.getMessage());
                                 break; // No retry on timeout
                             }
                             catch (Exception e) {
                                 errorCount.incrementAndGet();
-                                errors.add(e.getMessage());
-                                anyErrorException[0] = e;
+                                anyError.set(true);
 
-                                if (e instanceof DataIntegrityViolationException) {
-                                    logger.debug("Duplicated Key Exception Resolved");
-                                    break; // No retry needed
+                                if (errors.isEmpty()) {
+                                    errors.add(e.getMessage());
+                                }
+                                Throwable existing = anyErrorException.get();
+                                if (existing == null || !existing.getClass().equals(e.getClass())) {
+                                    errors.add(e.getMessage());
+                                }
+                                anyErrorException.set(e);
+
+                                retries++;
+                                if (retries < jdbcLevelMaxRetry) {
+                                    Thread.sleep(2000L * (retries + 1)); // Exponential backoff
                                 } else {
-                                    logger.error("ERROR on record: {}, {}",
-                                            // gsonNorm.toJson(res)
-                                            gsonSpec.toJson(res)
-                                            , e.getMessage());
-                                    LogResponseModel logModel = new LogResponseModel(
-                                            e.getMessage(), getStackTraceAsString(e),
-                                            ERROR, startTime, apiResponseModel);
-                                    updateLog(config.getTableName(), logModel);
-                                    handleError.writeRecordToFile(
-                                            //gsonNorm
-                                            gsonSpec
-                                            , res,
-                                            config.getTableName() + UUID.randomUUID(),
-                                            sqlErrorPath + "/" + config.getSourceDb() + "/"
-                                                    + e.getClass().getSimpleName() + "/"
-                                                    + config.getTableName() + "/");
-                                    retries++;
-                                    if (retries < jdbcLevelMaxRetry) {
-                                        Thread.sleep(2000L * (retries + 1)); // Exponential backoff
-                                    } else {
-                                        anyFatal.set(true);
-                                        break;
-                                    }
+                                    anyFatal.set(true);
+                                    break;
                                 }
                             } finally {
                                 if (acquired) semaphore.release();
