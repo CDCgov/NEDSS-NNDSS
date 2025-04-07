@@ -236,6 +236,7 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             ) {
                 forceIncrementalLoadApplied = true;
                 isInitialLoad = false; // NOSONAR
+                logger.info("Full Load detected on either EDX and ODSE tables, this operation is not allow. Auto switched to Incremental load");
             }
 
             if(config.isRecreateApplied() ) {
