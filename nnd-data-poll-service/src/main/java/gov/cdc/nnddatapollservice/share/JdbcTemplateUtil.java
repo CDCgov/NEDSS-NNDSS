@@ -42,6 +42,7 @@ import static gov.cdc.nnddatapollservice.constant.SqlConstantValue.UPDATE;
 import static gov.cdc.nnddatapollservice.constant.SqlConstantValue.WHERE_TABLE_NAME;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 
+@SuppressWarnings("java:S1068")
 @Component
 public class JdbcTemplateUtil {
     private static Logger logger = LoggerFactory.getLogger(JdbcTemplateUtil.class);
@@ -609,7 +610,7 @@ public class JdbcTemplateUtil {
     }
 
 
-    @SuppressWarnings("java:S3776")
+    @SuppressWarnings({"java:S3776", "java:S1481", "java:S125"})
     public LogResponseModel handleBatchInsertionFailure(List<Map<String, Object>> records, PollDataSyncConfig config,
                                             SimpleJdbcInsert simpleJdbcInsert, Timestamp startTime,
                                             ApiResponseModel<?> apiResponseModel, LogResponseModel log) {
