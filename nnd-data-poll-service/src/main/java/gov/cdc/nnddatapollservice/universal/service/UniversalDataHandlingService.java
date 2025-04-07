@@ -7,6 +7,8 @@ import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
+import gov.cdc.nnddatapollservice.service.model.dto.TableMetaDataDto;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.universal.dao.EdxNbsOdseDataPersistentDAO;
 import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
@@ -20,9 +22,11 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
@@ -34,6 +38,7 @@ import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp
 public class UniversalDataHandlingService implements IUniversalDataHandlingService {
     private static final Logger logger = LoggerFactory.getLogger(UniversalDataHandlingService.class);
     private static final int THREAD_CHECK = 10000;
+    private final JdbcTemplateUtil jdbcTemplateUtil;
 
     @Value("${datasync.store_in_local}")
     protected boolean storeJsonInLocalFolder = false;
@@ -87,12 +92,13 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     public UniversalDataHandlingService(UniversalDataPersistentDAO universalDataPersistentDAO,
                                         IPollCommonService iPollCommonService,
                                         IS3DataService is3DataService,
-                                        EdxNbsOdseDataPersistentDAO edxNbsOdseDataPersistentDAO, IApiService apiService) {
+                                        EdxNbsOdseDataPersistentDAO edxNbsOdseDataPersistentDAO, IApiService apiService, JdbcTemplateUtil jdbcTemplateUtil) {
         this.universalDataPersistentDAO = universalDataPersistentDAO;
         this.iPollCommonService = iPollCommonService;
         this.is3DataService = is3DataService;
         this.edxNbsOdseDataPersistentDAO = edxNbsOdseDataPersistentDAO;
         this.apiService = apiService;
+        this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
     @SuppressWarnings({"java:S3776", "java:S6541", "java:S1141"})
@@ -213,11 +219,34 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     }
 
+    protected  void tableMetaDataComparison(String tableName) {
+        var onCloudMetaDataResponse = apiService.callMetaEndpoint(tableName);
+        List<TableMetaDataDto> onCloudMetaData = onCloudMetaDataResponse.getResponse();
+        List<TableMetaDataDto> onPremMetaData = jdbcTemplateUtil.getOnPremMetaData(tableName);
+
+        // Extract column names for quick comparison
+        Set<String> onPremColumnNames = onPremMetaData.stream()
+                .map(TableMetaDataDto::getColumnName)
+                .collect(Collectors.toSet());
+
+        // Find columns that exist on cloud but not on-prem
+        List<TableMetaDataDto> missingColumns = onCloudMetaData.stream()
+                .filter(column -> !onPremColumnNames.contains(column.getColumnName()))
+                .toList();
+
+        if (!missingColumns.isEmpty()) {
+            // LOGIC TO ALFTER TABLE HERE
+            jdbcTemplateUtil.addColumnsToTable(tableName, missingColumns);
+        }
+    }
+
+
     @SuppressWarnings({"java:S1141","java:S3776", "java:S6541"})
     protected void pollAndPersistData(PollDataSyncConfig config) throws APIException {
         try {
             LogResponseModel log;
             Integer totalRecordCounts = 0;
+            tableMetaDataComparison(config.getTableName());
 
             boolean isInitialLoad = iPollCommonService.checkInitialLoadForIndividualTable(config);
 

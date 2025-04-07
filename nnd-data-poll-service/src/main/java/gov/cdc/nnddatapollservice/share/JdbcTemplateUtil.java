@@ -8,6 +8,7 @@ import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 import gov.cdc.nnddatapollservice.repository.config.model.PollDataLog;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
+import gov.cdc.nnddatapollservice.service.model.dto.TableMetaDataDto;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -814,4 +815,83 @@ public class JdbcTemplateUtil {
         return tableList;
     }
 
+
+    @SuppressWarnings("java:S6204")
+    public List<TableMetaDataDto> getOnPremMetaData(String tableName) {
+        String query = """
+                SELECT 
+                    COLUMN_NAME, 
+                    DATA_TYPE, 
+                    CHARACTER_MAXIMUM_LENGTH AS MaxLength, 
+                    IS_NULLABLE, 
+                    COLUMN_DEFAULT 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = ? 
+                AND TABLE_SCHEMA = 'dbo'
+            """;
+        return rdbJdbcTemplate.queryForList(query, tableName).stream()
+                .map(this::mapToTableMetaDataDto)
+                .collect(Collectors.toList());
+    }
+
+    private TableMetaDataDto mapToTableMetaDataDto(Map<String, Object> row) {
+        TableMetaDataDto dto = new TableMetaDataDto();
+        dto.setColumnName((String) row.get("COLUMN_NAME"));
+        dto.setDataType((String) row.get("DATA_TYPE"));
+        dto.setCharacterMaximumLength(row.get("CHARACTER_MAXIMUM_LENGTH") != null
+                ? ((Number) row.get("CHARACTER_MAXIMUM_LENGTH")).intValue() : null);
+        dto.setIsNullable((String) row.get("IS_NULLABLE"));
+        dto.setColumnDefault((String) row.get("COLUMN_DEFAULT"));
+        return dto;
+    }
+
+    public void addColumnsToTable(String tableName, List<TableMetaDataDto> columns) {
+        if (columns == null || columns.isEmpty()) {
+            logger.warn("No columns provided to add to table {}", tableName);
+            return;
+        }
+
+        StringBuilder query = new StringBuilder("ALTER TABLE ").append(tableName).append(" ADD ");
+
+        // Build the column addition statements
+        for (int i = 0; i < columns.size(); i++) {
+            TableMetaDataDto column = columns.get(i);
+
+            query.append(column.getColumnName()).append(" ").append(column.getDataType());
+
+            // Append max length if applicable
+            if (column.getCharacterMaximumLength() != null &&
+                    column.getCharacterMaximumLength() > 0 &&
+                    isLengthRequired(column.getDataType())) {
+                query.append("(").append(column.getCharacterMaximumLength()).append(")");
+            }
+
+            // Add NULL / NOT NULL constraint
+            query.append(column.getIsNullable().equalsIgnoreCase("NO") ? " NOT NULL" : " NULL");
+
+            // Add DEFAULT value if provided
+            if (column.getColumnDefault() != null && !column.getColumnDefault().isEmpty()) {
+                query.append(" DEFAULT '").append(column.getColumnDefault()).append("'");
+            }
+
+            // Add a comma between column definitions (except for the last one)
+            if (i < columns.size() - 1) {
+                query.append(", ");
+            }
+        }
+
+        // Execute the ALTER TABLE query
+        rdbJdbcTemplate.execute(query.toString());
+        logger.info("Columns added to table {}: {}", tableName, columns.stream()
+                .map(TableMetaDataDto::getColumnName)
+                .toList());
+    }
+
+    // Helper method to check if a data type requires a length specification
+    private boolean isLengthRequired(String dataType) {
+        return dataType.equalsIgnoreCase("VARCHAR") ||
+                dataType.equalsIgnoreCase("NVARCHAR") ||
+                dataType.equalsIgnoreCase("CHAR") ||
+                dataType.equalsIgnoreCase("NCHAR");
+    }
 }
