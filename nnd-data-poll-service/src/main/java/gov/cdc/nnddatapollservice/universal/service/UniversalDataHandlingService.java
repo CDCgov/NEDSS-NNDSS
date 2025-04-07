@@ -51,6 +51,9 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
 
+    @Value("${datasync.handle_dynamic_column.enabled}")
+    protected boolean handleDynamicColumnEnabled = false;
+
 
     // These are table level task - probably dont need this
     @Value("${thread.table-level.enabled}")
@@ -246,7 +249,9 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
         try {
             LogResponseModel log;
             Integer totalRecordCounts = 0;
-            tableMetaDataComparison(config.getTableName());
+            if (handleDynamicColumnEnabled) {
+                tableMetaDataComparison(config.getTableName());
+            }
 
             boolean isInitialLoad = iPollCommonService.checkInitialLoadForIndividualTable(config);
 
