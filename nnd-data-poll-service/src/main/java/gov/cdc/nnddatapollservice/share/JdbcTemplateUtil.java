@@ -630,6 +630,7 @@ public class JdbcTemplateUtil {
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
+                logger.debug("Error occurred during UPSERT/SINGLE INSERTION", ei);
                 ++errorCount;
                 anyError= true;
                 if (anyErrorException == null) {

@@ -290,7 +290,12 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
             totalRecordCounts = totalRecordCountsResponse.getResponse();
 
-            if (config.getSourceDb().equalsIgnoreCase(ODSE_OBS) && !isInitialLoad) {
+            Set<String> relevantTables = Set.of("ENTITY", "ACT", "ROLE", "ACT_RELATIONSHIP");
+
+            if (config.getSourceDb().equalsIgnoreCase(ODSE_OBS)
+                    && !isInitialLoad
+                    && relevantTables.contains(config.getTableName().toUpperCase()))
+            {
                 /**
                  * Reason for buffer because ODSE count and query can return in consistence match due to complex join
                  * */
