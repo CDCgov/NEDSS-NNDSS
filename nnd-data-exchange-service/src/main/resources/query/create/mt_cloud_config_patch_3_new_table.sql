@@ -346,38 +346,10 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'PUBLIC
                    'WITH ActResults AS (
                        SELECT DISTINCT ACT.act_uid
                        FROM ACT
-                       INNER JOIN OBSERVATION
-                           ON ACT.act_uid = OBSERVATION.observation_uid
-                       WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-
-                       UNION
-
-                       SELECT DISTINCT ACT.act_uid
-                       FROM ACT
-                       INNER JOIN PARTICIPATION
-                           ON ACT.act_uid = PARTICIPATION.act_uid
-                       INNER JOIN OBSERVATION
-                           ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
-                       WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-
-                       UNION
-
-                       SELECT DISTINCT ACT.act_uid
-                       FROM ACT
-                       INNER JOIN Act_relationship
-                           ON ACT.act_uid = Act_relationship.source_act_uid
-                       INNER JOIN OBSERVATION
-                           ON Act_relationship.target_act_uid = OBSERVATION.observation_uid
-                       WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-
-                       UNION
-
-                       SELECT DISTINCT ACT.act_uid
-                       FROM ACT
                        INNER JOIN Act_relationship
                            ON ACT.act_uid = Act_relationship.target_act_uid
                        INNER JOIN OBSERVATION
-                           ON Act_relationship.target_act_uid = OBSERVATION.observation_uid
+                           ON Act_relationship.source_act_uid = OBSERVATION.observation_uid
                        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
                    )
                    SELECT PUBLIC_HEALTH_CASE.*
@@ -389,38 +361,10 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'PUBLIC
                     WHERE public_health_case_uid IN (
                         SELECT DISTINCT ACT.act_uid
                         FROM ACT
-                        INNER JOIN OBSERVATION
-                            ON ACT.act_uid = OBSERVATION.observation_uid
-                        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-
-                        UNION
-
-                        SELECT DISTINCT ACT.act_uid
-                        FROM ACT
-                        INNER JOIN PARTICIPATION
-                            ON ACT.act_uid = PARTICIPATION.act_uid
-                        INNER JOIN OBSERVATION
-                            ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
-                        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-
-                        UNION
-
-                        SELECT DISTINCT ACT.act_uid
-                        FROM ACT
-                        INNER JOIN Act_relationship
-                            ON ACT.act_uid = Act_relationship.source_act_uid
-                        INNER JOIN OBSERVATION
-                            ON Act_relationship.target_act_uid = OBSERVATION.observation_uid
-                        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-
-                        UNION
-
-                        SELECT DISTINCT ACT.act_uid
-                        FROM ACT
                         INNER JOIN Act_relationship
                             ON ACT.act_uid = Act_relationship.target_act_uid
                         INNER JOIN OBSERVATION
-                            ON Act_relationship.target_act_uid = OBSERVATION.observation_uid
+                            ON Act_relationship.source_act_uid = OBSERVATION.observation_uid
                         WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
                     );',
                    'WITH ActResults AS (
@@ -430,53 +374,10 @@ IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'PUBLIC
                                ELSE OBSERVATION.last_chg_time
                            END) AS latest_timestamp
                        FROM ACT
-                       INNER JOIN OBSERVATION
-                           ON ACT.act_uid = OBSERVATION.observation_uid
-                       WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-                       GROUP BY ACT.act_uid
-
-                       UNION
-
-                       SELECT DISTINCT ACT.act_uid,
-                           MAX(CASE
-                               WHEN OBSERVATION.add_time >= OBSERVATION.last_chg_time THEN OBSERVATION.add_time
-                               ELSE OBSERVATION.last_chg_time
-                           END) AS latest_timestamp
-                       FROM ACT
-                       INNER JOIN PARTICIPATION
-                           ON ACT.act_uid = PARTICIPATION.act_uid
-                       INNER JOIN OBSERVATION
-                           ON PARTICIPATION.act_uid = OBSERVATION.observation_uid
-                       WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-                       GROUP BY ACT.act_uid
-
-                       UNION
-
-                       SELECT DISTINCT ACT.act_uid,
-                           MAX(CASE
-                               WHEN OBSERVATION.add_time >= OBSERVATION.last_chg_time THEN OBSERVATION.add_time
-                               ELSE OBSERVATION.last_chg_time
-                           END) AS latest_timestamp
-                       FROM ACT
-                       INNER JOIN Act_relationship
-                           ON ACT.act_uid = Act_relationship.source_act_uid
-                       INNER JOIN OBSERVATION
-                           ON Act_relationship.target_act_uid = OBSERVATION.observation_uid
-                       WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
-                       GROUP BY ACT.act_uid
-
-                       UNION
-
-                       SELECT DISTINCT ACT.act_uid,
-                           MAX(CASE
-                               WHEN OBSERVATION.add_time >= OBSERVATION.last_chg_time THEN OBSERVATION.add_time
-                               ELSE OBSERVATION.last_chg_time
-                           END) AS latest_timestamp
-                       FROM ACT
                        INNER JOIN Act_relationship
                            ON ACT.act_uid = Act_relationship.target_act_uid
                        INNER JOIN OBSERVATION
-                           ON Act_relationship.target_act_uid = OBSERVATION.observation_uid
+                           ON Act_relationship.source_act_uid = OBSERVATION.observation_uid
                        WHERE (OBSERVATION.add_time :operator :timestamp OR OBSERVATION.last_chg_time :operator :timestamp)
                        GROUP BY ACT.act_uid
                    ),
