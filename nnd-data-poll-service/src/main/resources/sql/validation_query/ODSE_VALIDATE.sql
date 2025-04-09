@@ -10,4 +10,20 @@ SELECT 'PARTICIPATION', COUNT(*) FROM PARTICIPATION
 UNION ALL
 SELECT 'PERSON', COUNT(*) FROM PERSON
 UNION ALL
-SELECT 'ROLE', COUNT(*) FROM ROLE;
+SELECT 'ROLE', COUNT(*) FROM ROLE
+UNION ALL
+SELECT 'ENTITY_ID', COUNT(*) FROM ENTITY_ID
+UNION ALL
+SELECT 'Obs_value_coded', COUNT(*) FROM Obs_value_coded
+UNION ALL
+SELECT 'Obs_value_numeric', COUNT(*) FROM Obs_value_numeric
+UNION ALL
+SELECT 'Obs_value_txt', COUNT(*) FROM Obs_value_txt
+UNION ALL
+SELECT 'Organization', COUNT(*) FROM Organization
+UNION ALL
+SELECT 'Organization_name', COUNT(*) FROM Organization_name
+UNION ALL
+SELECT 'Public_health_case', COUNT(*) FROM Public_health_case
+UNION ALL
+SELECT 'PublicHealthCaseFact', COUNT(*) FROM PublicHealthCaseFact;

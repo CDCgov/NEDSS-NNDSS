@@ -1,4 +1,5 @@
-delete from data_sync_config where table_name in ('ENTITY_ID', 'Obs_value_coded', 'Obs_value_numeric', 'Obs_value_txt', 'Organization', 'Organization_name', 'Public_health_case', 'PublicHealthCaseFact');
+delete from data_sync_config where table_name in ('ENTITY_ID', 'Obs_value_coded', 'Obs_value_numeric', 'Obs_value_txt',
+                                                  'Organization', 'Organization_name', 'Public_health_case', 'PublicHealthCaseFact');
 
 
 IF NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'ENTITY_ID')
