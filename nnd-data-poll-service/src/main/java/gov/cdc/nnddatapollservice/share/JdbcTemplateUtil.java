@@ -7,6 +7,7 @@ import gov.cdc.nnddatapollservice.configuration.LocalDateTimeAdapter;
 import gov.cdc.nnddatapollservice.configuration.TimestampAdapter;
 import gov.cdc.nnddatapollservice.repository.config.PollDataLogRepository;
 import gov.cdc.nnddatapollservice.repository.config.model.PollDataLog;
+import gov.cdc.nnddatapollservice.service.ApiService;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
@@ -40,6 +41,7 @@ import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
 @Component
 public class JdbcTemplateUtil {
     private static Logger logger = LoggerFactory.getLogger(JdbcTemplateUtil.class);
+    private final ApiService apiService;
     private final PollDataLogRepository pollDataLogRepository;
     private final String pollConfigTableName = "POLL_DATA_SYNC_CONFIG";
     private final JdbcTemplate rdbJdbcTemplate;
@@ -65,7 +67,8 @@ public class JdbcTemplateUtil {
 
 
 
-    public JdbcTemplateUtil(PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError) {
+    public JdbcTemplateUtil(ApiService apiService, PollDataLogRepository pollDataLogRepository, @Qualifier("rdbJdbcTemplate") JdbcTemplate rdbJdbcTemplate, HandleError handleError) {
+        this.apiService = apiService;
         this.pollDataLogRepository = pollDataLogRepository;
         this.rdbJdbcTemplate = rdbJdbcTemplate;
         this.handleError = handleError;
@@ -126,13 +129,7 @@ public class JdbcTemplateUtil {
         var values = validData.values().stream()
                 .map(this::convertIfDate)
                 .toArray();
-
-
-        try {
             rdbJdbcTemplate.update(sql, values);
-        } catch (Exception e) {
-            throw new SQLException("Single record upsert failed", e);
-        }
     }
 
     /**
@@ -333,15 +330,70 @@ public class JdbcTemplateUtil {
                     upsertSingle(config.getTableName(), res, config.getKeyList());
                 }
             } catch (Exception ei) {
-                ++errorCount;
-                anyError= true;
-                if (anyErrorException == null) {
-                    errors.add(ei.getMessage());
-                }
-                if (anyErrorException != null && !anyErrorException.getClass().equals(ei.getClass())) {
-                    errors.add(ei.getMessage());
-                }
-                anyErrorException = ei;
+//                if (ei instanceof DataIntegrityViolationException && SPECIAL_ODSE_TABLES_FOR_REPROCESS.contains(config.getTableName())) // NOSONAR
+//                {
+//                    logger.debug("Resolving Key Conflict Item");
+//                    if (SPECIAL_ODSE_TABLES_FOR_REPROCESS.contains(config.getTableName())) {
+//
+//                        // THIS LOGIC TRY TO POPULATE MISSING ENTITY
+//                        var currentMaxEntityId = getMaxId("ENTITY", "entity_uid");
+//                        var currentMaxActId = getMaxId("ACT", "act_uid");
+//                        var totalRecordCountsResponse  = apiService.callDataCountEndpoint("ENTITY", false ,
+//                                "", true, currentMaxEntityId);
+//                        var totalRecordCountsResponseAct  = apiService.callDataCountEndpoint("ACT", false ,
+//                                "", true, currentMaxActId);
+//                        if (totalRecordCountsResponse.getResponse() != null) {
+//                            logger.debug("Total record counts ENTITY: {}", totalRecordCountsResponse.getResponse());
+//                            logger.debug("Total record counts ACT: {}", totalRecordCountsResponseAct.getResponse());
+//
+//                            var responseModel = apiService.callDataExchangeEndpoint("ENTITY", false, "", false,
+//                                    String.valueOf(0), String.valueOf(totalRecordCountsResponse.getResponse() + 1), false,
+//                                    config.isUseKeyPagination(), currentMaxEntityId);
+//                            var responseModelAct = apiService.callDataExchangeEndpoint("ACT", false, "", false,
+//                                    String.valueOf(0), String.valueOf(totalRecordCountsResponseAct.getResponse() + 1), false,
+//                                    config.isUseKeyPagination(), currentMaxActId);
+//
+//                            var rawData = responseModel.getResponse();
+//                            List<Map<String, Object>> recordsEntity = PollServiceUtil.jsonToListOfMap(rawData);
+//                            recordsEntity.forEach(data -> data.remove("RowNum"));
+//
+//                            var rawDataAct = responseModelAct.getResponse();
+//                            List<Map<String, Object>> recordsAct = PollServiceUtil.jsonToListOfMap(rawDataAct);
+//                            recordsAct.forEach(data -> data.remove("RowNum"));
+//
+//                            try {
+//                                upsertBatch("ENTITY", recordsEntity, "entity_uid");
+//                                upsertBatch("ACT", recordsAct, "entity_uid");
+//
+//                                // Reprocess the FK constraint record
+//                                upsertSingle(config.getTableName(), res, config.getKeyList());
+//                            } catch (Exception e) {
+//                                ++errorCount;
+//                                anyError = true;
+//                                if (anyErrorException == null) {
+//                                    errors.add(ei.getMessage());
+//                                }
+//                                if (anyErrorException != null && !anyErrorException.getClass().equals(ei.getClass())) {
+//                                    errors.add(ei.getMessage());
+//                                }
+//                                anyErrorException = ei;
+//                            }
+//                        }
+//
+//
+//                    }
+//
+//                }
+//                else {
+                    ++errorCount;
+                    anyError = true;
+                    if (anyErrorException == null) {
+                        errors.add(ei.getMessage());
+                    }
+                    if (anyErrorException != null && !anyErrorException.getClass().equals(ei.getClass())) {
+                        errors.add(ei.getMessage());
+                    }
+                    anyErrorException = ei;
 //                if (ei instanceof DataIntegrityViolationException) // NOSONAR
 //                {
 //                    logger.debug("Duplicated Key Exception Resolved");
@@ -365,8 +417,9 @@ public class JdbcTemplateUtil {
 //                                    + ei.getClass().getSimpleName()
 //                                    + "/" + config.getTableName() + "/");
 //                }
+                }
 
-            }
+//            }
         }
 
         if (!anyError)
@@ -417,6 +470,13 @@ public class JdbcTemplateUtil {
     }
 
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
+        // Subtracting 1 hour for ODSE OBS Tables
+        if (SPECIAL_ODSE_TABLES.contains(tableName)) {
+            LocalDateTime localDateTime = timestamp.toLocalDateTime();
+            LocalDateTime updatedDateTime = localDateTime.minusHours(2);
+            timestamp = Timestamp.valueOf(updatedDateTime);
+        }
+
         String updateSql;
         if (!logResponseModel.apiResponseModel.isSuccess()) {
             updateSql = "update " + pollConfigTableName + " set last_update_time =?, api_fatal_on_last_run = 1 where table_name=?;";
@@ -504,9 +564,22 @@ public class JdbcTemplateUtil {
         return updatedTime;
     }
 
+//    public String getMaxId(String tableName, String key) {
+//        String sql = "SELECT COALESCE(MAX(" + key + "), '0') FROM " + tableName + ";";
+//        return rdbJdbcTemplate.queryForObject(sql, String.class);
+//    }
+
     public String getMaxId(String tableName, String key) {
         String sql = "SELECT COALESCE(MAX(" + key + "), '0') FROM " + tableName + ";";
-        return rdbJdbcTemplate.queryForObject(sql, String.class);
+        var data = rdbJdbcTemplate.queryForObject(sql, String.class);
+        logger.debug(data);
+        if (data != null && !data.equalsIgnoreCase("0") && SPECIAL_ODSE_TABLES.contains(tableName)) {
+            // 5000 is a cache by ODSE ID Generator
+            var id = Long.parseLong(data) - 5000;
+            data = String.valueOf(id);
+        }
+        logger.debug(data);
+        return data;
     }
 
 

@@ -227,10 +227,10 @@ INSERT INTO poll_data_sync_config (table_name, source_db, table_order, recreate_
 VALUES ('COVID_LAB_CELR_DATAMART', 'COVID_DATAMART', 1, 1, 1);
 
 
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('ENTITY', 'ODSE_OBS', 1, 'entity_uid');
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('ACT', 'ODSE_OBS', 1, 'act_uid');
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_pagination)
+VALUES ('ENTITY', 'ODSE_OBS', 1, 'entity_uid', 1);
+INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list, use_key_pagination)
+VALUES ('ACT', 'ODSE_OBS', 1, 'act_uid', 1);
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
 VALUES ('ENTITY_ID', 'ODSE_OBS', 1, 'entity_uid, entity_id_seq');
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
