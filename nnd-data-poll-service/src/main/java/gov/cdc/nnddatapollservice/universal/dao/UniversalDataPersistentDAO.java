@@ -20,8 +20,8 @@ public class UniversalDataPersistentDAO {
 
     private final JdbcTemplateUtil jdbcTemplateUtil;
 
-    @Value("${datasync.data_sync_batch_limit}")
-    protected Integer batchSize = 1000;
+
+    @Value("${thread.jdbc-batch-level.enabled}")
     protected boolean jdbcBatchLevelEnabled = true;
 
     @Autowired

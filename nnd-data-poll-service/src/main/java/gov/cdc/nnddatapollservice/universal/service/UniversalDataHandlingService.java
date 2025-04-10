@@ -7,6 +7,8 @@ import gov.cdc.nnddatapollservice.service.interfaces.IPollCommonService;
 import gov.cdc.nnddatapollservice.service.interfaces.IS3DataService;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import gov.cdc.nnddatapollservice.service.model.LogResponseModel;
+import gov.cdc.nnddatapollservice.service.model.dto.TableMetaDataDto;
+import gov.cdc.nnddatapollservice.share.JdbcTemplateUtil;
 import gov.cdc.nnddatapollservice.universal.dao.EdxNbsOdseDataPersistentDAO;
 import gov.cdc.nnddatapollservice.universal.dao.UniversalDataPersistentDAO;
 import gov.cdc.nnddatapollservice.universal.dto.PollDataSyncConfig;
@@ -20,9 +22,11 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddatapollservice.constant.ConstantValue.*;
 import static gov.cdc.nnddatapollservice.share.StringUtil.getStackTraceAsString;
@@ -34,6 +38,7 @@ import static gov.cdc.nnddatapollservice.share.TimestampUtil.getCurrentTimestamp
 public class UniversalDataHandlingService implements IUniversalDataHandlingService {
     private static final Logger logger = LoggerFactory.getLogger(UniversalDataHandlingService.class);
     private static final int THREAD_CHECK = 10000;
+    private final JdbcTemplateUtil jdbcTemplateUtil;
 
     @Value("${datasync.store_in_local}")
     protected boolean storeJsonInLocalFolder = false;
@@ -45,6 +50,9 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected Integer pullLimit = 0;
     @Value("${datasync.data_sync_delete_on_initial}")
     protected boolean deleteOnInit = false;
+
+    @Value("${datasync.handle_dynamic_column.enabled}")
+    protected boolean handleDynamicColumnEnabled = false;
 
 
     // These are table level task - probably dont need this
@@ -75,7 +83,6 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     protected int apiLevelMaxRetries = 5;
 
     // if task hit timeout it will be terminated, 120_000 == 2 min
-    @Value("${thread.processer-level.timeout}")
     protected long apiLevelTimeoutPerTaskMs = 600_000;
 
     private final UniversalDataPersistentDAO universalDataPersistentDAO;
@@ -88,12 +95,13 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
     public UniversalDataHandlingService(UniversalDataPersistentDAO universalDataPersistentDAO,
                                         IPollCommonService iPollCommonService,
                                         IS3DataService is3DataService,
-                                        EdxNbsOdseDataPersistentDAO edxNbsOdseDataPersistentDAO, IApiService apiService) {
+                                        EdxNbsOdseDataPersistentDAO edxNbsOdseDataPersistentDAO, IApiService apiService, JdbcTemplateUtil jdbcTemplateUtil) {
         this.universalDataPersistentDAO = universalDataPersistentDAO;
         this.iPollCommonService = iPollCommonService;
         this.is3DataService = is3DataService;
         this.edxNbsOdseDataPersistentDAO = edxNbsOdseDataPersistentDAO;
         this.apiService = apiService;
+        this.jdbcTemplateUtil = jdbcTemplateUtil;
     }
 
     @SuppressWarnings({"java:S3776", "java:S6541", "java:S1141"})
@@ -214,11 +222,36 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
     }
 
+    protected  void tableMetaDataComparison(String tableName) {
+        var onCloudMetaDataResponse = apiService.callMetaEndpoint(tableName);
+        List<TableMetaDataDto> onCloudMetaData = onCloudMetaDataResponse.getResponse();
+        List<TableMetaDataDto> onPremMetaData = jdbcTemplateUtil.getOnPremMetaData(tableName);
+
+        // Extract column names for quick comparison
+        Set<String> onPremColumnNames = onPremMetaData.stream()
+                .map(TableMetaDataDto::getColumnName)
+                .collect(Collectors.toSet());
+
+        // Find columns that exist on cloud but not on-prem
+        List<TableMetaDataDto> missingColumns = onCloudMetaData.stream()
+                .filter(column -> !onPremColumnNames.contains(column.getColumnName()))
+                .toList();
+
+        if (!missingColumns.isEmpty()) {
+            // LOGIC TO ALFTER TABLE HERE
+            jdbcTemplateUtil.addColumnsToTable(tableName, missingColumns);
+        }
+    }
+
+
     @SuppressWarnings({"java:S1141","java:S3776", "java:S6541"})
     protected void pollAndPersistData(PollDataSyncConfig config) throws APIException {
         try {
             LogResponseModel log;
             Integer totalRecordCounts = 0;
+            if (handleDynamicColumnEnabled) {
+                tableMetaDataComparison(config.getTableName());
+            }
 
             boolean isInitialLoad = iPollCommonService.checkInitialLoadForIndividualTable(config);
 
@@ -256,8 +289,22 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
 
 
             totalRecordCounts = totalRecordCountsResponse.getResponse();
+
+            Set<String> relevantTables = Set.of("ENTITY", "ACT", "ROLE", "ACT_RELATIONSHIP");
+
+            if (config.getSourceDb().equalsIgnoreCase(ODSE_OBS)
+                    && !isInitialLoad
+                    && relevantTables.contains(config.getTableName().toUpperCase()))
+            {
+                /**
+                 * Reason for buffer because ODSE count and query can return in consistence match due to complex join
+                 * */
+                var bufferForCount = totalRecordCounts / 100 * 40;
+                totalRecordCounts = totalRecordCounts + bufferForCount;
+            }
             int batchSize = pullLimit;
             int totalPages = (int) Math.ceil((double)  totalRecordCounts / batchSize);
+            logger.info("TOTAL RECORDS: {}", totalRecordCounts);
 
             if (!config.isNoPagination()) {
                 var encodedDataWithNullResponse = apiService.callDataExchangeEndpoint(config.getTableName(), isInitialLoad, timeStampForPoll, true,

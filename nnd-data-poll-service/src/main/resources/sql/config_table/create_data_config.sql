@@ -18,7 +18,7 @@ CREATE TABLE poll_data_sync_config
     use_key_pagination bit DEFAULT 0,
 
     api_fatal_on_last_run bit DEFAULT 0,
-    is_sync_enabled INT DEFAULT 0
+    is_sync_enabled INT DEFAULT 1
 );
 END
 

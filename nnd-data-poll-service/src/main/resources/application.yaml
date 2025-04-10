@@ -8,6 +8,7 @@ data_exchange:
   endpoint_token: ${NND_DE_URL}${NND_DE_TOKEN:/extraction/api/auth/token}
   endpoint_de: ${NND_DE_URL}${NND_DE_DE:/extraction/api/nnd}
   endpoint_generic: ${NND_DE_URL}${NND_DE_GENERIC:/extraction/api/datasync}
+  endpoint_generic_meta_data: ${NND_DE_URL}${NND_DE_GENERIC_META_DATA:/extraction/api/datasync/metadata}
   endpoint_generic_total_record: ${NND_DE_URL}${NND_DE_GENERIC_TOTAL_RECORD:/extraction/api/datasync/count}
   version: "1"
 nnd:
@@ -41,6 +42,8 @@ datasync:
   sql_reprocessing_data: ${DATASYNC_STORE_SQL_REPOCESSING_DATA:false}
   data_sync_batch_limit: ${DATASYNC_BATCH_LIMIT:1000}
   data_sync_delete_on_initial: ${DATASYNC_DELETE:false}
+  handle_dynamic_column:
+    enabled: ${DYNAMIC_COL_ENABLED:false}
 
 aws:
   auth:
@@ -81,24 +84,21 @@ thread:
       initial-concurrency: ${THREAD_PROCESSOR_LEVEL_INIT_CONCURRENCY:2}
       max-concurrency: ${THREAD_PROCESSOR_LEVEL_MAX_CONCURRENCY:4}
       max-retry: ${THREAD_PROCESSOR_LEVEL_MAX_RETRY:5}
-      timeout: ${THREAD_PROCESSOR_TIMEOUT:120_000}
   # 10000 record (1 processor batch) / 2000 = 5 concurrency
   jdbc-batch-level:
+      enabled: ${THREAD_JDBC_BATCH_LEVEL_ENABLED:false}
       chunk-size: ${THREAD_JDBC_BATCH_LEVEL_CHUNK_SIZE:2000}
       initial-concurrency: ${THREAD_JDBC_BATCH_LEVEL_INIT_CONCURRENCY:5}
       max-concurrency: ${THREAD_JDBC_BATCH_LEVEL_MAX_CONCURRENCY:10}
       max-retry: ${THREAD_JDBC_BATCH_LEVEL_MAX_RETRY:5}
-      timeout: ${THREAD_JDBC_BATCH_TIMEOUT:360_000}
   jdbc-level: #Single upsert or Single Insert level
       enabled: ${THREAD_JDBC_LEVEL_ENABLED:false}
       initial-concurrency: ${THREAD_JDBC_LEVEL_INIT_CONCURRENCY:10}
       max-concurrency: ${THREAD_JDBC_LEVEL_MAX_CONCURRENCY:20}
       max-retry: ${THREAD_JDBC_LEVEL_MAX_RETRY:5}
-      timeout: ${THREAD_JDBC_TIMEOUT:120_000}
   table-level:
       enabled: false
       max-concurrency: 1
-      timeout: 120_000
 ---
 spring:
   main:
