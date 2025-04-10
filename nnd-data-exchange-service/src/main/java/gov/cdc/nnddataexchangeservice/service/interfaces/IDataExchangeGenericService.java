@@ -14,4 +14,6 @@ public interface IDataExchangeGenericService {
     String getTableMetaData(String tableName) throws DataExchangeException;
 
     List<Map<String, Object>> getAllTablesCount(String sourceDbName, String tableName, String timestamp, boolean nullTimestampAllow) throws DataExchangeException;
+
+    String getDataForDataRetrieval(String tableName, String param) throws DataExchangeException;
 }

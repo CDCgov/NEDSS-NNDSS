@@ -1,7 +1,6 @@
 package gov.cdc.nnddataexchangeservice.service;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
@@ -24,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.getCurrentTimeStamp;
@@ -103,6 +103,186 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             throw new DataExchangeException("Error executing query: " + e.getMessage());
         }
     }
+
+    public String getDataForDataRetrieval(String tableName, String param) throws DataExchangeException {
+        DataSyncConfig dataConfig = getConfigByTableName(tableName);
+        if (dataConfig.isPartOfDatasync()) return "[]";
+
+        List<Map<String, Object>> result = jdbcTemplateHelperForDataRetrieval(dataConfig.getQuery(), param);
+        List<String> metaColumns = parseMetaColumns(dataConfig.getMetaData());
+        JsonArray parentArray = buildJsonArrayFromResult(result, metaColumns);
+
+        // Special case: MidisInvestigation -> nested fetch
+        if (tableName.equalsIgnoreCase("MidisInvestigation")) {
+            attachNestedObsValues(parentArray);
+        }
+
+        return new GsonBuilder().setPrettyPrinting().create().toJson(parentArray);
+    }
+
+    private List<String> parseMetaColumns(String metaData) {
+        return Arrays.stream(metaData.split(","))
+                .map(String::trim)
+                .toList();
+    }
+
+    private JsonArray buildJsonArrayFromResult(List<Map<String, Object>> result, List<String> columns) {
+        JsonArray jsonArray = new JsonArray();
+        for (Map<String, Object> row : result) {
+            JsonObject jsonObject = new JsonObject();
+            for (String column : columns) {
+                Object value = row.get(column);
+                jsonObject.addProperty(column, value != null ? value.toString() : null);
+            }
+            jsonArray.add(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    private void attachNestedObsValues(JsonArray parentArray) throws DataExchangeException {
+        List<String> obsUids = new ArrayList<>();
+
+        for (JsonElement element : parentArray) {
+            JsonObject obj = element.getAsJsonObject();
+            if (obj.has("observationUid") && !obj.get("observationUid").getAsString().isEmpty()) {
+                obsUids.add(obj.get("observationUid").getAsString());
+            }
+        }
+
+        if (obsUids.isEmpty()) return;
+
+        String inClause = obsUids.stream()
+                .map(uid -> "'" + uid + "'")
+                .collect(Collectors.joining(","));
+
+        DataSyncConfig nestedConfig = getConfigByTableName("MidisInvestigation_ObsValueCoded");
+        List<String> nestedColumns = parseMetaColumns(nestedConfig.getMetaData());
+
+        String query = nestedConfig.getQuery().replaceAll(":param", "(" + inClause + ")");
+        List<Map<String, Object>> nestedResults = jdbcTemplateHelperForDataRetrieval(query, "");
+
+        JsonArray nestedArray = buildJsonArrayFromResult(nestedResults, nestedColumns);
+
+        // Attach children
+        for (JsonElement parentElement : parentArray) {
+            JsonObject parent = parentElement.getAsJsonObject();
+            String obsUid = parent.get("observationUid").getAsString();
+
+            JsonArray children = new JsonArray();
+            for (JsonElement child : nestedArray) {
+                JsonObject childObj = child.getAsJsonObject();
+                if (obsUid.equals(childObj.get("observation_uid").getAsString())) {
+                    children.add(childObj);
+                }
+            }
+            parent.add("Obs_coded_value", children);
+        }
+    }
+
+    public List<Map<String, Object>> jdbcTemplateHelperForDataRetrieval(String query, String param) {
+        if (!param.isEmpty()) {
+            query = query.replace(":param", param);
+        }
+        return odseJdbcTemplate.queryForList(query);
+    }
+
+
+
+
+//    public String getDataForDataRetrieval(String tableName, String param) throws DataExchangeException {
+//        DataSyncConfig dataConfig = getConfigByTableName(tableName);
+//        JsonArray jsonArray = new JsonArray();
+//        JsonArray jsonArrayNested = new JsonArray();
+//
+//        List<String> obsUid = new ArrayList<>();
+//
+//        if (!dataConfig.isPartOfDatasync()) {
+//            JsonObject dynamicObject = new JsonObject();
+//
+//            List<String> listMetaData = Arrays.stream(dataConfig.getMetaData().split(","))
+//                    .map(String::trim)
+//                    .toList();
+//
+//            for (String columnName : listMetaData) {
+//                dynamicObject.add(columnName, new JsonPrimitive("String"));
+//            }
+//            List<Map<String, Object>>  result  = jdbcTemplateHelperForDataRetrieval(dataConfig.getQuery(), param);
+//
+//
+//            for (Map<String, Object> row : result) {
+//                JsonObject jsonObject = new JsonObject();
+//                for (String columnName : listMetaData) {
+//                    Object value = row.get(columnName);
+//                    jsonObject.addProperty(columnName, value != null ? value.toString() : null);
+//                }
+//                if (tableName.equalsIgnoreCase("MidisInvestigation")) {
+//                    if (!jsonObject.get("observationUid").getAsString().isEmpty()) {
+//                        obsUid.add(jsonObject.get("observationUid").getAsString());
+//                    }
+//
+//                }
+//
+//
+////                jsonObject.add("obs_value_coded_list", jsonArrayNested);
+//                jsonArray.add(jsonObject);
+//            }
+//
+//
+//            if (tableName.equalsIgnoreCase("MidisInvestigation")) {
+//                StringBuilder inCondition = new StringBuilder();
+//                for(var uid : obsUid) {
+//                    inCondition.append(uid).append(",");
+//                }
+//                if (!inCondition.isEmpty()) {
+//                    inCondition.setLength(inCondition.length() - 1);
+//                }
+//
+//                DataSyncConfig dataConfigNested = getConfigByTableName("MidisInvestigation_ObsValueCoded");
+//                List<String> listMetaDataNested = Arrays.stream(dataConfigNested.getMetaData().split(","))
+//                        .map(String::trim)
+//                        .toList();
+//                List<Map<String, Object>> resultNested = jdbcTemplateHelperForDataRetrieval(dataConfigNested.getQuery(), "(" + inCondition.toString() + ")");
+//
+//                for (Map<String, Object> rowNested : resultNested) {
+//                    JsonObject jsonObjectNested = new JsonObject();
+//                    for (String columnName : listMetaDataNested) {
+//                        Object value = rowNested.get(columnName);
+//                        jsonObjectNested.addProperty(columnName, value != null ? value.toString() : null);
+//                    }
+//                    jsonArrayNested.add(jsonObjectNested);
+//                }
+//            }
+//        }
+//
+//        if (tableName.equalsIgnoreCase("MidisInvestigation"))  {
+//            for (JsonElement parentElement : jsonArray) {
+//                JsonObject parentObject = parentElement.getAsJsonObject();
+//                String observationUid = parentObject.get("observationUid").getAsString();
+//
+//                JsonArray children = new JsonArray();
+//                for (JsonElement childElement : jsonArrayNested) {
+//                    JsonObject childObject = childElement.getAsJsonObject();
+//                    if (observationUid.equals(childObject.get("observation_uid").getAsString())) {
+//                        children.add(childObject);
+//                    }
+//                }
+//
+//                parentObject.add("Obs_coded_value", children);
+//            }
+//        }
+//
+//        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//        String jsonString = gson.toJson(jsonArray);
+//        return jsonString;
+//    }
+//
+//    public List<Map<String, Object>> jdbcTemplateHelperForDataRetrieval(String query, String param) {
+//        if (!param.isEmpty()) {
+//            query = query.replaceAll(":param", param);
+//        }
+//        List<Map<String, Object>> data = odseJdbcTemplate.queryForList(query);
+//        return data;
+//    }
 
     public String getTableMetaData(String tableName) throws DataExchangeException {
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
