@@ -1,0 +1,14 @@
+PublicHealthCaseFact - no depend - TS
+Entity - no depend
+ACT - no depend
+Entity_id - depend on Entity
+Role - depend on Entity
+
+Organization - depend on Entity
+Organization_Name - depend on Org
+
+PHC - depend on ACT
+Act_relatationship - depend on ACT
+Particiation - depend on Role, Act, Entity
+Observation - depend on ACT
+OBS_value__ - denepend on Observation

@@ -34,4 +34,19 @@ public class ConstantValue {
             "D_INV_TREATMENT",
             "D_INV_VACCINATION"
     ));
+
+    public static final Set<String> SPECIAL_ODSE_TABLES = new HashSet<>(Arrays.asList(
+            "ENTITY",
+            "ACT"
+    ));
+
+    public static final Set<String> SPECIAL_ODSE_TABLES_FOR_REPROCESS = new HashSet<>(Arrays.asList(
+            "ENTITY_ID",
+            "ROLE",
+            "ORGANIZATION",
+            "PUBLIC_HEALTH_CASE",
+            "ACT_RELATIONSHIP",
+            "PARTICIPATION",
+            "OBSERVATION"
+    ));
 }

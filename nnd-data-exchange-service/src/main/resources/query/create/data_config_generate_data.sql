@@ -1433,7 +1433,9 @@ WHERE (OBS_MAIN.add_time :operator :timestamp OR OBS_MAIN.last_chg_time :operato
 SELECT ACT.*
 FROM ACT
 INNER JOIN ActResults
-ON ACT.act_uid = ActResults.act_uid;', NULL, 'SELECT COUNT(*) FROM (
+ON ACT.act_uid = ActResults.act_uid;',
+             NULL,
+             'SELECT COUNT(*) FROM (
 SELECT DISTINCT ACT.act_uid
 FROM ACT
 INNER JOIN OBSERVATION
