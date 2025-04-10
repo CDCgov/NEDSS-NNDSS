@@ -280,6 +280,7 @@ class DataExchangeGenericServiceTest {
         DataSyncConfig dataSyncConfig = new DataSyncConfig();
         dataSyncConfig.setSourceDb(DB_RDB);
         dataSyncConfig.setQueryCount("SELECT COUNT(*) FROM NRT_OBSERVATION WHERE last_chg_time :operation :timestamp");
+        dataSyncConfig.setPartOfDatasync(true);
 
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(dataSyncConfig));
 
@@ -300,6 +301,7 @@ class DataExchangeGenericServiceTest {
         DataSyncConfig dataSyncConfig = new DataSyncConfig();
         dataSyncConfig.setSourceDb(DB_RDB_MODERN);
         dataSyncConfig.setQueryCount("SELECT COUNT(*) FROM NRT_OBSERVATION WHERE last_chg_time :operation :timestamp");
+        dataSyncConfig.setPartOfDatasync(true);
 
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(dataSyncConfig));
         when(srteJdbcTemplate.queryForObject(query, Integer.class)).thenReturn(150);
@@ -322,6 +324,7 @@ class DataExchangeGenericServiceTest {
         DataSyncConfig dataSyncConfig = new DataSyncConfig();
         dataSyncConfig.setSourceDb(DB_SRTE);
         dataSyncConfig.setQueryCount("SELECT COUNT(*) FROM NRT_OBSERVATION WHERE last_chg_time :operation :timestamp");
+        dataSyncConfig.setPartOfDatasync(true);
 
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(dataSyncConfig));
         when(srteJdbcTemplate.queryForObject(query, Integer.class)).thenReturn(150);
@@ -356,7 +359,7 @@ class DataExchangeGenericServiceTest {
         DataSyncConfig dataSyncConfig = new DataSyncConfig();
         dataSyncConfig.setSourceDb("UNSUPPORTED_DB");
         dataSyncConfig.setQueryCount("SELECT COUNT(*) FROM NRT_OBSERVATION WHERE last_chg_time :operation :timestamp");
-
+        dataSyncConfig.setPartOfDatasync(true);
         when(dataSyncConfigRepository.findById(tableName)).thenReturn(Optional.of(dataSyncConfig));
 
         // Act & Assert
