@@ -1,7 +1,6 @@
 package gov.cdc.nnddataexchangeservice.service;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
@@ -17,10 +16,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.getCurrentTimeStamp;
@@ -99,6 +100,39 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         } catch (Exception e) {
             throw new DataExchangeException("Error executing query: " + e.getMessage());
         }
+    }
+
+    public String getDataForDataRetrieval(String tableName, String param) throws DataExchangeException {
+        DataSyncConfig dataConfig = getConfigByTableName(tableName);
+        if (!dataConfig.isPartOfDatasync()) {
+            JsonObject dynamicObject = new JsonObject();
+
+            List<String> listMetaData = Arrays.stream(dataConfig.getMetaData().split(","))
+                    .map(String::trim)
+                    .toList();
+
+            for (String columnName : listMetaData) {
+                dynamicObject.add(columnName, new JsonPrimitive("String"));
+            }
+            List<Map<String, Object>>  result  = jdbcTemplateHelperForDataRetrieval("QUERY");
+
+            JsonArray jsonArray = new JsonArray();
+
+            for (Map<String, Object> row : result) {
+                JsonObject jsonObject = new JsonObject();
+                for (String columnName : listMetaData) {
+                    Object value = row.get(columnName);
+                    jsonObject.addProperty(columnName, value != null ? value.toString() : null);
+                }
+                jsonArray.add(jsonObject);
+            }
+        }
+        return "";
+    }
+
+    public List<Map<String, Object>> jdbcTemplateHelperForDataRetrieval(String query) {
+        List<Map<String, Object>> data = jdbcTemplate.queryForList(query);
+        return data;
     }
 
     public String getDataForDataSync(String tableName, String param, String startRow, String endRow,

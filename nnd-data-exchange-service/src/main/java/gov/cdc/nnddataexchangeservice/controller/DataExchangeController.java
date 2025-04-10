@@ -291,4 +291,13 @@ public class DataExchangeController {
         return new ResponseEntity<>(val, HttpStatus.OK);
     }
 
+
+    @GetMapping(path = "/api/datasync/special/{tableName}")
+    public ResponseEntity<String> dataSyncSpecialODSETable(@PathVariable String tableName,
+                                                        @RequestParam(name = "timestamp", required = false) String timestamp
+    ) throws DataExchangeException {
+        var res = dataExchangeGenericService.getDataForDataRetrieval(tableName, "");
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
 }
