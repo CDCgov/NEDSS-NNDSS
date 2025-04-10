@@ -582,7 +582,7 @@ IF
              'WITH ObservationResults AS (
 SELECT DISTINCT OBS_MAIN.observation_uid
 FROM OBSERVATION as OBS_MAIN JOIN Participation p ON OBS_MAIN.observation_uid = p.act_uid AND p.type_cd = ''AUT'' JOIN Act_relationship ar ON OBS_MAIN.observation_uid = ar.target_act_uid AND ar.type_cd = ''COMP'' JOIN Observation o1 ON ar.source_act_uid = o1.observation_uid AND o1.obs_domain_cd_st_1 = ''Result''
-WHERE (OBS_MAIN.add_time :operator :timestamp OR OBS_MAIN.last_chg_time :operator :timestamp) AND obs_domain_cd_st_1 = ''Order'' AND record_status_cd = ''UNPROCESSED'' AND ctrl_cd_display_form = ''LabReport'' AND jurisdiction_cd is NOT NULL AND prog_area_cd is NOT NULL
+WHERE (OBS_MAIN.add_time :operator :timestamp OR OBS_MAIN.last_chg_time :operator :timestamp) AND OBS_MAIN.obs_domain_cd_st_1 = ''Order'' AND OBS_MAIN.record_status_cd = ''UNPROCESSED'' AND OBS_MAIN.ctrl_cd_display_form = ''LabReport'' AND OBS_MAIN.jurisdiction_cd is NOT NULL AND OBS_MAIN.prog_area_cd is NOT NULL
 )
 SELECT OBSERVATION.*
 FROM OBSERVATION
@@ -592,7 +592,7 @@ ON OBSERVATION.observation_uid = ObservationResults.observation_uid;',
              'SELECT COUNT(*) FROM (
 SELECT DISTINCT OBS_MAIN.observation_uid
 FROM OBSERVATION as OBS_MAIN JOIN Participation p ON OBS_MAIN.observation_uid = p.act_uid AND p.type_cd = ''AUT'' JOIN Act_relationship ar ON OBS_MAIN.observation_uid = ar.target_act_uid AND ar.type_cd = ''COMP'' JOIN Observation o1 ON ar.source_act_uid = o1.observation_uid AND o1.obs_domain_cd_st_1 = ''Result''
-WHERE (OBS_MAIN.add_time :operator :timestamp OR OBS_MAIN.last_chg_time :operator :timestamp) AND obs_domain_cd_st_1 = ''Order'' AND record_status_cd = ''UNPROCESSED'' AND ctrl_cd_display_form = ''LabReport'' AND jurisdiction_cd is NOT NULL AND prog_area_cd is NOT NULL
+WHERE (OBS_MAIN.add_time :operator :timestamp OR OBS_MAIN.last_chg_time :operator :timestamp) AND OBS_MAIN.obs_domain_cd_st_1 = ''Order'' AND OBS_MAIN.record_status_cd = ''UNPROCESSED'' AND OBS_MAIN.ctrl_cd_display_form = ''LabReport'' AND OBS_MAIN.jurisdiction_cd is NOT NULL AND OBS_MAIN.prog_area_cd is NOT NULL
 ) AS OBSERVATION_COUNT;
 ',
              'WITH ObservationResults AS (
@@ -602,7 +602,7 @@ SELECT DISTINCT OBS_MAIN.observation_uid,
        ELSE OBS_MAIN.last_chg_time
    END) AS latest_timestamp
 FROM OBSERVATION as OBS_MAIN  JOIN Participation p ON OBS_MAIN.observation_uid = p.act_uid AND p.type_cd = ''AUT'' JOIN Act_relationship ar ON OBS_MAIN.observation_uid = ar.target_act_uid AND ar.type_cd = ''COMP'' JOIN Observation o1 ON ar.source_act_uid = o1.observation_uid AND o1.obs_domain_cd_st_1 = ''Result''
-WHERE (OBS_MAIN.add_time :operator :timestamp OR OBS_MAIN.last_chg_time :operator :timestamp) AND obs_domain_cd_st_1 = ''Order'' AND record_status_cd = ''UNPROCESSED'' AND ctrl_cd_display_form = ''LabReport'' AND jurisdiction_cd is NOT NULL AND prog_area_cd is NOT NULL
+WHERE (OBS_MAIN.add_time :operator :timestamp OR OBS_MAIN.last_chg_time :operator :timestamp) AND OBS_MAIN.obs_domain_cd_st_1 = ''Order'' AND OBS_MAIN.record_status_cd = ''UNPROCESSED'' AND OBS_MAIN.ctrl_cd_display_form = ''LabReport'' AND OBS_MAIN.jurisdiction_cd is NOT NULL AND OBS_MAIN.prog_area_cd is NOT NULL
 GROUP BY OBS_MAIN.observation_uid
 ),
 NumberedResults AS (
