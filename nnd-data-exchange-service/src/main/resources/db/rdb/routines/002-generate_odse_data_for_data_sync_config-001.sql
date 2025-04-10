@@ -57,7 +57,7 @@ VALUES
     'MidisInvestigation_ObsValueCoded',
     'NBS_ODSE',
     'select * from OBS_VALUE_CODED
-    where observation_uid IN :param;',
+    where observation_uid IN :operator;',
     '0',
     'observation_uid, code, code_system_cd, code_system_desc_txt, code_version, display_name, original_txt, alt_cd, alt_cd_desc_txt, alt_cd_system_cd, alt_cd_system_desc_txt, code_derived_ind','','');
 END;
@@ -88,7 +88,7 @@ VALUES
         JOIN dbo.PublicHealthCaseFact fact on per.Person_Uid = fact.Person_Uid
         WHERE
         phc.Case_Class_Cd IN (''P'',''C'',''U'')
-        and phc.Add_Time > '':param''
+        and phc.Add_Time > '':operator''
         and fact.FirstNotificationdate is null
         and phc.Jurisdiction_Cd != ''''
         and part.Type_Cd = ''SubjOfPHC'';', '0', 'YearNumber, WeekNumber, ConditionName, PatientId, JurisdictionName, PublicHealthCaseAddTime, ProgramAreaCode, InvestigationId, AddedDate','',''

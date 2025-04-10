@@ -61,10 +61,12 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
     public Integer getTotalRecord(String tableName, boolean initialLoad, String param, boolean useKeyPagination) throws DataExchangeException {
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
+        if (dataConfig.isPartOfDatasync()) {
+            String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, param, useKeyPagination);
 
-        String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, param, useKeyPagination);
-
-        return executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+            return executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+        }
+        return -1;
     }
 
     private DataSyncConfig getConfigByTableName(String tableName) throws DataExchangeException {
@@ -158,7 +160,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
         DataSyncConfig nestedConfig = getConfigByTableName("MidisInvestigation_ObsValueCoded");
         List<String> nestedColumns = parseMetaColumns(nestedConfig.getMetaData());
 
-        String query = nestedConfig.getQuery().replaceAll(":param", "(" + inClause + ")");
+        String query = nestedConfig.getQuery().replaceAll(OPERATION, "(" + inClause + ")");
         List<Map<String, Object>> nestedResults = jdbcTemplateHelperForDataRetrieval(query, "");
 
         JsonArray nestedArray = buildJsonArrayFromResult(nestedResults, nestedColumns);
@@ -181,108 +183,12 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
     public List<Map<String, Object>> jdbcTemplateHelperForDataRetrieval(String query, String param) {
         if (!param.isEmpty()) {
-            query = query.replace(":param", param);
+            query = query.replace(OPERATION, param);
         }
         return odseJdbcTemplate.queryForList(query);
     }
 
 
-
-
-//    public String getDataForDataRetrieval(String tableName, String param) throws DataExchangeException {
-//        DataSyncConfig dataConfig = getConfigByTableName(tableName);
-//        JsonArray jsonArray = new JsonArray();
-//        JsonArray jsonArrayNested = new JsonArray();
-//
-//        List<String> obsUid = new ArrayList<>();
-//
-//        if (!dataConfig.isPartOfDatasync()) {
-//            JsonObject dynamicObject = new JsonObject();
-//
-//            List<String> listMetaData = Arrays.stream(dataConfig.getMetaData().split(","))
-//                    .map(String::trim)
-//                    .toList();
-//
-//            for (String columnName : listMetaData) {
-//                dynamicObject.add(columnName, new JsonPrimitive("String"));
-//            }
-//            List<Map<String, Object>>  result  = jdbcTemplateHelperForDataRetrieval(dataConfig.getQuery(), param);
-//
-//
-//            for (Map<String, Object> row : result) {
-//                JsonObject jsonObject = new JsonObject();
-//                for (String columnName : listMetaData) {
-//                    Object value = row.get(columnName);
-//                    jsonObject.addProperty(columnName, value != null ? value.toString() : null);
-//                }
-//                if (tableName.equalsIgnoreCase("MidisInvestigation")) {
-//                    if (!jsonObject.get("observationUid").getAsString().isEmpty()) {
-//                        obsUid.add(jsonObject.get("observationUid").getAsString());
-//                    }
-//
-//                }
-//
-//
-////                jsonObject.add("obs_value_coded_list", jsonArrayNested);
-//                jsonArray.add(jsonObject);
-//            }
-//
-//
-//            if (tableName.equalsIgnoreCase("MidisInvestigation")) {
-//                StringBuilder inCondition = new StringBuilder();
-//                for(var uid : obsUid) {
-//                    inCondition.append(uid).append(",");
-//                }
-//                if (!inCondition.isEmpty()) {
-//                    inCondition.setLength(inCondition.length() - 1);
-//                }
-//
-//                DataSyncConfig dataConfigNested = getConfigByTableName("MidisInvestigation_ObsValueCoded");
-//                List<String> listMetaDataNested = Arrays.stream(dataConfigNested.getMetaData().split(","))
-//                        .map(String::trim)
-//                        .toList();
-//                List<Map<String, Object>> resultNested = jdbcTemplateHelperForDataRetrieval(dataConfigNested.getQuery(), "(" + inCondition.toString() + ")");
-//
-//                for (Map<String, Object> rowNested : resultNested) {
-//                    JsonObject jsonObjectNested = new JsonObject();
-//                    for (String columnName : listMetaDataNested) {
-//                        Object value = rowNested.get(columnName);
-//                        jsonObjectNested.addProperty(columnName, value != null ? value.toString() : null);
-//                    }
-//                    jsonArrayNested.add(jsonObjectNested);
-//                }
-//            }
-//        }
-//
-//        if (tableName.equalsIgnoreCase("MidisInvestigation"))  {
-//            for (JsonElement parentElement : jsonArray) {
-//                JsonObject parentObject = parentElement.getAsJsonObject();
-//                String observationUid = parentObject.get("observationUid").getAsString();
-//
-//                JsonArray children = new JsonArray();
-//                for (JsonElement childElement : jsonArrayNested) {
-//                    JsonObject childObject = childElement.getAsJsonObject();
-//                    if (observationUid.equals(childObject.get("observation_uid").getAsString())) {
-//                        children.add(childObject);
-//                    }
-//                }
-//
-//                parentObject.add("Obs_coded_value", children);
-//            }
-//        }
-//
-//        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-//        String jsonString = gson.toJson(jsonArray);
-//        return jsonString;
-//    }
-//
-//    public List<Map<String, Object>> jdbcTemplateHelperForDataRetrieval(String query, String param) {
-//        if (!param.isEmpty()) {
-//            query = query.replaceAll(":param", param);
-//        }
-//        List<Map<String, Object>> data = odseJdbcTemplate.queryForList(query);
-//        return data;
-//    }
 
     public String getTableMetaData(String tableName) throws DataExchangeException {
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
@@ -328,35 +234,42 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
-        DataSyncLog dataLog = new DataSyncLog();
-        dataLog.setTableName(tableName);
-        dataLog.setStatusSync("INPROGRESS");
-        dataLog.setStartTime(getCurrentTimeStamp(tz));
+        if (dataConfig.isPartOfDatasync()) {
+            DataSyncLog dataLog = new DataSyncLog();
+            dataLog.setTableName(tableName);
+            dataLog.setStatusSync("INPROGRESS");
+            dataLog.setStartTime(getCurrentTimeStamp(tz));
 
-        var log = dataSyncLogRepository.save(dataLog);
-        AtomicInteger dataCountHolder = new AtomicInteger();
+            var log = dataSyncLogRepository.save(dataLog);
+            AtomicInteger dataCountHolder = new AtomicInteger();
 
-        try {
-            Callable<String> callable = () -> {
-                String baseQuery = preparePaginationQuery(dataConfig, param, startRow, endRow, initialLoad, allowNull, noPagination, keyPagination);
+            try {
+                Callable<String> callable = () -> {
+                    String baseQuery = preparePaginationQuery(dataConfig, param, startRow, endRow, initialLoad, allowNull, noPagination, keyPagination);
 
-                List<Map<String, Object>> data = executeQueryForDataAsync(baseQuery, dataConfig.getSourceDb());
+                    List<Map<String, Object>> data = executeQueryForDataAsync(baseQuery, dataConfig.getSourceDb());
 
-                dataCountHolder.set(data.size());
+                    dataCountHolder.set(data.size());
 
 
-                return DataSimplification.dataToString(data);
-            };
+                    return DataSimplification.dataToString(data);
+                };
 
-            return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            log.setStatusSync("ERROR");
-            log.setEndTime(getCurrentTimeStamp(tz));
-            log.setErrorDesc(exception.getMessage());
-            dataSyncLogRepository.save(log);
-            throw new DataExchangeException(exception.getMessage());
+                return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                log.setStatusSync("ERROR");
+                log.setEndTime(getCurrentTimeStamp(tz));
+                log.setErrorDesc(exception.getMessage());
+                dataSyncLogRepository.save(log);
+                throw new DataExchangeException(exception.getMessage());
+            }
+
         }
+        else {
+            return "Invalid Table";
+        }
+
 
     }
 
@@ -505,7 +418,9 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 "D_INV_TREATMENT", "D_INV_VACCINATION"
         );
         for (DataSyncConfig dataConfig : dataSyncConfigs) {
-            tableCountsList.add(executeCountQuery(dataConfig, timestamp, invTableNames, nullTimestampAllow));
+            if (dataConfig.isPartOfDatasync()) {
+                tableCountsList.add(executeCountQuery(dataConfig, timestamp, invTableNames, nullTimestampAllow));
+            }
         }
         tableCountsList.sort(Comparator.comparing(map -> (String) map.get("Table Name")));
         return tableCountsList;

@@ -202,12 +202,7 @@ VALUES('CODE_TO_CONDITION', 'SRTE',1, 1, 1);
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('JURISDICTION_CODE', 'SRTE',1, 'code');
-INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, key_list)
-VALUES('EDX_ACTIVITY_LOG', 'ODSE_EDX',1, 'edx_activity_log_uid');
-INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order, key_list)
-VALUES('EDX_ACTIVITY_DETAIL_LOG', 'ODSE_EDX',2, 'edx_activity_detail_log_uid');
+
 
 
 INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
@@ -227,17 +222,3 @@ INSERT INTO poll_data_sync_config (table_name, source_db, table_order, recreate_
 VALUES ('COVID_LAB_CELR_DATAMART', 'COVID_DATAMART', 1, 1, 1);
 
 
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('ENTITY', 'ODSE_OBS', 1, 'entity_uid');
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('ROLE', 'ODSE_OBS', 2, 'subject_entity_uid, role_seq, cd');
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('PERSON', 'ODSE_OBS', 3, 'person_uid');
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('ACT', 'ODSE_OBS', 4, 'act_uid');
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('OBSERVATION', 'ODSE_OBS', 5, 'observation_uid');
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('PARTICIPATION', 'ODSE_OBS', 6, 'subject_entity_uid, act_uid, type_cd');
-INSERT INTO poll_data_sync_config (table_name, source_db, table_order, key_list)
-VALUES ('ACT_RELATIONSHIP', 'ODSE_OBS', 7, 'source_act_uid,target_act_uid,type_cd');
