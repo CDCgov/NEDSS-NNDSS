@@ -863,6 +863,12 @@ public class JdbcTemplateUtil {
                     isLengthRequired(column.getDataType())) {
                 query.append("(").append(column.getCharacterMaximumLength()).append(")");
             }
+            else if (isLengthRequired(column.getDataType()) &&
+                    column.getCharacterMaximumLength() == null)
+            {
+                query.append("(MAX)");
+            }
+
 
             // Add NULL / NOT NULL constraint
             query.append(column.getIsNullable().equalsIgnoreCase("NO") ? " NOT NULL" : " NULL");
