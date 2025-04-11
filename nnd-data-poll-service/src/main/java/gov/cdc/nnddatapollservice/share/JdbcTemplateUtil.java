@@ -157,11 +157,8 @@ public class JdbcTemplateUtil {
                 .toArray();
 
 
-        try {
-            rdbJdbcTemplate.update(sql, values);
-        } catch (Exception e) {
-            throw new SQLException("Single record upsert failed", e);
-        }
+        rdbJdbcTemplate.update(sql, values);
+
     }
 
     /**
@@ -634,10 +631,10 @@ public class JdbcTemplateUtil {
                 ++errorCount;
                 anyError= true;
                 if (anyErrorException == null) {
-                    errors.add(ei.getMessage());
+                    errors.add( getStackTraceAsString(ei));
                 }
                 if (anyErrorException != null && !anyErrorException.getClass().equals(ei.getClass())) {
-                    errors.add(ei.getMessage());
+                    errors.add( getStackTraceAsString(ei));
                 }
                 anyErrorException = ei;
 //
@@ -866,6 +863,12 @@ public class JdbcTemplateUtil {
                     isLengthRequired(column.getDataType())) {
                 query.append("(").append(column.getCharacterMaximumLength()).append(")");
             }
+            else if (isLengthRequired(column.getDataType()) &&
+                    column.getCharacterMaximumLength() == null)
+            {
+                query.append("(MAX)");
+            }
+
 
             // Add NULL / NOT NULL constraint
             query.append(column.getIsNullable().equalsIgnoreCase("NO") ? " NOT NULL" : " NULL");

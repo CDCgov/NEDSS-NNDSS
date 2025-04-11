@@ -47,7 +47,10 @@ CREATE TABLE data_sync_log
     last_executed_run_time     NVARCHAR(255) NULL DEFAULT NULL,
     last_executed_result_count INTEGER NULL DEFAULT NULL,
     log_start_row              NVARCHAR(255) NULL,
-    log_end_row                NVARCHAR(255) NULL
+    log_end_row                NVARCHAR(255) NULL,
+    log_end_row                NVARCHAR(255) NULL,
+    metaData                    NVARCHAR(255) NULL,
+    datasync_applied            BIT DEFAULT 1
 
     CONSTRAINT FK_data_sync_log_table
         FOREIGN KEY (table_name)

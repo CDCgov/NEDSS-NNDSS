@@ -139,7 +139,7 @@ class DataExchangeServiceTest {
         config.setTableName("D_INV_ADMINISTRATIVE");
         config.setSourceDb("RDB");
         config.setQueryCount("SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE WHERE timestamp > ?");
-
+        config.setPartOfDatasync(true);
         when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(Collections.singletonList(config));
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(10);
 
@@ -158,6 +158,7 @@ class DataExchangeServiceTest {
         config.setTableName("D_INV_ADMINISTRATIVE");
         config.setSourceDb("RDB");
         config.setQueryCount("SELECT COUNT(*) FROM D_INV_ADMINISTRATIVE WHERE timestamp > ?");
+        config.setPartOfDatasync(true);
 
         when(dataSyncConfigRepository.findBySourceDb(sourceDbName)).thenReturn(Collections.singletonList(config));
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(5);
@@ -178,7 +179,7 @@ class DataExchangeServiceTest {
         config.setTableName(tableName);
         config.setSourceDb("RDB");
         config.setQueryCount("SELECT COUNT(*) FROM " + tableName + " WHERE timestamp > ?");
-
+        config.setPartOfDatasync(true);
         when(dataSyncConfigRepository.findByTableNameAndSourceDb(tableName, sourceDbName)).thenReturn(Collections.singletonList(config));
         when(jdbcTemplate.queryForObject(anyString(), eq(Integer.class))).thenReturn(7);
 

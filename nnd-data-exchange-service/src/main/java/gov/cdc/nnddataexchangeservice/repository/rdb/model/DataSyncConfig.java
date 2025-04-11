@@ -40,6 +40,12 @@ public class DataSyncConfig {
     @Column(name = "created_at")
     private Timestamp createdAt;
 
+    @Column(name = "meta_data")
+    private String metaData;
+
+    @Column(name = "datasync_applied")
+    private boolean partOfDatasync;
+
 
 
 
