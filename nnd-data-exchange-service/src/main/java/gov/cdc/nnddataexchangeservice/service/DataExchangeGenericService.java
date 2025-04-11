@@ -182,7 +182,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
     }
 
     public List<Map<String, Object>> jdbcTemplateHelperForDataRetrieval(String query, String param) {
-        if (!param.isEmpty()) {
+        if (param != null && !param.isEmpty()) {
             query = query.replace(OPERATION, param);
         }
         return odseJdbcTemplate.queryForList(query);
