@@ -94,3 +94,47 @@ VALUES
         and part.Type_Cd = ''SubjOfPHC'';', '0', 'YearNumber, WeekNumber, ConditionName, PatientId, JurisdictionName, PublicHealthCaseAddTime, ProgramAreaCode, InvestigationId, AddedDate','',''
     )
 END;
+
+
+
+IF
+NOT EXISTS (SELECT 1 FROM [dbo].[data_sync_config] WHERE table_name = 'MidisQueue')
+BEGIN
+INSERT INTO [RDB].[dbo].[data_sync_config]
+(table_name, source_db, query, datasync_applied, meta_data, query_count, query_with_pagination)
+VALUES
+    (
+    'MidisQueue',
+    'NBS_ODSE',
+    'SELECT
+    o.jurisdiction_cd AS JurisDictionName,
+    o.cd AS OrderedTestCode,
+    o.cd_desc_txt AS OrderedTest,
+	o1.cd as SourceOrderedTestCode,
+	o1.cd_desc_txt as SourceOrderedTest,
+	ISNULL(o.rpt_to_state_time, CAST(''1900-01-01 00:00:00.000'' AS DATETIME)) AS ReportToStateTime,
+    o.local_id AS ObsNumber,
+    o1.observation_uid AS ObservationUid,
+	vc.display_name as Result,
+	vc.code as Result_Code
+FROM Observation o
+JOIN Participation p       ON o.observation_uid = p.act_uid
+JOIN Act_relationship ar   ON o.observation_uid = ar.target_act_uid
+JOIN Observation o1        ON ar.source_act_uid = o1.observation_uid
+LEFT JOIN OBS_VALUE_CODED vc    ON vc.observation_uid = o1.observation_uid
+WHERE o.record_status_cd     = ''UNPROCESSED''
+  AND o.obs_domain_cd_st_1   = ''Order''
+  AND o.ctrl_cd_display_form = ''LabReport''
+  AND o.jurisdiction_cd IS NOT NULL
+  AND o.prog_area_cd IS NOT NULL
+  AND p.type_cd              = ''AUT''
+  AND ar.type_cd             = ''COMP''
+  AND o1.obs_domain_cd_st_1  = ''Result''
+AND vc.observation_uid IS NOT NULL
+ORDER BY o.local_id;',
+    '0',
+    'JurisDictionName, OrderedTestCode, OrderedTest, SourceOrderedTestCode, SourceOrderedTest, ReportToStateTime, ObsNumber, ObservationUid, Result, Result_Code',
+    '',
+    ''
+    )
+END;
