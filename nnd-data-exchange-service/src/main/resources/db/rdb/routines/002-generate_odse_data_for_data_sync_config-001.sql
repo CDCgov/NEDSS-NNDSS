@@ -65,7 +65,7 @@ VALUES
     'MidisQueue',
     'NBS_ODSE',
     'SELECT
-    o.jurisdiction_cd AS JurisDictionName,
+    o.jurisdiction_cd AS JurisdictionName,
     o.cd AS OrderedTestCode,
     o.cd_desc_txt AS OrderedTest,
 	o1.cd as SourceOrderedTestCode,
@@ -88,9 +88,9 @@ WHERE o.record_status_cd     = ''UNPROCESSED''
   AND p.type_cd              = ''AUT''
   AND ar.type_cd             = ''COMP''
   AND o1.obs_domain_cd_st_1  = ''Result''
-ORDER BY o.local_id;',
+ORDER BY SourceOrderedTest;',
     '0',
-    'JurisDictionName, OrderedTestCode, OrderedTest, SourceOrderedTestCode, SourceOrderedTest, ReportToStateTime, ObsNumber, ObservationUid, Result, Result_Code',
+    'JurisdictionName, OrderedTestCode, OrderedTest, SourceOrderedTestCode, SourceOrderedTest, ReportToStateTime, ObsNumber, ObservationUid, Result, Result_Code',
     '',
     ''
     )
