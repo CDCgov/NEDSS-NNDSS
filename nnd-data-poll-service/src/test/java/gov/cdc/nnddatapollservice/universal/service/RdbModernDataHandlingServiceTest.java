@@ -85,7 +85,6 @@ class RdbModernDataHandlingServiceTest {
 
         String tableName = "exampleTable";
         universalDataHandlingService.storeJsonInLocalFolder= true;
-        universalDataHandlingService.edxFullSync = true;
 
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName(tableName);
@@ -106,7 +105,6 @@ class RdbModernDataHandlingServiceTest {
 
         String tableName = "exampleTable";
         universalDataHandlingService.storeJsonInLocalFolder= true;
-        universalDataHandlingService.odseFullSync = true;
 
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName(tableName);
@@ -127,7 +125,6 @@ class RdbModernDataHandlingServiceTest {
 
         String tableName = "exampleTable";
         universalDataHandlingService.storeJsonInLocalFolder= true;
-        universalDataHandlingService.odseFullSync = false;
 
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName(tableName);
@@ -148,7 +145,6 @@ class RdbModernDataHandlingServiceTest {
 
         String tableName = "exampleTable";
         universalDataHandlingService.storeJsonInLocalFolder= true;
-        universalDataHandlingService.edxFullSync = false;
 
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName(tableName);
@@ -169,7 +165,6 @@ class RdbModernDataHandlingServiceTest {
 
         String tableName = "exampleTable";
         universalDataHandlingService.storeJsonInLocalFolder= true;
-        universalDataHandlingService.edxFullSync = true;
 
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName(tableName);
@@ -190,7 +185,6 @@ class RdbModernDataHandlingServiceTest {
         // Arrange
         String tableName = "exampleTable";
         universalDataHandlingService.storeJsonInLocalFolder = true;
-        universalDataHandlingService.edxFullSync = true; // triggers first part of the condition
 
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName(tableName);
@@ -211,7 +205,6 @@ class RdbModernDataHandlingServiceTest {
         // Arrange
         String tableName = "exampleTable";
         universalDataHandlingService.storeJsonInLocalFolder = true;
-        universalDataHandlingService.odseFullSync = false; // triggers first part of the condition
 
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName(tableName);
@@ -232,7 +225,6 @@ class RdbModernDataHandlingServiceTest {
         // Arrange
         String tableName = "exampleTable";
         universalDataHandlingService.storeJsonInLocalFolder = true;
-        universalDataHandlingService.odseFullSync = true; // triggers first part of the condition
 
         PollDataSyncConfig config = new PollDataSyncConfig();
         config.setTableName(tableName);
