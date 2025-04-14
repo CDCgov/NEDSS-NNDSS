@@ -19,7 +19,7 @@ ALTER TABLE poll_data_sync_config
     ADD is_sync_enabled INT DEFAULT 0;
 
 UPDATE poll_data_sync_config
-SET is_sync_enabled = 0;
+SET is_sync_enabled = 1;
 
 
 IF EXISTS (

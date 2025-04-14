@@ -2,7 +2,7 @@
 // connection reset by peer issue
 plugins {
     id 'java'
-    id 'org.springframework.boot' version "3.4.3"
+    id 'org.springframework.boot' version '3.4.4'
     id 'io.spring.dependency-management' version "1.1.6"
     id 'com.github.johnrengelman.shadow' version "7.1.2"
 }
@@ -43,7 +43,9 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
 
     implementation("com.google.code.gson:gson:2.10.1")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server:3.4.3")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation 'org.springframework.security:spring-security-config'
+    implementation 'org.springframework.security:spring-security-core'
     implementation 'com.microsoft.sqlserver:mssql-jdbc:12.8.1.jre11'
     implementation 'com.zaxxer:HikariCP:6.2.1'
     implementation 'org.liquibase:liquibase-core:4.31.1'
@@ -52,7 +54,7 @@ dependencies {
     runtimeOnly 'com.nimbusds:oauth2-oidc-sdk:11.8'
 
 
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
     implementation("org.apache.httpcomponents.core5:httpcore5:5.2.5")
 
     runtimeOnly("com.nimbusds:oauth2-oidc-sdk:11.8")

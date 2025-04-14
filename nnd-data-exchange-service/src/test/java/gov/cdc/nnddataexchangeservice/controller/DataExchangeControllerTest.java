@@ -13,14 +13,16 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
 import java.io.IOException;
-import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.when;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.*;
 import static org.mockito.Mockito.*;
 
 class DataExchangeControllerTest {
@@ -33,6 +35,7 @@ class DataExchangeControllerTest {
 
     @InjectMocks
     private DataExchangeController dataExchangeController;
+
 
     private HttpServletRequest request;
 
@@ -164,6 +167,7 @@ class DataExchangeControllerTest {
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
     }
+
 
     @Test
     void testDataSyncTotalRecords_whenVersionIsMissing_shouldReturnErrorResponse()  {

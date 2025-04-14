@@ -1,5 +1,6 @@
 FROM amazoncorretto:21 as builder
-
+# try patching system for security fixes
+RUN yum update -y && yum clean all
 
 #Copy project config
 COPY gradle /usr/src/nnddataexchange/gradle
@@ -18,6 +19,8 @@ WORKDIR /usr/src/nnd
 RUN ./gradlew :nnd-data-exchange-service:buildNeeded -x test --no-daemon
 
 FROM amazoncorretto:21
+# try patching system for security fixes
+RUN yum update -y && yum clean all
 
 COPY --from=builder /usr/src/nnd/nnd-data-exchange-service/build/libs/nnd-data-exchange-service*.jar nnd-data-exchange-service.jar
 
