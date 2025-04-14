@@ -1,7 +1,6 @@
 package gov.cdc.nnddataexchangeservice.service;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import gov.cdc.nnddataexchangeservice.configuration.TimestampAdapter;
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.repository.rdb.DataSyncConfigRepository;
@@ -24,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static gov.cdc.nnddataexchangeservice.constant.DataSyncConstant.*;
 import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.getCurrentTimeStamp;
@@ -61,10 +61,12 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
     public Integer getTotalRecord(String tableName, boolean initialLoad, String param, boolean useKeyPagination) throws DataExchangeException {
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
+        if (dataConfig.isPartOfDatasync()) {
+            String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, param, useKeyPagination);
 
-        String query = prepareQuery(dataConfig.getQueryCount(), initialLoad, param, useKeyPagination);
-
-        return executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+            return executeQueryForTotalRecords(query, dataConfig.getSourceDb());
+        }
+        return -1;
     }
 
     private DataSyncConfig getConfigByTableName(String tableName) throws DataExchangeException {
@@ -103,6 +105,90 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             throw new DataExchangeException("Error executing query: " + e.getMessage());
         }
     }
+
+    public String getDataForDataRetrieval(String tableName, String param) throws DataExchangeException {
+        DataSyncConfig dataConfig = getConfigByTableName(tableName);
+        if (dataConfig.isPartOfDatasync()) return "[]";
+
+        List<Map<String, Object>> result = jdbcTemplateHelperForDataRetrieval(dataConfig.getQuery(), param);
+        List<String> metaColumns = parseMetaColumns(dataConfig.getMetaData());
+        JsonArray parentArray = buildJsonArrayFromResult(result, metaColumns);
+
+        // Special case: MidisInvestigation -> nested fetch
+        if (tableName.equalsIgnoreCase("MidisInvestigation")) {
+            attachNestedObsValues(parentArray);
+        }
+
+        return new GsonBuilder().setPrettyPrinting().create().toJson(parentArray);
+    }
+
+    private List<String> parseMetaColumns(String metaData) {
+        return Arrays.stream(metaData.split(","))
+                .map(String::trim)
+                .toList();
+    }
+
+    private JsonArray buildJsonArrayFromResult(List<Map<String, Object>> result, List<String> columns) {
+        JsonArray jsonArray = new JsonArray();
+        for (Map<String, Object> row : result) {
+            JsonObject jsonObject = new JsonObject();
+            for (String column : columns) {
+                Object value = row.get(column);
+                jsonObject.addProperty(column, value != null ? value.toString() : null);
+            }
+            jsonArray.add(jsonObject);
+        }
+        return jsonArray;
+    }
+
+    private void attachNestedObsValues(JsonArray parentArray) throws DataExchangeException {
+        List<String> obsUids = new ArrayList<>();
+
+        for (JsonElement element : parentArray) {
+            JsonObject obj = element.getAsJsonObject();
+            if (obj.has("observationUid") && !obj.get("observationUid").getAsString().isEmpty()) {
+                obsUids.add(obj.get("observationUid").getAsString());
+            }
+        }
+
+        if (obsUids.isEmpty()) return;
+
+        String inClause = obsUids.stream()
+                .map(uid -> "'" + uid + "'")
+                .collect(Collectors.joining(","));
+
+        DataSyncConfig nestedConfig = getConfigByTableName("MidisInvestigation_ObsValueCoded");
+        List<String> nestedColumns = parseMetaColumns(nestedConfig.getMetaData());
+
+        String query = nestedConfig.getQuery().replaceAll(OPERATION, "(" + inClause + ")");
+        List<Map<String, Object>> nestedResults = jdbcTemplateHelperForDataRetrieval(query, "");
+
+        JsonArray nestedArray = buildJsonArrayFromResult(nestedResults, nestedColumns);
+
+        // Attach children
+        for (JsonElement parentElement : parentArray) {
+            JsonObject parent = parentElement.getAsJsonObject();
+            String obsUid = parent.get("observationUid").getAsString();
+
+            JsonArray children = new JsonArray();
+            for (JsonElement child : nestedArray) {
+                JsonObject childObj = child.getAsJsonObject();
+                if (obsUid.equals(childObj.get("observation_uid").getAsString())) {
+                    children.add(childObj);
+                }
+            }
+            parent.add("Obs_coded_value", children);
+        }
+    }
+
+    public List<Map<String, Object>> jdbcTemplateHelperForDataRetrieval(String query, String param) {
+        if (param != null && !param.isEmpty()) {
+            query = query.replace(OPERATION, param);
+        }
+        return odseJdbcTemplate.queryForList(query);
+    }
+
+
 
     public String getTableMetaData(String tableName) throws DataExchangeException {
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
@@ -148,35 +234,42 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
 
         DataSyncConfig dataConfig = getConfigByTableName(tableName);
 
-        DataSyncLog dataLog = new DataSyncLog();
-        dataLog.setTableName(tableName);
-        dataLog.setStatusSync("INPROGRESS");
-        dataLog.setStartTime(getCurrentTimeStamp(tz));
+        if (dataConfig.isPartOfDatasync()) {
+            DataSyncLog dataLog = new DataSyncLog();
+            dataLog.setTableName(tableName);
+            dataLog.setStatusSync("INPROGRESS");
+            dataLog.setStartTime(getCurrentTimeStamp(tz));
 
-        var log = dataSyncLogRepository.save(dataLog);
-        AtomicInteger dataCountHolder = new AtomicInteger();
+            var log = dataSyncLogRepository.save(dataLog);
+            AtomicInteger dataCountHolder = new AtomicInteger();
 
-        try {
-            Callable<String> callable = () -> {
-                String baseQuery = preparePaginationQuery(dataConfig, param, startRow, endRow, initialLoad, allowNull, noPagination, keyPagination);
+            try {
+                Callable<String> callable = () -> {
+                    String baseQuery = preparePaginationQuery(dataConfig, param, startRow, endRow, initialLoad, allowNull, noPagination, keyPagination);
 
-                List<Map<String, Object>> data = executeQueryForDataAsync(baseQuery, dataConfig.getSourceDb());
+                    List<Map<String, Object>> data = executeQueryForDataAsync(baseQuery, dataConfig.getSourceDb());
 
-                dataCountHolder.set(data.size());
+                    dataCountHolder.set(data.size());
 
 
-                return DataSimplification.dataToString(data);
-            };
+                    return DataSimplification.dataToString(data);
+                };
 
-            return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            log.setStatusSync("ERROR");
-            log.setEndTime(getCurrentTimeStamp(tz));
-            log.setErrorDesc(exception.getMessage());
-            dataSyncLogRepository.save(log);
-            throw new DataExchangeException(exception.getMessage());
+                return executeDataSyncQuery(callable, tableName, startRow, endRow, dataCountHolder, log);
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                log.setStatusSync("ERROR");
+                log.setEndTime(getCurrentTimeStamp(tz));
+                log.setErrorDesc(exception.getMessage());
+                dataSyncLogRepository.save(log);
+                throw new DataExchangeException(exception.getMessage());
+            }
+
         }
+        else {
+            return "Invalid Table";
+        }
+
 
     }
 
@@ -325,7 +418,9 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
                 "D_INV_TREATMENT", "D_INV_VACCINATION"
         );
         for (DataSyncConfig dataConfig : dataSyncConfigs) {
-            tableCountsList.add(executeCountQuery(dataConfig, timestamp, invTableNames, nullTimestampAllow));
+            if (dataConfig.isPartOfDatasync()) {
+                tableCountsList.add(executeCountQuery(dataConfig, timestamp, invTableNames, nullTimestampAllow));
+            }
         }
         tableCountsList.sort(Comparator.comparing(map -> (String) map.get("Table Name")));
         return tableCountsList;

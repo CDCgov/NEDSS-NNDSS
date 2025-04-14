@@ -435,4 +435,34 @@ public class DataExchangeController {
             return buildErrorResponse(e, HttpStatus.INTERNAL_SERVER_ERROR, request);
         }
     }
+
+    @Operation(
+            summary = "Get Specific ODSE data",
+            description = "Fetches specific ODSE data base on custom query",
+            parameters = {
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientid",
+                            description = "The Client Id for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "clientsecret",
+                            description = "The Client Secret for authentication",
+                            required = true,
+                            schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.QUERY,
+                            name = "timestamp",
+                            description = "Optional timestamp to filter counts",
+                            required = false,
+                            schema = @Schema(type = "string"))
+            }
+    )
+    @GetMapping(path = "/api/data-view/{tableName}")
+    public ResponseEntity<String> dataSyncSpecialODSETable(@PathVariable String tableName,
+                                                           @RequestParam(name = "timestamp", required = false) String timestamp
+    ) throws DataExchangeException {
+        var res = dataExchangeGenericService.getDataForDataRetrieval(tableName, timestamp);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+
+    }
 }
