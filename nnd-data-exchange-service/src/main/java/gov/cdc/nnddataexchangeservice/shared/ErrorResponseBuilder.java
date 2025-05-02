@@ -1,6 +1,9 @@
 package gov.cdc.nnddataexchangeservice.shared;
 
+import gov.cdc.nnddataexchangeservice.controller.DataExchangeController;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -9,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ErrorResponseBuilder {
+    private static Logger logger = LoggerFactory.getLogger(ErrorResponseBuilder.class);
+
     private ErrorResponseBuilder() {
         //SONARQ
     }
@@ -29,6 +34,8 @@ public class ErrorResponseBuilder {
             stackTraceString.append(stackTrace[i].toString()).append("\n");
         }
         errorResponse.put("stackTrace", stackTraceString.toString());
+
+        logger.error(stackTraceString.toString());
 
         return ResponseEntity.status(status).body(errorResponse);
     }

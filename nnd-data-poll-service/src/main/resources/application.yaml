@@ -11,6 +11,11 @@ data_exchange:
   endpoint_generic_meta_data: ${NND_DE_URL}${NND_DE_GENERIC_META_DATA:/extraction/api/datasync/metadata}
   endpoint_generic_total_record: ${NND_DE_URL}${NND_DE_GENERIC_TOTAL_RECORD:/extraction/api/datasync/count}
   version: "1"
+  retry:
+    max-attempts: ${API_MAX_RETRY:5}
+    delay-ms: ${API_RETRY_DELAY_MS:3000}
+    stuck-threshold-minutes: ${API_STUCK_THRESHOLD_MINUTE:10}
+    max-backoff-ms: ${API_MAX_BACKOFF:60000}
 nnd:
   fullLoad: ${NND_FULL_LOAD:false}
   pullLimit: ${NND_PULL_LIMIT:0}
