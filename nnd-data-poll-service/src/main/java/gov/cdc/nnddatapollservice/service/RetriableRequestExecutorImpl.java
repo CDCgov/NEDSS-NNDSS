@@ -1,6 +1,5 @@
 package gov.cdc.nnddatapollservice.service;
 
-import gov.cdc.nnddatapollservice.configuration.HttpClientProvider;
 import gov.cdc.nnddatapollservice.exception.APIException;
 import gov.cdc.nnddatapollservice.service.interfaces.RetriableRequestExecutor;
 import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
@@ -25,6 +24,7 @@ public class RetriableRequestExecutorImpl implements RetriableRequestExecutor {
     @Value("${data_exchange.retry.max-backoff-ms:60000}")
     private int maxBackoffMs;
 
+    @SuppressWarnings("java:S2142")
     @Override
     public <T> ApiResponseModel<T> executeWithRetry(Supplier<HttpRequest> requestSupplier,
                                                     Function<HttpResponse<String>, ApiResponseModel<T>> responseHandler,
