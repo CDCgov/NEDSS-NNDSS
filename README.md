@@ -29,6 +29,12 @@ This architecture ensure the STLT can make a secure connection to CDC database w
     - OP_DBUSER: On Prem DB info
     - NBS_NND_CRON: Cron Scheduler (ex: * * * * * *)
     - NBS_NND_CRON_TIME_ZONE: Cron timezone (ex: UTC)
+      -  API Retry Property
+         - API_MAX_RETRY: number of retry per api request, default is 5  
+         - API_RETRY_DELAY_MS: delay time before execute the next call, default is 3000 ms (3 seconds)
+         - API_STUCK_THRESHOLD_MINUTE: time to trigger token refresh when token is expired, default is 10 min - recommend using default
+         - API_MAX_BACKOFF: max exponential backoff for max delay time. Default is 60000 ms (1 min). This used in combined with the API_RETRY_DELAY_MS
+            -  If Delay is 3 second and Back off is 1 min and there 5 retry - each retry deploy will be increase by multiply of 2 until it reaching 1 minute. For  3 second, first delay is 3 sec, then 6 sec, then 12 sec, so on and on until it cap at 60 min
 - NETSS Message Processor ENV:
     - NBS_NND_CRON: Cron Scheduler (ex: * * * * * *)
     - NETSS_FILE_LOCATION: Path to output directory on the setup machine (ex: /Users/UserName/Desktop/LOG)

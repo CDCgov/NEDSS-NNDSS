@@ -190,6 +190,7 @@ public class DataExchangeController {
                                            @RequestHeader(name = "lastKey", defaultValue = "") String lastKey,
                                            HttpServletRequest request) {
         try {
+
             if (version == null || version.isEmpty()) {
                 throw new DataExchangeException("Version is Missing");
             }

@@ -18,11 +18,11 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('D_PROVIDER', 'RDB',1, 'PROVIDER_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_CASE_MANAGEMENT', 'RDB',2);
+(table_name, source_db,table_order, key_list)
+VALUES('D_CASE_MANAGEMENT', 'RDB',2, 'INVESTIGATION_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('D_INTERVIEW', 'RDB',1);
+(table_name, source_db,table_order, key_list)
+VALUES('D_INTERVIEW', 'RDB',1, 'D_INTERVIEW_KEY');
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, use_key_pagination)
 VALUES('D_INV_ADMINISTRATIVE', 'RDB',4, 'D_INV_ADMINISTRATIVE_KEY', 1);
@@ -51,14 +51,14 @@ INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list)
 VALUES('D_PATIENT', 'RDB',1, 'PATIENT_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('F_INTERVIEW_CASE', 'RDB',1);
+(table_name, source_db,table_order, key_list)
+VALUES('F_INTERVIEW_CASE', 'RDB',1, 'D_INTERVIEW_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('F_PAGE_CASE', 'RDB',1);
+(table_name, source_db,table_order, key_list)
+VALUES('F_PAGE_CASE', 'RDB',1, 'INVESTIGATION_KEY');
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('F_STD_PAGE_CASE', 'RDB',1);
+(table_name, source_db,table_order, key_list)
+VALUES('F_STD_PAGE_CASE', 'RDB',1, 'INVESTIGATION_KEY');
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, recreate_applied)
 VALUES('F_VAR_PAM', 'RDB',2, 1);
