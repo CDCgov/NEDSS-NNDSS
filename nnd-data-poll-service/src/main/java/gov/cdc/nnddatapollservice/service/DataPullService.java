@@ -7,6 +7,7 @@ import gov.cdc.nnddatapollservice.universal.service.interfaces.IUniversalDataHan
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,7 @@ public class DataPullService implements IDataPullService {
     private final INNDDataHandlingService dataHandlingService;
     private final IUniversalDataHandlingService universalDataHandlingService;
 
-    public DataPullService(INNDDataHandlingService dataHandlingService,
+    public DataPullService(@Qualifier("NNDDataHandlingServiceWithRetry") INNDDataHandlingService dataHandlingService,
                            IUniversalDataHandlingService universalDataHandlingService) {
         this.dataHandlingService = dataHandlingService;
         this.universalDataHandlingService = universalDataHandlingService;
