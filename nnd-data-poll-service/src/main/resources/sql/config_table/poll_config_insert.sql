@@ -124,8 +124,8 @@ INSERT INTO poll_data_sync_config
 VALUES('HEP_MULTI_VALUE_FIELD', 'RDB',2, 'HEP_MULTI_VAL_DATA_KEY, HEP_MULTI_VAL_GRP_KEY', 1);
 
 INSERT INTO poll_data_sync_config
-(table_name, source_db,table_order)
-VALUES('HEPATITIS_DATAMART', 'RDB',1);
+(table_name, source_db,table_order, key_list)
+VALUES('HEPATITIS_DATAMART', 'RDB',1, 'INVESTIGATION_KEY');
 INSERT INTO poll_data_sync_config
 (table_name, source_db,table_order, key_list, recreate_applied)
 VALUES('LDF_DATA', 'RDB',1, 'LDF_DATA_KEY', 1);
