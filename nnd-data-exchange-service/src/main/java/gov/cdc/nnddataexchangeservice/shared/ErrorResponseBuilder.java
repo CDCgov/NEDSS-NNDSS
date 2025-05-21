@@ -35,6 +35,7 @@ public class ErrorResponseBuilder {
         }
         errorResponse.put("stackTrace", stackTraceString.toString());
 
+        e.printStackTrace();
         logger.error(stackTraceString.toString());
 
         return ResponseEntity.status(status).body(errorResponse);
