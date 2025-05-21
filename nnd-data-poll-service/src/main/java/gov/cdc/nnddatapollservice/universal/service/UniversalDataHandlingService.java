@@ -654,9 +654,19 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             }
         }
 
-        if (timeStampForPoll.isEmpty()) {
+        if (timeStampForPoll == null || timeStampForPoll.isEmpty()) {
             timeStampForPoll = iPollCommonService.getCurrentTimestamp();
         }
+
+        Timestamp ts = Timestamp.valueOf(timeStampForPoll);
+        timeStampForPoll = ts.toLocalDateTime()
+                .minusDays(1)
+                .withHour(19)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0)
+                .toString();
+
         return timeStampForPoll;
     }
 

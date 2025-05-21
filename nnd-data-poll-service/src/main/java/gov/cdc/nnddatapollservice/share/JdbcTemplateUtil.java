@@ -712,17 +712,26 @@ public class JdbcTemplateUtil {
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
         String updateSql;
 
-        // Convert to milliseconds
-        long currentMillis = timestamp.getTime();
+//        // Convert to milliseconds
+//        long currentMillis = timestamp.getTime();
+//
+//        // 8 hours in milliseconds
+//        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
+//
+//        // Subtract 8 hours
+//        long newMillis = currentMillis - eightHoursInMilliseconds;
+//
+//        // Create a new timestamp
+//        Timestamp newTimestamp = new Timestamp(newMillis);
 
-        // 8 hours in milliseconds
-        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
-
-        // Subtract 8 hours
-        long newMillis = currentMillis - eightHoursInMilliseconds;
-
-        // Create a new timestamp
-        Timestamp newTimestamp = new Timestamp(newMillis);
+//        // Adjust to 7:00 PM of the day before the input timestamp
+//        LocalDateTime adjustedDateTime = timestamp
+//                .toLocalDateTime()
+//                .toLocalDate()
+//                .minusDays(1)
+//                .atTime(19, 0);
+//
+//        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
 
         if (!logResponseModel.apiResponseModel.isSuccess()) {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time =?, api_fatal_on_last_run = 1 where table_name=?;";
@@ -730,7 +739,7 @@ public class JdbcTemplateUtil {
         else {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time =? where table_name=?;";
         }
-        rdbJdbcTemplate.update(updateSql, newTimestamp, tableName);
+        rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
         pollDataLogRepository.save(pollDataLog);
@@ -739,17 +748,26 @@ public class JdbcTemplateUtil {
     public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp,  LogResponseModel logResponseModel) {
         String updateSql;
 
-        // Convert to milliseconds
-        long currentMillis = timestamp.getTime();
+//        // Convert to milliseconds
+//        long currentMillis = timestamp.getTime();
+//
+//        // 8 hours in milliseconds
+//        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
+//
+//        // Subtract 8 hours
+//        long newMillis = currentMillis - eightHoursInMilliseconds;
+//
+//        // Create a new timestamp
+//        Timestamp newTimestamp = new Timestamp(newMillis);
 
-        // 8 hours in milliseconds
-        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
-
-        // Subtract 8 hours
-        long newMillis = currentMillis - eightHoursInMilliseconds;
-
-        // Create a new timestamp
-        Timestamp newTimestamp = new Timestamp(newMillis);
+//        // Adjust to 7:00 PM of the day before the input timestamp
+//        LocalDateTime adjustedDateTime = timestamp
+//                .toLocalDateTime()
+//                .toLocalDate()
+//                .minusDays(1)
+//                .atTime(19, 0);
+//
+//        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
 
         if (!logResponseModel.apiResponseModel.isSuccess()) {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_s3 =?, api_fatal_on_last_run = 1 where table_name=?;";
@@ -758,7 +776,7 @@ public class JdbcTemplateUtil {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_s3 =? where table_name=?;";
         }
 
-        rdbJdbcTemplate.update(updateSql, newTimestamp, tableName);
+        rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
         pollDataLogRepository.save(pollDataLog);
@@ -767,17 +785,26 @@ public class JdbcTemplateUtil {
     public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
         String updateSql;
 
-        // Convert to milliseconds
-        long currentMillis = timestamp.getTime();
+//        // Convert to milliseconds
+//        long currentMillis = timestamp.getTime();
+//
+//        // 8 hours in milliseconds
+//        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
+//
+//        // Subtract 8 hours
+//        long newMillis = currentMillis - eightHoursInMilliseconds;
+//
+//        // Create a new timestamp
+//        Timestamp newTimestamp = new Timestamp(newMillis);
 
-        // 8 hours in milliseconds
-        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
-
-        // Subtract 8 hours
-        long newMillis = currentMillis - eightHoursInMilliseconds;
-
-        // Create a new timestamp
-        Timestamp newTimestamp = new Timestamp(newMillis);
+//        // Adjust to 7:00 PM of the day before the input timestamp
+//        LocalDateTime adjustedDateTime = timestamp
+//                .toLocalDateTime()
+//                .toLocalDate()
+//                .minusDays(1)
+//                .atTime(19, 0);
+//
+//        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
 
         if (!logResponseModel.apiResponseModel.isSuccess()) {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_local_dir =?, api_fatal_on_last_run = 1 where table_name=?;";
@@ -786,7 +813,7 @@ public class JdbcTemplateUtil {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_local_dir =? where table_name=?;";
         }
 
-        rdbJdbcTemplate.update(updateSql, newTimestamp, tableName);
+        rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
         pollDataLogRepository.save(pollDataLog);
