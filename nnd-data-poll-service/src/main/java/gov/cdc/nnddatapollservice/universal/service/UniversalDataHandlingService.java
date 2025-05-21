@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -667,7 +668,9 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
                 .withNano(0)
                 .toString();
 
-        return timeStampForPoll;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        timeStampForPoll.formatted(formatter);
+        return timeStampForPoll.replaceAll("T", " ");
     }
 
     protected String getMaxId(boolean isInitialLoad, String tableName, String key) {
