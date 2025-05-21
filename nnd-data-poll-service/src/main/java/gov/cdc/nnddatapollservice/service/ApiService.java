@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static gov.cdc.nnddatapollservice.constant.ApiConstantValue.*;
@@ -132,7 +133,11 @@ public class ApiService implements IApiService {
                 .build()
                 .toUri();
 
-        logger.info("Count API URL: {} , headers: {}", uri, maskHeaders(headers));
+        String fullUrl = uri.toString();
+        String headerString = maskHeaders(headers);
+
+        logger.info("Count API URL: {} , headers: {}", uri, headerString);
+
 
         return retrier.executeWithRetry(
                 () -> {
@@ -142,6 +147,9 @@ public class ApiService implements IApiService {
                 },
                 response -> {
                     ApiResponseModel<Integer> model = new ApiResponseModel<>();
+                    model.setLastApiCall(fullUrl);
+                    model.setLastApiHeader(headerString);
+
                     if (response.statusCode() == 200) {
                         model.setResponse(Integer.valueOf(response.body()));
                         model.setSuccess(true);
@@ -184,6 +192,9 @@ public class ApiService implements IApiService {
                 .build()
                 .toUri();
 
+        String fullUrl = uri.toString();
+        String headerString = maskHeaders(headers);
+
         logger.info("DataSync API URL: {} , headers: {}", uri, maskHeaders(headers));
 
         return retrier.executeWithRetry(
@@ -194,6 +205,8 @@ public class ApiService implements IApiService {
                 },
                 response -> {
                     ApiResponseModel<String> model = new ApiResponseModel<>();
+                    model.setLastApiCall(fullUrl);
+                    model.setLastApiHeader(headerString);
                     if (response.statusCode() == 200) {
                         model.setResponse(response.body());
                         model.setSuccess(true);
@@ -227,7 +240,8 @@ public class ApiService implements IApiService {
                 .toUri();
 
         logger.info("Meta API URL: {} , headers: {}", uri, maskHeaders(headers));
-
+        String fullUrl = uri.toString();
+        String headerString = maskHeaders(headers);
         return retrier.executeWithRetry(
                 () -> {
                     String token = tokenService.getToken();
@@ -236,6 +250,8 @@ public class ApiService implements IApiService {
                 },
                 response -> {
                     ApiResponseModel<List<TableMetaDataDto>> model = new ApiResponseModel<>();
+                    model.setLastApiCall(fullUrl);
+                    model.setLastApiHeader(headerString);
                     if (response.statusCode() == 200) {
                         var gsonWithUpperCase = new GsonBuilder()
                                 .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CASE_WITH_UNDERSCORES)
