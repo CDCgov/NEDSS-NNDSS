@@ -724,14 +724,14 @@ public class JdbcTemplateUtil {
 //        // Create a new timestamp
 //        Timestamp newTimestamp = new Timestamp(newMillis);
 
-        // Adjust to 7:00 PM of the day before the input timestamp
-        LocalDateTime adjustedDateTime = timestamp
-                .toLocalDateTime()
-                .toLocalDate()
-                .minusDays(1)
-                .atTime(19, 0);
-
-        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
+//        // Adjust to 7:00 PM of the day before the input timestamp
+//        LocalDateTime adjustedDateTime = timestamp
+//                .toLocalDateTime()
+//                .toLocalDate()
+//                .minusDays(1)
+//                .atTime(19, 0);
+//
+//        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
 
         if (!logResponseModel.apiResponseModel.isSuccess()) {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time =?, api_fatal_on_last_run = 1 where table_name=?;";
@@ -739,7 +739,7 @@ public class JdbcTemplateUtil {
         else {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time =? where table_name=?;";
         }
-        rdbJdbcTemplate.update(updateSql, newTimestamp, tableName);
+        rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
         pollDataLogRepository.save(pollDataLog);
@@ -760,14 +760,14 @@ public class JdbcTemplateUtil {
 //        // Create a new timestamp
 //        Timestamp newTimestamp = new Timestamp(newMillis);
 
-        // Adjust to 7:00 PM of the day before the input timestamp
-        LocalDateTime adjustedDateTime = timestamp
-                .toLocalDateTime()
-                .toLocalDate()
-                .minusDays(1)
-                .atTime(19, 0);
-
-        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
+//        // Adjust to 7:00 PM of the day before the input timestamp
+//        LocalDateTime adjustedDateTime = timestamp
+//                .toLocalDateTime()
+//                .toLocalDate()
+//                .minusDays(1)
+//                .atTime(19, 0);
+//
+//        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
 
         if (!logResponseModel.apiResponseModel.isSuccess()) {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_s3 =?, api_fatal_on_last_run = 1 where table_name=?;";
@@ -776,7 +776,7 @@ public class JdbcTemplateUtil {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_s3 =? where table_name=?;";
         }
 
-        rdbJdbcTemplate.update(updateSql, newTimestamp, tableName);
+        rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
         pollDataLogRepository.save(pollDataLog);
@@ -797,14 +797,14 @@ public class JdbcTemplateUtil {
 //        // Create a new timestamp
 //        Timestamp newTimestamp = new Timestamp(newMillis);
 
-        // Adjust to 7:00 PM of the day before the input timestamp
-        LocalDateTime adjustedDateTime = timestamp
-                .toLocalDateTime()
-                .toLocalDate()
-                .minusDays(1)
-                .atTime(19, 0);
-
-        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
+//        // Adjust to 7:00 PM of the day before the input timestamp
+//        LocalDateTime adjustedDateTime = timestamp
+//                .toLocalDateTime()
+//                .toLocalDate()
+//                .minusDays(1)
+//                .atTime(19, 0);
+//
+//        Timestamp newTimestamp = Timestamp.valueOf(adjustedDateTime);
 
         if (!logResponseModel.apiResponseModel.isSuccess()) {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_local_dir =?, api_fatal_on_last_run = 1 where table_name=?;";
@@ -813,7 +813,7 @@ public class JdbcTemplateUtil {
             updateSql = UPDATE + POLL_CONFIG_TABLE_NAME + " set last_update_time_local_dir =? where table_name=?;";
         }
 
-        rdbJdbcTemplate.update(updateSql, newTimestamp, tableName);
+        rdbJdbcTemplate.update(updateSql, timestamp, tableName);
 
         PollDataLog pollDataLog = new PollDataLog(logResponseModel, tableName);
         pollDataLogRepository.save(pollDataLog);
