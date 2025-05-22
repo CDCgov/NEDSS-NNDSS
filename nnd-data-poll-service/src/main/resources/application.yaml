@@ -76,7 +76,7 @@ scheduler:
   # America/New_York
   # UTC
   cron: ${NBS_NND_CRON:0 */1 * * * * }
-  cron-data-sync:  ${NBS_DATA_CRON:0 */1 * * * * }
+  cron-data-sync: ${NBS_DATA_CRON:0 */1 * * * * }
   # "0 */5 0-2 * * *"
   # every 5 min from 12 am to 3 am
   # 0 * 0-2 * * *

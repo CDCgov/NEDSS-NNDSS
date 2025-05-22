@@ -712,18 +712,6 @@ public class JdbcTemplateUtil {
     public void updateLastUpdatedTimeAndLog(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
         String updateSql;
 
-//        // Convert to milliseconds
-//        long currentMillis = timestamp.getTime();
-//
-//        // 8 hours in milliseconds
-//        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
-//
-//        // Subtract 8 hours
-//        long newMillis = currentMillis - eightHoursInMilliseconds;
-//
-//        // Create a new timestamp
-//        Timestamp newTimestamp = new Timestamp(newMillis);
-
 //        // Adjust to 7:00 PM of the day before the input timestamp
 //        LocalDateTime adjustedDateTime = timestamp
 //                .toLocalDateTime()
@@ -747,18 +735,6 @@ public class JdbcTemplateUtil {
 
     public void updateLastUpdatedTimeAndLogS3(String tableName, Timestamp timestamp,  LogResponseModel logResponseModel) {
         String updateSql;
-
-//        // Convert to milliseconds
-//        long currentMillis = timestamp.getTime();
-//
-//        // 8 hours in milliseconds
-//        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
-//
-//        // Subtract 8 hours
-//        long newMillis = currentMillis - eightHoursInMilliseconds;
-//
-//        // Create a new timestamp
-//        Timestamp newTimestamp = new Timestamp(newMillis);
 
 //        // Adjust to 7:00 PM of the day before the input timestamp
 //        LocalDateTime adjustedDateTime = timestamp
@@ -784,18 +760,6 @@ public class JdbcTemplateUtil {
 
     public void updateLastUpdatedTimeAndLogLocalDir(String tableName, Timestamp timestamp, LogResponseModel logResponseModel) {
         String updateSql;
-
-//        // Convert to milliseconds
-//        long currentMillis = timestamp.getTime();
-//
-//        // 8 hours in milliseconds
-//        long eightHoursInMilliseconds = 8 * 60 * 60 * 1000;
-//
-//        // Subtract 8 hours
-//        long newMillis = currentMillis - eightHoursInMilliseconds;
-//
-//        // Create a new timestamp
-//        Timestamp newTimestamp = new Timestamp(newMillis);
 
 //        // Adjust to 7:00 PM of the day before the input timestamp
 //        LocalDateTime adjustedDateTime = timestamp
