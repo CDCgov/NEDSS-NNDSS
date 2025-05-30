@@ -63,3 +63,11 @@ databaseChangeLog:
         - sqlFile:
             path: db/rdb/routines/003-generate_data_view_record-001.sql
             splitStatements: false
+  - changeSet:
+      id: 8
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/rdb/tables/004-alter-data-sync-config-002.sql
+            splitStatements: false
