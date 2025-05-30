@@ -16,12 +16,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -105,6 +101,7 @@ public class DataExchangeGenericService implements IDataExchangeGenericService {
             throw new DataExchangeException("Error executing query: " + e.getMessage());
         }
     }
+
 
     public String getDataForDataRetrieval(String tableName, String param) throws DataExchangeException {
         DataSyncConfig dataConfig = getConfigByTableName(tableName);

@@ -3,7 +3,6 @@ package gov.cdc.nnddataexchangeservice.controller;
 
 import gov.cdc.nnddataexchangeservice.exception.DataExchangeException;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
-import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -17,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,88 +26,16 @@ import static gov.cdc.nnddataexchangeservice.shared.TimestampHandler.convertTime
 
 @RestController
 @SecurityRequirement(name = "bearer-key")
-@Tag(name = "Data Exchange", description = "Data Exchange API")
-public class DataExchangeController {
+@Tag(name = "Data Sync", description = "Data Sync API")
+public class DataSyncController {
 
-    private final IDataExchangeService dataExchangeService;
     private final IDataExchangeGenericService dataExchangeGenericService;
-    private static Logger logger = LoggerFactory.getLogger(DataExchangeController.class);
+    private static Logger logger = LoggerFactory.getLogger(DataSyncController.class);
 
-    public DataExchangeController(IDataExchangeService dataExchangeService,
-                                  IDataExchangeGenericService dataExchangeGenericService) {
-        this.dataExchangeService = dataExchangeService;
+    public DataSyncController(
+                              IDataExchangeGenericService dataExchangeGenericService) {
         this.dataExchangeGenericService = dataExchangeGenericService;
     }
-
-    @Operation(
-            summary = "Get data from multiple tables related to NND process",
-            description = "Fetches data based on various parameters related to the NND process.",
-            parameters = {
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "clientid",
-                            description = "The Client Id for authentication",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "clientsecret",
-                            description = "The Client Secret for authentication",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.QUERY,
-                            name = "cnStatusTime",
-                            description = "CN Status time parameter",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.QUERY,
-                            name = "transportStatusTime",
-                            description = "Transport Status time parameter",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.QUERY,
-                            name = "netssTime",
-                            description = "NETSS time parameter",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.QUERY,
-                            name = "statusCd",
-                            description = "Status code for filtering",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "limit",
-                            description = "Limit on the number of records returned",
-                            schema = @Schema(type = "string", defaultValue = "0"),
-                            required = false),
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "compress",
-                            description = "Boolean flag to compress the response",
-                            schema = @Schema(type = "string", defaultValue = "false"),
-                            required = false),
-
-            }
-    )
-    @GetMapping(path = "/api/nnd")
-    public ResponseEntity<String> exchangingData(@RequestParam("cnStatusTime") String cnStatusTime,
-                                                            @RequestParam("transportStatusTime") String transportStatusTime,
-                                                            @RequestParam("netssTime") String netssTime,
-                                                            @RequestParam("statusCd") String statusCd,
-                                                            @RequestHeader(name = "limit", defaultValue = "0", required = false) String limit,
-                                                            @RequestHeader(name = "compress", defaultValue = "false", required = false) String compress) throws DataExchangeException, IOException {
-        if (statusCd.isEmpty()) {
-            throw new DataExchangeException("Status Code is Missing");
-        }
-
-
-        boolean compressCheck = false;
-        if (compress.equalsIgnoreCase("true") ) {
-            compressCheck = true;
-        }
-
-        int intLimit = Integer.parseInt(limit);
-        return ResponseEntity.ok(dataExchangeService.getDataForOnPremExchanging(cnStatusTime, transportStatusTime,netssTime, statusCd, intLimit, compressCheck));
-    }
-
-
 
     @Operation(
             summary = "Get data from multiple tables related to Datasync process",
@@ -353,28 +279,6 @@ public class DataExchangeController {
     }
 
     @Operation(
-            summary = "Decoding data that return from data sync endpoint",
-            description = "Data Sync return zipped and encoded data, this endpoint can be used to decode the data for inspection and integration",
-            parameters = {
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "clientid",
-                            description = "The Client Id for authentication",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "clientsecret",
-                            description = "The Client Secret for authentication",
-                            required = true,
-                            schema = @Schema(type = "string"))
-            }
-    )
-    @PostMapping(path = "/api/datasync/decode")
-    public ResponseEntity<String> decodeAndDecompress(@RequestBody String tableName) throws DataExchangeException {
-        var val = dataExchangeGenericService.decodeAndDecompress(tableName);
-        return new ResponseEntity<>(val, HttpStatus.OK);
-    }
-
-    @Operation(
             summary = "Get count for all tables",
             description = "Fetches the record count for all tables, optionally filtered by source database, table name, and timestamp. Requires client authentication headers.",
             parameters = {
@@ -437,33 +341,6 @@ public class DataExchangeController {
         }
     }
 
-    @Operation(
-            summary = "Get Specific ODSE data",
-            description = "Fetches specific ODSE data base on custom query",
-            parameters = {
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "clientid",
-                            description = "The Client Id for authentication",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.HEADER,
-                            name = "clientsecret",
-                            description = "The Client Secret for authentication",
-                            required = true,
-                            schema = @Schema(type = "string")),
-                    @Parameter(in = ParameterIn.QUERY,
-                            name = "timestamp",
-                            description = "Optional timestamp to filter counts",
-                            required = false,
-                            schema = @Schema(type = "string"))
-            }
-    )
-    @GetMapping(path = "/api/data-view/{tableName}")
-    public ResponseEntity<String> dataSyncSpecialODSETable(@PathVariable String tableName,
-                                                           @RequestParam(name = "timestamp", required = false) String timestamp
-    ) throws DataExchangeException {
-        var res = dataExchangeGenericService.getDataForDataRetrieval(tableName, timestamp);
-        return new ResponseEntity<>(res, HttpStatus.OK);
 
-    }
+
 }

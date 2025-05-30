@@ -13,19 +13,18 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import java.io.IOException;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.when;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.io.IOException;
 import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-class DataExchangeControllerTest {
+class DataSyncControllerTest {
 
     @Mock
     private IDataExchangeService dataExchangeService;
@@ -34,7 +33,7 @@ class DataExchangeControllerTest {
     private IDataExchangeGenericService dataExchangeGenericService;
 
     @InjectMocks
-    private DataExchangeController dataExchangeController;
+    private DataSyncController dataSyncController;
 
 
     private HttpServletRequest request;
@@ -46,58 +45,6 @@ class DataExchangeControllerTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
 
-    @Test
-    void exchangingData_WithValidParams_ReturnsDataExchangeModel() throws DataExchangeException, IOException {
-        String cnStatusTime = "2024-07-11";
-        String transportStatusTime = "2024-07-12";
-        String netssTime = "2024-07-13";
-        String statusCd = "COMPLETE";
-        String limit = "10";
-
-        DataExchangeModel dataExchangeModel = new DataExchangeModel();
-        Gson gson = new Gson();
-        String data = gson.toJson(dataExchangeModel);
-        when(dataExchangeService.getDataForOnPremExchanging(anyString(), anyString(), anyString(), anyString(), anyInt(), anyBoolean()))
-                .thenReturn(data);
-
-        ResponseEntity<String> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "false");
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
-
-
-    @Test
-    void exchangingData_WithValidParams_ReturnsDataExchangeModel_True() throws DataExchangeException, IOException {
-        String cnStatusTime = "2024-07-11";
-        String transportStatusTime = "2024-07-12";
-        String netssTime = "2024-07-13";
-        String statusCd = "COMPLETE";
-        String limit = "10";
-
-        DataExchangeModel dataExchangeModel = new DataExchangeModel();
-        Gson gson = new Gson();
-        String data = gson.toJson(dataExchangeModel);
-        when(dataExchangeService.getDataForOnPremExchanging(anyString(), anyString(), anyString(), anyString(), anyInt(), anyBoolean()))
-                .thenReturn(data);
-
-        ResponseEntity<String> response = dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "true");
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
-
-    @Test
-    void exchangingData_WithMissingStatusCd_ThrowsDataExchangeException() {
-        String cnStatusTime = "2024-07-11";
-        String transportStatusTime = "2024-07-12";
-        String netssTime = "2024-07-13";
-        String statusCd = "";
-        String limit = "10";
-
-        assertThrows(DataExchangeException.class, () ->
-                dataExchangeController.exchangingData(cnStatusTime, transportStatusTime, netssTime, statusCd, limit, "false"));
-    }
 
     @Test
     void exchangingGenericData_WithValidParams_ReturnsBase64CompressedData() throws Exception {
@@ -111,7 +58,7 @@ class DataExchangeControllerTest {
                 anyString(), anyBoolean(), anyBoolean(), anyBoolean(), anyBoolean()))
                 .thenReturn(base64CompressedData);
 
-        ResponseEntity<?> response = dataExchangeController.dataSync(
+        ResponseEntity<?> response = dataSyncController.dataSync(
                 tableName,
                 timestamp,
                 "0",
@@ -131,21 +78,6 @@ class DataExchangeControllerTest {
 
 
 
-    @Test
-    void decodeAndDecompress_WithValidTableName_ReturnsDecodedData() throws DataExchangeException {
-        String tableName = "test_table";
-        String decodedData = "mockDecodedData";
-
-        when(dataExchangeGenericService.decodeAndDecompress(anyString()))
-                .thenReturn(decodedData);
-
-        ResponseEntity<String> response = dataExchangeController.decodeAndDecompress(tableName);
-
-        assertNotNull(response);
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(decodedData, response.getBody());
-    }
-
 
     @Test
     void dataSyncTotalRecords_Test() throws Exception {
@@ -155,7 +87,7 @@ class DataExchangeControllerTest {
         when(dataExchangeGenericService.getTotalRecord(anyString(), anyBoolean(),anyString(), anyBoolean()))
                 .thenReturn(10);
 
-        ResponseEntity<?> response = dataExchangeController.dataSyncTotalRecords(
+        ResponseEntity<?> response = dataSyncController.dataSyncTotalRecords(
                 tableName,
                 timestamp,
                 "true",
@@ -183,7 +115,7 @@ class DataExchangeControllerTest {
         when(mockRequest.getRequestURI()).thenReturn("/api/datasync/count/" + tableName);
 
         // Act
-        ResponseEntity<?> response = dataExchangeController.dataSyncTotalRecords(
+        ResponseEntity<?> response = dataSyncController.dataSyncTotalRecords(
                 tableName, timestamp, initialLoadApplied, version,
                 useKeyPagination, lastKey, mockRequest
         );
@@ -216,7 +148,7 @@ class DataExchangeControllerTest {
         when(mockRequest.getRequestURI()).thenReturn("/api/datasync/" + tableName);
 
         // Act
-        ResponseEntity<?> response = dataExchangeController.dataSync(
+        ResponseEntity<?> response = dataSyncController.dataSync(
                 tableName, timestamp, startRow, endRow,
                 initialLoad, allowNull, version,
                 noPagination, useKeyPagination, lastKey, mockRequest
@@ -247,7 +179,7 @@ class DataExchangeControllerTest {
         when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, false))
                 .thenReturn(List.of(mockResult));
 
-        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName,
+        ResponseEntity<?> response = dataSyncController.getAllTablesCount(sourceDbName, tableName,
                 timestamp, "", request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -266,7 +198,7 @@ class DataExchangeControllerTest {
         when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, false))
                 .thenReturn(List.of());
 
-        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, "", request);
+        ResponseEntity<?> response = dataSyncController.getAllTablesCount(sourceDbName, tableName, timestamp, "", request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(expectedOutput, response.getBody());
@@ -281,7 +213,7 @@ class DataExchangeControllerTest {
         when(dataExchangeGenericService.getAllTablesCount(sourceDbName, tableName, timestamp, false))
                 .thenThrow(new DataExchangeException("Test exception"));
 
-        ResponseEntity<?> response = dataExchangeController.getAllTablesCount(sourceDbName, tableName, timestamp, "", request);
+        ResponseEntity<?> response = dataSyncController.getAllTablesCount(sourceDbName, tableName, timestamp, "", request);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

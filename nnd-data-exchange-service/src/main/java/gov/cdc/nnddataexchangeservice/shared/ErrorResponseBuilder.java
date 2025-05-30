@@ -1,6 +1,5 @@
 package gov.cdc.nnddataexchangeservice.shared;
 
-import gov.cdc.nnddataexchangeservice.controller.DataExchangeController;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
