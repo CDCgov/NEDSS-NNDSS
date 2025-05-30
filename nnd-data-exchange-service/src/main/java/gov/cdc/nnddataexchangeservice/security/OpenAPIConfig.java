@@ -51,7 +51,7 @@ public class OpenAPIConfig {
                 .title("Data Sync Service API")
                 .version("1.0")
                 .contact(contact)
-                .description("This API exposes endpoints to manage Data Sync Service.");
+                .description("This API exposes endpoints to manage Data Extraction Services.");
 
         Components components=new Components().
                 addSecuritySchemes("bearer-key",

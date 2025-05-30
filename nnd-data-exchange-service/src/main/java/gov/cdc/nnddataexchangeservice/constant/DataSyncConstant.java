@@ -14,6 +14,7 @@ public class DataSyncConstant {
     public static final String DB_RDB = "RDB";
     public static final String DB_RDB_MODERN = "RDB_MODERN";
     public static final String DB_NBS_ODSE = "NBS_ODSE";
+    public static final String DB_NBS_MSG = "NBS_MSGOUTE";
 
     public static final String DB_SRTE = "SRTE";
 }
