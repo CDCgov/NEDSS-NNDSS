@@ -1,0 +1,239 @@
+{
+	"info": {
+		"_postman_id": "d5f57fe7-c102-444c-89f1-8b01a2da5432",
+		"name": "NND-DATAVIEW-DTS1",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "14185531"
+	},
+	"item": [
+		{
+			"name": "data-view",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJSdHNXT1FxbW9VSThiSjNQWjNtbnZjSzJuZEJra2xaSHJaZE81T0E2UGZvIn0.eyJleHAiOjE3NDg4OTI3NTMsImlhdCI6MTc0ODg5MDk1MywianRpIjoiYTk0MjgyZjMtMmUzNy00OTg5LWJhZGMtZTgzMzcwMjQ0MWQ3IiwiaXNzIjoiaHR0cDovL2tleWNsb2FrLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwvYXV0aC9yZWFsbXMvTkJTIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImJlMWFjODA4LTIxOTMtNGY2ZC04ZTUxLWM1MTE3YWFjYmU5MyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImRpLWtleWNsb2FrLWNsaWVudCIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwiZGVmYXVsdC1yb2xlcy1uYnMiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjEwLjUyLjEuNzgiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtZGkta2V5Y2xvYWstY2xpZW50IiwiY2xpZW50QWRkcmVzcyI6IjEwLjUyLjEuNzgiLCJjbGllbnRfaWQiOiJkaS1rZXljbG9hay1jbGllbnQifQ.L0OfeCuxs4EAPGuvKmvm_EKXHeCBCcrYUEtcLRitBYL-f2jAsptRnZFbi_XKkwlQGLdOqhwb3OP5UXU_quyE2Mz8C7_m5H6xEE6CRNhdXIMDe1QuCS1IOrYvNSloXi2KDWnFbdycwW_6udDJApu8buzf4dlvm594Cy02li7-FIt-fEmWkwYFpi5svVgoQde6XAi8ps1TwuLfDZyG8w7e7thFWLa2jhH_AKPEZdUX9jsbyX53_ECorJk0Ecek14vEQBMMWNzyd_2j_owlcAJSOpq2Y0dz-GoNVGiQZ60mUW5p71u8hOGnwHlypQPnWh7DnqRraBF18Yt4beuhH3BsAA",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "clientid",
+						"value": "di-keycloak-client",
+						"type": "text"
+					},
+					{
+						"key": "clientsecret",
+						"value": "",
+						"type": "text"
+					},
+					{
+						"key": "limit",
+						"value": "10",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " D_INTERVIEW_KEY = '2' and  IX_STATUS_CD = 'SCHED'",
+					"options": {
+						"raw": {
+							"language": "text"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://dataingestion.dts1.nbspreview.com/extraction/api/data-view/test?param=2022-01-01~test",
+					"protocol": "https",
+					"host": [
+						"dataingestion",
+						"dts1",
+						"nbspreview",
+						"com"
+					],
+					"path": [
+						"extraction",
+						"api",
+						"data-view",
+						"test"
+					],
+					"query": [
+						{
+							"key": "param",
+							"value": "2022-01-01~test"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "data-view-config UPSERT",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJmcWhmb0NWUzNGeVByeVBDODlhRDJnbWVCekhXY0NvcFpKZFgwbS1aT2dvIn0.eyJleHAiOjE3NDg2Mjc1NjAsImlhdCI6MTc0ODYyNTc2MCwianRpIjoiMjBhN2Q2OGItZTI3MS00ZGYzLTg3M2QtNzdhZjk2NTAyNGRhIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MTAwL3JlYWxtcy9OQlMiLCJhdWQiOiJhY2NvdW50Iiwic3ViIjoiMjYzNDQ5M2MtZjliMC00YWExLWJlYTMtNWYyYmZlOTQ5MGZkIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoiZGkta2V5Y2xvYWstY2xpZW50IiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyIvKiJdLCJyZWFsbV9hY2Nlc3MiOnsicm9sZXMiOlsib2ZmbGluZV9hY2Nlc3MiLCJkZWZhdWx0LXJvbGVzLW5icyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SG9zdCI6IjE3Mi4xOC4wLjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1kaS1rZXljbG9hay1jbGllbnQiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjE4LjAuMSIsImNsaWVudF9pZCI6ImRpLWtleWNsb2FrLWNsaWVudCJ9.bZhgj5fGQWSXVNMnW2_FVsL-FpX9kMGJXooO0bvsnNOpXunlEeq8lEtmKE8LmZ5I-8xhbb2OQ0gpe76Lo8518hK279GSbAwj0msX3Ecr-9sH2mYJhDEeienuqhaqaxvpmg_nQCNvtP5g-HSP8J8xFbELFUeBwjdrYdKBomyL0-uGNNK7G2o8bAZxVJQVvXDyOf6aISEnYY0QmnQMocr1FVGT2X37BPy3bowtioWrtZ8h_uASos972G6PyeiBgnB4a60o5uh4Tl-JhL904xZfr8FvHJbbu10RDlhjaphMuKAthzT9hWST0XhhWeFEGpoL22BDNyEjwIekzviJccPIZw",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "clientid",
+						"value": "di-keycloak-client",
+						"type": "text"
+					},
+					{
+						"key": "clientsecret",
+						"value": "",
+						"type": "text"
+					},
+					{
+						"key": "limit",
+						"value": "10",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"queryName\": \"test\",\r\n  \"sourceDb\": \"RDB\",\r\n  \"query\": \"SELECT D_INTERVIEW_KEY as interKey, IX_STATUS_CD as cd FROM D_INTERVIEW WHERE_STATEMENT\",\r\n  \"metaData\": \"interKey, cd\",\r\n  \"customParamApplied\": true\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://dataingestion.dts1.nbspreview.com/extraction/api/data-view-config",
+					"protocol": "https",
+					"host": [
+						"dataingestion",
+						"dts1",
+						"nbspreview",
+						"com"
+					],
+					"path": [
+						"extraction",
+						"api",
+						"data-view-config"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "data-view-config GET",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJSdHNXT1FxbW9VSThiSjNQWjNtbnZjSzJuZEJra2xaSHJaZE81T0E2UGZvIn0.eyJleHAiOjE3NDg4OTI3NTMsImlhdCI6MTc0ODg5MDk1MywianRpIjoiYTk0MjgyZjMtMmUzNy00OTg5LWJhZGMtZTgzMzcwMjQ0MWQ3IiwiaXNzIjoiaHR0cDovL2tleWNsb2FrLmRlZmF1bHQuc3ZjLmNsdXN0ZXIubG9jYWwvYXV0aC9yZWFsbXMvTkJTIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImJlMWFjODA4LTIxOTMtNGY2ZC04ZTUxLWM1MTE3YWFjYmU5MyIsInR5cCI6IkJlYXJlciIsImF6cCI6ImRpLWtleWNsb2FrLWNsaWVudCIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwiZGVmYXVsdC1yb2xlcy1uYnMiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsImVtYWlsX3ZlcmlmaWVkIjpmYWxzZSwiY2xpZW50SG9zdCI6IjEwLjUyLjEuNzgiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJzZXJ2aWNlLWFjY291bnQtZGkta2V5Y2xvYWstY2xpZW50IiwiY2xpZW50QWRkcmVzcyI6IjEwLjUyLjEuNzgiLCJjbGllbnRfaWQiOiJkaS1rZXljbG9hay1jbGllbnQifQ.L0OfeCuxs4EAPGuvKmvm_EKXHeCBCcrYUEtcLRitBYL-f2jAsptRnZFbi_XKkwlQGLdOqhwb3OP5UXU_quyE2Mz8C7_m5H6xEE6CRNhdXIMDe1QuCS1IOrYvNSloXi2KDWnFbdycwW_6udDJApu8buzf4dlvm594Cy02li7-FIt-fEmWkwYFpi5svVgoQde6XAi8ps1TwuLfDZyG8w7e7thFWLa2jhH_AKPEZdUX9jsbyX53_ECorJk0Ecek14vEQBMMWNzyd_2j_owlcAJSOpq2Y0dz-GoNVGiQZ60mUW5p71u8hOGnwHlypQPnWh7DnqRraBF18Yt4beuhH3BsAA",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "clientid",
+						"value": "di-keycloak-client",
+						"type": "text"
+					},
+					{
+						"key": "clientsecret",
+						"value": "",
+						"type": "text"
+					},
+					{
+						"key": "limit",
+						"value": "10",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://dataingestion.dts1.nbspreview.com/extraction/api/data-view-config?queryName=MidisInvestigationReminders",
+					"protocol": "https",
+					"host": [
+						"dataingestion",
+						"dts1",
+						"nbspreview",
+						"com"
+					],
+					"path": [
+						"extraction",
+						"api",
+						"data-view-config"
+					],
+					"query": [
+						{
+							"key": "queryName",
+							"value": "MidisInvestigationReminders"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Token",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "clientid",
+						"value": "di-keycloak-client"
+					},
+					{
+						"key": "clientsecret",
+						"value": ""
+					}
+				],
+				"url": {
+					"raw": "https://dataingestion.dts1.nbspreview.com/extraction/api/auth/token",
+					"protocol": "https",
+					"host": [
+						"dataingestion",
+						"dts1",
+						"nbspreview",
+						"com"
+					],
+					"path": [
+						"extraction",
+						"api",
+						"auth",
+						"token"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
