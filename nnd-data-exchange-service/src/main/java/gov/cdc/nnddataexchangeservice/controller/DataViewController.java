@@ -57,7 +57,7 @@ public class DataViewController {
                             schema = @Schema(type = "string"))
             }
     )
-    @GetMapping(path = "/api/data-view/{tableName}")
+    @GetMapping(path = "/api/data-view-old/{tableName}")
     @Deprecated
     public ResponseEntity<?> dataSyncSpecialODSETable(@PathVariable String tableName,
                                                            @RequestParam(name = "timestamp", required = false) String timestamp,
@@ -120,7 +120,7 @@ public class DataViewController {
                     )
             )
     )
-    @GetMapping(path = "/api/data-view-v2/{queryName}",  consumes = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(path = "/api/data-view/{queryName}",  consumes = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<?> dataViewV2Table(@PathVariable String queryName,
                                                   @RequestParam(name = "param", required = false) String param,
                                                   @RequestBody(required = false) String where,
@@ -181,7 +181,7 @@ public class DataViewController {
             )
     )
     @PostMapping("/api/data-view-config")
-    public ResponseEntity<?> createDataViewConfig(@RequestBody DataViewConfigDto dto,
+    public ResponseEntity<?> saveDataViewConfig(@RequestBody DataViewConfigDto dto,
                                                                   HttpServletRequest request)  {
 
         try {
