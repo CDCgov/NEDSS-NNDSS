@@ -1,6 +1,6 @@
 rootProject.name = 'NEDSS-NNDSS'
 
-include 'nnd-data-exchange-service'
+include 'nnd-service'
 
 include 'nnd-data-poll-service'
 

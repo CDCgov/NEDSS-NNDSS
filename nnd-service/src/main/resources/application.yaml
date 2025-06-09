@@ -35,7 +35,7 @@ management:
 
 spring:
   application:
-    name: nnd-data-exchange-service
+    name: nnd-service
   security:
     oauth2:
       resourceserver:

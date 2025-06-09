@@ -1,4 +1,4 @@
-name: Build and push nnd-data-exchange-service image to ECR
+name: Build and push nnd-service image to ECR
 on:
   push:
     branches:
@@ -27,8 +27,8 @@ jobs:
     needs: sonar_scan
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
-      microservice_name: nnd-data-exchange-service
-      dockerfile_relative_path: -f ./nnd-data-exchange-service/Dockerfile .
+      microservice_name: nnd-service
+      dockerfile_relative_path: -f ./nnd-service/Dockerfile .
       environment_classifier: SNAPSHOT
       java_version: "21"
     secrets:
@@ -47,7 +47,7 @@ jobs:
     needs: call-build-microservice-container-workflow
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Update-helm-charts.yaml@main
     with:
-      microservice_name: nnd-data-exchange-service
+      microservice_name: nnd-service
       values_file_with_path: charts/nnd-service/values-dts1.yaml
       new_image_tag: ${{ needs.call-build-microservice-container-workflow.outputs.output_image_tag }}
     secrets:
