@@ -62,6 +62,9 @@ public class JdbcTemplateUtil {
     @Value("${thread.jdbc-level.enabled}")
     protected boolean multiThreadJdbcLevelEnabled = false;
 
+    @Value("${log.detail_log_applied}")
+    protected boolean debugLogApplied = false;
+
     // Initial starter number of task - if 20 then the system begin with 20 parallel task
     @Value("${thread.jdbc-level.initial-concurrency}")
     protected int jdbcLevelInitialConcurrency = 80;
@@ -295,18 +298,21 @@ public class JdbcTemplateUtil {
                                 if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty()) {
                                     sublist.forEach(data -> data.remove("RowNum"));
                                     jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(sublist));
+                                    StringUtil.printDebugLog("persistingGenericTable - batch", sublist, debugLogApplied);
 
                                 } else {
                                     upsertBatch(config.getTableName(), sublist, config.getKeyList());
+                                    StringUtil.printDebugLog("persistingGenericTable - upsert", sublist, debugLogApplied);
                                 }
                             }
                         } else {
                             if (initialLoad || config.getKeyList() == null || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
                                 records.forEach(data -> data.remove("RowNum"));
                                 jdbcInsert.executeBatch(SqlParameterSourceUtils.createBatch(records));
-
+                                StringUtil.printDebugLog("persistingGenericTable - batch", records, debugLogApplied);
                             } else {
                                 upsertBatch(config.getTableName(), records, config.getKeyList());
+                                StringUtil.printDebugLog("persistingGenericTable - upsert", records, debugLogApplied);
                             }
                         }
                     }
@@ -621,12 +627,15 @@ public class JdbcTemplateUtil {
             try {
                 if (config.getKeyList() == null  || config.getKeyList().isEmpty() || config.isRecreateApplied()) {
                     simpleJdbcInsert.execute(new MapSqlParameterSource(res));
+                    StringUtil.printDebugLog("handleBatchInsertionFailure - simpleJdbcInsert", res, debugLogApplied);
                 }
                 else
                 {
                     upsertSingle(config.getTableName(), res, config.getKeyList());
+                    StringUtil.printDebugLog("handleBatchInsertionFailure - upsert", res, debugLogApplied);
                 }
             } catch (Exception ei) {
+                StringUtil.printDebugLog("Error while handleBatchInsertionFailure", res, debugLogApplied);
                 logger.debug("Error occurred during UPSERT/SINGLE INSERTION", ei);
                 ++errorCount;
                 anyError= true;
