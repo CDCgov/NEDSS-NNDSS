@@ -8,7 +8,6 @@ import gov.cdc.nnddatapollservice.service.model.ApiResponseModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.io.UncheckedIOException;
@@ -23,8 +22,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import static gov.cdc.nnddatapollservice.constant.ApiConstantValue.*;
 
 @Service
 public class RetriableRequestExecutorImpl implements RetriableRequestExecutor {
