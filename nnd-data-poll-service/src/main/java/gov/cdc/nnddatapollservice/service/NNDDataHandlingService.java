@@ -59,7 +59,6 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
-//                .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
                 .create();
 
         this.icnTransportQOutService = icnTransportQOutService;
@@ -73,11 +72,6 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
         var netssTimeStamp = netsstTransportService.getMaxTimestamp();
 
         truncatingDataForFullLoadingForModernizedCaseNotification();
-
-        // PULL NETSS first - TRUNCATE then FULL LOAD
-
-        // PULL TRANSPORT second - incremental - then update cloud status to like STLT_SENT??
-
         var token = tokenService.getToken();
 
         var param = new HashMap<String, String>();
