@@ -2,7 +2,7 @@
 // connection reset by peer issue
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.4'
+    id 'org.springframework.boot' version '3.4.5'
     id 'io.spring.dependency-management' version "1.1.6"
     id 'com.github.johnrengelman.shadow' version "7.1.2"
 }
@@ -66,3 +66,12 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
+
+dependencyManagement {
+    dependencies {
+        dependency 'org.apache.tomcat.embed:tomcat-embed-core:10.1.42'
+        dependency 'org.apache.tomcat.embed:tomcat-embed-el:10.1.42'
+        dependency 'org.apache.tomcat.embed:tomcat-embed-websocket:10.1.42'
+    }
+}
+
