@@ -25,6 +25,8 @@ poll:
   single_time_poll_enabled: ${SINGLE_TIME_POLL:false}
   nnd:
     enabled: ${NND_POLL_ENABLED:false}
+  nnd_modern:
+    enabled: ${NND_MODERN_POLL_ENABLED:false}
   rdb:
     enabled: ${RDB_POLL_ENABLED:false}
   rdb_modern:
