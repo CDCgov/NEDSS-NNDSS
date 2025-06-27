@@ -1,0 +1,77 @@
+// https://github.com/spring-projects/spring-framework/issues/32509
+// connection reset by peer issue
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.5'
+    id 'io.spring.dependency-management' version "1.1.6"
+    id 'com.github.johnrengelman.shadow' version "7.1.2"
+}
+springBoot {
+    buildInfo()
+}
+
+group = 'gov.cdc'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom(annotationProcessor)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+}
+
+dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+    implementation 'org.springframework.security:spring-security-config'
+    implementation 'org.springframework.security:spring-security-core'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:12.8.1.jre11'
+    implementation 'com.zaxxer:HikariCP:6.2.1'
+    implementation 'org.liquibase:liquibase-core:4.31.1'
+
+
+    runtimeOnly 'com.nimbusds:oauth2-oidc-sdk:11.8'
+
+
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+    implementation("org.apache.httpcomponents.core5:httpcore5:5.2.5")
+
+    runtimeOnly("com.nimbusds:oauth2-oidc-sdk:11.8")
+
+    testImplementation(platform("org.junit:junit-bom"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.mockito:mockito-core")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+dependencyManagement {
+    dependencies {
+        dependency 'org.apache.tomcat.embed:tomcat-embed-core:10.1.42'
+        dependency 'org.apache.tomcat.embed:tomcat-embed-el:10.1.42'
+        dependency 'org.apache.tomcat.embed:tomcat-embed-websocket:10.1.42'
+    }
+}
+
