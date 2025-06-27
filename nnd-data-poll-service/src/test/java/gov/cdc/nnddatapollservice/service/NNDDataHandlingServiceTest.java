@@ -58,7 +58,7 @@ class NNDDataHandlingServiceTest {
     void testPersistingExchangeData_Exception() throws DataPollException {
         String data = "invalid json";
 
-        assertThrows(DataPollException.class, () -> dataHandlingService.persistingExchangeData(data));
+        assertThrows(DataPollException.class, () -> dataHandlingService.persistingExchangeData(data, false));
 
         verify(icnTransportQOutService, never()).saveDataExchange(anyList());
         verify(transportQOutService, never()).saveDataExchange(anyList());

@@ -59,7 +59,6 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampSerializer())
                 .registerTypeAdapter(Timestamp.class, TimestampAdapter.getTimestampDeserializer())
-//                .setDateFormat("yyyy-MM-dd HH:mm:ss.SSS")
                 .create();
 
         this.icnTransportQOutService = icnTransportQOutService;
@@ -68,6 +67,29 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
         this.tokenService = tokenService;
     }
 
+    public void handlingNndForModernizedCaseNotification() throws DataPollException {
+        var transportTimeStamp = transportQOutService.getMaxTimestamp();
+        var netssTimeStamp = netsstTransportService.getMaxTimestamp();
+
+        truncatingDataForFullLoadingForModernizedCaseNotification();
+        var token = tokenService.getToken();
+
+        var param = new HashMap<String, String>();
+        param.put("cnStatusTime", "");
+        param.put("transportStatusTime", transportTimeStamp);
+        param.put("netssTime", netssTimeStamp);
+        param.put("statusCd", "IGNORED");
+
+        String data = callDataExchangeEndpoint(token, param);
+
+        var deCompressedData = DataSimplification.decodeAndDecompress(data);
+
+        int index = deCompressedData.lastIndexOf("],") + 2;
+        String countLoggingString = "{" + deCompressedData.substring(index).trim();
+        logger.info("Decompressed Data count is: {}", countLoggingString);
+
+        persistingExchangeData(deCompressedData, true);
+    }
     public void handlingExchangedData() throws DataPollException {
         truncatingDataForFullLoading();
         var cnTimeStamp = icnTransportQOutService.getMaxTimestamp();
@@ -90,14 +112,14 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
         String countLoggingString = "{" + deCompressedData.substring(index).trim();
         logger.info("Decompressed Data count is: {}", countLoggingString);
 
-        persistingExchangeData(deCompressedData);
+        persistingExchangeData(deCompressedData, false);
     }
 
-    public void persistingExchangeData(String data) throws DataPollException {
+    public void persistingExchangeData(String data, boolean modernizedCaseNotificationApplied) throws DataPollException {
         try {
             var dataExchangeModel = gson.fromJson(data, DataExchangeModel.class);
 
-            if (!dataExchangeModel.getCnTransportQOutDtoList().isEmpty()) {
+            if (!dataExchangeModel.getCnTransportQOutDtoList().isEmpty() && !modernizedCaseNotificationApplied) {
                 icnTransportQOutService.saveDataExchange(dataExchangeModel.getCnTransportQOutDtoList());
             }
 
@@ -120,7 +142,13 @@ public class NNDDataHandlingService implements INNDDataHandlingService {
             transportQOutService.truncatingData();
             netsstTransportService.truncatingData();
         }
+    }
 
+    protected void truncatingDataForFullLoadingForModernizedCaseNotification() {
+        if (fullLoadApplied) {
+            transportQOutService.truncatingData();
+            netsstTransportService.truncatingData();
+        }
     }
 
     protected String callDataExchangeEndpoint(String token, Map<String, String> params) throws DataPollException {

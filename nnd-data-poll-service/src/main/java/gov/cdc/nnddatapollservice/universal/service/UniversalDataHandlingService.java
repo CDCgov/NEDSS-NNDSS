@@ -659,18 +659,27 @@ public class UniversalDataHandlingService implements IUniversalDataHandlingServi
             timeStampForPoll = iPollCommonService.getCurrentTimestamp();
         }
 
-        Timestamp ts = Timestamp.valueOf(timeStampForPoll);
-        timeStampForPoll = ts.toLocalDateTime()
-                .minusDays(1)
-                .withHour(19)
-                .withMinute(0)
-                .withSecond(0)
-                .withNano(0)
-                .toString();
+        // Only Apply offset on the increment load
+        // full load would indicate 2 scenarios - true first full load and ELT recreate load
+        if (!isInitialLoad) {
+            Timestamp ts = Timestamp.valueOf(timeStampForPoll);
+            timeStampForPoll = ts.toLocalDateTime()
+                    .minusDays(1)
+                    .withHour(19)
+                    .withMinute(0)
+                    .withSecond(0)
+                    .withNano(0)
+                    .toString();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-        timeStampForPoll.formatted(formatter);
-        return timeStampForPoll.replaceAll("T", " ");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+            timeStampForPoll.formatted(formatter);
+            return timeStampForPoll.replaceAll("T", " ");
+        }
+        else
+        {
+            return timeStampForPoll;
+        }
+
     }
 
     protected String getMaxId(boolean isInitialLoad, String tableName, String key) {

@@ -26,6 +26,10 @@ public class DataPullService implements IDataPullService {
 
     @Value("${poll.nnd.enabled}")
     private boolean nndPollEnabled;
+
+    @Value("${poll.nnd_modern.enabled}")
+    private boolean nndPollEnabledForModernizedNotification;
+
     @Value("${poll.rdb.enabled}")
     private boolean rdbPollEnabled;
 
@@ -61,6 +65,13 @@ public class DataPullService implements IDataPullService {
             logger.info("START POLLING");
             logger.info("NND CRON: {}, TZ: {}", cron, zone);
             dataHandlingService.handlingExchangedData();
+            logger.info("END POLLING");
+            closePoller();
+        }
+        else if (nndPollEnabledForModernizedNotification) {
+            logger.info("START POLLING");
+            logger.info("NND FOR MODERNIZED CRON: {}, TZ: {}", cron, zone);
+            dataHandlingService.handlingNndForModernizedCaseNotification();
             logger.info("END POLLING");
             closePoller();
         }

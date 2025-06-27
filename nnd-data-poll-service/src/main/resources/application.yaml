@@ -25,6 +25,8 @@ poll:
   single_time_poll_enabled: ${SINGLE_TIME_POLL:false}
   nnd:
     enabled: ${NND_POLL_ENABLED:false}
+  nnd_modern:
+    enabled: ${NND_MODERN_POLL_ENABLED:false}
   rdb:
     enabled: ${RDB_POLL_ENABLED:false}
   rdb_modern:
@@ -37,6 +39,9 @@ poll:
     enabled: ${SRTE_POLL_ENABLED:false}
   edx_activity:
     enabled: ${EDX_ACTIVITY_ENABLED:false}
+
+log:
+  detail_log_applied: ${DEBUG_LOG:false}
 
 datasync:
   store_in_sql: ${DATASYNC_STORE_SQL:false}
@@ -128,10 +133,22 @@ spring:
     dataSync:
       url: jdbc:sqlserver://${OP_DBSERVER:};databaseName=${DATASYNC_DBNAME:};encrypt=true;trustServerCertificate=true;
   jpa:
-    show-sql: true
+    show-sql: false
+    properties:
+      hibernate.format_sql: false
+      hibernate.use_sql_comments: false
     hibernate:
       ddl-auto: none
 #logging:
 #  level:
 #    com.zaxxer.hikari: DEBUG
 
+#logging:
+#  level:
+#    root: INFO
+#    com.zaxxer.hikari: DEBUG
+#    org.springframework.jdbc: DEBUG
+#    org.hibernate.SQL: OFF
+#    org.hibernate.type.descriptor.sql: OFF
+#    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+#    gov.cdc.nnddatapollservice: DEBUG

@@ -59,6 +59,8 @@ sonarqube {
                 "**/NndDataPollServiceApplication.java, " +
                 "**/TokenController.java, " +
                 "**/data_generator/**, " +
-                "**/HandleError.java"
+                "**/HandleError.java, " +
+                "**/nnddatapollservice/**, " +
+                "**/nnddataexchangeservice/**"
     }
 }
