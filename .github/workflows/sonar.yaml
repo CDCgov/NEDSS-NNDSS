@@ -13,7 +13,7 @@ on:
         required: true
   pull_request:
     paths:
-      - "nnd-data-exchange-service/**"
+      - "nnd-service/**"
       - "nnd-data-poll-service/**"
       - "netss-message-processor/**"
       - ".github/workflows/sonar.yaml"
