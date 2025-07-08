@@ -31,6 +31,7 @@ public class DataViewService implements IDataViewService {
     private final JdbcTemplate rdbModernJdbcTemplate;
     private final JdbcTemplate odseJdbcTemplate;
     private final JdbcTemplate msgJdbcTemplate;
+    private final JdbcTemplate crossJdbcTemplate;
     @Value("${service.timezone}")
     private String tz = "UTC";
     public DataViewService(
@@ -39,7 +40,8 @@ public class DataViewService implements IDataViewService {
             @Qualifier("srteJdbcTemplate") JdbcTemplate srteJdbcTemplate,
             @Qualifier("rdbModernJdbcTemplate") JdbcTemplate rdbModernJdbcTemplate,
             @Qualifier("odseJdbcTemplate") JdbcTemplate odseJdbcTemplate,
-            @Qualifier("msgJdbcTemplate")  JdbcTemplate msgJdbcTemplate
+            @Qualifier("msgJdbcTemplate")  JdbcTemplate msgJdbcTemplate,
+            @Qualifier("crossDbJdbcTemplate")  JdbcTemplate crossJdbcTemplate
     )
     {
         this.dataViewConfigRepository = dataViewConfigRepository;
@@ -48,6 +50,7 @@ public class DataViewService implements IDataViewService {
         this.rdbModernJdbcTemplate = rdbModernJdbcTemplate;
         this.odseJdbcTemplate = odseJdbcTemplate;
         this.msgJdbcTemplate = msgJdbcTemplate;
+        this.crossJdbcTemplate = crossJdbcTemplate;
     }
 
     public List<DataViewConfig> getConfigs(String queryName) throws DataExchangeException {
@@ -99,7 +102,7 @@ public class DataViewService implements IDataViewService {
             paramArray = (param != null && !param.isEmpty()) ? param.split("~") : new String[0];
         }
         try {
-            List<Map<String, Object>> result = jdbcTemplateHelperForDataRetrieval(config, paramArray);
+            List<Map<String, Object>> result = jdbcTemplateHelperForDataRetrieval(config, paramArray, config.getCrossDbApplied());
             List<String> metaColumns = parseMetaColumns(config.getMetaData());
             JsonArray parentArray = buildJsonArrayFromResult(result, metaColumns);
             return new GsonBuilder().setPrettyPrinting().create().toJson(parentArray);
@@ -110,7 +113,8 @@ public class DataViewService implements IDataViewService {
 
 
     public List<Map<String, Object>> jdbcTemplateHelperForDataRetrieval(DataViewConfig config,
-                                                                        String[] paramArray) throws DataExchangeException {
+                                                                        String[] paramArray,
+                                                                        boolean crossDbApplied) throws DataExchangeException {
         String sourceDb = config.getSourceDb();
         String query = config.getQuery();
         Object[] params =  new Object[]{};
@@ -132,16 +136,21 @@ public class DataViewService implements IDataViewService {
             }
             params = paramApplied ? paramArray : new Object[]{};
         }
+        JdbcTemplate selectedTemplate;
+        if (crossDbApplied) {
+            selectedTemplate = crossJdbcTemplate;
+        }
+        else {
+            selectedTemplate = switch (sourceDb.toUpperCase()) {
+                case DB_RDB -> jdbcTemplate;
+                case DB_SRTE -> srteJdbcTemplate;
+                case DB_RDB_MODERN -> rdbModernJdbcTemplate;
+                case DB_NBS_ODSE -> odseJdbcTemplate;
+                case DB_NBS_MSG -> msgJdbcTemplate;
+                default -> throw new DataExchangeException("Database Not Supported: " + sourceDb);
+            };
 
-
-        JdbcTemplate selectedTemplate = switch (sourceDb.toUpperCase()) {
-            case DB_RDB -> jdbcTemplate;
-            case DB_SRTE -> srteJdbcTemplate;
-            case DB_RDB_MODERN -> rdbModernJdbcTemplate;
-            case DB_NBS_ODSE -> odseJdbcTemplate;
-            case DB_NBS_MSG -> msgJdbcTemplate;
-            default -> throw new DataExchangeException("Database Not Supported: " + sourceDb);
-        };
+        }
 
         return selectedTemplate.queryForList(query, params);
     }

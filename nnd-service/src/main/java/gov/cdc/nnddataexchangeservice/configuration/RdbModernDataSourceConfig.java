@@ -31,60 +31,37 @@ import java.util.HashMap;
         }
 )
 public class RdbModernDataSourceConfig {
-    @Value("${spring.datasource.driver-class-name}")
-    private String driverClassName;
+    private final DbPropertiesProvider dbPropertiesProvider;
+
 
     @Value("${spring.datasource.rdbModern.url}")
     private String dbUrl;
 
-    @Value("${spring.datasource.username}")
-    private String dbUserName;
-
-    @Value("${spring.datasource.password}")
-    private String dbUserPassword;
-
-    @Value("${spring.datasource.hikari.maximum-pool-size:100}")
-    private int maximumPoolSize;
-
-    @Value("${spring.datasource.hikari.minimum-idle:50}")
-    private int minimumIdle;
-
-    @Value("${spring.datasource.hikari.idle-timeout:120000}")
-    private long idleTimeout;
-
-    @Value("${spring.datasource.hikari.max-lifetime:1200000}")
-    private long maxLifetime;
-
-    @Value("${spring.datasource.hikari.connection-timeout:300000}")
-    private long connectionTimeout;
-
     @Value("${spring.datasource.hikari.pool-name.rdbmodern:OdseHikariCP}")
     private String poolName;
 
-    @Value("${spring.datasource.hikari.keepalive-time:300000}")
-    private long keepaliveTime;
-
-    @Value("${spring.datasource.hikari.validation-timeout:500}")
-    private long validationTimeout;
+    public RdbModernDataSourceConfig(DbPropertiesProvider dbPropertiesProvider) {
+        this.dbPropertiesProvider = dbPropertiesProvider;
+    }
 
     @Bean(name = "rdbModernDataSource")
     public DataSource rdbModernDataSource() {
         HikariConfig hikariConfig = new HikariConfig();
-        hikariConfig.setDriverClassName(driverClassName);
+        hikariConfig.setDriverClassName(dbPropertiesProvider.getDriverClassName());
         hikariConfig.setJdbcUrl(dbUrl);
-        hikariConfig.setUsername(dbUserName);
-        hikariConfig.setPassword(dbUserPassword);
+        hikariConfig.setUsername(dbPropertiesProvider.getDbUserName());
+        hikariConfig.setPassword(dbPropertiesProvider.getDbUserPassword());
 
         // HikariCP-specific settings
-        hikariConfig.setMaximumPoolSize(maximumPoolSize);
-        hikariConfig.setMinimumIdle(minimumIdle);
-        hikariConfig.setIdleTimeout(idleTimeout);
-        hikariConfig.setMaxLifetime(maxLifetime);
-        hikariConfig.setConnectionTimeout(connectionTimeout);
+        hikariConfig.setMaximumPoolSize(dbPropertiesProvider.getMaximumPoolSize());
+        hikariConfig.setMinimumIdle(dbPropertiesProvider.getMinimumIdle());
+        hikariConfig.setIdleTimeout(dbPropertiesProvider.getIdleTimeout());
+        hikariConfig.setMaxLifetime(dbPropertiesProvider.getMaxLifetime());
+        hikariConfig.setConnectionTimeout(dbPropertiesProvider.getConnectionTimeout());
         hikariConfig.setPoolName(poolName);
 
-        hikariConfig.setKeepaliveTime(keepaliveTime);
-        hikariConfig.setValidationTimeout(validationTimeout);
+        hikariConfig.setKeepaliveTime(dbPropertiesProvider.getKeepaliveTime());
+        hikariConfig.setValidationTimeout(dbPropertiesProvider.getValidationTimeout());
         hikariConfig.setInitializationFailTimeout(-1);
         hikariConfig.setConnectionTestQuery("SELECT 1");
         return new HikariDataSource(hikariConfig);

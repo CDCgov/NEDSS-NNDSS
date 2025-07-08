@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 public class TokenController {
     @Value("${auth.token-uri}")
     String authTokenUri;
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
     public TokenController(@Qualifier("restTemplate") RestTemplate restTemplate) {
         this.restTemplate=restTemplate;
     }
