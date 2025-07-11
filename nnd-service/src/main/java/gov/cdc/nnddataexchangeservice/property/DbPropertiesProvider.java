@@ -1,4 +1,4 @@
-package gov.cdc.nnddataexchangeservice.configuration;
+package gov.cdc.nnddataexchangeservice.property;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;

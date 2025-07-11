@@ -2,6 +2,7 @@ package gov.cdc.nnddataexchangeservice.configuration;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import gov.cdc.nnddataexchangeservice.property.DbPropertiesProvider;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

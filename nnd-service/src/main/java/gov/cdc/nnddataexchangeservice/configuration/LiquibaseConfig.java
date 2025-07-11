@@ -1,5 +1,6 @@
 package gov.cdc.nnddataexchangeservice.configuration;
 
+import gov.cdc.nnddataexchangeservice.property.DbPropertiesProvider;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
