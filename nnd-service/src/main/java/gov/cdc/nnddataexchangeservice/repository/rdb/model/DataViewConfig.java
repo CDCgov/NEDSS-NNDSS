@@ -37,6 +37,9 @@ public class DataViewConfig {
     @Column(name = "custom_param_applied")
     private Boolean customParamApplied;
 
+    @Column(name = "cross_db_applied")
+    private Boolean crossDbApplied;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Timestamp createdAt;
@@ -55,6 +58,7 @@ public class DataViewConfig {
         this.query = dto.getQuery();
         this.metaData = dto.getMetaData();
         this.customParamApplied = dto.getCustomParamApplied();
+        this.crossDbApplied = dto.getCrossDbApplied();
     }
 
 }

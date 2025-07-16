@@ -73,6 +73,7 @@ spring:
         odse: HIKARI_POOL_ODSE
         rdbmodern: HIKARI_POOL_RDB_MODERN
         srte: HIKARI_POOL_SRTE
+        crossdb: HIKARI_POOL_CROSS
       validation-timeout: ${HIKARI_VALIDATION_TIMEOUT:5000}
       leak-detection-threshold: ${LEAK_DETECTION_THRESHOLD:30000}
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

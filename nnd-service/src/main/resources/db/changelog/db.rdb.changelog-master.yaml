@@ -71,3 +71,11 @@ databaseChangeLog:
         - sqlFile:
             path: db/rdb/tables/004-alter-data-sync-config-002.sql
             splitStatements: false
+  - changeSet:
+      id: 9
+      author: liquibase
+      runOnChange: true
+      changes:
+        - sqlFile:
+            path: db/rdb/tables/005-alter-data-view-config-add-cross-db-check-001.sql
+            splitStatements: false

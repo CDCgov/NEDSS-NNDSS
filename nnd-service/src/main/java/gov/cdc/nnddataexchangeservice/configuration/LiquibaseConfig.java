@@ -1,5 +1,6 @@
 package gov.cdc.nnddataexchangeservice.configuration;
 
+import gov.cdc.nnddataexchangeservice.property.DbPropertiesProvider;
 import liquibase.integration.spring.SpringLiquibase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,18 +15,15 @@ import java.util.List;
 
 @Configuration
 public class LiquibaseConfig {
-
-    @Value("${spring.liquibase.user}")
-    private String dbUserName;
-
-    @Value("${spring.liquibase.password}")
-    private String dbUserPassword;
-
-    @Value("${spring.liquibase.driver-class-name}")
-    private String driverClassName;
+    private final DbPropertiesProvider dbPropertiesProvider;
 
     @Value("${spring.liquibase.url}")
     private String dbUrl;
+
+    public LiquibaseConfig(DbPropertiesProvider dbPropertiesProvider) {
+        this.dbPropertiesProvider = dbPropertiesProvider;
+    }
+
     @Bean
     @ConfigurationProperties(prefix = "spring.liquibase")
     public LiquibaseProperties liquibaseProperties() {
@@ -36,9 +34,9 @@ public class LiquibaseConfig {
     public DataSource liquibaseDataSource() {
         return DataSourceBuilder.create()
                 .url(dbUrl)
-                .username(dbUserName)
-                .password(dbUserPassword)
-                .driverClassName(driverClassName)
+                .username(dbPropertiesProvider.getDbUserName())
+                .password(dbPropertiesProvider.getDbUserPassword())
+                .driverClassName(dbPropertiesProvider.getDriverClassName())
                 .build();
     }
 

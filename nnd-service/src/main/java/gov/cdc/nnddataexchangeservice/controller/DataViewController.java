@@ -151,7 +151,8 @@ public class DataViewController {
           "sourceDb": String (required) - support (RDB, NBS_ODSE, NBS_MSGOUTE, SRTE, RDB_MODERN)
           "query": String (required),
           "metaData": String (optional),
-          "customParamApplied": Boolean (optional) - value is true or false
+          "customParamApplied": Boolean (optional) - value is true or false,
+          "crossDbApplied": Boolean (optional) - value is true or false,
         }
         ```
         """,

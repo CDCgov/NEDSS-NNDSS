@@ -19,6 +19,7 @@ public class DataViewConfigDto {
     private String query;
     private String metaData;
     private Boolean customParamApplied;
+    private Boolean crossDbApplied;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
@@ -32,6 +33,7 @@ public class DataViewConfigDto {
                 .customParamApplied(entity.getCustomParamApplied())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .crossDbApplied(entity.getCrossDbApplied())
                 .build();
     }
 }
