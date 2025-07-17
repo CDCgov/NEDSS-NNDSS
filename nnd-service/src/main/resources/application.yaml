@@ -42,16 +42,6 @@ spring:
         jwt:
           issuer-uri: ${NND_AUTH_URI}
           jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
-
-auth:
-  token-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/token
-  introspect-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/token/introspect
-
----
-spring:
-  config:
-    activate:
-      on-profile: default
   liquibase:
     change-log: classpath:db/changelog/db.rdb.changelog-master.yaml
     enabled: true
@@ -93,6 +83,33 @@ spring:
     show-sql: true
     hibernate:
       ddl-auto: none
+
+auth:
+  token-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/token
+  introspect-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/token/introspect
+
+---
+spring:
+  config:
+    activate:
+      on-profile: default
+  springdoc:
+    api-docs:
+      enabled: false
+    swagger-ui:
+      enabled: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  springdoc:
+    api-docs:
+      enabled: true
+    swagger-ui:
+      enabled: true
+---
 
 logging:
   level:
