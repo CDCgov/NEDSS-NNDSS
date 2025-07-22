@@ -1,0 +1,1423 @@
+{
+	"info": {
+		"_postman_id": "e066d509-8fa4-40be-9912-8a13140ed8e9",
+		"name": "Data Sync Service API",
+		"description": "This API exposes endpoints to manage Data Extraction Services.\n\nContact Support:\n Name: Data Sync Service\n Email: nndservice@cdc.com",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25680585",
+		"_collection_link": "https://data-team-0400.postman.co/workspace/08287add-14ad-4ca6-b115-b6f95b8635db/collection/25680585-e066d509-8fa4-40be-9912-8a13140ed8e9?action=share&source=collection_link&creator=25680585"
+	},
+	"item": [
+		{
+			"name": "api",
+			"item": [
+				{
+					"name": "datasync",
+					"item": [
+						{
+							"name": "Decoding data that return from data sync endpoint",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "{{keycloakClientId}}",
+										"description": "(Required) The Client Id for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "{{keycloakClientSecret}}",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/datasync/decode",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"datasync",
+										"decode"
+									]
+								},
+								"description": "Data Sync return zipped and encoded data, this endpoint can be used to decode the data for inspection and integration"
+							},
+							"response": [
+								{
+									"name": "OK",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer <token>",
+												"description": "Added as a part of security scheme: bearer"
+											},
+											{
+												"key": "clientid",
+												"value": "veniam aute",
+												"description": "(Required) The Client Id for authentication"
+											},
+											{
+												"key": "clientsecret",
+												"value": "veniam aute",
+												"description": "(Required) The Client Secret for authentication"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "veniam aute",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/datasync/decode",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"datasync",
+												"decode"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "text",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "*/*"
+										}
+									],
+									"cookie": [],
+									"body": "veniam aute"
+								}
+							]
+						},
+						{
+							"name": "Get data from multiple tables related to Datasync process",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "{{keycloakClientId}}",
+										"description": "(Required) The Client Id for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "{{keycloakClientSecret}}",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "startRow",
+										"value": "0",
+										"description": "The starting row for pagination"
+									},
+									{
+										"key": "endRow",
+										"value": "0",
+										"description": "The ending row for pagination"
+									},
+									{
+										"key": "initialLoad",
+										"value": "false",
+										"description": "Flag indicating whether this is an initial data load"
+									},
+									{
+										"key": "allowNull",
+										"value": "false",
+										"description": "Flag indicating whether null timestamps are allowed"
+									},
+									{
+										"key": "version",
+										"value": "1",
+										"description": "Version check Flag"
+									},
+									{
+										"key": "noPagination",
+										"value": "false",
+										"description": "No Pagination check Flag"
+									},
+									{
+										"key": "useKeyPagination",
+										"value": "false",
+										"description": "Use Key Pagination check Flag"
+									},
+									{
+										"key": "lastKey",
+										"value": "",
+										"description": "Last use Key indicator"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/datasync/:tableName?timestamp=",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"datasync",
+										":tableName"
+									],
+									"query": [
+										{
+											"key": "timestamp",
+											"value": "",
+											"description": "(Required) Timestamp parameter used to filter data"
+										}
+									],
+									"variable": [
+										{
+											"key": "tableName",
+											"value": "",
+											"description": "(Required) The name of the table from which data is to be synced"
+										}
+									]
+								},
+								"description": "Fetches data from the specified table based on the timestamp for data synchronization."
+							},
+							"response": [
+								{
+									"name": "OK",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer <token>",
+												"description": "Added as a part of security scheme: bearer"
+											},
+											{
+												"key": "clientid",
+												"value": "veniam aute",
+												"description": "(Required) The Client Id for authentication"
+											},
+											{
+												"key": "clientsecret",
+												"value": "veniam aute",
+												"description": "(Required) The Client Secret for authentication"
+											},
+											{
+												"key": "startRow",
+												"value": "0",
+												"description": "The starting row for pagination"
+											},
+											{
+												"key": "endRow",
+												"value": "0",
+												"description": "The ending row for pagination"
+											},
+											{
+												"key": "initialLoad",
+												"value": "false",
+												"description": "Flag indicating whether this is an initial data load"
+											},
+											{
+												"key": "allowNull",
+												"value": "false",
+												"description": "Flag indicating whether null timestamps are allowed"
+											},
+											{
+												"key": "version",
+												"value": "1",
+												"description": "Version check Flag"
+											},
+											{
+												"key": "noPagination",
+												"value": "false",
+												"description": "No Pagination check Flag"
+											},
+											{
+												"key": "useKeyPagination",
+												"value": "false",
+												"description": "Use Key Pagination check Flag"
+											},
+											{
+												"key": "lastKey",
+												"value": "veniam aute",
+												"description": "Last use Key indicator"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/datasync/:tableName?timestamp=veniam aute",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"datasync",
+												":tableName"
+											],
+											"query": [
+												{
+													"key": "timestamp",
+													"value": "veniam aute"
+												}
+											],
+											"variable": [
+												{
+													"key": "tableName",
+													"value": "veniam aute",
+													"description": "(Required) The name of the table from which data is to be synced"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "*/*"
+										}
+									],
+									"cookie": [],
+									"body": "{}"
+								}
+							]
+						},
+						{
+							"name": "Get Meta data for specific table",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "{{keycloakClientId}}",
+										"description": "(Required) The Client Id for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "{{keycloakClientSecret}}",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "version",
+										"value": "1",
+										"description": "Version check Flag"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/datasync/metadata/:tableName?sourcedb=",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"datasync",
+										"metadata",
+										":tableName"
+									],
+									"query": [
+										{
+											"key": "sourcedb",
+											"value": "",
+											"description": "(Required) Source DB"
+										}
+									],
+									"variable": [
+										{
+											"key": "tableName",
+											"value": "",
+											"description": "(Required) The name of the table to retrieve the record count from"
+										}
+									]
+								},
+								"description": "This endpoint will return data detail info such as field information like name, and data type"
+							},
+							"response": [
+								{
+									"name": "OK",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer <token>",
+												"description": "Added as a part of security scheme: bearer"
+											},
+											{
+												"key": "clientid",
+												"value": "veniam aute",
+												"description": "(Required) The Client Id for authentication"
+											},
+											{
+												"key": "clientsecret",
+												"value": "veniam aute",
+												"description": "(Required) The Client Secret for authentication"
+											},
+											{
+												"key": "version",
+												"value": "1",
+												"description": "Version check Flag"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/datasync/metadata/:tableName?sourcedb=veniam aute",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"datasync",
+												"metadata",
+												":tableName"
+											],
+											"query": [
+												{
+													"key": "sourcedb",
+													"value": "veniam aute"
+												}
+											],
+											"variable": [
+												{
+													"key": "tableName",
+													"value": "veniam aute",
+													"description": "(Required) The name of the table to retrieve the record count from"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "*/*"
+										}
+									],
+									"cookie": [],
+									"body": "{}"
+								}
+							]
+						},
+						{
+							"name": "Get total record count for data sync from NND",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "{{keycloakClientId}}",
+										"description": "(Required) The Client Id for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "{{keycloakClientSecret}}",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "initialLoad",
+										"value": "false",
+										"description": "Flag indicating whether this is an initial data load"
+									},
+									{
+										"key": "version",
+										"value": "1",
+										"description": "Version check Flag"
+									},
+									{
+										"key": "useKeyPagination",
+										"value": "false",
+										"description": "Use Key Pagination check Flag"
+									},
+									{
+										"key": "lastKey",
+										"value": "",
+										"description": "Last use Key indicator"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/datasync/count/:tableName?timestamp=",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"datasync",
+										"count",
+										":tableName"
+									],
+									"query": [
+										{
+											"key": "timestamp",
+											"value": "",
+											"description": "(Required) Timestamp parameter used to filter records"
+										}
+									],
+									"variable": [
+										{
+											"key": "tableName",
+											"value": "",
+											"description": "(Required) The name of the table to retrieve the record count from"
+										}
+									]
+								},
+								"description": "Fetches the total number of records from the specified table based on the timestamp for data synchronization. Requires client authentication headers."
+							},
+							"response": [
+								{
+									"name": "OK",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer <token>",
+												"description": "Added as a part of security scheme: bearer"
+											},
+											{
+												"key": "clientid",
+												"value": "veniam aute",
+												"description": "(Required) The Client Id for authentication"
+											},
+											{
+												"key": "clientsecret",
+												"value": "veniam aute",
+												"description": "(Required) The Client Secret for authentication"
+											},
+											{
+												"key": "initialLoad",
+												"value": "false",
+												"description": "Flag indicating whether this is an initial data load"
+											},
+											{
+												"key": "version",
+												"value": "1",
+												"description": "Version check Flag"
+											},
+											{
+												"key": "useKeyPagination",
+												"value": "false",
+												"description": "Use Key Pagination check Flag"
+											},
+											{
+												"key": "lastKey",
+												"value": "veniam aute",
+												"description": "Last use Key indicator"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/datasync/count/:tableName?timestamp=veniam aute",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"datasync",
+												"count",
+												":tableName"
+											],
+											"query": [
+												{
+													"key": "timestamp",
+													"value": "veniam aute"
+												}
+											],
+											"variable": [
+												{
+													"key": "tableName",
+													"value": "veniam aute",
+													"description": "(Required) The name of the table to retrieve the record count from"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "*/*"
+										}
+									],
+									"cookie": [],
+									"body": "{}"
+								}
+							]
+						},
+						{
+							"name": "Get count for all tables",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "{{keycloakClientId}}",
+										"description": "(Required) The Client Id for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "{{keycloakClientSecret}}",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/datasync/all-tables-count?sourceDbName=&tableName=&timestamp=&nullTimestampAllow=",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"datasync",
+										"all-tables-count"
+									],
+									"query": [
+										{
+											"key": "sourceDbName",
+											"value": "",
+											"description": "Optional source database name to filter counts"
+										},
+										{
+											"key": "tableName",
+											"value": "",
+											"description": "Optional table name to filter counts"
+										},
+										{
+											"key": "timestamp",
+											"value": "",
+											"description": "Optional timestamp to filter counts"
+										},
+										{
+											"key": "nullTimestampAllow",
+											"value": "",
+											"description": "Optional null ts value allow flag to filter counts - value should be either true, false or empty"
+										}
+									]
+								},
+								"description": "Fetches the record count for all tables, optionally filtered by source database, table name, and timestamp. Requires client authentication headers."
+							},
+							"response": [
+								{
+									"name": "OK",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer <token>",
+												"description": "Added as a part of security scheme: bearer"
+											},
+											{
+												"key": "clientid",
+												"value": "veniam aute",
+												"description": "(Required) The Client Id for authentication"
+											},
+											{
+												"key": "clientsecret",
+												"value": "veniam aute",
+												"description": "(Required) The Client Secret for authentication"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/datasync/all-tables-count?sourceDbName=veniam aute&tableName=veniam aute&timestamp=veniam aute&nullTimestampAllow=veniam aute",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"datasync",
+												"all-tables-count"
+											],
+											"query": [
+												{
+													"key": "sourceDbName",
+													"value": "veniam aute"
+												},
+												{
+													"key": "tableName",
+													"value": "veniam aute"
+												},
+												{
+													"key": "timestamp",
+													"value": "veniam aute"
+												},
+												{
+													"key": "nullTimestampAllow",
+													"value": "veniam aute"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "*/*"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"cillumd4a\": {},\n  \"ut4\": {}\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "data-view-config",
+					"item": [
+						{
+							"name": "Fetch Data View Config",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "{{keycloakClientId}}",
+										"description": "(Required) The Client ID for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "{{keycloakClientSecret}}",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/data-view-config?queryName=",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"data-view-config"
+									],
+									"query": [
+										{
+											"key": "queryName",
+											"value": "",
+											"description": "Optional filter for specific query name. If omitted, returns all configs."
+										}
+									]
+								},
+								"description": "Retrieve Data View Config(s) from the system.\n\n- If `queryName` is provided, returns the specific config matching the name.\n- If not provided, returns **all available** data view configurations.\n"
+							},
+							"response": [
+								{
+									"name": "OK",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer <token>",
+												"description": "Added as a part of security scheme: bearer"
+											},
+											{
+												"key": "clientid",
+												"value": "veniam aute",
+												"description": "(Required) The Client ID for authentication"
+											},
+											{
+												"key": "clientsecret",
+												"value": "veniam aute",
+												"description": "(Required) The Client Secret for authentication"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/data-view-config?queryName=veniam aute",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"data-view-config"
+											],
+											"query": [
+												{
+													"key": "queryName",
+													"value": "veniam aute"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "*/*"
+										}
+									],
+									"cookie": [],
+									"body": "{}"
+								}
+							]
+						},
+						{
+							"name": "Add or Update Data View Config",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "{{keycloakClientId}}",
+										"description": "(Required) The Client ID for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "{{keycloakClientSecret}}",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"id\": 98091139,\n  \"queryName\": \"non laboris\",\n  \"sourceDb\": \"irure sint mollit ut\",\n  \"query\": \"aute Lorem ullamco\",\n  \"metaData\": \"dolor\",\n  \"customParamApplied\": false,\n  \"crossDbApplied\": true,\n  \"createdAt\": \"1969-06-12T22:51:13.065Z\",\n  \"updatedAt\": \"2020-01-28T10:36:20.693Z\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/data-view-config",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"data-view-config"
+									]
+								},
+								"description": "This endpoint is used to add or update a data view config record.\n- If config require CUSTOM PARAM, it must have WHERE_STATEMENT key in the where clause location\n- If an existing `queryName` is provided, the record will be **updated**.\n- If the `queryName` is new, the record will be **inserted**.\n\nThe request body must match the following model:\n```\n{\n  \"queryName\": String (required),\n  \"sourceDb\": String (required) - support (RDB, NBS_ODSE, NBS_MSGOUTE, SRTE, RDB_MODERN)\n  \"query\": String (required),\n  \"metaData\": String (optional),\n  \"customParamApplied\": Boolean (optional) - value is true or false,\n  \"crossDbApplied\": Boolean (optional) - value is true or false,\n}\n```\n"
+							},
+							"response": [
+								{
+									"name": "OK",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer <token>",
+												"description": "Added as a part of security scheme: bearer"
+											},
+											{
+												"key": "clientid",
+												"value": "veniam aute",
+												"description": "(Required) The Client ID for authentication"
+											},
+											{
+												"key": "clientsecret",
+												"value": "veniam aute",
+												"description": "(Required) The Client Secret for authentication"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"id\": 98091139,\n  \"queryName\": \"non laboris\",\n  \"sourceDb\": \"irure sint mollit ut\",\n  \"query\": \"aute Lorem ullamco\",\n  \"metaData\": \"dolor\",\n  \"customParamApplied\": false,\n  \"crossDbApplied\": true,\n  \"createdAt\": \"1969-06-12T22:51:13.065Z\",\n  \"updatedAt\": \"2020-01-28T10:36:20.693Z\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/data-view-config",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"data-view-config"
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "*/*"
+										}
+									],
+									"cookie": [],
+									"body": "{}"
+								}
+							]
+						},
+						{
+							"name": "Get Specific Data",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{bearerToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "{{keycloakClientId}}",
+										"description": "(Required) The Client ID for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "{{keycloakClientSecret}}",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "Content-Type",
+										"value": "text/plain"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/data-view/:queryName?param=",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"data-view",
+										":queryName"
+									],
+									"query": [
+										{
+											"key": "param",
+											"value": "",
+											"description": "Optional parameter values for the query. Use `~` to separate multiple values."
+										}
+									],
+									"variable": [
+										{
+											"key": "queryName",
+											"value": "",
+											"description": "(Required) "
+										}
+									]
+								},
+								"description": "Fetches specific data based on a named query.\n- If query support custom where, the param query string will be ignored even if it has value - vice versa with when custom query is deactivated\n\n- `param`: Used to supply values for predefined queries. Multiple values can be passed, separated by `~`.\n  Example: `test~test1~test3` (this passes 3 values to placeholders in sequence).\n\n- `where`: Used only for queries flagged as accepting custom WHERE clauses. Supply the full WHERE clause string in the request body.\n  Example:\n  ```\n  o.record_status_cd = 'UNPROCESSED'\n  AND o.obs_domain_cd_st_1 = 'Order'\n  AND o.ctrl_cd_display_form = 'LabReport'\n  AND o.jurisdiction_cd IS NOT NULL\n  AND o.prog_area_cd IS NOT NULL\n  AND p.type_cd = 'AUT'\n  AND ar.type_cd = 'COMP'\n  AND o1.obs_domain_cd_st_1 = 'Result'\n  ```\n"
+							},
+							"response": [
+								{
+									"name": "OK",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "Bearer <token>",
+												"description": "Added as a part of security scheme: bearer"
+											},
+											{
+												"key": "clientid",
+												"value": "veniam aute",
+												"description": "(Required) The Client ID for authentication"
+											},
+											{
+												"key": "clientsecret",
+												"value": "veniam aute",
+												"description": "(Required) The Client Secret for authentication"
+											},
+											{
+												"key": "Accept",
+												"value": "*/*"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/data-view/:queryName?param=veniam aute",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"data-view",
+												":queryName"
+											],
+											"query": [
+												{
+													"key": "param",
+													"value": "veniam aute"
+												}
+											],
+											"variable": [
+												{
+													"key": "queryName",
+													"value": "veniam aute",
+													"description": "(Required) "
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "*/*"
+										}
+									],
+									"cookie": [],
+									"body": "{}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Get Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const token = pm.response.text();",
+									"pm.collectionVariables.set(\"bearerToken\", token);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "clientid",
+								"value": "{{keycloakClientId}}",
+								"description": "(Required) The Client ID for authentication"
+							},
+							{
+								"key": "clientsecret",
+								"value": "{{keycloakClientSecret}}",
+								"description": "(Required) The Client Secret for authentication"
+							},
+							{
+								"key": "Accept",
+								"value": "*/*"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/token",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"token"
+							]
+						},
+						"description": "Generates an access token using client credentials. The client ID and client secret must be provided in the request headers."
+					},
+					"response": [
+						{
+							"name": "OK",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "clientid",
+										"value": "veniam aute",
+										"description": "(Required) The Client ID for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "veniam aute",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/auth/token",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"token"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "*/*"
+								}
+							],
+							"cookie": [],
+							"body": "veniam aute"
+						}
+					]
+				},
+				{
+					"name": "Get data from multiple tables related to NND process",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{bearerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "clientid",
+								"value": "{{keycloakClientId}}",
+								"description": "(Required) The Client Id for authentication"
+							},
+							{
+								"key": "clientsecret",
+								"value": "{{keycloakClientSecret}}",
+								"description": "(Required) The Client Secret for authentication"
+							},
+							{
+								"key": "limit",
+								"value": "0",
+								"description": "Limit on the number of records returned"
+							},
+							{
+								"key": "compress",
+								"value": "false",
+								"description": "Boolean flag to compress the response"
+							},
+							{
+								"key": "Accept",
+								"value": "*/*"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nnd?cnStatusTime=&transportStatusTime=&netssTime=&statusCd=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nnd"
+							],
+							"query": [
+								{
+									"key": "cnStatusTime",
+									"value": "",
+									"description": "(Required) CN Status time parameter"
+								},
+								{
+									"key": "transportStatusTime",
+									"value": "",
+									"description": "(Required) Transport Status time parameter"
+								},
+								{
+									"key": "netssTime",
+									"value": "",
+									"description": "(Required) NETSS time parameter"
+								},
+								{
+									"key": "statusCd",
+									"value": "",
+									"description": "(Required) Status code for filtering"
+								}
+							]
+						},
+						"description": "Fetches data based on various parameters related to the NND process."
+					},
+					"response": [
+						{
+							"name": "OK",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer <token>",
+										"description": "Added as a part of security scheme: bearer"
+									},
+									{
+										"key": "clientid",
+										"value": "veniam aute",
+										"description": "(Required) The Client Id for authentication"
+									},
+									{
+										"key": "clientsecret",
+										"value": "veniam aute",
+										"description": "(Required) The Client Secret for authentication"
+									},
+									{
+										"key": "limit",
+										"value": "0",
+										"description": "Limit on the number of records returned"
+									},
+									{
+										"key": "compress",
+										"value": "false",
+										"description": "Boolean flag to compress the response"
+									},
+									{
+										"key": "Accept",
+										"value": "*/*"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/nnd?cnStatusTime=veniam aute&transportStatusTime=veniam aute&netssTime=veniam aute&statusCd=veniam aute",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"nnd"
+									],
+									"query": [
+										{
+											"key": "cnStatusTime",
+											"value": "veniam aute"
+										},
+										{
+											"key": "transportStatusTime",
+											"value": "veniam aute"
+										},
+										{
+											"key": "netssTime",
+											"value": "veniam aute"
+										},
+										{
+											"key": "statusCd",
+											"value": "veniam aute"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "text",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "*/*"
+								}
+							],
+							"cookie": [],
+							"body": "veniam aute"
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "keycloakClientId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "keycloakClientSecret",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "bearerToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
