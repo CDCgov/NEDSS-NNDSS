@@ -10,8 +10,18 @@ on:
       - 'nnd-data-poll-service/**'
       - 'nnd-service/**'
 jobs:
+  sonar_scan:
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/sonar.yaml
+    secrets:
+      CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
+      PASSED_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
   extract-version-suffix:
     name: Extract image tag from version
+    needs: sonar_scan
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.parse.outputs.image_tag }}
@@ -25,35 +35,25 @@ jobs:
           version_line=$(grep "^version" ./nnd-service/build.gradle)
           version=$(echo "$version_line" | sed -E "s/version *= *['\"]([^'\"]+)['\"]/\1/")
           echo "Full version: $version"
-          
+
           # Default value
           image_tag="SNAPSHOT"
-          
+
           # Match SNAPSHOT-123
           if [[ "$version" =~ SNAPSHOT-([0-9]+) ]]; then
             image_tag="SNAPSHOT-${BASH_REMATCH[1]}"
           elif [[ "$version" =~ SNAPSHOT ]]; then
             image_tag="SNAPSHOT"
           fi
-          
+
           echo "image_tag=$image_tag" >> $GITHUB_OUTPUT
-  sonar_scan:
-    needs: extract-version-suffix
-    permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/sonar.yaml
-    secrets:
-      CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID: ${{secrets.CDC_NBS_SANDBOX_SHARED_SERVICES_ACCOUNTID}}
-      PASSED_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      SONAR_TOKEN: ${{secrets.SONAR_TOKEN}}
   call-build-microservice-container-workflow:
     permissions:
       id-token: write
       contents: read
       security-events: write
     name: Build Container
-    needs: sonar_scan
+    needs: extract-version-suffix
     uses: CDCgov/NEDSS-Workflows/.github/workflows/Build-gradle-microservice-container.yaml@main
     with:
       microservice_name: nnd-service
@@ -66,7 +66,6 @@ jobs:
       GIT_USER_EMAIL: ${{secrets.GIT_USER_EMAIL}}
       GIT_USER_NAME: ${{secrets.GIT_USER_NAME}}
       HELM_TOKEN: ${{secrets.HELM_TOKEN}}
-
   call-update-helm-nnd-service:
     permissions:
       id-token: write
