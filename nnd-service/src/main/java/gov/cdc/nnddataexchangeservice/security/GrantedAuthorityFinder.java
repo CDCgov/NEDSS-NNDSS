@@ -1,5 +1,6 @@
 package gov.cdc.nnddataexchangeservice.security;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,7 +26,7 @@ public class GrantedAuthorityFinder {
           FROM auth_user
           WHERE user_id = ? AND prog_area_admin_ind = 'T'
           UNION
-          SELECT DISTINCT (operationType.bus_op_nm || '-' || objectType.bus_obj_nm) AS grantedAuthority
+          SELECT DISTINCT (operationType.bus_op_nm + '-' + objectType.bus_obj_nm) AS grantedAuthority
           FROM auth_user authUser
             JOIN auth_user_role role ON role.auth_user_uid = authUser.auth_user_uid
             JOIN auth_perm_set permissionSet ON role.auth_perm_set_uid = permissionSet.auth_perm_set_uid
@@ -45,7 +46,7 @@ public class GrantedAuthorityFinder {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public GrantedAuthorityFinder(JdbcTemplate jdbcTemplate) {
+    public GrantedAuthorityFinder(@Qualifier("odseJdbcTemplate") JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

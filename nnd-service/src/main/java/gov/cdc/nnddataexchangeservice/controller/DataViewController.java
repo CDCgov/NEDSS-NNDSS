@@ -135,8 +135,8 @@ public class DataViewController {
     @GetMapping(path = "/api/data-view/{queryName}",  consumes = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<?> dataViewV2Table(@PathVariable String queryName,
                                              @RequestParam(name = "param", required = false) String param,
-                                             @RequestParam(name = "username", required = true) String username,
                                              @RequestBody(required = false) String where,
+                                             @RequestHeader(name = "username", required = true) String username,
                                              HttpServletRequest request
     )  {
         try {
@@ -146,7 +146,7 @@ public class DataViewController {
                     auth.getAuthority().equals("CREATE-NOTIFICATION") ||
                     auth.getAuthority().equals("ADD-PATIENT")
             )) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied for the user: " + username);
             }
             var res = dataViewService.getDataForDataView(queryName, param, where);
             return new ResponseEntity<>(res, HttpStatus.OK);

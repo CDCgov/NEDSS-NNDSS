@@ -5,7 +5,7 @@
 		"description": "This API exposes endpoints to manage Data Extraction Services.\n\nContact Support:\n Name: Data Sync Service\n Email: nndservice@cdc.com",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "25680585",
-		"_collection_link": "https://data-team-0400.postman.co/workspace/08287add-14ad-4ca6-b115-b6f95b8635db/collection/25680585-e066d509-8fa4-40be-9912-8a13140ed8e9?action=share&source=collection_link&creator=25680585"
+		"_collection_link": "https://data-team-0400.postman.co/workspace/Data-Services-Swagger~08287add-14ad-4ca6-b115-b6f95b8635db/collection/25680585-e066d509-8fa4-40be-9912-8a13140ed8e9?action=share&source=collection_link&creator=25680585"
 	},
 	"item": [
 		{
@@ -1027,6 +1027,12 @@
 									{
 										"key": "Accept",
 										"value": "*/*"
+									},
+									{
+										"key": "username",
+										"value": "",
+										"description": "(Required) User's NBS system username",
+										"type": "text"
 									}
 								],
 								"body": {
