@@ -1,6 +1,7 @@
 package gov.cdc.nnddataexchangeservice.controller;
 
 import gov.cdc.nnddataexchangeservice.repository.rdb.model.DataViewConfig;
+import gov.cdc.nnddataexchangeservice.security.GrantedAuthorityFinder;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataExchangeGenericService;
 import gov.cdc.nnddataexchangeservice.service.interfaces.IDataViewService;
 import gov.cdc.nnddataexchangeservice.service.model.dto.DataViewConfigDto;
@@ -17,7 +18,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Set;
 
 import static gov.cdc.nnddataexchangeservice.shared.ErrorResponseBuilder.buildErrorResponse;
 
@@ -27,13 +31,16 @@ import static gov.cdc.nnddataexchangeservice.shared.ErrorResponseBuilder.buildEr
 public class DataViewController {
     private final IDataViewService dataViewService;
     private final IDataExchangeGenericService dataExchangeGenericService;
+    private final GrantedAuthorityFinder grantedAuthorityFinder;
+
 
     private static Logger logger = LoggerFactory.getLogger(DataViewController.class);
 
     public DataViewController(IDataViewService dataViewService,
-                              IDataExchangeGenericService dataExchangeGenericService) {
+                              IDataExchangeGenericService dataExchangeGenericService, GrantedAuthorityFinder grantedAuthorityFinder) {
         this.dataViewService = dataViewService;
         this.dataExchangeGenericService = dataExchangeGenericService;
+        this.grantedAuthorityFinder = grantedAuthorityFinder;
     }
 
     @Operation(
@@ -105,6 +112,11 @@ public class DataViewController {
                             description = "The Client Secret for authentication",
                             required = true,
                             schema = @Schema(type = "string")),
+                    @Parameter(in = ParameterIn.HEADER,
+                            name = "username",
+                            description = "User's NBS system username",
+                            required = true,
+                            schema = @Schema(type = "string")),
                     @Parameter(in = ParameterIn.QUERY,
                             name = "param",
                             description = "Optional parameter values for the query. Use `~` to separate multiple values.",
@@ -122,11 +134,20 @@ public class DataViewController {
     )
     @GetMapping(path = "/api/data-view/{queryName}",  consumes = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<?> dataViewV2Table(@PathVariable String queryName,
-                                                  @RequestParam(name = "param", required = false) String param,
-                                                  @RequestBody(required = false) String where,
+                                             @RequestParam(name = "param", required = false) String param,
+                                             @RequestParam(name = "username", required = true) String username,
+                                             @RequestBody(required = false) String where,
                                              HttpServletRequest request
     )  {
         try {
+            Set<GrantedAuthority> authorities = grantedAuthorityFinder.find(username);
+            if (authorities.stream().noneMatch(auth ->
+                    auth.getAuthority().equals("ADD-INVESTIGATION") ||
+                    auth.getAuthority().equals("CREATE-NOTIFICATION") ||
+                    auth.getAuthority().equals("ADD-PATIENT")
+            )) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
+            }
             var res = dataViewService.getDataForDataView(queryName, param, where);
             return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
