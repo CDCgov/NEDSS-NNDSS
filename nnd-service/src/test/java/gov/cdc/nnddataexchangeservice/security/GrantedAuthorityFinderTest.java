@@ -21,8 +21,9 @@ class GrantedAuthorityFinderTest {
 
         List<GrantedAuthority> mockResult = Arrays.asList(
                 new SimpleGrantedAuthority("ADMINISTRATE-SYSTEM"),
-                new SimpleGrantedAuthority("ADMINISTRATE-SECURITY"),
-                new SimpleGrantedAuthority("CREATE-NOTIFICATION")
+                new SimpleGrantedAuthority("ADD-PATIENT"),
+                new SimpleGrantedAuthority("CREATE-NOTIFICATION"),
+                new SimpleGrantedAuthority("ADD-INVESTIGATION")
         );
 
         when(jdbcTemplate.query(
