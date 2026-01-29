@@ -1,4 +1,4 @@
-FROM amazoncorretto:21 as builder
+FROM amazoncorretto:25 as builder
 # try patching system for security fixes
 RUN yum update -y && yum clean all
 
@@ -18,7 +18,7 @@ WORKDIR /usr/src/nnd
 #Build report service along with any required libraries
 RUN ./gradlew :nnd-service:buildNeeded -x test --no-daemon
 
-FROM amazoncorretto:21
+FROM amazoncorretto:25
 # try patching system for security fixes
 RUN yum update -y && yum clean all
 
